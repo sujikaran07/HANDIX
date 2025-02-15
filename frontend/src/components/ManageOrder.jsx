@@ -7,7 +7,7 @@ import { FaGift } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminOrder.css';
 
-const ManageOrder = () => {
+const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [orders, setOrders] = useState([
     { id: 'O001', customerName: 'John Doe', orderDate: '2023-10-01', totalAmount: '$100', orderType: 'Retail', assignedArtisan: '', status: 'Pending' },
     { id: 'O002', customerName: 'Jane Smith', orderDate: '2023-10-02', totalAmount: '$200', orderType: 'Wholesale', assignedArtisan: '', status: 'Processing' },
@@ -181,7 +181,7 @@ const ManageOrder = () => {
                         </button>
                         <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                           <li>
-                            <button className="dropdown-item">View</button>
+                            <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                           </li>
                           {order.orderType === 'Customized' && (
                             <li>

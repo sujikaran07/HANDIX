@@ -292,13 +292,7 @@ body {
     opacity: 0.5;
 }
 
-.pagination {
-    display: flex;
-    justify-content: center;
-    padding: 0px 0;
-    margin-top: 10px;
-    list-style: none;
-}
+
 
 .page-item {
     margin: 0 5px;
