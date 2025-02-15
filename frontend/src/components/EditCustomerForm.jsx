@@ -8,7 +8,7 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
   const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [location, setLocation] = useState('');
+  const [country, setCountry] = useState('Sri Lanka');
   const [accountType, setAccountType] = useState('Retail');
   const [password, setPassword] = useState('');
   const [registrationDate, setRegistrationDate] = useState('');
@@ -20,7 +20,7 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
       setUserId(customer.id);
       setEmail(customer.email);
       setPhoneNumber(customer.phone);
-      setLocation(customer.location);
+      setCountry(customer.country);
       setAccountType(customer.accountType);
       setPassword(customer.password);
       setRegistrationDate(customer.registrationDate);
@@ -33,7 +33,7 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
       name: `${firstName} ${lastName}`,
       email,
       phone: phoneNumber,
-      location,
+      country,
       accountType,
       password,
       registrationDate,
@@ -113,13 +113,13 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
         </div>
         <div className="row mb-3 form-group">
           <div className="col-md-4">
-            <label htmlFor="location" className="form-label">Location</label>
+            <label htmlFor="country" className="form-label">Country</label>
             <input
               type="text"
               className="form-control"
-              id="location"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              id="country"
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
             />
           </div>
           <div className="col-md-4">

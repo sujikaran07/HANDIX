@@ -3,10 +3,9 @@ import { useState, useEffect } from "react";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminEmployee from "./pages/admin/AdminEmployee";
-import AdminCustomer from "./pages/admin/AdminCustomer"; 
-import './styles/admin/AdminEmployee.css';
-import './styles/admin/AdminDashboard.css';
-import './styles/admin/AdminCustomer.css'; 
+import AdminCustomer from "./pages/admin/AdminCustomer";
+import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
+
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -31,6 +30,7 @@ function App() {
           <Route path="/admindashboard" element={<AdminDashboard />} />
           <Route path="/adminemployee" element={<AdminEmployee />} />
           <Route path="/admincustomer" element={<AdminCustomer />} />
+          <Route path="/adminorder" element={<AdminOrder />} /> 
         </Routes>
       </Router>
     </div>

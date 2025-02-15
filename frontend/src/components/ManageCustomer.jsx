@@ -7,51 +7,53 @@ import { FaUsers } from 'react-icons/fa';
 import Pagination from './Pagination';
 import AddCustomerForm from './AddCustomerForm';
 import EditCustomerForm from './EditCustomerForm';
+import CustomerViewForm from './CustomerViewForm';
 
 const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, onCancelAddCustomer, onSaveCustomer, onSaveAndAddAnotherCustomer }) => {
   const [customers, setCustomers] = useState([
-    { id: 'C001', name: 'John Doe', email: 'john@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C002', name: 'Jane Smith', email: 'jane@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C003', name: 'Alice Johnson', email: 'alice@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C004', name: 'Bob Brown', email: 'bob@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C005', name: 'Charlie Davis', email: 'charlie@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C006', name: 'Diana Evans', email: 'diana@example.com', accountType: 'Wholesale', status: 'Rejected' },
-    { id: 'C007', name: 'Eve Foster', email: 'eve@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C008', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C009', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C010', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C011', name: 'Ivy Jackson', email: 'ivy@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C012', name: 'Jack King', email: 'jack@example.com', accountType: 'Wholesale', status: 'Rejected' },
-    { id: 'C013', name: 'Karen Lee', email: 'karen@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C014', name: 'Leo Martin', email: 'leo@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C015', name: 'Mona Nelson', email: 'mona@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C016', name: 'Nina Owens', email: 'nina@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C017', name: 'Oscar Perez', email: 'oscar@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C018', name: 'Paul Quinn', email: 'paul@example.com', accountType: 'Wholesale', status: 'Rejected' },
-    { id: 'C019', name: 'Quincy Roberts', email: 'quincy@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C020', name: 'Rachel Scott', email: 'rachel@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C021', name: 'Sam Taylor', email: 'sam@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C022', name: 'Tina Underwood', email: 'tina@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C023', name: 'Uma Vincent', email: 'uma@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C024', name: 'Victor White', email: 'victor@example.com', accountType: 'Wholesale', status: 'Rejected' },
-    { id: 'C025', name: 'Wendy Xander', email: 'wendy@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C026', name: 'Xander Young', email: 'xander@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C027', name: 'Yara Zane', email: 'yara@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C028', name: 'Zack Allen', email: 'zack@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C029', name: 'Amy Baker', email: 'amy@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C030', name: 'Brian Clark', email: 'brian@example.com', accountType: 'Wholesale', status: 'Rejected' },
-    { id: 'C031', name: 'Cathy Davis', email: 'cathy@example.com', accountType: 'Retail', status: 'Active' },
-    { id: 'C032', name: 'David Evans', email: 'david@example.com', accountType: 'Wholesale', status: 'Pending' },
-    { id: 'C033', name: 'Ella Foster', email: 'ella@example.com', accountType: 'Retail', status: 'Rejected' },
-    { id: 'C034', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Active' },
-    { id: 'C035', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Pending' },
-    { id: 'C036', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Rejected' }
+    { id: 'C001', name: 'John Doe', email: 'john@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C002', name: 'Jane Smith', email: 'jane@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C003', name: 'Alice Johnson', email: 'alice@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C004', name: 'Bob Brown', email: 'bob@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C005', name: 'Charlie Davis', email: 'charlie@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C006', name: 'Diana Evans', email: 'diana@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
+    { id: 'C007', name: 'Eve Foster', email: 'eve@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C008', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C009', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C010', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C011', name: 'Ivy Jackson', email: 'ivy@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C012', name: 'Jack King', email: 'jack@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
+    { id: 'C013', name: 'Karen Lee', email: 'karen@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C014', name: 'Leo Martin', email: 'leo@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C015', name: 'Mona Nelson', email: 'mona@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C016', name: 'Nina Owens', email: 'nina@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C017', name: 'Oscar Perez', email: 'oscar@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C018', name: 'Paul Quinn', email: 'paul@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
+    { id: 'C019', name: 'Quincy Roberts', email: 'quincy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C020', name: 'Rachel Scott', email: 'rachel@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C021', name: 'Sam Taylor', email: 'sam@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C022', name: 'Tina Underwood', email: 'tina@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C023', name: 'Uma Vincent', email: 'uma@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C024', name: 'Victor White', email: 'victor@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
+    { id: 'C025', name: 'Wendy Xander', email: 'wendy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C026', name: 'Xander Young', email: 'xander@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C027', name: 'Yara Zane', email: 'yara@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C028', name: 'Zack Allen', email: 'zack@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C029', name: 'Amy Baker', email: 'amy@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C030', name: 'Brian Clark', email: 'brian@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
+    { id: 'C031', name: 'Cathy Davis', email: 'cathy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
+    { id: 'C032', name: 'David Evans', email: 'david@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
+    { id: 'C033', name: 'Ella Foster', email: 'ella@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
+    { id: 'C034', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
+    { id: 'C035', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
+    { id: 'C036', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' }
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [viewingCustomer, setViewingCustomer] = useState(null);
   const customersPerPage = 4;
 
   const handleDelete = (id) => {
@@ -79,6 +81,14 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
     setEditingCustomer(null);
   };
 
+  const handleViewCustomer = (customer) => {
+    setViewingCustomer(customer);
+  };
+
+  const handleBackToTable = () => {
+    setViewingCustomer(null);
+  };
+
   const filteredCustomers = customers.filter(customer => {
     return (
       (filterStatus === 'All' || customer.status === filterStatus) &&
@@ -104,6 +114,8 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
           <AddCustomerForm onSave={onSaveCustomer} onSaveAndAddAnother={onSaveAndAddAnotherCustomer} onCancel={onCancelAddCustomer} />
         ) : editingCustomer ? (
           <EditCustomerForm customer={editingCustomer} onSave={handleSaveEdit} onCancel={handleCancelEdit} />
+        ) : viewingCustomer ? (
+          <CustomerViewForm customer={viewingCustomer} onBack={handleBackToTable} />
         ) : (
           <>
             <div className="manage-customer-header d-flex justify-content-between align-items-center mb-3">
@@ -201,7 +213,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
                                 </button>
                               </li>
                               <li>
-                                <button className="dropdown-item" onClick={() => onViewCustomer(customer)}>
+                                <button className="dropdown-item" onClick={() => handleViewCustomer(customer)}>
                                   View
                                 </button>
                               </li>
@@ -229,7 +241,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
               </table>
             </div>
 
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            <Pagination className="employee-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           </>
         )}
       </div>

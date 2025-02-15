@@ -7,6 +7,7 @@ body {
     display: flex;
     flex-direction: column;
     flex-direction: row;
+
 }
 
 .admin-employee-page .main-content {
@@ -15,7 +16,7 @@ body {
     background-color: #f4f6fc;
     margin-left: 232px;
     margin-top: 55px;
-    margin-right: -18px;
+    margin-right: -32px;
     display: flex;
     flex-direction: column;
 }
@@ -149,7 +150,7 @@ body {
 
 .admin-employee-page .artisan-table th:last-child,
 .admin-employee-page .artisan-table td:last-child {
-    width: 22%;
+    width: 21%;
 }
 
 .admin-employee-page .edit-btn,
@@ -259,7 +260,7 @@ body {
     display: flex;
     justify-content: center;
     padding: 0px 0;
-    margin-top: 10px;
+    margin-top: -10px;
     list-style: none;
 }
 
@@ -287,6 +288,42 @@ body {
 }
 
 .page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.employee-pagination {
+    display: flex;
+    justify-content: center;
+    padding: 0px 0;
+    margin-top: -10px;
+    list-style: none;
+}
+
+.employee-pagination .page-item {
+    margin: 0 5px;
+}
+
+.employee-pagination .page-item .page-link {
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+}
+
+.employee-pagination .page-item .page-link:hover {
+    background-color: #f0f0f0;
+}
+
+.employee-pagination .page-item.active .page-link {
+    background-color: #3e87c3;
+    color: #ffffff;
+    border-color: #3e87c3;
+}
+
+.employee-pagination .page-item.disabled .page-link {
     cursor: not-allowed;
     opacity: 0.5;
 }

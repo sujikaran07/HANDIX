@@ -108,7 +108,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
           </div>
         </div>
         <div className="d-flex justify-content-between">
-          <button type="button" className="btn btn-success me-2" onClick={handleSave}>Save</button>
+          <button type="button" className="btn btn-success me-2" onClick={handleSave}>Update</button>
           <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
         </div>
       </form>
