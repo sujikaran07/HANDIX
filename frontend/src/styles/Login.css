@@ -1,0 +1,137 @@
+/* General Page Styling */
+body, html {
+  font-family: "Poppins", sans-serif;
+  background-color: #f8f9fa;
+  height: 100vh;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Centering the Login Container */
+.login-container {
+  display: flex;
+  width: 900px;
+  height: 500px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+  align-items: stretch; 
+  justify-content: center;
+
+  /* Perfect Centering Fix */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Left Side Panel */
+.left-panel {
+  flex: 1;
+  background: url("../assets/Handix_Background.png") no-repeat center center/cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+/* Overlay Text */
+.overlay {
+
+  color: white;
+  text-align: center;
+  padding: 20px;
+  border-radius: 5px;
+  width: 80%;
+}
+
+/* Right Side Panel */
+.right-panel {
+  flex: 1;
+  background: #f3f5f7;
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+}
+
+/* Login Form */
+.login-form {
+  width: 100%;
+  max-width: 320px;
+}
+
+.form-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.logo {
+  width: 50px;
+}
+
+/* Input Group Styling */
+.input-group {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 5px;
+  background: white;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Fix input field when typing */
+.input-group input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 10px;
+  font-size: 16px;
+  background: transparent; 
+}
+
+/* Placeholder Styling */
+.input-group input::placeholder {
+  color: #6c757d;
+}
+
+/* Icon Styling */
+.input-icon {
+  padding: 10px;
+  color: #6c757d;
+}
+
+/* Focus Effect */
+.input-group:focus-within {
+  border-color: #2790C3;
+  box-shadow: 0px 0px 5px #2790C3;
+}
+
+/* Fix background color issue */
+input:focus {
+  background: white !important;
+  color: black !important;
+}
+
+/* Login Button */
+.login-btn {
+  width: 100%;
+  background-color: #3e87c3;
+  border: none;
+  padding: 10px;
+}
+
+.login-btn:hover {
+  background-color: #2790C3;
+}
+
+/* Footer Styling */
+.form-footer {
+  text-align: center;
+  margin-top: 10px;
+}

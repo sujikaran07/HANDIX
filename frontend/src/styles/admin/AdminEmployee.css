@@ -1,0 +1,336 @@
+/* Apply Poppins font family */
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+.admin-employee-page {
+    display: flex;
+    flex-direction: column;
+    flex-direction: row;
+}
+
+.admin-employee-page .main-content {
+    flex: 1;
+    padding: 15px;
+    background-color: #f4f6fc;
+    margin-left: 232px;
+    margin-top: 55px;
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-employee-page .manage-artisan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -40px;
+    margin-top: -10px;
+}
+
+.admin-employee-page .manage-artisan-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin-top: 0px;
+}
+
+.admin-employee-page .add-employee-btn,
+.admin-employee-page .export-btn {
+    padding: 5px 10px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    font-weight: bold;
+    width: 120px;
+    text-align: center;
+    margin-right: 5px;
+}
+
+.admin-employee-page .add-employee-btn {
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+}
+
+.admin-employee-page .add-employee-btn:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.admin-employee-page .export-btn {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+}
+
+.admin-employee-page .export-btn:hover {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.admin-employee-page .add-employee-btn svg,
+.admin-employee-page .export-btn svg {
+    margin-right: 5px;
+}
+
+.admin-employee-page .icon-and-title {
+    display: flex;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.admin-employee-page .employee-icon {
+    font-size: 40px;
+    margin-top: 0px;
+    color: #3e87c3;
+    margin-right: 15px;
+    height: 100%;
+}
+
+.admin-employee-page .text-section h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 0px;
+    line-height: 1.2;
+}
+
+.admin-employee-page .text-section p {
+    font-size: 14px;
+    color: #666;
+}
+
+.admin-employee-page .title-section {
+    display: flex;
+    align-items: flex-start;
+}
+
+.admin-employee-page .button-section {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-employee-page .artisan-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.admin-employee-page .artisan-table th,
+.admin-employee-page .artisan-table td {
+    padding: 5px 10px;
+    border: none;
+    text-align: left;
+    background-color: #ffffff;
+}
+
+.admin-employee-page .artisan-table th {
+    background-color: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    box-shadow: none;
+}
+
+.admin-employee-page .artisan-table tr {
+    margin-bottom: 0px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.admin-employee-page .artisan-table th:nth-child(2),
+.admin-employee-page .artisan-table td:nth-child(2) {
+    width: 23%;
+}
+
+.admin-employee-page .artisan-table th:nth-child(3),
+.admin-employee-page .artisan-table td:nth-child(3) {
+    width: 23%;
+}
+
+.admin-employee-page .artisan-table th:last-child,
+.admin-employee-page .artisan-table td:last-child {
+    width: 22%;
+}
+
+.admin-employee-page .edit-btn,
+.admin-employee-page .delete-btn {
+    padding: 4px 8px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 12px;
+    font-weight: bold;
+    width: 80px;
+    text-align: center;
+    margin-right: 5px;
+}
+
+.admin-employee-page .edit-btn {
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+}
+
+.admin-employee-page .edit-btn:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.admin-employee-page .delete-btn {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: transparent;
+}
+
+.admin-employee-page .delete-btn:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.admin-employee-page .manage-request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.admin-employee-page .search-bar .input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f4f6fc;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.admin-employee-page .search-bar .form-control {
+    border: none;
+    background-color: transparent;
+    padding-left: 10px;
+}
+
+.admin-employee-page .filter-dropdown .input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f4f6fc;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.admin-employee-page .filter-dropdown .form-select {
+    border: none;
+    background-color: transparent;
+    padding-left: 10px;
+}
+
+.admin-employee-page .export-btn {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.admin-employee-page .export-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.admin-employee-page .add-employee-btn {
+    padding: 5px 10px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    font-weight: bold;
+    width: 160px;
+    text-align: center;
+    margin-right: 5px;
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+}
+
+.admin-employee-page .add-employee-btn:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    padding: 0px 0;
+    margin-top: 10px;
+    list-style: none;
+}
+
+.page-item {
+    margin: 0 5px;
+}
+
+.page-item .page-link {
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+}
+
+.page-item .page-link:hover {
+    background-color: #f0f0f0;
+}
+
+.page-item.active .page-link {
+    background-color: #3e87c3;
+    color: #ffffff;
+    border-color: #3e87c3;
+}
+
+.page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.btn-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-primary {
+    background-color: #3e87c3;
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.btn-success {
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.add-employee-form {
+    font-family: "Poppins", sans-serif;
+}
