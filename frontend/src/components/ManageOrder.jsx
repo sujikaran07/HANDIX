@@ -153,7 +153,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           <table className="table table-bordered table-striped order-table">
             <thead>
               <tr>
-                <th>Order ID</th>
+                <th>O-ID</th>
                 <th>Customer Name</th>
                 <th>Order Date</th>
                 <th>Total Amount</th>

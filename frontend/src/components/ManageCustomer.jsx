@@ -179,7 +179,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
               <table className="table table-bordered table-striped customer-table">
                 <thead>
                   <tr>
-                    <th>User ID</th>
+                    <th>C-ID</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Account Type</th>

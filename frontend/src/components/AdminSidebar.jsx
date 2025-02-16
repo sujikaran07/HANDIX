@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaProductHunt } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import '../styles/admin/AdminDashboard.css';
 import logo from '../assets/logo1.png'; 
@@ -47,7 +47,7 @@ const AdminSidebar = () => {
           </li>
           <li>
             <Link to="/admin/chats">
-              <FaProductHunt /> Products
+              <FaBox /> Products
             </Link>
           </li>
           <li className="other-section">

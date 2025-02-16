@@ -172,7 +172,7 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
               <table className="table table-bordered table-striped artisan-table">
                 <thead>
                   <tr>
-                    <th>User ID</th>
+                    <th>E-ID</th>
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Phone Number</th>

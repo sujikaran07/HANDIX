@@ -5,7 +5,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminEmployee from "./pages/admin/AdminEmployee";
 import AdminCustomer from "./pages/admin/AdminCustomer";
 import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
-import AdminProducts from "./pages/admin/AdminProducts"; // Import the AdminProducts component
+import AdminProducts from "./pages/admin/AdminProducts"; 
+import AdminInventory from "./pages/admin/AdminInventory"; // Import the new inventory page
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -32,6 +33,7 @@ function App() {
           <Route path="/admincustomer" element={<AdminCustomer />} />
           <Route path="/adminorder" element={<AdminOrder />} /> 
           <Route path="/adminproducts" element={<AdminProducts />} />
+          <Route path="/admininventory" element={<AdminInventory />} /> {/* Add the new route */}
         </Routes>
       </Router>
     </div>
