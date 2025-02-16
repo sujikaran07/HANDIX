@@ -5,7 +5,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminEmployee from "./pages/admin/AdminEmployee";
 import AdminCustomer from "./pages/admin/AdminCustomer";
 import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
-
+import AdminProducts from "./pages/admin/AdminProducts"; // Import the AdminProducts component
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -31,6 +31,7 @@ function App() {
           <Route path="/adminemployee" element={<AdminEmployee />} />
           <Route path="/admincustomer" element={<AdminCustomer />} />
           <Route path="/adminorder" element={<AdminOrder />} /> 
+          <Route path="/adminproducts" element={<AdminProducts />} />
         </Routes>
       </Router>
     </div>
