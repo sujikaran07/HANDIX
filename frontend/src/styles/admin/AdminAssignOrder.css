@@ -1,0 +1,354 @@
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+.admin-assign-order-page {
+    display: flex;
+    flex-direction: column;
+    flex-direction: row;
+    height: 100vh;
+}
+
+.admin-assign-order-page .main-content {
+    flex: 1;
+    padding: 15px;
+    background-color: #f4f6fc;
+    margin-left: 232px;
+    margin-top: 55px;
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-assign-order-page .manage-assign-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -40px;
+    margin-top: -10px;
+}
+
+.admin-assign-order-page .manage-assign-order-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin-top: 0px;
+}
+
+.admin-assign-order-page .add-assign-order-btn,
+.admin-assign-order-page .export-btn {
+    padding: 5px 10px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    font-weight: bold;
+    width: 120px;
+    text-align: center;
+    margin-right: 5px;
+}
+
+.admin-assign-order-page .add-assign-order-btn {
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+}
+
+.admin-assign-order-page .add-assign-order-btn:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.admin-assign-order-page .export-btn {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+}
+
+.admin-assign-order-page .export-btn:hover {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.admin-assign-order-page .add-assign-order-btn svg,
+.admin-assign-order-page .export-btn svg {
+    margin-right: 5px;
+}
+
+.admin-assign-order-page .icon-and-title {
+    display: flex;
+    align-items: flex-start;
+    height: 100%;
+}
+
+.admin-assign-order-page .assign-order-icon {
+    font-size: 40px;
+    margin-top: 0px;
+    color: #3e87c3;
+    margin-right: 15px;
+    height: 100%;
+}
+
+.admin-assign-order-page .text-section h2 {
+    font-size: 20px;
+    color: #333;
+    margin-bottom: 0px;
+    line-height: 1.2;
+}
+
+.admin-assign-order-page .text-section p {
+    font-size: 14px;
+    color: #666;
+}
+
+.admin-assign-order-page .title-section {
+    display: flex;
+    align-items: flex-start;
+}
+
+.admin-assign-order-page .button-section {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-assign-order-page .assign-order-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.admin-assign-order-page .assign-order-table th,
+.admin-assign-order-page .assign-order-table td {
+    padding: 5px 10px;
+    border: none;
+    text-align: left;
+    background-color: #ffffff;
+}
+
+.admin-assign-order-page .assign-order-table th {
+    background-color: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    box-shadow: none;
+}
+
+.admin-assign-order-page .assign-order-table tr {
+    margin-bottom: 0px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+}
+
+.admin-assign-order-page .edit-btn,
+.admin-assign-order-page .delete-btn {
+    padding: 4px 8px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 12px;
+    font-weight: bold;
+    width: 80px;
+    text-align: center;
+    margin-right: 5px;
+}
+
+.admin-assign-order-page .edit-btn {
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+}
+
+.admin-assign-order-page .edit-btn:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.admin-assign-order-page .delete-btn {
+    border-color: #dc3545;
+    color: #dc3545;
+    background-color: transparent;
+}
+
+.admin-assign-order-page .delete-btn:hover {
+    background-color: #dc3545;
+    color: #ffffff;
+}
+
+.admin-assign-order-page .manage-request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.admin-assign-order-page .search-bar .input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f4f6fc;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.admin-assign-order-page .search-bar .form-control {
+    border: none;
+    background-color: transparent;
+    padding-left: 10px;
+}
+
+.admin-assign-order-page .filter-dropdown .input-group {
+    display: flex;
+    align-items: center;
+    background-color: #f4f6fc;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.admin-assign-order-page .filter-dropdown .form-select {
+    border: none;
+    background-color: transparent;
+    padding-left: 10px;
+}
+
+.admin-assign-order-page .export-btn {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.admin-assign-order-page .export-btn:hover {
+    background-color: #f0f0f0;
+}
+
+.admin-assign-order-page .add-assign-order-btn {
+    padding: 5px 10px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    font-weight: bold;
+    width: 160px;
+    text-align: center;
+    margin-right: 5px;
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+}
+
+.admin-assign-order-page .add-assign-order-btn:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.page-item {
+    margin: 0 5px;
+}
+
+.page-item .page-link {
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+}
+
+.page-item .page-link:hover {
+    background-color: #f0f0f0;
+}
+
+.page-item.active .page-link {
+    background-color: #3e87c3;
+    color: #ffffff;
+    border-color: #3e87c3;
+}
+
+.page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.assign-order-pagination {
+    display: flex;
+    justify-content: center;
+    padding: 10px 0;
+    margin-top: 10px;
+    list-style: none;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #ffffff;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.assign-order-pagination .page-item {
+    margin: 0 5px;
+}
+
+.assign-order-pagination .page-item .page-link {
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+}
+
+.assign-order-pagination .page-item .page-link:hover {
+    background-color: #f0f0f0;
+}
+
+.assign-order-pagination .page-item.active .page-link {
+    background-color: #3e87c3;
+    color: #ffffff;
+    border-color: #3e87c3;
+}
+
+.assign-order-pagination .page-item.disabled .page-link {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.btn-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.btn-primary {
+    background-color: #3e87c3;
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.btn-success {
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+    border-radius: 20px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #28a745;
+    color: #ffffff;
+}
+
+.add-assign-order-form {
+    font-family: "Poppins", sans-serif;
+}

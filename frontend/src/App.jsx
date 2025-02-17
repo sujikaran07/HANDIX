@@ -7,6 +7,7 @@ import AdminCustomer from "./pages/admin/AdminCustomer";
 import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
 import AdminProducts from "./pages/admin/AdminProducts"; 
 import AdminInventory from "./pages/admin/AdminInventory"; // Import the new inventory page
+import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; // Import the new assign order page
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,8 @@ function App() {
           <Route path="/admincustomer" element={<AdminCustomer />} />
           <Route path="/adminorder" element={<AdminOrder />} /> 
           <Route path="/adminproducts" element={<AdminProducts />} />
-          <Route path="/admininventory" element={<AdminInventory />} /> {/* Add the new route */}
+          <Route path="/admininventory" element={<AdminInventory />} /> 
+          <Route path="/adminassignorder" element={<AdminAssignOrder />} />
         </Routes>
       </Router>
     </div>

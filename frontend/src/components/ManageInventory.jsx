@@ -189,7 +189,8 @@ const ManageInventory = ({ onViewInventory }) => {
                     <td>{item.category}</td>
                     <td>{item.quantity}</td>
                     <td>{item.lastUpdated}</td>
-                    <td className={`stock-status ${item.status.toLowerCase().replace(' ', '-')}`}>{item.status}</td>
+                    <td className={`stock-status ${item.status.toLowerCase().replace(/\s+/g, '-')}`}>{item.status}</td>
+
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -197,13 +198,10 @@ const ManageInventory = ({ onViewInventory }) => {
                         </button>
                         <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                           <li>
-                            <button className="dropdown-item" onClick={() => onViewInventory(item)}>View</button>
+                            <button className="dropdown-item">Update</button>
                           </li>
                           <li>
-                            <button className="dropdown-item">Edit</button>
-                          </li>
-                          <li>
-                            <button className="dropdown-item">Delete</button>
+                            <button className="dropdown-item">Restock</button>
                           </li>
                         </ul>
                       </div>

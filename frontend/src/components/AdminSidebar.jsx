@@ -52,7 +52,7 @@ const AdminSidebar = () => {
           </li>
           <li className="other-section">
             <Link to="/admin/analytics-reports">
-              <FaChartLine /> Analytics & Reports
+              <FaChartLine /> Analytics 
             </Link>
           </li>
           <li className="/admin/settings">
