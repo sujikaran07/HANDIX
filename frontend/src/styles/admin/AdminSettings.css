@@ -1,0 +1,84 @@
+
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+.admin-settings-page {
+    display: flex;
+    flex-direction: row;
+    flex-direction: column;
+}
+
+.admin-settings-page .main-content {
+    flex: 1;
+    padding: 15px;
+    background-color: #f4f6fc;
+    margin-left: 232px;
+    margin-top: 55px;
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-settings-page .manage-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -40px;
+    margin-top: -10px;
+}
+
+.admin-settings-page .manage-settings-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin-top: 0px;
+}
+
+.admin-settings-page .btn-primary {
+    padding: 4px 8px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 12px;
+    font-weight: bold;
+    width: 120px;
+    text-align: center;
+    margin-right: 5px;
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+}
+
+.admin-settings-page .btn-primary:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.manage-settings-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.manage-settings-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.password-confirmation-modal {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

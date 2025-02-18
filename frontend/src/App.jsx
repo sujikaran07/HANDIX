@@ -6,8 +6,9 @@ import AdminEmployee from "./pages/admin/AdminEmployee";
 import AdminCustomer from "./pages/admin/AdminCustomer";
 import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
 import AdminProducts from "./pages/admin/AdminProducts"; 
-import AdminInventory from "./pages/admin/AdminInventory"; // Import the new inventory page
-import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; // Import the new assign order page
+import AdminInventory from "./pages/admin/AdminInventory"; 
+import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; 
+import AdminSettings from "./pages/admin/AdminSettings"; 
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -36,6 +37,7 @@ function App() {
           <Route path="/adminproducts" element={<AdminProducts />} />
           <Route path="/admininventory" element={<AdminInventory />} /> 
           <Route path="/adminassignorder" element={<AdminAssignOrder />} />
+          <Route path="/adminsettings" element={<AdminSettings />} />
         </Routes>
       </Router>
     </div>

@@ -50,11 +50,6 @@ const AdminSidebar = () => {
               <FaBox /> Products
             </Link>
           </li>
-          <li className="other-section">
-            <Link to="/admin/analytics-reports">
-              <FaChartLine /> Analytics 
-            </Link>
-          </li>
           <li className="/admin/settings">
             <Link to="/admin/settings">
               <FaCog /> Settings

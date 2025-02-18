@@ -14,7 +14,7 @@ body {
 .sidebar {
     width: 250px;
     background-color: #f8f9fa;
-    padding: 20px;
+    padding: 30px;
     border-radius: 5px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     position: fixed;
@@ -34,7 +34,7 @@ body {
 }
 
 .sidebar-content ul li {
-    margin: 15px 0;
+    margin: 18px 0;
     position: relative;
 }
 
