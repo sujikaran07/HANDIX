@@ -30,14 +30,14 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/adminemployee" element={<AdminEmployee />} />
-          <Route path="/admincustomer" element={<AdminCustomer />} />
-          <Route path="/adminorder" element={<AdminOrder />} /> 
-          <Route path="/adminproducts" element={<AdminProducts />} />
-          <Route path="/admininventory" element={<AdminInventory />} /> 
-          <Route path="/adminassignorder" element={<AdminAssignOrder />} />
-          <Route path="/adminsettings" element={<AdminSettings />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/employee" element={<AdminEmployee />} />
+          <Route path="/admin/customers" element={<AdminCustomer />} />
+          <Route path="/admin/orders" element={<AdminOrder />} /> 
+          <Route path="/admin/products" element={<AdminProducts />} />
+          <Route path="/admin/inventory" element={<AdminInventory />} /> 
+          <Route path="/admin/assignorders" element={<AdminAssignOrder />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
         </Routes>
       </Router>
     </div>

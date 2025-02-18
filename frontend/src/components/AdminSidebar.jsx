@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import '../styles/admin/AdminDashboard.css';
 import logo from '../assets/logo1.png'; 
 
 const AdminSidebar = () => {
+  const location = useLocation();
+  const [activeLink, setActiveLink] = useState(location.pathname);
+
+  const handleLinkClick = (path) => {
+    setActiveLink(path);
+  };
+
   return (
     <div className="sidebar text-white">
       <div className="sidebar-header">
@@ -15,48 +22,48 @@ const AdminSidebar = () => {
       </div>
       <div className="sidebar-content">
         <ul className="list-unstyled">
-          <li>
-            <Link to="/admin/dashboard">
+          <li className={activeLink === '/admin/dashboard' ? 'active' : ''}>
+            <Link to="/admin/dashboard" onClick={() => handleLinkClick('/admin/dashboard')}>
               <FaTachometerAlt /> Dashboard
             </Link>
           </li>
-          <li>
-            <Link to="/admin/products">
+          <li className={activeLink === '/admin/employee' ? 'active' : ''}>
+            <Link to="/admin/employee" onClick={() => handleLinkClick('/admin/employee')}>
               <FaUserTie /> Employee
             </Link>
           </li>
-          <li>
-            <Link to="/admin/category">
+          <li className={activeLink === '/admin/customers' ? 'active' : ''}>
+            <Link to="/admin/customers" onClick={() => handleLinkClick('/admin/customers')}>
               <FaUsers /> Customers
             </Link>
           </li>
-          <li>
-            <Link to="/admin/customers">
+          <li className={activeLink === '/admin/assignorders' ? 'active' : ''}>
+            <Link to="/admin/assignorders" onClick={() => handleLinkClick('/admin/assignorders')}>
               <FaRegListAlt /> Assign Orders
             </Link>
           </li>
-          <li>
-            <Link to="/admin/orders">
+          <li className={activeLink === '/admin/orders' ? 'active' : ''}>
+            <Link to="/admin/orders" onClick={() => handleLinkClick('/admin/orders')}>
               <FaGift /> Orders
             </Link>
           </li>
-          <li>
-            <Link to="/admin/coupons">
+          <li className={activeLink === '/admin/inventory' ? 'active' : ''}>
+            <Link to="/admin/inventory" onClick={() => handleLinkClick('/admin/inventory')}>
               <FaWarehouse /> Inventory
             </Link>
           </li>
-          <li>
-            <Link to="/admin/chats">
+          <li className={activeLink === '/admin/products' ? 'active' : ''}>
+            <Link to="/admin/products" onClick={() => handleLinkClick('/admin/products')}>
               <FaBox /> Products
             </Link>
           </li>
-          <li className="/admin/settings">
-            <Link to="/admin/settings">
+          <li className={activeLink === '/admin/settings' ? 'active' : ''}>
+            <Link to="/admin/settings" onClick={() => handleLinkClick('/admin/settings')}>
               <FaCog /> Settings
             </Link>
           </li>
-          <li>
-            <Link to="/admin/logout">
+          <li className={activeLink === '/admin/logout' ? 'active' : ''}>
+            <Link to="/admin/logout" onClick={() => handleLinkClick('/admin/logout')}>
               <FaSignOutAlt /> Logout
             </Link>
           </li>
