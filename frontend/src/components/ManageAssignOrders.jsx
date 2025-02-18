@@ -142,11 +142,11 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
               <table className="table table-bordered table-striped assign-order-table">
                 <thead>
                   <tr>
-                    <th>Artisan ID</th>
+                    <th>A-ID</th>
                     <th>Artisan Name</th>
-                    <th>Availability</th>
-                    <th>Last Completed Order</th>
                     <th>Ongoing Orders</th>
+                    <th>Last Order Completed</th>
+                    <th>Availability</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -156,9 +156,9 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
                       <tr key={artisan.id}>
                         <td>{artisan.id}</td>
                         <td>{artisan.name}</td>
-                        <td style={{ color: getAvailabilityColor(artisan.availability) }}>{artisan.availability}</td>
-                        <td>{artisan.lastCompletedOrder}</td>
                         <td>{artisan.ongoingOrders}</td>
+                        <td>{artisan.lastCompletedOrder}</td>
+                        <td style={{ color: getAvailabilityColor(artisan.availability) }}>{artisan.availability}</td>
                         <td className="action-buttons">
                           <div className="dropdown">
                             <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
