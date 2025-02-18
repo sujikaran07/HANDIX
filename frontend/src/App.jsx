@@ -9,6 +9,7 @@ import AdminProducts from "./pages/admin/AdminProducts";
 import AdminInventory from "./pages/admin/AdminInventory"; 
 import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; 
 import AdminSettings from "./pages/admin/AdminSettings"; 
+import AdminLogout from "./pages/admin/AdminLogout"; 
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -38,6 +39,7 @@ function App() {
           <Route path="/admin/inventory" element={<AdminInventory />} /> 
           <Route path="/admin/assignorders" element={<AdminAssignOrder />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/logout" element={<AdminLogout />} /> 
         </Routes>
       </Router>
     </div>
