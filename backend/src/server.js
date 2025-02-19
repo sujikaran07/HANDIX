@@ -3,9 +3,9 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const routes = require("./routes/employeeLoginRoutes");
-const sequelize = require('./config/db');
-const Employee = require('./models/employeeModel');
-const bcrypt = require('bcrypt');
+const { connectToDatabase } = require('./config/db');
+const { setupAdminUser } = require('./models/employeeModel');
+const net = require('net');
 
 dotenv.config();
 
@@ -20,38 +20,41 @@ app.use(express.json());
 app.use("/api", routes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('Database connected successfully.');
 
-    // Sync the Employee model
-    await Employee.sync({ alter: true });
+const checkPort = (port) => {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        reject(new Error(`Port ${port} is already in use`));
+      } else {
+        reject(err);
+      }
+    });
+    server.once('listening', () => {
+      server.close();
+      resolve();
+    });
+    server.listen(port);
+  });
+};
 
-    // Check if the admin user exists, if not, create it
-    const adminEmail = 'admin@gmail.com';
-    const adminPassword = 'admin123';
-    const adminUser = await Employee.findOne({ where: { email: adminEmail } });
-    if (!adminUser) {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      await Employee.create({
-        firstName: 'Admin',
-        lastName: 'User',
-        email: adminEmail,
-        phoneNumber: '1234567890',
-        role: 'admin',
-        password: hashedPassword,
-      });
-      console.log('Admin user created.');
-    } else {
-      console.log('Admin user already exists.');
-    }
-
-    console.log(`Server is running on port ${PORT}`);
-  } catch (error) {
-    console.error('Unable to connect to the database:', error);
-  }
-});
+checkPort(PORT)
+  .then(() => {
+    app.listen(PORT, async () => {
+      try {
+        await connectToDatabase();
+        await setupAdminUser();
+        console.log(`Server is running on port ${PORT}`);
+      } catch (error) {
+        console.error('Error during server startup:', error);
+      }
+    });
+  })
+  .catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

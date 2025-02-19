@@ -1,7 +1,7 @@
 const pool = require("../config/db");
+const { Employee } = require('../models/employeeModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const Employee = require('../models/employeeModel'); 
 
 // Middleware
 const authMiddleware = (req, res, next) => {
@@ -34,22 +34,21 @@ const login = async (req, res) => {
   const { email, password } = req.body;
   console.log(`Login attempt with email: ${email}`);
   try {
-    const employee = await Employee.findOne({ where: { email } });
-    if (!employee) {
-      console.log('Invalid email');
+    const user = await Employee.findOne({ where: { email } });
+    if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    const isMatch = await bcrypt.compare(password, employee.password);
-    if (!isMatch) {
-      console.log('Invalid password');
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
-    const token = jwt.sign({ id: employee.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    console.log('Login successful');
+
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (error) {
-    console.error('Error logging in:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error(`Error logging in: ${error}`);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
 
