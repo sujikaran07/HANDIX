@@ -2,10 +2,10 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const employeeRoutes = require("./routes/employeeRoutes");
-const authRoutes = require('./routes/authRoutes');
-const pool = require("./config/db");
+const routes = require("./routes/employeeLoginRoutes");
 const sequelize = require('./config/db');
+const Employee = require('./models/employeeModel');
+const bcrypt = require('bcrypt');
 
 dotenv.config();
 
@@ -17,44 +17,36 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(express.json());
 
-app.use("/api", employeeRoutes);
-app.use('/login', authRoutes);
-
-app.get("/employees", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM employees");
-    res.status(200).json(result.rows);
-  } catch (err) {
-    console.error("Error fetching employees", err);
-    res.status(500).json({ message: "Error fetching employees" });
-  }
-});
-
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  
-  try {
-    const result = await sequelize.query("SELECT * FROM employees WHERE email = :email", {
-      replacements: { email },
-      type: sequelize.QueryTypes.SELECT
-    });
-    if (result.length > 0) {
-      const user = result[0];
-      res.status(200).json({ message: `Welcome, ${user.email}` });
-    } else {
-      res.status(400).json({ message: "Invalid credentials" });
-    }
-  } catch (error) {
-    console.error("Error logging in", error);
-    res.status(500).json({ message: "Error logging in" });
-  }
-});
+app.use("/api", routes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connected successfully.');
+
+    // Sync the Employee model
+    await Employee.sync({ alter: true });
+
+    // Check if the admin user exists, if not, create it
+    const adminEmail = 'admin@gmail.com';
+    const adminPassword = 'admin123';
+    const adminUser = await Employee.findOne({ where: { email: adminEmail } });
+    if (!adminUser) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      await Employee.create({
+        firstName: 'Admin',
+        lastName: 'User',
+        email: adminEmail,
+        phoneNumber: '1234567890',
+        role: 'admin',
+        password: hashedPassword,
+      });
+      console.log('Admin user created.');
+    } else {
+      console.log('Admin user already exists.');
+    }
+
     console.log(`Server is running on port ${PORT}`);
   } catch (error) {
     console.error('Unable to connect to the database:', error);
