@@ -14,7 +14,8 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
   const handleSave = () => {
     const updatedEmployee = {
       id: userId,
-      name: `${firstName} ${lastName}`,
+      firstName,
+      lastName,
       email,
       phone: phoneNumber,
       role: jobRole,

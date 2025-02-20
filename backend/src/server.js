@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const routes = require("./routes/employeeLoginRoutes");
 const { connectToDatabase } = require('./config/db');
-const { setupAdminUser } = require('./models/employeeModel');
+const { setupAdminUser, Employee } = require('./models/employeeModel');
 const net = require('net');
 
 dotenv.config();
@@ -44,6 +44,7 @@ checkPort(PORT)
     app.listen(PORT, async () => {
       try {
         await connectToDatabase();
+        await Employee.sync(); // Sync the model with the database without altering the schema
         await setupAdminUser();
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {

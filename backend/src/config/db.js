@@ -7,17 +7,16 @@ const DATABASE_URL = `postgres://${DB_USER}:${encodedPassword}@${DB_HOST}:${DB_P
 
 const sequelize = new Sequelize(DATABASE_URL, {
   dialect: 'postgres',
-  protocol: 'postgres',
-  logging: false,
+  logging: false
 });
 
 const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
-    console.log('Database connected successfully.');
+    console.log('PostgreSQL connected');
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
-    throw error;
+    console.error('Error connecting to PostgreSQL:', error);
+    process.exit(1);
   }
 };
 

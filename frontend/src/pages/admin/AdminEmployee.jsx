@@ -16,9 +16,14 @@ const AdminManageArtisanPage = () => {
     setShowAddEmployeeForm(false);
   };
 
-  const handleSave = (newEmployee) => {
-    // Implement save functionality here
-    setShowAddEmployeeForm(false);
+  const handleSave = async (newEmployee) => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/employees', newEmployee);
+      // Optionally, update the state with the new employee data
+      setShowAddEmployeeForm(false);
+    } catch (error) {
+      console.error('Error saving employee:', error);
+    }
   };
 
   return (
