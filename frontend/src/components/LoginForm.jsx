@@ -19,7 +19,9 @@ const LoginForm = () => {
     setEmailError(false);
     setPasswordError(false);
     try {
+      console.log('Sending login request:', { email, password });
       const response = await axios.post('http://localhost:5000/api/login', { email, password });
+      console.log('Login successful:', response.data);
       if (response.status === 200) {
         localStorage.setItem('token', response.data.token);
         navigate('/admin/dashboard');
@@ -34,6 +36,7 @@ const LoginForm = () => {
       setPasswordError(true);
       setEmail('');
       setPassword('');
+      console.error('Error during login:', error);
     }
   };
 

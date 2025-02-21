@@ -8,9 +8,8 @@ import AddEmployeeForm from './AddEmployeeForm';
 import EditEmployeeForm from './EditEmployeeForm';
 import axios from 'axios';
 
-const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
+const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [employees, setEmployees] = useState([]);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,26 +22,26 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
     const fetchEmployees = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/employees');
-        setEmployees(response.data);
+        console.log('Fetched employees:', response.data); // Log fetched data
+        setEmployees(response.data); // Update state with the employee data
       } catch (error) {
         console.error('Error fetching employees:', error);
       }
     };
-
     fetchEmployees();
   }, []);
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (eId) => {
     try {
-      await axios.delete(`http://localhost:5000/api/employees/${id}`);
-      setEmployees(employees.filter(req => req.id !== id));
+      await axios.delete(`http://localhost:5000/api/employees/${eId}`);
+      setEmployees(employees.filter(emp => emp.eId !== eId)); 
     } catch (error) {
       console.error('Error deleting employee:', error);
     }
   };
 
-  const handleEdit = (id) => {
-    const employee = employees.find(req => req.id === id);
+  const handleEdit = (eId) => {
+    const employee = employees.find(emp => emp.eId === eId);
     setSelectedEmployee(employee);
     setShowEditEmployeeForm(true);
   };
@@ -59,8 +58,8 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
   const handleSave = async (newEmployee) => {
     try {
       if (showEditEmployeeForm) {
-        const response = await axios.put(`http://localhost:5000/api/employees/${newEmployee.id}`, newEmployee);
-        setEmployees(employees.map(req => req.id === newEmployee.id ? response.data : req));
+        const response = await axios.put(`http://localhost:5000/api/employees/${newEmployee.eId}`, newEmployee);
+        setEmployees(employees.map(emp => emp.eId === newEmployee.eId ? response.data : emp));
       } else {
         const response = await axios.post('http://localhost:5000/api/employees', newEmployee);
         setEmployees([...employees, response.data]);
@@ -77,7 +76,7 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
       (filterRole === 'All' || employee.role === filterRole) &&
       (`${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       employee.phone.includes(searchTerm) ||
+       (employee.phone && employee.phone.includes(searchTerm)) ||
        employee.role.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
@@ -120,42 +119,6 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
               </div>
             </div>
 
-            <div className="manage-request-header d-flex justify-content-between align-items-center mb-3">
-              <h4 className="mb-0">Manage Employees</h4>
-              <div className="d-flex align-items-center">
-                <div className="search-bar me-2">
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-0">
-                      <FontAwesomeIcon icon={faSearch} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control border-0"
-                      placeholder="Search keyword"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="filter-dropdown">
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-0">
-                      <FontAwesomeIcon icon={faFilter} />
-                    </span>
-                    <select
-                      className="form-select border-0"
-                      value={filterRole}
-                      onChange={(e) => setFilterRole(e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      <option value="Admin">Admin</option>
-                      <option value="Artisan">Artisan</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
               <table className="table table-bordered table-striped artisan-table">
                 <thead>
@@ -171,15 +134,15 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
                 <tbody>
                   {currentEmployees.length > 0 ? (
                     currentEmployees.map(employee => (
-                      <tr key={employee.id}>
+                      <tr key={employee.eId}>
                         <td>{employee.eId}</td>
                         <td>{`${employee.firstName} ${employee.lastName}`}</td>
                         <td>{employee.email}</td>
-                        <td>{employee.phone}</td>
+                        <td>{employee.phone || 'N/A'}</td>
                         <td>{employee.role}</td>
                         <td className="action-buttons">
-                          <button className="edit-btn" onClick={() => handleEdit(employee.id)}>Edit</button>
-                          <button className="delete-btn" onClick={() => handleDelete(employee.id)}>Delete</button>
+                          <button className="edit-btn" onClick={() => handleEdit(employee.eId)}>Edit</button>
+                          <button className="delete-btn" onClick={() => handleDelete(employee.eId)}>Delete</button>
                         </td>
                       </tr>
                     ))
@@ -200,4 +163,4 @@ const ManageLeaveRequests = ({ onAddEmployeeClick }) => {
   );
 };
 
-export default ManageLeaveRequests;
+export default ManageEmployee;

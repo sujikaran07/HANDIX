@@ -1,5 +1,5 @@
-const pool = require("../config/db");
-const { Employee } = require('../models/employeeModel');
+const pool = require("../../config/db");
+const { Employee } = require('../../models/employeeModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const dotenv = require('dotenv');
@@ -32,8 +32,8 @@ const authMiddleware = (req, res, next) => {
 // Controllers
 const getEmployees = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM employees");
-    res.status(200).json(result.rows);
+    const result = await Employee.findAll();
+    res.status(200).json(result);
   } catch (err) {
     console.error("Error fetching employees", err);
     res.status(500).json({ message: "Error fetching employees" });
@@ -46,15 +46,18 @@ const login = async (req, res) => {
   try {
     const user = await Employee.findOne({ where: { email } });
     if (!user) {
+      console.log('User not found');
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log('Invalid password');
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.eId, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log('Login successful, token generated');
     res.json({ token });
   } catch (error) {
     console.error(`Error logging in: ${error}`);
