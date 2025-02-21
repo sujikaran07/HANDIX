@@ -26,6 +26,7 @@ const AdminManageEmployeePage = () => {
       // Optionally handle response (like adding it to the list of employees in state)
       console.log('Employee saved:', response.data);
       setShowAddEmployeeForm(false);
+      window.location.reload(); // Refresh the page to show the latest data
     } catch (error) {
       console.error('Error saving employee:', error);
     }

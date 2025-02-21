@@ -1,44 +1,77 @@
-import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '.././styles/admin/AdminEmployee.css'; 
+import '.././styles/admin/AdminEmployee.css';
 
 const AddEmployeeForm = ({ onSave, onCancel }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [jobRole, setJobRole] = useState('Artisan');
-  const [userId, setUserId] = useState(uuidv4());
+  const [userId, setUserId] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState(uuidv4().slice(0, 8));
+  const [password, setPassword] = useState('');
+  const [existingEIds, setExistingEIds] = useState([]);
 
-  const handleSave = () => {
+  useEffect(() => {
+    const fetchExistingEIds = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/employees/eids');
+        setExistingEIds(response.data);
+        generateUniqueEId(response.data);
+      } catch (error) {
+        console.error('Error fetching existing E-IDs:', error);
+      }
+    };
+    fetchExistingEIds();
+  }, []);
+
+  const generateUniqueEId = (existingEIds) => {
+    let newEId;
+    let counter = existingEIds.length + 1;
+    do {
+      newEId = `E${String(counter).padStart(3, '0')}`;
+      counter++;
+    } while (existingEIds.includes(newEId));
+    setUserId(newEId);
+  };
+
+  const generatePassword = () => {
+    const newPassword = Math.random().toString(36).slice(-8);
+    setPassword(newPassword);
+  };
+
+  const handleSave = async () => {
     const newEmployee = {
-      id: userId,
-      name: `${firstName} ${lastName}`,
+      eId: userId, // Ensure this maps to eId in the database
+      firstName,
+      lastName,
       email,
       phone: phoneNumber,
       role: jobRole,
       password,
     };
-    onSave(newEmployee);
-    resetForm();
-  };
-
-  const handleSaveAndAddAnother = () => {
-    handleSave();
-    resetForm();
+    try {
+      await onSave(newEmployee);
+      resetForm();
+    } catch (error) {
+      console.error('Error saving employee:', error);
+    }
   };
 
   const resetForm = () => {
     setFirstName('');
     setLastName('');
     setJobRole('Artisan');
-    setUserId(uuidv4());
+    generateUniqueEId(existingEIds);
+    generatePassword();
     setEmail('');
     setPhoneNumber('');
-    setPassword(uuidv4().slice(0, 8));
   };
+
+  useEffect(() => {
+    generatePassword();
+  }, []);
 
   return (
     <div className="add-employee-form">
@@ -80,7 +113,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
             </select>
           </div>
           <div className="col-md-6">
-            <label htmlFor="userId" className="form-label">User ID</label>
+            <label htmlFor="userId" className="form-label">E-ID</label>
             <input
               type="text"
               className="form-control"
@@ -127,7 +160,6 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
         <div className="d-flex justify-content-between">
           <div>
             <button type="button" className="btn btn-success me-2" onClick={handleSave}>Save</button>
-            <button type="button" className="btn btn-primary" style={{ backgroundColor: '#3e87c3', color: '#ffffff' }} onClick={handleSaveAndAddAnother}>Save & Add Another</button>
           </div>
           <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
         </div>

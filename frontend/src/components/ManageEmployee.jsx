@@ -119,6 +119,44 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
               </div>
             </div>
 
+            <div className="manage-request-header d-flex justify-content-between align-items-center mb-3">
+              <h4 className="mb-0">Manage Employees</h4>
+              <div className="d-flex align-items-center">
+                <div className="search-bar me-2">
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-0">
+                      <FontAwesomeIcon icon={faSearch} />
+                    </span>
+                    <input
+                      type="text"
+                      className="form-control border-0"
+                      placeholder="Search keyword"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="filter-dropdown">
+                  <div className="input-group">
+                    <span className="input-group-text bg-light border-0">
+                      <FontAwesomeIcon icon={faFilter} />
+                    </span>
+                    <select
+                      className="form-select border-0"
+                      value={filterRole}
+                      onChange={(e) => setFilterRole(e.target.value)}
+                    >
+                      <option value="All">All</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Developer">Developer</option>
+                      <option value="Designer">Designer</option>
+                      <option value="QA">QA</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
               <table className="table table-bordered table-striped artisan-table">
                 <thead>

@@ -1,4 +1,3 @@
-// filepath: /d:/SDP/HANDIX/backend/src/server.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
@@ -6,7 +5,7 @@ const cors = require("cors");
 const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");  
 const employeeRoutes = require("./routes/employees/employeeRoutes");  
 const { connectToDatabase } = require('./config/db');
-const { setupAdminUser, Employee } = require('./models/employeeModel');
+const { Employee } = require('./models/employeeModel');
 const net = require('net');
 
 dotenv.config();
@@ -48,7 +47,6 @@ checkPort(PORT)
       try {
         await connectToDatabase();
         await Employee.sync(); 
-        await setupAdminUser();  
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {
         console.error('Error during server startup:', error);

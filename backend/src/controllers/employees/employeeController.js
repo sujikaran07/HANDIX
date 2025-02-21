@@ -34,10 +34,20 @@ const getEmployees = async (req, res) => {
   }
 };
 
+const getEmployeeEIds = async (req, res) => {
+  try {
+    const employees = await Employee.findAll({ attributes: ['eId'] });
+    const eIds = employees.map(employee => employee.eId);
+    res.status(200).json(eIds);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching employee E-IDs' });
+  }
+};
+
 const addEmployee = async (req, res) => {
   try {
     const newEmployee = await Employee.create(req.body);
-    res.status(201).json(newEmployee);
+    res.status(201).json({ newEmployee, eId: newEmployee.eId });
   } catch (error) {
     res.status(500).json({ message: 'Error adding employee' });
   }
@@ -74,6 +84,7 @@ const deleteEmployee = async (req, res) => {
 
 module.exports = {
   getEmployees,
+  getEmployeeEIds,
   addEmployee,
   updateEmployee,
   deleteEmployee,
