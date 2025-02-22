@@ -6,7 +6,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
   const [firstName, setFirstName] = useState(employee.firstName);
   const [lastName, setLastName] = useState(employee.lastName);
   const [jobRole, setJobRole] = useState(employee.role);
-  const [userId, setUserId] = useState(employee.id);
+  const [userId, setUserId] = useState(employee.eId); 
   const [email, setEmail] = useState(employee.email);
   const [phoneNumber, setPhoneNumber] = useState(employee.phone);
   const [password, setPassword] = useState(employee.password);
@@ -104,7 +104,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
               className="form-control"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              readOnly 
             />
           </div>
         </div>
