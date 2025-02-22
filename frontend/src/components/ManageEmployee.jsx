@@ -73,11 +73,11 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
   const filteredEmployees = employees.filter(employee => {
     return (
-      (filterRole === 'All' || employee.role === filterRole) &&
+      (filterRole === 'All' || employee.role.toLowerCase() === filterRole.toLowerCase()) && // Ensure case-insensitive comparison
       (`${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
        (employee.phone && employee.phone.includes(searchTerm)) ||
-       employee.role.toLowerCase().includes(searchTerm.toLowerCase()))
+       employee.eId.toString().includes(searchTerm))
     );
   });
 
@@ -147,10 +147,8 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                       onChange={(e) => setFilterRole(e.target.value)}
                     >
                       <option value="All">All</option>
-                      <option value="Manager">Manager</option>
-                      <option value="Developer">Developer</option>
-                      <option value="Designer">Designer</option>
-                      <option value="QA">QA</option>
+                      <option value="Admin">Admin</option> {/* Corrected value */}
+                      <option value="Artisan">Artisan</option> {/* Corrected value */}
                     </select>
                   </div>
                 </div>
