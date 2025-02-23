@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminCustomer.css';
+import axios from 'axios';
 
 const EditCustomerForm = ({ onSave, onCancel, customer }) => {
   const [firstName, setFirstName] = useState('');
@@ -15,9 +16,9 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
 
   useEffect(() => {
     if (customer) {
-      setFirstName(customer.name.split(' ')[0]);
-      setLastName(customer.name.split(' ')[1]);
-      setUserId(customer.id);
+      setFirstName(customer.firstName);
+      setLastName(customer.lastName);
+      setUserId(customer.c_id);
       setEmail(customer.email);
       setPhoneNumber(customer.phone);
       setCountry(customer.country);
@@ -27,10 +28,11 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
     }
   }, [customer]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedCustomer = {
-      id: userId,
-      name: `${firstName} ${lastName}`,
+      c_id: userId,
+      firstName,
+      lastName,
       email,
       phone: phoneNumber,
       country,
@@ -38,7 +40,13 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
       password,
       registrationDate,
     };
-    onSave(updatedCustomer);
+    try {
+      await axios.put(`http://localhost:5000/api/customers/${userId}`, updatedCustomer);
+      onSave(updatedCustomer); // Call the onSave function passed as a prop
+      onCancel();  // Navigate back to customer list after update
+    } catch (error) {
+      console.error('Error updating customer:', error);
+    }
   };
 
   return (
@@ -129,7 +137,7 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
               className="form-control"
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              readOnly 
             />
           </div>
           <div className="col-md-4">

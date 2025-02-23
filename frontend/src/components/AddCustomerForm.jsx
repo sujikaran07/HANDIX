@@ -2,42 +2,52 @@ import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminCustomer.css';
+import axios from 'axios';
 
-const AddCustomerForm = ({ onSave, onCancel }) => {
+const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [userId, setUserId] = useState(uuidv4());
+  const [cId, setCId] = useState(selectedCustomer ? selectedCustomer.c_id : '');
   const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');  
   const [country, setCountry] = useState('Sri Lanka');
   const [accountType, setAccountType] = useState('Retail');
   const [password, setPassword] = useState(uuidv4().slice(0, 8));
   const [registrationDate, setRegistrationDate] = useState(new Date().toLocaleDateString());
+  const [error, setError] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newCustomer = {
-      id: userId,
-      name: `${firstName} ${lastName}`,
+      c_id: cId,
+      firstName, 
+      lastName,  
       email,
-      phone: phoneNumber,
+      phone: phoneNumber,  
       country,
       accountType,
       password,
       registrationDate,
+      accountStatus: accountType === 'Retail' ? 'Approved' : 'Pending', 
     };
-    onSave(newCustomer);
-    resetForm();
-  };
-
-  const handleSaveAndAddAnother = () => {
-    handleSave();
-    resetForm();
+    try {
+      console.log('Saving customer with data:', newCustomer); 
+      await axios.post('http://localhost:5000/api/customers', newCustomer);
+      onSave(newCustomer); // Call onSave to handle navigation
+      onCancel(); // Navigate back to the customer page
+    } catch (error) {
+      console.error('Error saving customer:', error);
+      if (error.response && error.response.data.message === 'Email already exists') {
+        setError('Email already exists. Please use a different email.');
+      } else {
+        setError('Error saving customer. Please try again.');
+      }
+    }
   };
 
   const resetForm = () => {
     setFirstName('');
     setLastName('');
-    setUserId(uuidv4());
+    setCId(uuidv4());
     setEmail('');
     setPhoneNumber('');
     setCountry('Sri Lanka');
@@ -49,6 +59,7 @@ const AddCustomerForm = ({ onSave, onCancel }) => {
   return (
     <>
       <h4 className="mb-4">Add New Customer</h4>
+      {error && <div className="alert alert-danger">{error}</div>}
       <form>
         <div className="row mb-3 form-group">
           <div className="col-md-4">
@@ -72,12 +83,12 @@ const AddCustomerForm = ({ onSave, onCancel }) => {
             />
           </div>
           <div className="col-md-4">
-            <label htmlFor="userId" className="form-label">User ID</label>
+            <label htmlFor="cId" className="form-label">C-ID</label>
             <input
               type="text"
               className="form-control"
-              id="userId"
-              value={userId}
+              id="cId"
+              value={cId}
               readOnly
             />
           </div>
@@ -151,7 +162,6 @@ const AddCustomerForm = ({ onSave, onCancel }) => {
         <div className="d-flex justify-content-between mt-3 button-group">
           <div>
             <button type="button" className="btn btn-success me-2" onClick={handleSave}>Save</button>
-            <button type="button" className="btn btn-primary" onClick={handleSaveAndAddAnother}>Save & Add Another</button>
           </div>
           <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>
         </div>

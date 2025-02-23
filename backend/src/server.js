@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");  
 const employeeRoutes = require("./routes/employees/employeeRoutes");  
+const customerRoutes = require('./routes/customers/customerRoutes'); // Add this line
 const { connectToDatabase } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
 const net = require('net');
@@ -20,6 +21,7 @@ app.use(express.json());
 
 app.use("/api/login", employeeLoginRoutes);  
 app.use("/api/employees", employeeRoutes);  
+app.use("/api/customers", customerRoutes); 
 
 const PORT = process.env.PORT || 5000;
 

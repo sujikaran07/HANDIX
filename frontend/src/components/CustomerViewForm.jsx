@@ -10,7 +10,7 @@ const CustomerViewForm = ({ customer, onBack }) => {
       <h4 className="mb-4">Customer Details</h4>
       <div className="row mb-3 form-group">
         <div className="col-md-4">
-          <label className="form-label font-weight-bold">User ID</label>
+          <label className="form-label font-weight-bold">C-ID</label>
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.id)}</p>
         </div>
         <div className="col-md-4">

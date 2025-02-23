@@ -8,47 +8,22 @@ import Pagination from './Pagination';
 import AddCustomerForm from './AddCustomerForm';
 import EditCustomerForm from './EditCustomerForm';
 import CustomerViewForm from './CustomerViewForm';
+import axios from 'axios';
 
-const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, onCancelAddCustomer, onSaveCustomer, onSaveAndAddAnotherCustomer }) => {
-  const [customers, setCustomers] = useState([
-    { id: 'C001', name: 'John Doe', email: 'john@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C002', name: 'Jane Smith', email: 'jane@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C003', name: 'Alice Johnson', email: 'alice@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C004', name: 'Bob Brown', email: 'bob@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C005', name: 'Charlie Davis', email: 'charlie@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C006', name: 'Diana Evans', email: 'diana@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
-    { id: 'C007', name: 'Eve Foster', email: 'eve@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C008', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C009', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C010', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C011', name: 'Ivy Jackson', email: 'ivy@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C012', name: 'Jack King', email: 'jack@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
-    { id: 'C013', name: 'Karen Lee', email: 'karen@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C014', name: 'Leo Martin', email: 'leo@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C015', name: 'Mona Nelson', email: 'mona@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C016', name: 'Nina Owens', email: 'nina@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C017', name: 'Oscar Perez', email: 'oscar@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C018', name: 'Paul Quinn', email: 'paul@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
-    { id: 'C019', name: 'Quincy Roberts', email: 'quincy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C020', name: 'Rachel Scott', email: 'rachel@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C021', name: 'Sam Taylor', email: 'sam@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C022', name: 'Tina Underwood', email: 'tina@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C023', name: 'Uma Vincent', email: 'uma@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C024', name: 'Victor White', email: 'victor@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
-    { id: 'C025', name: 'Wendy Xander', email: 'wendy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C026', name: 'Xander Young', email: 'xander@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C027', name: 'Yara Zane', email: 'yara@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C028', name: 'Zack Allen', email: 'zack@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C029', name: 'Amy Baker', email: 'amy@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C030', name: 'Brian Clark', email: 'brian@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' },
-    { id: 'C031', name: 'Cathy Davis', email: 'cathy@example.com', accountType: 'Retail', status: 'Active', country: 'USA' },
-    { id: 'C032', name: 'David Evans', email: 'david@example.com', accountType: 'Wholesale', status: 'Pending', country: 'Canada' },
-    { id: 'C033', name: 'Ella Foster', email: 'ella@example.com', accountType: 'Retail', status: 'Rejected', country: 'USA' },
-    { id: 'C034', name: 'Frank Green', email: 'frank@example.com', accountType: 'Wholesale', status: 'Active', country: 'Canada' },
-    { id: 'C035', name: 'Grace Harris', email: 'grace@example.com', accountType: 'Retail', status: 'Pending', country: 'USA' },
-    { id: 'C036', name: 'Hank Irving', email: 'hank@example.com', accountType: 'Wholesale', status: 'Rejected', country: 'Canada' }
-  ]);
-
+const ManageCustomer = ({
+  customers,
+  onViewCustomer,
+  onAddCustomer,
+  showAddCustomerForm,
+  onCancelAddCustomer,
+  onSaveCustomer,
+  onSaveAndAddAnotherCustomer,
+  onEditCustomer,
+  selectedCustomer,
+  onApproveCustomer, // Receive the approve function
+  onRejectCustomer, // Receive the reject function
+  onDeleteCustomer // Receive the delete function
+}) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,16 +31,18 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const customersPerPage = 4;
 
+  console.log('Customers passed to ManageCustomer:', customers);
+
   const handleDelete = (id) => {
-    setCustomers(customers.filter(customer => customer.id !== id));
+    onDeleteCustomer(id); // Call the passed delete function
   };
 
   const handleApprove = (id) => {
-    setCustomers(customers.map(customer => customer.id === id ? { ...customer, status: 'Active' } : customer));
+    onApproveCustomer(id); // Call the passed approve function
   };
 
   const handleReject = (id) => {
-    setCustomers(customers.map(customer => customer.id === id ? { ...customer, status: 'Rejected' } : customer));
+    onRejectCustomer(id); // Call the passed reject function
   };
 
   const handleEdit = (customer) => {
@@ -77,7 +54,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
   };
 
   const handleSaveEdit = (updatedCustomer) => {
-    setCustomers(customers.map(customer => customer.id === updatedCustomer.id ? updatedCustomer : customer));
+    onEditCustomer(updatedCustomer);
     setEditingCustomer(null);
   };
 
@@ -89,12 +66,12 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
     setViewingCustomer(null);
   };
 
-  const filteredCustomers = customers.filter(customer => {
+  const filteredCustomers = customers.filter((customer) => {
     return (
-      (filterStatus === 'All' || customer.status === filterStatus) &&
-      (customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       customer.accountType.toLowerCase().includes(searchTerm.toLowerCase()))
+      (filterStatus === 'All' || customer.accountStatus === filterStatus) &&
+      (customer.c_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${customer.firstName} ${customer.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.email.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -111,7 +88,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
         {showAddCustomerForm ? (
-          <AddCustomerForm onSave={onSaveCustomer} onSaveAndAddAnother={onSaveAndAddAnotherCustomer} onCancel={onCancelAddCustomer} />
+          <AddCustomerForm onSave={onSaveCustomer} onSaveAndAddAnother={onSaveAndAddAnotherCustomer} onCancel={onCancelAddCustomer} selectedCustomer={selectedCustomer} />
         ) : editingCustomer ? (
           <EditCustomerForm customer={editingCustomer} onSave={handleSaveEdit} onCancel={handleCancelEdit} />
         ) : viewingCustomer ? (
@@ -166,7 +143,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
                       onChange={(e) => setFilterStatus(e.target.value)}
                     >
                       <option value="All">All</option>
-                      <option value="Active">Active</option>
+                      <option value="Approved">Approved</option>
                       <option value="Pending">Pending</option>
                       <option value="Rejected">Rejected</option>
                     </select>
@@ -189,29 +166,33 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
                 </thead>
                 <tbody>
                   {currentCustomers.length > 0 ? (
-                    currentCustomers.map(customer => (
-                      <tr key={customer.id}>
-                        <td>{customer.id}</td>
-                        <td>{customer.name}</td>
+                    currentCustomers.map((customer) => (
+                      <tr key={customer.c_id}>
+                        <td>{customer.c_id}</td>
+                        <td>{`${customer.firstName} ${customer.lastName}`}</td>
                         <td>{customer.email}</td>
                         <td>{customer.accountType}</td>
-                        <td className={`status ${customer.status.toLowerCase()}`}>{customer.status}</td>
+                        <td className={`status ${customer.accountStatus.toLowerCase()}`}>{customer.accountStatus}</td>
                         <td className="action-buttons">
                           <div className="dropdown">
                             <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                               Actions
                             </button>
                             <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              <li>
-                                <button className="dropdown-item" onClick={() => handleApprove(customer.id)}>
-                                  Approve
-                                </button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item" onClick={() => handleReject(customer.id)}>
-                                  Reject
-                                </button>
-                              </li>
+                              {customer.accountType !== 'Retail' && (
+                                <>
+                                  <li>
+                                    <button className="dropdown-item" onClick={() => handleApprove(customer.c_id)}>
+                                      Approve
+                                    </button>
+                                  </li>
+                                  <li>
+                                    <button className="dropdown-item" onClick={() => handleReject(customer.c_id)}>
+                                      Reject
+                                    </button>
+                                  </li>
+                                </>
+                              )}
                               <li>
                                 <button className="dropdown-item" onClick={() => handleViewCustomer(customer)}>
                                   View
@@ -223,7 +204,7 @@ const ManageCustomer = ({ onViewCustomer, onAddCustomer, showAddCustomerForm, on
                                 </button>
                               </li>
                               <li>
-                                <button className="dropdown-item" onClick={() => handleDelete(customer.id)}>
+                                <button className="dropdown-item" onClick={() => handleDelete(customer.c_id)}>
                                   Delete
                                 </button>
                               </li>
