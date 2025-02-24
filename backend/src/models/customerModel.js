@@ -7,7 +7,7 @@ const Customer = sequelize.define('Customer', {
     type: DataTypes.STRING,
     primaryKey: true,
     allowNull: false,
-    unique: true, // Ensure c_id is unique
+    unique: true, 
   },
   firstName: {
     type: DataTypes.STRING,

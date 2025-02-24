@@ -4,7 +4,7 @@ const { Customer } = require('../../models/customerModel');
 const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.findAll({
-      order: [['c_id', 'ASC']] // Order by C_ID in ascending order
+      order: [['c_id', 'ASC']] 
     });
     res.json(customers);  
   } catch (error) {
@@ -31,7 +31,7 @@ const getCustomerById = async (req, res) => {
 
 const createCustomer = async (req, res) => {
   try {
-    console.log('Creating customer with data:', req.body); // Log the incoming request data
+    console.log('Creating customer with data:', req.body); 
     if (req.body.accountType === 'Retail') {
       req.body.accountStatus = 'Approved';
     }
