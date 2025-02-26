@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaCommentDots, FaStar } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import '../../styles/artisan/ArtisanDashboard.css';
 import logo from '../../assets/logo1.png'; 
@@ -29,7 +29,7 @@ const ArtisanSidebar = () => {
           </li>
           <li className={activeLink === '/artisan/products' ? 'artisan-active' : ''}>
             <Link to="/artisan/products" onClick={() => handleLinkClick('/artisan/products')}>
-              <FaBox /> Products
+              <FaBox /> Products Update
             </Link>
           </li>
           <li className={activeLink === '/artisan/assignorders' ? 'artisan-active' : ''}>
@@ -45,6 +45,16 @@ const ArtisanSidebar = () => {
           <li className={activeLink === '/artisan/notification' ? 'artisan-active' : ''}>
             <Link to="/artisan/notification" onClick={() => handleLinkClick('/artisan/notification')}>
               <FaComments /> Notification
+            </Link>
+          </li>
+          <li className={activeLink === '/artisan/chat' ? 'artisan-active' : ''}>
+            <Link to="/artisan/chat" onClick={() => handleLinkClick('/artisan/chat')}>
+              <FaCommentDots /> Chat
+            </Link>
+          </li>
+          <li className={activeLink === '/artisan/reviews' ? 'artisan-active' : ''}>
+            <Link to="/artisan/reviews" onClick={() => handleLinkClick('/artisan/reviews')}>
+              <FaStar /> Reviews
             </Link>
           </li>
           <li className={activeLink === '/artisan/settings' ? 'artisan-active' : ''}>

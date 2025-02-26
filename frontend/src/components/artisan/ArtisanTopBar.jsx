@@ -15,7 +15,7 @@ const ArtisanTopBar = () => {
       <div className="artisan-info">
         <div className="user-profile">
           <FaUserCircle style={{ fontSize: '25px', color: '#3e87c3' }} />
-          <span>ARTISAN NAME</span>
+          <span>SUJIKARAN </span>
         </div>
       </div>
     </div>

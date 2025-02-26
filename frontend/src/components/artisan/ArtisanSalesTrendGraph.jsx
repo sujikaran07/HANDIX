@@ -27,7 +27,7 @@ const ArtisanSalesTrendGraph = () => {
       y: {
         beginAtZero: true,
         title: {
-          display: true,
+          display: false,
           text: 'Products Made',
         },
       },
