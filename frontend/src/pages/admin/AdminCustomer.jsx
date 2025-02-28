@@ -64,7 +64,7 @@ const AdminCustomerPage = () => {
       await axios.post('http://localhost:5000/api/customers', newCustomer);
       fetchCustomers();
       setShowAddCustomerForm(false);
-      setSelectedCustomer(null); // Reset selected customer
+      setSelectedCustomer(null); 
     } catch (error) {
       console.error('Error saving customer:', error);
     }
@@ -134,7 +134,7 @@ const AdminCustomerPage = () => {
         <AdminTopbar />
         {showCustomerDetails ? (
           <div>
-            {/* Render customer details here */}
+            
             <button onClick={handleBackToList}>Back to List</button>
           </div>
         ) : showEditCustomerForm ? (
@@ -153,10 +153,10 @@ const AdminCustomerPage = () => {
             onSaveCustomer={handleSaveCustomer}
             onSaveAndAddAnotherCustomer={handleSaveAndAddAnotherCustomer}
             onEditCustomer={handleEditCustomer}
-            selectedCustomer={selectedCustomer} // Pass selectedCustomer to ManageCustomer
-            onApproveCustomer={handleApproveCustomer} // Pass approve function
-            onRejectCustomer={handleRejectCustomer} // Pass reject function
-            onDeleteCustomer={handleDeleteCustomer} // Pass delete function
+            selectedCustomer={selectedCustomer} 
+            onApproveCustomer={handleApproveCustomer} 
+            onRejectCustomer={handleRejectCustomer} 
+            onDeleteCustomer={handleDeleteCustomer} 
           />
         )}
       </div>

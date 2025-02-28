@@ -18,7 +18,6 @@ const AdminManageOrderPage = () => {
   };
 
   const handleSave = (newOrder) => {
-    // Implement save functionality here
     setShowAddOrderForm(false);
   };
 

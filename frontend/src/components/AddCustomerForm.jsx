@@ -32,8 +32,8 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
     try {
       console.log('Saving customer with data:', newCustomer); 
       await axios.post('http://localhost:5000/api/customers', newCustomer);
-      onSave(newCustomer); // Call onSave to handle navigation
-      onCancel(); // Navigate back to the customer page
+      onSave(newCustomer); 
+      onCancel(); 
     } catch (error) {
       console.error('Error saving customer:', error);
       if (error.response && error.response.data.message === 'Email already exists') {

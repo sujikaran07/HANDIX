@@ -147,8 +147,8 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                       onChange={(e) => setFilterRole(e.target.value)}
                     >
                       <option value="All">All</option>
-                      <option value="Admin">Admin</option> {/* Corrected value */}
-                      <option value="Artisan">Artisan</option> {/* Corrected value */}
+                      <option value="Admin">Admin</option>
+                      <option value="Artisan">Artisan</option> 
                     </select>
                   </div>
                 </div>

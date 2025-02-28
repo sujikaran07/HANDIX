@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Middleware
+
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -29,7 +29,7 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Controllers
+
 const getEmployees = async (req, res) => {
   try {
     const result = await Employee.findAll();

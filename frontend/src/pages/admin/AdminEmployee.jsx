@@ -19,14 +19,12 @@ const AdminManageEmployeePage = () => {
 
   const handleSave = async (newEmployee) => {
     try {
-      // Add full name to the new employee object
+      
       newEmployee.fullName = `${newEmployee.firstName} ${newEmployee.lastName}`;
-      // Post data to your backend
       const response = await axios.post('http://localhost:5000/api/employees', newEmployee);
-      // Optionally handle response (like adding it to the list of employees in state)
       console.log('Employee saved:', response.data);
       setShowAddEmployeeForm(false);
-      window.location.reload(); // Refresh the page to show the latest data
+      window.location.reload(); 
     } catch (error) {
       console.error('Error saving employee:', error);
     }

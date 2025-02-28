@@ -442,18 +442,18 @@ body {
 }
 
 .add-customer-form .d-flex {
-    margin-top: 30px; /* Increase the gap between the buttons and the form */
+    margin-top: 30px; 
 }
 
 .add-customer-form .button-group {
-    margin-top: 30px; /* Increase the gap between the form and the buttons */
+    margin-top: 30px; 
 }
 
 .add-customer-form .form-group {
-    margin-bottom: 20px; /* Add vertical gap between input fields */
+    margin-bottom: 20px; 
 }
 
-/* Dropdown button with rounded corners */
+
 .btn.dropdown-toggle {
     background-color: #ffffff;
     border: 1px solid #ced4da;
@@ -466,13 +466,13 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Button hover effect */
+
 .btn.dropdown-toggle:hover {
     background-color: #f8f9fa;
-    color: #495057; /* Neutral color */
+    color: #495057; 
 }
 
-/* Dropdown menu with rounded corners */
+
 .dropdown-menu {
     min-width: 100px;
     padding: 0px 10px;
@@ -481,33 +481,33 @@ body {
     transition: all 0.3s ease;
 }
 
-/* Menu item styles */
+
 .dropdown-item {
     font-size: 14px;
     padding: 5px 15px;
-    color: #495057; /* Neutral color */
+    color: #495057; 
     text-align: left;
     transition: all 0.3s ease;
     border-radius: 8px;
 }
 
-/* Item hover effect */
+
 .dropdown-item:hover {
     background-color: #f0f0f0;
     color: #165bcb; 
 }
 
-/* Status colors without glow effects */
+
 .status.active {
-    color: #28a745 !important; /* Green for active */
+    color: #28a745 !important; 
 }
 
 .status.pending {
-    color: #ffc107 !important; /* Yellow for pending */
+    color: #ffc107 !important; 
 }
 
 .status.rejected {
-    color: #dc3545 !important; /* Red for rejected */
+    color: #dc3545 !important;
 }
 
 .add-customer-form-container {
@@ -589,7 +589,7 @@ body {
     color: #ffffff;
 }
 
-/* Unique pagination styles */
+
 .admin-customer-page .pagination {
     display: flex;
     justify-content: center;

@@ -157,15 +157,15 @@ body {
 }
 
 .stock-status.in-stock {
-    color: #28a745 !important; /* Green for in stock */
+    color: #28a745 !important; 
 }
 
 .stock-status.low-stock {
-    color: #ffc107 !important; /* Yellow for low stock */
+    color: #ffc107 !important; 
 }
 
 .stock-status.out-of-stock {
-    color: #dc3545 !important; /* Red for out of stock */
+    color: #dc3545 !important; 
 }
 
 .icon-and-title {
@@ -253,7 +253,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-size: 14px;
-    color: #3e87c3; /* Apply blue color to pagination text */
+    color: #3e87c3; 
 }
 
 .inventory-pagination .page-item .page-link:hover {

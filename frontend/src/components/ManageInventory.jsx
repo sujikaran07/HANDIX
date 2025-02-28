@@ -14,7 +14,7 @@ const ManageInventory = ({ onViewInventory }) => {
     { id: 'P003', name: 'Handloom Sarong', category: 'Clothing', quantity: 20, status: 'Out of Stock', lastUpdated: '2023-10-03' },
     { id: 'P004', name: 'Coconut Craft', category: 'Crafts', quantity: 40, status: 'In Stock', lastUpdated: '2023-10-04' },
     { id: 'P005', name: 'Hand-Painted Mask', category: 'Artistry', quantity: 10, status: 'Low Stock', lastUpdated: '2023-10-05' },
-    // ...more inventory items
+    
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');

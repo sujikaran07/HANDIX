@@ -42,8 +42,8 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
     };
     try {
       await axios.put(`http://localhost:5000/api/customers/${userId}`, updatedCustomer);
-      onSave(updatedCustomer); // Call the onSave function passed as a prop
-      onCancel();  // Navigate back to customer list after update
+      onSave(updatedCustomer); 
+      onCancel();  
     } catch (error) {
       console.error('Error updating customer:', error);
     }

@@ -1,4 +1,4 @@
-/* Apply Poppins font family */
+
 body {
     font-family: "Poppins", sans-serif;
 }
@@ -53,15 +53,15 @@ body {
 }
 
 .admin-order-page .filter-dropdown .form-select {
-    height: 30px; /* Reduced height */
-    padding: 0 10px; /* Adjust padding */
+    height: 30px; 
+    padding: 0 10px; 
 }
 
 .admin-order-page .order-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 10px;
-    margin-top: -15px; /* Reduced margin-top */
+    margin-top: -15px; 
 }
 
 .admin-order-page .order-table th,
@@ -157,27 +157,27 @@ body {
 }
 
 .status.pending {
-    color: #ffc107 !important; /* Yellow for pending */
+    color: #ffc107 !important; 
 }
 
 .status.processing {
-    color: #17a2b8 !important; /* Blue for processing */
+    color: #17a2b8 !important; 
 }
 
 .status.review {
-    color: #6f42c1 !important; /* Purple for review */
+    color: #6f42c1 !important;
 }
 
 .status.shipped {
-    color: #007bff !important; /* Blue for shipped */
+    color: #007bff !important; 
 }
 
 .status.delivered {
-    color: #28a745 !important; /* Green for delivered */
+    color: #28a745 !important; 
 }
 
 .status.canceled {
-    color: #dc3545 !important; /* Red for canceled */
+    color: #dc3545 !important; 
 }
 
 .icon-and-title {
@@ -265,7 +265,7 @@ body {
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-size: 14px;
-    color: #3e87c3; /* Apply blue color to pagination text */
+    color: #3e87c3; 
 }
 
 .order-pagination .page-item .page-link:hover {

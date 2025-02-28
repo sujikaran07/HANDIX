@@ -20,9 +20,9 @@ const ManageCustomer = ({
   onSaveAndAddAnotherCustomer,
   onEditCustomer,
   selectedCustomer,
-  onApproveCustomer, // Receive the approve function
-  onRejectCustomer, // Receive the reject function
-  onDeleteCustomer // Receive the delete function
+  onApproveCustomer, 
+  onRejectCustomer, 
+  onDeleteCustomer 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -34,15 +34,15 @@ const ManageCustomer = ({
   console.log('Customers passed to ManageCustomer:', customers);
 
   const handleDelete = (id) => {
-    onDeleteCustomer(id); // Call the passed delete function
+    onDeleteCustomer(id); 
   };
 
   const handleApprove = (id) => {
-    onApproveCustomer(id); // Call the passed approve function
+    onApproveCustomer(id); 
   };
 
   const handleReject = (id) => {
-    onRejectCustomer(id); // Call the passed reject function
+    onRejectCustomer(id); 
   };
 
   const handleEdit = (customer) => {

@@ -19,7 +19,7 @@ const ManageProducts = ({ onViewProduct }) => {
     { pID: 'P008', name: 'Palmyrah Basket', category: 'Crafts', aID: 'A008', price: '$450', quantity: 35, uploadedDate: '2023-10-08', status: 'Pending' },
     { pID: 'P009', name: 'Dumbara Mat', category: 'Artistry', aID: 'A009', price: '$500', quantity: 15, uploadedDate: '2023-10-09', status: 'Rejected' },
     { pID: 'P010', name: 'Coconut Shell ', category: 'Carry Goods', aID: 'A010', price: '$550', quantity: 45, uploadedDate: '2023-10-10', status: 'Approved' },
-    // ...more products
+    
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');

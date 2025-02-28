@@ -8,12 +8,10 @@ const ManageLogout = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Implement logout functionality here
     navigate('/login');
   };
 
   const handleCancel = () => {
-    // Implement cancel functionality here
     navigate('/admin/dashboard');
   };
 

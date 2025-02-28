@@ -43,7 +43,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
 
   const handleSave = async () => {
     const newEmployee = {
-      eId: userId, // Ensure this maps to eId in the database
+      eId: userId, 
       firstName,
       lastName,
       email,
