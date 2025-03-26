@@ -30,6 +30,12 @@ const AdminManageEmployeePage = () => {
     }
   };
 
+  const handleUpdate = (updatedEmployee) => {
+    console.log('handleUpdate called with:', updatedEmployee); 
+    setShowEditEmployeeForm(false); 
+    setRefreshKey((prevKey) => prevKey + 1); 
+  };
+
   return (
     <div className="admin-employee-page">
       <AdminSidebar />

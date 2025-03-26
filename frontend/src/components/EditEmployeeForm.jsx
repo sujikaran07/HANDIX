@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminEmployee.css'; 
+import axios from 'axios';
 
 const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
   const [firstName, setFirstName] = useState(employee.firstName);
@@ -11,15 +12,27 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
   const [phoneNumber, setPhoneNumber] = useState(employee.phone);
   const [password, setPassword] = useState(employee.password);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedEmployee = {
       firstName,
       lastName,
       email,
       phone: phoneNumber,
-      roleId: jobRole === 'Admin' ? 1 : 2, // Map jobRole to roleId (1 for Admin, 2 for Artisan)
+      roleId: jobRole === 'Admin' ? 1 : 2, 
     };
-    onSave(userId, updatedEmployee); // Pass userId and updatedEmployee to the onSave function
+
+    try {
+      const response = await axios.put(`http://localhost:5000/api/employees/${userId}`, updatedEmployee);
+      if (response.status === 200) {
+        console.log('Employee updated successfully:', response.data); 
+        onSave(response.data); 
+      } else {
+        throw new Error('Unexpected response status');
+      }
+    } catch (error) {
+      console.error('Error updating employee:', error.response || error.message); // Debug log
+      alert('Failed to update employee. Please try again.');
+    }
   };
 
   return (

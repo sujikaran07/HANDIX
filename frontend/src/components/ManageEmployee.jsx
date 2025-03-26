@@ -16,6 +16,8 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
   const [showEditEmployeeForm, setShowEditEmployeeForm] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
+  const [employeeToDelete, setEmployeeToDelete] = useState(null); // Track employee to delete
   const employeesPerPage = 4;
 
   useEffect(() => {
@@ -31,13 +33,27 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     fetchEmployees();
   }, []);
 
-  const handleDelete = async (eId) => {
+  const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/employees/${eId}`);
-      setEmployees(employees.filter(emp => emp.eId !== eId)); 
+      await axios.delete(`http://localhost:5000/api/employees/${employeeToDelete.eId}`);
+      setEmployees(employees.filter(emp => emp.eId !== employeeToDelete.eId)); 
+      console.log(`Employee with E-ID ${employeeToDelete.eId} deleted successfully.`);
+      setShowDeleteModal(false); 
+      setEmployeeToDelete(null); 
     } catch (error) {
       console.error('Error deleting employee:', error);
+      alert('Failed to delete employee. Please try again.');
     }
+  };
+
+  const confirmDelete = (employee) => {
+    setEmployeeToDelete(employee); 
+    setShowDeleteModal(true); 
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false); 
+    setEmployeeToDelete(null); 
   };
 
   const handleEdit = (eId) => {
@@ -55,14 +71,13 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     setShowEditEmployeeForm(false);
   };
 
-  const handleSave = async (newEmployee) => {
+  const handleSave = async (updatedEmployee) => {
     try {
       if (showEditEmployeeForm) {
-        const response = await axios.put(`http://localhost:5000/api/employees/${newEmployee.eId}`, newEmployee);
-        setEmployees(employees.map(emp => emp.eId === newEmployee.eId ? response.data : emp));
+        setEmployees(employees.map(emp => emp.eId === updatedEmployee.eId ? updatedEmployee : emp)); 
       } else {
-        const response = await axios.post('http://localhost:5000/api/employees', newEmployee);
-        setEmployees([...employees, response.data]);
+        const response = await axios.post('http://localhost:5000/api/employees', updatedEmployee);
+        setEmployees([...employees, response.data]); 
       }
       setShowAddEmployeeForm(false);
       setShowEditEmployeeForm(false);
@@ -179,7 +194,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                         <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
                         <td className="action-buttons">
                           <button className="edit-btn" onClick={() => handleEdit(employee.eId)}>Edit</button>
-                          <button className="delete-btn" onClick={() => handleDelete(employee.eId)}>Delete</button>
+                          <button className="delete-btn" onClick={() => confirmDelete(employee)}>Delete</button>
                         </td>
                       </tr>
                     ))
@@ -196,6 +211,19 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
           </>
         )}
       </div>
+
+      
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h5>Are you sure you want to delete this employee?</h5>
+            <div className="modal-actions">
+              <button className="btn btn-danger me-2" onClick={handleDelete}>Delete</button>
+              <button className="btn btn-secondary" onClick={handleCancelDelete}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
