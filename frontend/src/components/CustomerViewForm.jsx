@@ -11,11 +11,11 @@ const CustomerViewForm = ({ customer, onBack }) => {
       <div className="row mb-3 form-group">
         <div className="col-md-4">
           <label className="form-label font-weight-bold">C-ID</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.id)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.c_id)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Name</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.name)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(`${customer.firstName} ${customer.lastName}`)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Email</label>
@@ -46,8 +46,8 @@ const CustomerViewForm = ({ customer, onBack }) => {
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.orders)}</p>
         </div>
         <div className="col-md-4">
-          <label className="form-label font-weight-bold">Verification Status</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.verificationStatus)}</p>
+          <label className="form-label font-weight-bold">Account Status</label>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.accountStatus)}</p>
         </div>
       </div>
       <div className="row mb-3 form-group">
