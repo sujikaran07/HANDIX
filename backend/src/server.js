@@ -7,6 +7,7 @@ const employeeRoutes = require("./routes/employees/employeeRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes'); 
 const { connectToDatabase } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
+const { Customer } = require('./models/customerModel');
 const net = require('net');
 
 dotenv.config();
@@ -49,6 +50,7 @@ checkPort(PORT)
       try {
         await connectToDatabase();
         await Employee.sync(); 
+        await Customer.sync(); 
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {
         console.error('Error during server startup:', error);

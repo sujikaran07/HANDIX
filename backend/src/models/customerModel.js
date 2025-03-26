@@ -31,13 +31,19 @@ const Customer = sequelize.define('Customer', {
     allowNull: false,
   },
   accountType: {
-    type: DataTypes.ENUM('Retail', 'Wholesale'),
+    type: DataTypes.ENUM({
+      values: ['Retail', 'Wholesale'],
+      name: 'account_type_enum'  
+    }),
     defaultValue: 'Retail',
   },
   accountStatus: {
-    type: DataTypes.ENUM('Pending', 'Approved', 'Rejected'),  
+    type: DataTypes.ENUM({
+      values: ['Pending', 'Approved', 'Rejected'],
+      name: 'enum_Customers_account_status' 
+    }),
     defaultValue: 'Pending',
-  },
+  },  
   registrationDate: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
