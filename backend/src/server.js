@@ -5,10 +5,14 @@ const cors = require("cors");
 const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");  
 const employeeRoutes = require("./routes/employees/employeeRoutes");  
 const customerRoutes = require('./routes/customers/customerRoutes'); 
-const { connectToDatabase } = require('./config/db');
+const { connectToDatabase, sequelize } = require('./config/db'); 
 const { Employee } = require('./models/employeeModel');
 const { Customer } = require('./models/customerModel');
 const net = require('net');
+const { Address } = require('./models/addressModel');
+const { Order } = require('./models/orderModel');
+const { OrderDetail } = require('./models/orderDetailModel');
+const { ProfileImage } = require('./models/profileImageModel');
 
 dotenv.config();
 
@@ -60,6 +64,14 @@ checkPort(PORT)
   .catch((err) => {
     console.error(err.message);
     process.exit(1);
+  });
+
+sequelize.sync() 
+  .then(() => {
+    console.log('Database synced successfully.');
+  })
+  .catch((error) => {
+    console.error('Error syncing database:', error);
   });
 
 app.use((err, req, res, next) => {
