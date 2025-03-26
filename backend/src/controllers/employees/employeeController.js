@@ -46,25 +46,31 @@ const getEmployeeEIds = async (req, res) => {
 
 const addEmployee = async (req, res) => {
   try {
-    const newEmployee = await Employee.create(req.body);
+    const { role, ...employeeData } = req.body;
+    const newEmployee = await Employee.create({
+      ...employeeData,
+      roleId: role // Assuming the client sends `role` as the role ID
+    });
     res.status(201).json({ newEmployee, eId: newEmployee.eId });
   } catch (error) {
-    res.status(500).json({ message: 'Error adding employee' });
+    console.error('Error adding employee:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Error adding employee', error: error.message });
   }
 };
 
 const updateEmployee = async (req, res) => {
   try {
-    const { id } = req.params;
-    const [updated] = await Employee.update(req.body, { where: { eId: id } });
+    const { id } = req.params; // Extract employee ID from the request parameters
+    const [updated] = await Employee.update(req.body, { where: { eId: id } }); // Update the employee
     if (updated) {
-      const updatedEmployee = await Employee.findOne({ where: { eId: id } });
-      res.status(200).json(updatedEmployee);
+      const updatedEmployee = await Employee.findOne({ where: { eId: id } }); // Fetch the updated employee
+      res.status(200).json(updatedEmployee); // Return the updated employee
     } else {
-      res.status(404).json({ message: 'Employee not found' });
+      res.status(404).json({ message: 'Employee not found' }); // Handle case where employee is not found
     }
   } catch (error) {
-    res.status(500).json({ message: 'Error updating employee' });
+    console.error('Error updating employee:', error); // Log the error for debugging
+    res.status(500).json({ message: 'Error updating employee', error: error.message }); // Return error response
   }
 };
 

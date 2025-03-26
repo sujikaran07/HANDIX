@@ -13,15 +13,13 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
 
   const handleSave = () => {
     const updatedEmployee = {
-      id: userId,
       firstName,
       lastName,
       email,
       phone: phoneNumber,
-      role: jobRole,
-      password,
+      roleId: jobRole === 'Admin' ? 1 : 2, // Map jobRole to roleId (1 for Admin, 2 for Artisan)
     };
-    onSave(updatedEmployee);
+    onSave(userId, updatedEmployee); // Pass userId and updatedEmployee to the onSave function
   };
 
   return (

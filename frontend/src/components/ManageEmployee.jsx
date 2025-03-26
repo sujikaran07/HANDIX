@@ -72,8 +72,9 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   };
 
   const filteredEmployees = employees.filter(employee => {
+    const roleName = employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other';
     return (
-      (filterRole === 'All' || employee.role.toLowerCase() === filterRole.toLowerCase()) && // Ensure case-insensitive comparison
+      (filterRole === 'All' || roleName.toLowerCase() === filterRole.toLowerCase()) &&
       (`${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
        employee.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
        (employee.phone && employee.phone.includes(searchTerm)) ||
@@ -175,7 +176,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                         <td>{`${employee.firstName} ${employee.lastName}`}</td>
                         <td>{employee.email}</td>
                         <td>{employee.phone || 'N/A'}</td>
-                        <td>{employee.role}</td>
+                        <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
                         <td className="action-buttons">
                           <button className="edit-btn" onClick={() => handleEdit(employee.eId)}>Edit</button>
                           <button className="delete-btn" onClick={() => handleDelete(employee.eId)}>Delete</button>

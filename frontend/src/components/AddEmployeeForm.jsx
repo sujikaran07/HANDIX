@@ -48,7 +48,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
       lastName,
       email,
       phone: phoneNumber,
-      role: jobRole,
+      role: jobRole === 'Admin' ? 1 : 2, // Map jobRole to roleId (1 for Admin, 2 for Artisan)
       password,
     };
     try {
@@ -56,6 +56,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
       resetForm();
     } catch (error) {
       console.error('Error saving employee:', error);
+      alert('Failed to save employee. Please try again.');
     }
   };
 

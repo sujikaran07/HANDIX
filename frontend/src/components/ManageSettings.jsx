@@ -6,10 +6,10 @@ import '../styles/admin/AdminSettings.css';
 const ManageSettings = ({ onViewSetting }) => {
   const [profile, setProfile] = useState({
     profilePicture: '',
-    username: 'john_doe',
+    username: 'sujikaran',
     email: 'user@example.com',
     mobileNumber: '123-456-7890',
-    currentPassword: 'password123',
+    currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
   });

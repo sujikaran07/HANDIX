@@ -11,6 +11,7 @@ import AdminAssignOrder from "./pages/admin/AdminAssignOrder";
 import AdminSettings from "./pages/admin/AdminSettings"; 
 import AdminLogout from "./pages/admin/AdminLogout"; 
 import ArtisanDashboard from "./pages/artisan/ArtisanDashboard"; 
+import ArtisanProducts from "./pages/artisan/ArtisanProducts";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -42,6 +43,7 @@ function App() {
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/logout" element={<AdminLogout />} /> 
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
+          <Route path="/artisan/products" element={<ArtisanProducts />} />
         </Routes>
       </Router>
     </div>

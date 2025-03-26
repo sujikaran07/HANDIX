@@ -8,7 +8,8 @@ const Employee = sequelize.define('Employee', {
     primaryKey: true,
     allowNull: false,
     unique: true,
-    field: 'e_id' 
+    field: 'e_id',
+    defaultValue: sequelize.literal(`'E' || lpad(nextval('employee_seq')::text, 3, '0')`)
   },
   firstName: { 
     type: DataTypes.STRING, 
@@ -32,12 +33,15 @@ const Employee = sequelize.define('Employee', {
     type: DataTypes.TEXT, 
     allowNull: false 
   },
-  role: { 
-    type: DataTypes.STRING, 
-    allowNull: false,
-    validate: {
-      isIn: [['Admin', 'Artisan']]
-    }
+  roleId: { 
+    type: DataTypes.INTEGER,
+    field: 'role_id',
+    references: {
+      model: 'Roles', // Ensure this matches the actual table name in your database
+      key: 'role_id'
+    },
+    onUpdate: 'CASCADE', // Ensure updates cascade properly
+    onDelete: 'SET NULL'
   },
   profileImage: { 
     type: DataTypes.TEXT,
@@ -60,11 +64,6 @@ const Employee = sequelize.define('Employee', {
         const salt = await bcrypt.genSalt(10);
         employee.password = await bcrypt.hash(employee.password, salt);
       }
-      if (employee.isNewRecord) {
-        const lastEmployee = await Employee.findOne({ order: [['createdAt', 'DESC']] });
-        const lastId = lastEmployee ? parseInt(lastEmployee.eId.slice(1)) : 0;
-        employee.eId = `E${String(lastId + 1).padStart(3, '0')}`;
-      }
     }
   }
 });
@@ -79,13 +78,12 @@ const setupAdminUser = async () => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('adminpassword', salt);
     const newAdmin = await Employee.create({
-      eId: 'E001',
       firstName: 'Admin',
       lastName: 'User',
       email: 'admin@gmail.com',
       phone: '1234567890',
       password: hashedPassword, 
-      role: 'Admin',
+      roleId: 1, 
       profileImage: 'https://example.com/profiles/admin.jpg'
     });
   }
