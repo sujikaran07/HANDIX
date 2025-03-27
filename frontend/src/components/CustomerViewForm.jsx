@@ -44,8 +44,8 @@ const CustomerViewForm = ({ customer, onBack }) => {
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.registrationDate)}</p>
         </div>
         <div className="col-md-4">
-          <label className="form-label font-weight-bold">Orders</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.orders)}</p>
+          <label className="form-label font-weight-bold">Total Orders</label> {/* Renamed Orders to Total Orders */}
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.totalOrders)}</p> {/* Updated field name */}
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Status</label>
@@ -61,10 +61,7 @@ const CustomerViewForm = ({ customer, onBack }) => {
           <label className="form-label font-weight-bold">Last Order Date</label>
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.lastOrderDate)}</p>
         </div>
-        <div className="col-md-4">
-          <label className="form-label font-weight-bold">Orders Count</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.customerOrders?.length)}</p> {/* Ensure alias matches backend */}
-        </div>
+        {/* Removed Orders Count field */}
       </div>
       <div className="d-flex justify-content-end">
         <button type="button" className="btn btn-secondary" onClick={onBack}>Back</button>

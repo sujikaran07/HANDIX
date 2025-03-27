@@ -29,7 +29,7 @@ const getCustomerById = async (req, res) => {
       customer.country = billingOrShippingAddress?.country || 'N/A';
       customer.registrationDate = customer.createdAt;
       customer.totalSpent = customer.customerOrders?.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0).toFixed(2);
-      customer.orders = customer.customerOrders?.length || 0;
+      customer.totalOrders = customer.customerOrders?.length || 0; // Renamed orders to totalOrders
       customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
 
       res.json(customer);
