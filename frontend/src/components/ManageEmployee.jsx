@@ -193,8 +193,23 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                         <td>{employee.phone || 'N/A'}</td>
                         <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
                         <td className="action-buttons">
-                          <button className="edit-btn" onClick={() => handleEdit(employee.eId)}>Edit</button>
-                          <button className="delete-btn" onClick={() => confirmDelete(employee)}>Delete</button>
+                          <div className="dropdown">
+                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                              Actions
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              <li>
+                                <button className="dropdown-item" onClick={() => handleEdit(employee.eId)}>
+                                  Edit
+                                </button>
+                              </li>
+                              <li>
+                                <button className="dropdown-item" onClick={() => confirmDelete(employee)}>
+                                  Delete
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
                         </td>
                       </tr>
                     ))

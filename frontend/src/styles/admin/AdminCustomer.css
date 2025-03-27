@@ -503,7 +503,7 @@ body {
 }
 
 .status.pending {
-    color: #ffc107 !important; 
+    color: #ff7707 !important; 
 }
 
 .status.rejected {
