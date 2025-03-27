@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Customer } = require('./customerModel');
 
 const Address = sequelize.define('Address', {
   address_id: {
@@ -13,7 +12,7 @@ const Address = sequelize.define('Address', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: Customer,
+      model: 'Customers', // Use table name to avoid circular dependency
       key: 'c_id',
     },
     onDelete: 'CASCADE',
@@ -59,5 +58,6 @@ const Address = sequelize.define('Address', {
   timestamps: false,
   underscored: true,
 });
+
 
 module.exports = { Address };

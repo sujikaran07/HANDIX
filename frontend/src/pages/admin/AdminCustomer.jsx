@@ -21,16 +21,21 @@ const AdminCustomerPage = () => {
   const fetchCustomers = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/customers');
-      console.log('Fetched customers:', response.data); 
+      console.log('Fetched customers:', response.data); // Log the API response
       setCustomers(response.data);
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
   };
 
-  const handleViewCustomer = (customer) => {
-    setSelectedCustomer(customer);
-    setShowCustomerDetails(true);
+  const handleViewCustomer = async (customer) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/customers/${customer.c_id}`); 
+      setSelectedCustomer(response.data); // Set the fetched customer data
+      setShowCustomerDetails(true);
+    } catch (error) {
+      console.error('Error fetching customer details:', error);
+    }
   };
 
   const handleBackToList = () => {

@@ -42,6 +42,18 @@ const Order = sequelize.define('Order', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  total_spent: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00,
+  },
+  total_orders: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  last_order_date: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'Orders',
   timestamps: false,

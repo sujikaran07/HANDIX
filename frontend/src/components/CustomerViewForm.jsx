@@ -29,7 +29,9 @@ const CustomerViewForm = ({ customer, onBack }) => {
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Country</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.country)}</p>
+          <p className="form-control-plaintext bg-light p-2">
+            {getFieldValue(customer.addresses?.[0]?.country)} {/* Fetch country from the first address */}
+          </p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Type</label>
@@ -58,6 +60,10 @@ const CustomerViewForm = ({ customer, onBack }) => {
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Last Order Date</label>
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.lastOrderDate)}</p>
+        </div>
+        <div className="col-md-4">
+          <label className="form-label font-weight-bold">Orders Count</label>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.customerOrders?.length)}</p> {/* Ensure alias matches backend */}
         </div>
       </div>
       <div className="d-flex justify-content-end">

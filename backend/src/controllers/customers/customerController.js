@@ -1,5 +1,6 @@
 const { Customer } = require('../../models/customerModel');  
-
+const { Address } = require('../../models/addressModel');
+const { Order } = require('../../models/orderModel');
 
 const getAllCustomers = async (req, res) => {
   try {
@@ -13,40 +14,50 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
-
 const getCustomerById = async (req, res) => {
   try {
-    const customer = await Customer.findByPk(req.params.c_id);  
+    const customer = await Customer.findByPk(req.params.c_id, {
+      include: [
+        { model: Address, as: 'addresses' }, 
+        { model: Order, as: 'customerOrders' } 
+      ]
+    });
+
     if (customer) {
-      res.json(customer);  
+      
+      const billingOrShippingAddress = customer.addresses?.[0];
+      customer.country = billingOrShippingAddress?.country || 'N/A';
+      customer.registrationDate = customer.createdAt;
+      customer.totalSpent = customer.customerOrders?.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0).toFixed(2);
+      customer.orders = customer.customerOrders?.length || 0;
+      customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
+
+      res.json(customer);
     } else {
-      res.status(404).json({ message: 'Customer not found' });  
+      res.status(404).json({ message: 'Customer not found' });
     }
   } catch (error) {
-    console.error('Error fetching customer:', error);  
+    console.error('Error fetching customer:', error);
     res.status(500).json({ message: 'Error fetching customer', error: error.message });
   }
 };
 
-
 const createCustomer = async (req, res) => {
   try {
-    console.log('Creating customer with data:', req.body); 
-    if (req.body.accountType === 'Retail') {
-      req.body.accountStatus = 'Approved';
+    const customerData = req.body;
+
+    // Ensure country consistency between Customer and Address
+    if (customerData.addresses && customerData.addresses.length > 0) {
+      customerData.country = customerData.addresses[0].country; // Set Customer country to match the first address
     }
-    const customer = await Customer.create(req.body);
-    res.status(201).json(customer);  
+
+    const customer = await Customer.create(customerData, { include: [{ model: Address, as: 'addresses' }] });
+    res.status(201).json(customer);
   } catch (error) {
-    console.error('Error creating customer:', error);  
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      res.status(400).json({ message: 'Email or C-ID already exists' });
-    } else {
-      res.status(500).json({ message: 'Error creating customer', error: error.message });
-    }
+    console.error('Error creating customer:', error);
+    res.status(500).json({ message: 'Error creating customer', error: error.message });
   }
 };
-
 
 const updateCustomer = async (req, res) => {
   try {
@@ -66,7 +77,6 @@ const updateCustomer = async (req, res) => {
     res.status(500).json({ message: 'Error updating customer', error: error.message });
   }
 };
-
 
 const deleteCustomer = async (req, res) => {
   try {
@@ -120,6 +130,23 @@ const rejectCustomer = async (req, res) => {
   }
 };
 
+const getAllCustomersWithDetails = async (req, res) => {
+  try {
+    const customers = await Customer.findAll({
+      include: [
+        { model: Address, as: 'addresses' }, // Include related addresses
+        { model: Order, as: 'customerOrders' } // Include related orders
+      ],
+      order: [['c_id', 'ASC']]
+    });
+    console.log('Fetched customers with details:', JSON.stringify(customers, null, 2)); // Log the fetched data
+    res.json(customers); // Send the fetched data as JSON
+  } catch (error) {
+    console.error('Error fetching customers with details:', error);
+    res.status(500).json({ message: 'Error fetching customers with details', error: error.message });
+  }
+};
+
 module.exports = {
   getAllCustomers,
   getCustomerById,
@@ -127,5 +154,6 @@ module.exports = {
   updateCustomer,
   deleteCustomer,
   approveCustomer,
-  rejectCustomer
+  rejectCustomer,
+  getAllCustomersWithDetails
 };

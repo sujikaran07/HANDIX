@@ -6,7 +6,8 @@ const {
   updateCustomer,
   deleteCustomer,
   approveCustomer,
-  rejectCustomer
+  rejectCustomer,
+  getAllCustomersWithDetails
 } = require('../../controllers/customers/customerController');
 const router = express.Router();
 
@@ -17,5 +18,6 @@ router.put('/:c_id', updateCustomer);
 router.delete('/:c_id', deleteCustomer);
 router.put('/:c_id/approve', approveCustomer);  
 router.put('/:c_id/reject', rejectCustomer);  
+router.get('/details', getAllCustomersWithDetails); // Add a new route to fetch customers with details
 
 module.exports = router;
