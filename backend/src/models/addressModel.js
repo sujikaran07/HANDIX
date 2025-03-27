@@ -59,5 +59,8 @@ const Address = sequelize.define('Address', {
   underscored: true,
 });
 
+Address.associate = (models) => {
+  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'associatedCustomer' }); // Updated alias
+};
 
 module.exports = { Address };

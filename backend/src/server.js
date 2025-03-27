@@ -15,6 +15,13 @@ const { Order } = require('./models/orderModel');
 const { OrderDetail } = require('./models/orderDetailModel');
 const { ProfileImage } = require('./models/profileImageModel');
 
+// Ensure associations are initialized
+const { Customer } = require('./models/customerModel');
+Customer.associate({ Address, Order });
+Address.associate({ Customer });
+// Removed duplicate association
+// Address.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+
 dotenv.config();
 
 const app = express();
