@@ -1,6 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const bcrypt = require('bcrypt'); // Add this line
+const bcrypt = require('bcrypt'); 
 
 const Customer = sequelize.define('Customer', {
   c_id: {
@@ -48,13 +48,13 @@ const Customer = sequelize.define('Customer', {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
   },
-  orders: {
+  totalOrders: {
     type: DataTypes.INTEGER,
-    defaultValue: 0,
+    defaultValue: 0, 
   },
   totalSpent: {
     type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0.00,
+    defaultValue: 0.00, 
   },
   lastOrderDate: {
     type: DataTypes.DATE,

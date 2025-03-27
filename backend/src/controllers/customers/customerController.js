@@ -27,11 +27,22 @@ const getCustomerById = async (req, res) => {
       const billingOrShippingAddress = customer.addresses?.[0];
       customer.country = billingOrShippingAddress?.country || customer.country || 'N/A';
       customer.registrationDate = customer.createdAt;
-      customer.totalSpent = customer.customerOrders?.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0).toFixed(2);
-      customer.totalOrders = customer.customerOrders?.length || 0;
+
+      // Fetch totalOrders and totalSpent from the Orders table
+      const orders = await Order.findAll({ 
+        where: { c_id: req.params.c_id },
+        attributes: ['total_amount']
+      });
+
+      const totalOrders = orders.length; // Count of orders
+      const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+
+      customer.totalOrders = totalOrders || 0;
+      customer.totalSpent = totalSpent.toFixed(2);
+
       customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
 
-      console.log('Customer data being sent:', customer); // Debug log
+      console.log('Customer data being sent:', JSON.stringify(customer, null, 2)); // Debug log
       res.json(customer);
     } else {
       res.status(404).json({ message: 'Customer not found' });

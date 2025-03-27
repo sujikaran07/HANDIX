@@ -1,11 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminCustomer.css';
 
-const CustomerViewForm = ({ customer, onBack }) => {
-  console.log('Customer data in CustomerViewForm:', customer); // Debug log
+const CustomerViewForm = ({ c_id, onBack }) => {
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCustomerDetails = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/customers/${c_id}`);
+        console.log('Fetched customer details:', response.data); // Debug log
+        setCustomer(response.data);
+      } catch (error) {
+        console.error('Error fetching customer details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomerDetails();
+  }, [c_id]);
 
   const getFieldValue = (value) => (value ? value : 'N/A');
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  if (!customer) {
+    return <p>Customer not found.</p>;
+  }
 
   return (
     <div>
@@ -31,9 +57,7 @@ const CustomerViewForm = ({ customer, onBack }) => {
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Country</label>
-          <p className="form-control-plaintext bg-light p-2">
-            {getFieldValue(customer.country || customer.addresses?.[0]?.country)} {/* Ensure fallback to customer.country */}
-          </p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.country)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Type</label>
@@ -43,7 +67,7 @@ const CustomerViewForm = ({ customer, onBack }) => {
       <div className="row mb-3 form-group">
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Registration Date</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.registrationDate)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.createdAt)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Total Orders</label>

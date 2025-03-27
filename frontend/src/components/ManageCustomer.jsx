@@ -29,12 +29,28 @@ const ManageCustomer = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [viewingCustomer, setViewingCustomer] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
+  const [customerToDelete, setCustomerToDelete] = useState(null); // Track customer to delete
   const customersPerPage = 4;
 
   console.log('Customers passed to ManageCustomer:', customers);
 
-  const handleDelete = (id) => {
-    onDeleteCustomer(id); 
+  const confirmDelete = (customer) => {
+    setCustomerToDelete(customer);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setCustomerToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (customerToDelete) {
+      onDeleteCustomer(customerToDelete.c_id);
+      setShowDeleteModal(false);
+      setCustomerToDelete(null);
+    }
   };
 
   const handleApprove = (id) => {
@@ -59,7 +75,7 @@ const ManageCustomer = ({
   };
 
   const handleViewCustomer = (customer) => {
-    setViewingCustomer(customer);
+    setViewingCustomer(customer.c_id); // Pass only c_id
   };
 
   const handleBackToTable = () => {
@@ -92,7 +108,7 @@ const ManageCustomer = ({
         ) : editingCustomer ? (
           <EditCustomerForm customer={editingCustomer} onSave={handleSaveEdit} onCancel={handleCancelEdit} />
         ) : viewingCustomer ? (
-          <CustomerViewForm customer={viewingCustomer} onBack={handleBackToTable} />
+          <CustomerViewForm c_id={viewingCustomer} onBack={handleBackToTable} />
         ) : (
           <>
             <div className="manage-customer-header d-flex justify-content-between align-items-center mb-3">
@@ -204,7 +220,7 @@ const ManageCustomer = ({
                                 </button>
                               </li>
                               <li>
-                                <button className="dropdown-item" onClick={() => handleDelete(customer.c_id)}>
+                                <button className="dropdown-item" onClick={() => confirmDelete(customer)}>
                                   Delete
                                 </button>
                               </li>
@@ -226,6 +242,17 @@ const ManageCustomer = ({
           </>
         )}
       </div>
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h5>Are you sure you want to delete this customer?</h5>
+            <div className="modal-actions">
+              <button className="btn btn-danger me-2" onClick={handleDelete}>Delete</button>
+              <button className="btn btn-secondary" onClick={handleCancelDelete}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
