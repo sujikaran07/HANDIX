@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Customer } = require('./customerModel');
 
 const Order = sequelize.define('Order', {
   order_id: {
@@ -13,7 +12,7 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: Customer,
+      model: 'Customers', // Use table name to avoid circular dependency
       key: 'c_id',
     },
     onDelete: 'SET NULL',

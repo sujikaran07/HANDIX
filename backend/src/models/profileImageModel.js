@@ -1,6 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Customer } = require('./customerModel');
 
 const ProfileImage = sequelize.define('ProfileImage', {
   profile_image_id: {
@@ -13,7 +12,7 @@ const ProfileImage = sequelize.define('ProfileImage', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: Customer,
+      model: 'Customers', 
       key: 'c_id',
     },
     onDelete: 'CASCADE',

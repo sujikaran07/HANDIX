@@ -7,7 +7,8 @@ const employeeRoutes = require("./routes/employees/employeeRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes'); 
 const { connectToDatabase, sequelize } = require('./config/db'); 
 const { Employee } = require('./models/employeeModel');
-const { Customer } = require('./models/customerModel');
+// Removed direct import of Customer model
+// const { Customer } = require('./models/customerModel');
 const net = require('net');
 const { Address } = require('./models/addressModel');
 const { Order } = require('./models/orderModel');
@@ -54,6 +55,8 @@ checkPort(PORT)
       try {
         await connectToDatabase();
         await Employee.sync(); 
+        // Dynamically require Customer model to avoid circular dependency
+        const { Customer } = require('./models/customerModel');
         await Customer.sync(); 
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {
@@ -66,6 +69,7 @@ checkPort(PORT)
     process.exit(1);
   });
 
+// Removed direct usage of Customer model in sequelize.sync()
 sequelize.sync() 
   .then(() => {
     console.log('Database synced successfully.');

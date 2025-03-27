@@ -1,7 +1,5 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Address } = require('./addressModel'); // Ensure this import resolves properly
-const { Order } = require('./orderModel'); // Ensure this import resolves properly
 
 const Customer = sequelize.define('Customer', {
   c_id: {
@@ -119,7 +117,9 @@ const Customer = sequelize.define('Customer', {
 });
 
 // Ensure associations are defined after all models are imported
-Customer.hasMany(Address, { foreignKey: 'c_id', as: 'addresses' });
-Customer.hasMany(Order, { foreignKey: 'c_id', as: 'customerOrders' });
+Customer.associate = (models) => {
+  Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' });
+  Customer.hasMany(models.Order, { foreignKey: 'c_id', as: 'customerOrders' });
+};
 
 module.exports = { Customer };
