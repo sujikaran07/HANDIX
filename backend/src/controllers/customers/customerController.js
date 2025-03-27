@@ -18,20 +18,20 @@ const getCustomerById = async (req, res) => {
   try {
     const customer = await Customer.findByPk(req.params.c_id, {
       include: [
-        { model: Address, as: 'addresses' }, 
-        { model: Order, as: 'customerOrders' } 
+        { model: Address, as: 'addresses' },
+        { model: Order, as: 'customerOrders' }
       ]
     });
 
     if (customer) {
-      
       const billingOrShippingAddress = customer.addresses?.[0];
-      customer.country = billingOrShippingAddress?.country || 'N/A';
+      customer.country = billingOrShippingAddress?.country || customer.country || 'N/A';
       customer.registrationDate = customer.createdAt;
       customer.totalSpent = customer.customerOrders?.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0).toFixed(2);
-      customer.totalOrders = customer.customerOrders?.length || 0; // Renamed orders to totalOrders
+      customer.totalOrders = customer.customerOrders?.length || 0;
       customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
 
+      console.log('Customer data being sent:', customer); // Debug log
       res.json(customer);
     } else {
       res.status(404).json({ message: 'Customer not found' });

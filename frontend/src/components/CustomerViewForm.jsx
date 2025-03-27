@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminCustomer.css';
 
 const CustomerViewForm = ({ customer, onBack }) => {
+  console.log('Customer data in CustomerViewForm:', customer); // Debug log
+
   const getFieldValue = (value) => (value ? value : 'N/A');
 
   return (
@@ -30,7 +32,7 @@ const CustomerViewForm = ({ customer, onBack }) => {
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Country</label>
           <p className="form-control-plaintext bg-light p-2">
-            {getFieldValue(customer.addresses?.[0]?.country)} {/* Fetch country from the first address */}
+            {getFieldValue(customer.country || customer.addresses?.[0]?.country)} {/* Ensure fallback to customer.country */}
           </p>
         </div>
         <div className="col-md-4">
@@ -44,8 +46,8 @@ const CustomerViewForm = ({ customer, onBack }) => {
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.registrationDate)}</p>
         </div>
         <div className="col-md-4">
-          <label className="form-label font-weight-bold">Total Orders</label> {/* Renamed Orders to Total Orders */}
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.totalOrders)}</p> {/* Updated field name */}
+          <label className="form-label font-weight-bold">Total Orders</label>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.totalOrders)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Status</label>
@@ -61,7 +63,6 @@ const CustomerViewForm = ({ customer, onBack }) => {
           <label className="form-label font-weight-bold">Last Order Date</label>
           <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.lastOrderDate)}</p>
         </div>
-        {/* Removed Orders Count field */}
       </div>
       <div className="d-flex justify-content-end">
         <button type="button" className="btn btn-secondary" onClick={onBack}>Back</button>

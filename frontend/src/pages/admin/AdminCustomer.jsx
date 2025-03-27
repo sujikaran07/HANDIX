@@ -30,8 +30,9 @@ const AdminCustomerPage = () => {
 
   const handleViewCustomer = async (customer) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/customers/${customer.c_id}`); 
-      setSelectedCustomer(response.data); // Set the fetched customer data
+      const response = await axios.get(`http://localhost:5000/api/customers/${customer.c_id}`);
+      console.log('Fetched customer details:', response.data); // Debug log
+      setSelectedCustomer(response.data);
       setShowCustomerDetails(true);
     } catch (error) {
       console.error('Error fetching customer details:', error);
