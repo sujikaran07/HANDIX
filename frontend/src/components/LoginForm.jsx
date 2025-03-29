@@ -6,7 +6,7 @@ import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import Hlogo from "../assets/logo1.png";
 import axios from 'axios';
 
-const LoginForm = () => {
+const LoginForm = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState(false);
@@ -23,8 +23,9 @@ const LoginForm = () => {
       const response = await axios.post('http://localhost:5000/api/login', { email, password });
       console.log('Login successful:', response.data);
       if (response.status === 200) {
-        localStorage.setItem('token', response.data.token);
-        navigate('/admin/dashboard');
+        const { token, redirectUrl } = response.data;
+        localStorage.setItem('token', token);
+        onLoginSuccess(redirectUrl);
       } else {
         setEmailError(true);
         setPasswordError(true);

@@ -56,9 +56,18 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ id: user.eId, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.eId, role: user.roleId }, process.env.JWT_SECRET, { expiresIn: '1h' });
     console.log('Login successful, token generated');
-    res.json({ token });
+
+    // Role-based redirection logic
+    let redirectUrl = '';
+    if (user.roleId === 1) {
+      redirectUrl = '/admin/dashboard';
+    } else if (user.roleId === 2) {
+      redirectUrl = '/artisan/dashboard';
+    }
+
+    res.json({ token, redirectUrl });
   } catch (error) {
     console.error(`Error logging in: ${error}`);
     res.status(500).json({ message: 'Internal server error' });
