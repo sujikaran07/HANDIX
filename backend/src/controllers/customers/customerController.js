@@ -72,19 +72,19 @@ const createCustomer = async (req, res) => {
 
 const updateCustomer = async (req, res) => {
   try {
-    const [updated] = await Customer.update(req.body, {
-      where: { c_id: req.params.c_id }  
+    const { country, ...updateData } = req.body; // Exclude country from updates
+    const [updated] = await Customer.update(updateData, {
+      where: { c_id: req.params.c_id }
     });
 
     if (updated) {
-      
       const updatedCustomer = await Customer.findByPk(req.params.c_id);
-      res.json(updatedCustomer);  
+      res.json(updatedCustomer);
     } else {
-      res.status(404).json({ message: 'Customer not found' });  
+      res.status(404).json({ message: 'Customer not found' });
     }
   } catch (error) {
-    console.error('Error updating customer:', error);  
+    console.error('Error updating customer:', error);
     res.status(500).json({ message: 'Error updating customer', error: error.message });
   }
 };

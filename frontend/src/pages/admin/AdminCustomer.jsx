@@ -91,16 +91,16 @@ const AdminCustomerPage = () => {
   };
 
   const handleCancelEditCustomer = () => {
-    setShowEditCustomerForm(false);
-    setSelectedCustomer(null);
+    setShowEditCustomerForm(false); // Close the edit form
+    setSelectedCustomer(null); // Clear the selected customer
   };
 
   const handleUpdateCustomer = async (updatedCustomer) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${updatedCustomer.c_id}`, updatedCustomer);
-      fetchCustomers();
-      setShowEditCustomerForm(false);
-      setSelectedCustomer(null);
+      fetchCustomers(); // Refresh the customer list
+      setShowEditCustomerForm(false); // Close the edit form
+      setSelectedCustomer(null); // Clear the selected customer
     } catch (error) {
       console.error('Error updating customer:', error);
     }

@@ -57,7 +57,7 @@ const CustomerViewForm = ({ c_id, onBack }) => {
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Country</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.country)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.country || 'N/A')}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Type</label>

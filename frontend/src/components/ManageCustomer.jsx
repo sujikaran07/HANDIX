@@ -62,7 +62,7 @@ const ManageCustomer = ({
   };
 
   const handleEdit = (customer) => {
-    setEditingCustomer(customer);
+    onEditCustomer(customer); // Notify parent to open the edit form
   };
 
   const handleCancelEdit = () => {

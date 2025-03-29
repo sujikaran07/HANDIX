@@ -625,3 +625,19 @@ body {
     cursor: not-allowed;
     opacity: 0.5;
 }
+
+/* Unique class for EditCustomerForm */
+.edit-customer-form .form-label {
+    font-size: 16px; 
+    color: #666;
+}
+
+.edit-customer-form .form-control,
+.edit-customer-form .form-select {
+    font-size: 16px; 
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background-color: #f8f9fa;
+}
