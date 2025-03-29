@@ -25,7 +25,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
       const response = await axios.put(`http://localhost:5000/api/employees/${userId}`, updatedEmployee);
       if (response.status === 200) {
         console.log('Employee updated successfully:', response.data); 
-        onSave(response.data); 
+        onSave({ ...employee, ...updatedEmployee }); // Ensure updated data is passed to onSave
       } else {
         throw new Error('Unexpected response status');
       }
