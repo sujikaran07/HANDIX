@@ -81,24 +81,30 @@ const AddProductForm = ({ onSave, onCancel }) => {
             </div>
             <div className="col-md-4">
               <label htmlFor="category" className="form-label">Category</label>
-              <input
-                type="text"
-                className="form-control"
+              <select
+                className="form-select"
                 id="category"
                 name="category"
                 value={product.category}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Select Category</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Carry Goods">Carry Goods</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Crafts">Crafts</option>
+                <option value="Artistry">Artistry</option>
+              </select>
             </div>
           </div>
           <div className="row mb-3">
             <div className="col-md-4">
-              <label htmlFor="price" className="form-label">Price</label>
+              <label htmlFor="unitPrice" className="form-label">Unit Price</label>
               <input
                 type="text"
                 className="form-control"
-                id="price"
+                id="unitPrice"
                 name="price"
                 value={product.price}
                 onChange={handleChange}
@@ -188,7 +194,7 @@ const AddProductForm = ({ onSave, onCancel }) => {
                   checked={product.customization.chat}
                   onChange={handleCustomizationChange}
                 />
-                <label htmlFor="chat" className="form-check-label">Option to Chat</label>
+                <label htmlFor="chat" className="form-check-label">Customizable</label>
               </div>
             </div>
           </div>
