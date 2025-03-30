@@ -9,16 +9,16 @@ import '../../styles/artisan/ArtisanProducts.css';
 
 const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
   const [products, setProducts] = useState([
-    { id: 'P001', name: 'Tote Bag', category: 'Carry Goods', price: '$100', quantity: 50, date: '2023-10-01', status: 'Approved' },
-    { id: 'P002', name: 'Beeralu Jewelry', category: 'Accessories', price: '$200', quantity: 30, date: '2023-10-02', status: 'Pending' },
-    { id: 'P003', name: 'Handloom Sarong', category: 'Clothing', price: '$150', quantity: 20, date: '2023-10-03', status: 'Rejected' },
-    { id: 'P004', name: 'Coconut ', category: 'Crafts', price: '$250', quantity: 40, date: '2023-10-04', status: 'Approved' },
-    { id: 'P005', name: 'Hand-Painted Mask', category: 'Artistry', price: '$300', quantity: 10, date: '2023-10-05', status: 'Pending' },
-    { id: 'P006', name: 'Handwoven Bag ', category: 'Carry Goods', price: '$350', quantity: 60, date: '2023-10-06', status: 'Rejected' },
-    { id: 'P007', name: 'Batik Shawl', category: 'Clothing', price: '$400', quantity: 25, date: '2023-10-07', status: 'Approved' },
-    { id: 'P008', name: 'Palmyrah Basket', category: 'Crafts', price: '$450', quantity: 35, date: '2023-10-08', status: 'Pending' },
-    { id: 'P009', name: 'Dumbara Mat', category: 'Artistry', price: '$500', quantity: 15, date: '2023-10-09', status: 'Rejected' },
-    { id: 'P010', name: 'Coconut Shell ', category: 'Carry Goods', price: '$550', quantity: 45, date: '2023-10-10', status: 'Approved' },
+    { id: 'P001', name: 'Tote Bag', category: 'Carry Goods', price: '$100', quantity: 50, size: 'M', date: '2023-10-01', status: 'Approved' },
+    { id: 'P002', name: 'Beeralu Jewelry', category: 'Accessories', price: '$200', quantity: 30, size: 'S', date: '2023-10-02', status: 'Pending' },
+    { id: 'P003', name: 'Handloom Sarong', category: 'Clothing', price: '$150', quantity: 20, size: 'L', date: '2023-10-03', status: 'Rejected' },
+    { id: 'P004', name: 'Coconut ', category: 'Crafts', price: '$250', quantity: 40, size: 'M', date: '2023-10-04', status: 'Approved' },
+    { id: 'P005', name: 'Hand-Painted Mask', category: 'Artistry', price: '$300', quantity: 10, size: 'S', date: '2023-10-05', status: 'Pending' },
+    { id: 'P006', name: 'Handwoven Bag ', category: 'Carry Goods', price: '$350', quantity: 60, size: 'L', date: '2023-10-06', status: 'Rejected' },
+    { id: 'P007', name: 'Batik Shawl', category: 'Clothing', price: '$400', quantity: 25, size: 'M', date: '2023-10-07', status: 'Approved' },
+    { id: 'P008', name: 'Palmyrah Basket', category: 'Crafts', price: '$450', quantity: 35, size: 'S', date: '2023-10-08', status: 'Pending' },
+    { id: 'P009', name: 'Dumbara Mat', category: 'Artistry', price: '$500', quantity: 15, size: 'L', date: '2023-10-09', status: 'Rejected' },
+    { id: 'P010', name: 'Coconut Shell ', category: 'Carry Goods', price: '$550', quantity: 45, size: 'M', date: '2023-10-10', status: 'Approved' },
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -180,6 +180,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Quantity</th>
+                <th>Size</th>
                 <th>Uploaded Date</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -194,6 +195,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                     <td>{product.category}</td>
                     <td>{product.price}</td>
                     <td>{product.quantity}</td>
+                    <td>{product.size}</td>
                     <td>{product.date}</td>
                     <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
                     <td className="action-buttons">
@@ -218,7 +220,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">No products available</td>
+                  <td colSpan="9" className="text-center">No products available</td>
                 </tr>
               )}
             </tbody>

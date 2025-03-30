@@ -83,6 +83,11 @@ body {
     border-radius: 10px;
 }
 
+.artisan-products-page .product-table th:nth-child(2),
+.artisan-products-page .product-table td:nth-child(2) {
+    width: 22%;
+}
+
 .artisan-products-page .btn-primary,
 .artisan-products-page .btn-secondary,
 .artisan-products-page .btn-success,
