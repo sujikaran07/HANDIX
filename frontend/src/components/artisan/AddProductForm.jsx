@@ -13,7 +13,6 @@ const AddProductForm = ({ onSave, onCancel }) => {
     images: null,
     customization: {
       size: false,
-      color: false,
       chat: false,
     },
     status: 'In Stock',
@@ -162,29 +161,31 @@ const AddProductForm = ({ onSave, onCancel }) => {
               ></textarea>
             </div>
             <div className="col-md-4">
-              <label className="form-label">Customization Type</label>
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="size"
-                  name="size"
-                  checked={product.customization.size}
-                  onChange={handleCustomizationChange}
-                />
-                <label htmlFor="size" className="form-check-label">Size</label>
-              </div>
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="color"
-                  name="color"
-                  checked={product.customization.color}
-                  onChange={handleCustomizationChange}
-                />
-                <label htmlFor="color" className="form-check-label">Color</label>
-              </div>
+              <label htmlFor="size" className="form-label">Size</label>
+              <select
+                className="form-select"
+                id="size"
+                name="size"
+                value={product.size || ''}
+                onChange={(e) =>
+                  setProduct((prevProduct) => ({
+                    ...prevProduct,
+                    size: e.target.value,
+                  }))
+                }
+              >
+                <option value="">Select Size</option>
+                <option value="XS">XS</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+              </select>
+            </div>
+          </div>
+          <div className="row mb-3">
+            <div className="col-md-4">
+              <label className="form-label">Customization</label>
               <div className="form-check">
                 <input
                   type="checkbox"
@@ -197,6 +198,24 @@ const AddProductForm = ({ onSave, onCancel }) => {
                 <label htmlFor="chat" className="form-check-label">Customizable</label>
               </div>
             </div>
+            {product.customization.chat && (
+              <div className="col-md-4">
+                <label htmlFor="additionalFees" className="form-label">Additional Fees</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="additionalFees"
+                  name="additionalFees"
+                  value={product.additionalFees || ''}
+                  onChange={(e) =>
+                    setProduct((prevProduct) => ({
+                      ...prevProduct,
+                      additionalFees: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            )}
           </div>
           <div className="d-flex justify-content-between mt-auto">
             <button type="submit" className="btn btn-success me-2">Save</button>
