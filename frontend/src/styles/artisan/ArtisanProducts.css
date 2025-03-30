@@ -101,6 +101,11 @@ body {
 }
 
 .artisan-products-page .btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px; 
+    width: 140px;
     border-color: #28a745;
     color: #28a745;
     background-color: transparent;
@@ -232,13 +237,13 @@ body {
     width: 120px;
     text-align: center;
     border-color: #6c757d;
-    color: #6c757d;
-    background-color: transparent;
+    color: #000000; /* Match AdminEmployee color */
+    background-color: #ffffff; /* Match AdminEmployee background */
 }
 
 .export-btn:hover {
-    background-color: #6c757d;
-    color: #ffffff;
+    background-color: #f0f0f0; /* Match AdminEmployee hover background */
+    color: #ffffff; /* Match AdminEmployee hover text color */
 }
 
 .product-pagination {

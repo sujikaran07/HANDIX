@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
-import { FaBox } from 'react-icons/fa';
+import { FaBox, FaPlus } from 'react-icons/fa';
 import Pagination from '../Pagination';
 import '../../styles/artisan/ArtisanProducts.css';
 
@@ -72,7 +72,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
               <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
             </button>
             <button className="btn btn-primary ms-2" onClick={onAddProductClick}>
-              Add Product
+              <FaPlus style={{ marginRight: '5px' }} /> Add Product
             </button>
           </div>
         </div>
