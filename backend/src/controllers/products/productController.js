@@ -6,9 +6,10 @@ const getAllProducts = async (req, res) => {
   try {
     const products = await Product.findAll({
       include: [
-        { model: Category, as: 'category' },
+        { model: Category, as: 'category', attributes: ['category_name'] },
         { model: ProductVariation, as: 'variations' },
       ],
+      attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'], // Added 'status'
     });
     res.status(200).json(products);
   } catch (error) {

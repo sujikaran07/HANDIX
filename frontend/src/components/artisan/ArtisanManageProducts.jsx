@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -15,6 +15,20 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 4;
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products'); // Updated API endpoint
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
       prevSelected.includes(category)
@@ -25,11 +39,11 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
 
   const filteredProducts = products.filter(product => {
     return (
-      (selectedCategories.includes(product.category)) &&
-      (filterStatus === 'All' || product.status === filterStatus) &&
-      (product.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      (selectedCategories.includes(product.category?.category_name)) && // Use category_name from the nested category object
+      (filterStatus === 'All' || product.status === filterStatus) && // Use status instead of product_status
+      (product.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       product.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -177,15 +191,17 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
             <tbody>
               {currentProducts.length > 0 ? (
                 currentProducts.map(product => (
-                  <tr key={product.id}>
-                    <td>{product.id}</td>
-                    <td>{product.name}</td>
-                    <td>{product.category}</td>
-                    <td>{product.price}</td>
+                  <tr key={product.product_id}>
+                    <td>{product.product_id}</td>
+                    <td>{product.product_name}</td>
+                    <td>{product.category?.category_name}</td>
+                    <td>{product.unit_price}</td>
                     <td>{product.quantity}</td>
-                    <td>{product.size}</td>
-                    <td>{product.date}</td>
-                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
+                    <td>
+                      {product.variations?.map(variation => variation.size).join(', ') || 'N/A'}
+                    </td>
+                    <td>{new Date(product.date_added).toLocaleDateString()}</td>
+                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Use status */}
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">

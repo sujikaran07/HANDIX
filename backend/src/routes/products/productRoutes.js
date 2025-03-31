@@ -3,7 +3,7 @@ const { getAllProducts, getProductById, createProduct, updateProduct, deleteProd
 
 const router = express.Router();
 
-router.get('/', getAllProducts); // Get all products
+router.get('/', getAllProducts); // Fetch all products
 router.get('/:id', getProductById); // Ensure this route is correctly mapped
 router.post('/', createProduct); // Create a new product
 router.put('/:id', updateProduct); // Update a product by ID

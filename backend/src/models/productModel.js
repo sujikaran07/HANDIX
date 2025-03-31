@@ -46,8 +46,13 @@ const Product = sequelize.define('Product', {
     defaultValue: false,
   },
   product_status: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(10), // Represents the stock status (e.g., 'In Stock', 'Out of Stock')
     defaultValue: 'In Stock',
+  },
+  status: {
+    type: DataTypes.ENUM('pending', 'approved', 'rejected'), // Represents the approval status of the product
+    allowNull: false,
+    defaultValue: 'pending',
   },
 }, {
   tableName: 'Products',
