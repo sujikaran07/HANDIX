@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../styles/artisan/ArtisanProducts.css';
 
-const AddProductForm = ({ onSave, onCancel }) => {
+const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
   const [product, setProduct] = useState({
-    id: 'P001', // Auto-generated or existing ID
+    product_id: productId, // Initialize with the passed productId
     name: '',
     description: '',
     category: '',
@@ -16,7 +16,33 @@ const AddProductForm = ({ onSave, onCancel }) => {
       chat: false,
     },
     status: 'In Stock',
+    size: '', 
   });
+
+  const [errors, setErrors] = useState({}); 
+
+  const fetchProductDetails = async (productId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProduct((prevProduct) => ({
+          ...prevProduct,
+          product_id: data.product_id,
+          name: data.product_name,
+          description: data.description,
+          category: data.category?.category_name || '',
+          price: data.unit_price,
+          status: data.product_status,
+          // Exclude size and quantity from being auto-filled
+        }));
+      } else {
+        console.error('Product not found');
+      }
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,6 +50,10 @@ const AddProductForm = ({ onSave, onCancel }) => {
       ...prevProduct,
       [name]: value,
     }));
+
+    if (name === 'product_id' && value) {
+      fetchProductDetails(value); 
+    }
   };
 
   const handleCustomizationChange = (e) => {
@@ -44,9 +74,29 @@ const AddProductForm = ({ onSave, onCancel }) => {
     }));
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!product.product_id) newErrors.product_id = 'Product ID is required';
+    if (!product.name) newErrors.name = 'Product Name is required';
+    if (!product.category) newErrors.category = 'Category is required';
+    if (!product.price || isNaN(product.price)) newErrors.price = 'Valid Unit Price is required';
+    if (!product.quantity || isNaN(product.quantity)) newErrors.quantity = 'Valid Stock Quantity is required';
+    if (!product.description) newErrors.description = 'Product Description is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(product);
+    if (validateForm()) {
+      const productWithUploader = {
+        ...product,
+        product_name: product.name, // Map 'name' to 'product_name' for backend compatibility
+        e_id: loggedInEmployeeId, // Add e_id to the product
+      };
+      console.log('Submitting product:', productWithUploader); // Debugging: Log the product data
+      onSave(productWithUploader);
+    }
   };
 
   return (
@@ -56,32 +106,34 @@ const AddProductForm = ({ onSave, onCancel }) => {
         <form onSubmit={handleSubmit} className="d-flex flex-column h-100">
           <div className="row mb-3">
             <div className="col-md-4">
-              <label htmlFor="id" className="form-label">Product ID</label>
+              <label htmlFor="product_id" className="form-label">Product ID</label>
               <input
                 type="text"
-                className="form-control"
-                id="id"
-                name="id"
-                value={product.id}
-                readOnly
+                className={`form-control ${errors.product_id ? 'is-invalid' : ''}`}
+                id="product_id"
+                name="product_id"
+                value={product.product_id}
+                onChange={handleChange} // Allow editing of product_id and fetch details
               />
+              {errors.product_id && <div className="invalid-feedback">{errors.product_id}</div>}
             </div>
             <div className="col-md-4">
               <label htmlFor="name" className="form-label">Product Name</label>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${errors.name ? 'is-invalid' : ''}`}
                 id="name"
                 name="name"
                 value={product.name}
                 onChange={handleChange}
                 required
               />
+              {errors.name && <div className="invalid-feedback">{errors.name}</div>}
             </div>
             <div className="col-md-4">
               <label htmlFor="category" className="form-label">Category</label>
               <select
-                className="form-select"
+                className={`form-select ${errors.category ? 'is-invalid' : ''}`}
                 id="category"
                 name="category"
                 value={product.category}
@@ -95,6 +147,7 @@ const AddProductForm = ({ onSave, onCancel }) => {
                 <option value="Crafts">Crafts</option>
                 <option value="Artistry">Artistry</option>
               </select>
+              {errors.category && <div className="invalid-feedback">{errors.category}</div>}
             </div>
           </div>
           <div className="row mb-3">
@@ -102,25 +155,27 @@ const AddProductForm = ({ onSave, onCancel }) => {
               <label htmlFor="unitPrice" className="form-label">Unit Price</label>
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${errors.price ? 'is-invalid' : ''}`}
                 id="unitPrice"
                 name="price"
                 value={product.price}
                 onChange={handleChange}
                 required
               />
+              {errors.price && <div className="invalid-feedback">{errors.price}</div>}
             </div>
             <div className="col-md-4">
               <label htmlFor="quantity" className="form-label">Stock Quantity</label>
               <input
                 type="number"
-                className="form-control"
+                className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
                 id="quantity"
                 name="quantity"
                 value={product.quantity}
                 onChange={handleChange}
                 required
               />
+              {errors.quantity && <div className="invalid-feedback">{errors.quantity}</div>}
             </div>
             <div className="col-md-4">
               <label htmlFor="status" className="form-label">Product Status</label>
@@ -151,7 +206,7 @@ const AddProductForm = ({ onSave, onCancel }) => {
             <div className="col-md-4">
               <label htmlFor="description" className="form-label">Product Description</label>
               <textarea
-                className="form-control"
+                className={`form-control ${errors.description ? 'is-invalid' : ''}`}
                 id="description"
                 name="description"
                 value={product.description}
@@ -159,6 +214,7 @@ const AddProductForm = ({ onSave, onCancel }) => {
                 rows="1" /* Adjusted to match the size of other fields */
                 required
               ></textarea>
+              {errors.description && <div className="invalid-feedback">{errors.description}</div>}
             </div>
             <div className="col-md-4">
               <label htmlFor="size" className="form-label">Size</label>
@@ -166,13 +222,9 @@ const AddProductForm = ({ onSave, onCancel }) => {
                 className="form-select"
                 id="size"
                 name="size"
-                value={product.size || ''}
-                onChange={(e) =>
-                  setProduct((prevProduct) => ({
-                    ...prevProduct,
-                    size: e.target.value,
-                  }))
-                }
+                value={product.size}
+                onChange={handleChange}
+                disabled={product.category !== 'Clothing'} // Disable if category is not Clothing
               >
                 <option value="">Select Size</option>
                 <option value="XS">XS</option>

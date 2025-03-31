@@ -6,7 +6,7 @@ const Product = sequelize.define('Product', {
     type: DataTypes.STRING(10),
     primaryKey: true,
     allowNull: false,
-    defaultValue: Sequelize.literal(`'P' || lpad(nextval('product_id_seq')::text, 3, '0')`),
+    defaultValue: Sequelize.literal(`'P' || lpad(nextval('product_id_seq')::text, 3, '0')`), // Auto-generate product_id
   },
   product_name: {
     type: DataTypes.STRING(255),
@@ -54,6 +54,16 @@ const Product = sequelize.define('Product', {
     allowNull: false,
     defaultValue: 'pending',
   },
+  e_id: {
+    type: DataTypes.STRING(10),
+    allowNull: false, // Ensure e_id is required
+    references: {
+      model: 'Employees', // Ensure this matches the actual table name
+      key: 'e_id',
+    },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
+  },
 }, {
   tableName: 'Products',
   timestamps: false,
@@ -61,8 +71,15 @@ const Product = sequelize.define('Product', {
 });
 
 Product.associate = (models) => {
-  Product.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
-  Product.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
+  if (models.Category) {
+    Product.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+  }
+  if (models.ProductVariation) {
+    Product.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
+  }
+  if (models.Employee) {
+    Product.belongsTo(models.Employee, { foreignKey: 'e_id', as: 'employee' });
+  }
 };
 
-module.exports = Product; // Ensure the model is exported directly
+module.exports = Product;

@@ -18,9 +18,26 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/products'); // Updated API endpoint
-        const data = await response.json();
-        setProducts(data);
+        const token = localStorage.getItem('token'); // Ensure the token is stored in localStorage
+        if (!token) {
+          console.error('No token found in localStorage');
+          return;
+        }
+
+        const response = await fetch('http://localhost:5000/api/products', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched products:', data); // Debugging: Log the fetched products
+          setProducts(data);
+        } else {
+          const errorData = await response.json();
+          console.error('Failed to fetch products:', errorData);
+        }
       } catch (error) {
         console.error('Error fetching products:', error);
       }
