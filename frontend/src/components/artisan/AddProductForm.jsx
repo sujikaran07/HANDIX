@@ -92,7 +92,10 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       const productWithUploader = {
         ...product,
         product_name: product.name, // Map 'name' to 'product_name' for backend compatibility
-        e_id: loggedInEmployeeId, // Add e_id to the product
+        e_id: loggedInEmployeeId, // Ensure e_id is included in the product data
+        size: product.category === 'Clothing' && product.size ? product.size : 'N/A', // Default size to 'N/A' if not Clothing or size not selected
+        price: parseFloat(product.price), // Ensure 'price' is sent as a number
+        status: 'pending', // Default to 'pending' for new products
       };
       console.log('Submitting product:', productWithUploader); // Debugging: Log the product data
       onSave(productWithUploader);

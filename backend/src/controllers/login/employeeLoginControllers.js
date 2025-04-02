@@ -8,6 +8,7 @@ dotenv.config();
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
+  console.log('Authorization header:', authHeader); // Debugging: Log the Authorization header
 
   if (!authHeader) {
     console.error('Authorization header missing');
@@ -63,13 +64,16 @@ const login = async (req, res) => {
 
     // Role-based redirection logic
     let redirectUrl = '';
+    let tokenKey = ''; // Key to store the token in localStorage
     if (user.roleId === 1) {
       redirectUrl = '/admin/dashboard';
+      tokenKey = 'adminToken'; // Use a separate key for admin
     } else if (user.roleId === 2) {
       redirectUrl = '/artisan/dashboard';
+      tokenKey = 'artisanToken'; // Use a separate key for artisan
     }
 
-    res.json({ token, redirectUrl });
+    res.json({ token, redirectUrl, tokenKey }); // Return the token key to the frontend
   } catch (error) {
     console.error(`Error logging in: ${error}`);
     res.status(500).json({ message: 'Internal server error' });

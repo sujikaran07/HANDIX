@@ -4,8 +4,8 @@ const { sequelize } = require('../config/db');
 const Product = sequelize.define('Product', {
   product_id: {
     type: DataTypes.STRING(10),
-    primaryKey: true,
     allowNull: false,
+    primaryKey: true, // Explicitly set product_id as the primary key
     defaultValue: Sequelize.literal(`'P' || lpad(nextval('product_id_seq')::text, 3, '0')`), // Auto-generate product_id
   },
   product_name: {
@@ -34,7 +34,7 @@ const Product = sequelize.define('Product', {
   },
   date_added: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
+    defaultValue: Sequelize.NOW, // Automatically set the current timestamp
   },
   quantity: {
     type: DataTypes.INTEGER,
@@ -68,6 +68,12 @@ const Product = sequelize.define('Product', {
   tableName: 'Products',
   timestamps: false,
   underscored: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['product_id', 'e_id'], // Composite unique constraint on product_id and e_id
+    },
+  ],
 });
 
 Product.associate = (models) => {

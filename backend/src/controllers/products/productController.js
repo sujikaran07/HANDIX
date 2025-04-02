@@ -16,6 +16,7 @@ const getAllProducts = async (req, res) => {
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'], // Added 'status'
     });
 
+    console.log('Fetched products:', products); // Debugging: Log the fetched products
     res.status(200).json(products);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -45,45 +46,101 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    console.log('Received product data:', req.body); // Debugging: Log the incoming data
+    console.log('Received product data:', req.body);
 
-    const { product_name, size, e_id, ...rest } = req.body;
+    const { product_id, product_name, size, e_id: bodyEId, category, price, status, ...rest } = req.body;
+    const e_id = bodyEId || req.user.id;
 
-    // Validate product_name and e_id
+    console.log('e_id from body:', bodyEId);
+    console.log('e_id from token:', req.user.id);
+    console.log('Final e_id:', e_id);
+
     if (!product_name) {
-      console.error('Validation Error: Product name is required');
       return res.status(400).json({ error: 'Product name is required' });
     }
     if (!e_id) {
-      console.error('Validation Error: Employee ID (e_id) is missing');
       return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     }
-
-    // Check if a product with the same name exists
-    const existingProduct = await Product.findOne({ where: { product_name } });
-    console.log('Existing product:', existingProduct);
-
-    let productId = existingProduct ? existingProduct.product_id : null;
-
-    if (!productId) {
-      // Generate a new unique product_id
-      const newProduct = await Product.create({ product_name, e_id, ...rest });
-      console.log('New product created:', newProduct);
-      productId = newProduct.product_id;
+    if (!price || isNaN(price)) {
+      return res.status(400).json({ error: 'Valid unit price is required' });
     }
 
-    // Create a new variation or update the existing product
-    const productVariation = await ProductVariation.create({
-      product_id: productId,
-      size,
-      additional_price: rest.unit_price,
-      stock_level: rest.quantity,
-    });
-    console.log('Product variation created:', productVariation);
+    const validStatuses = ['pending', 'approved', 'rejected'];
+    const finalStatus = validStatuses.includes(status) ? status : 'pending';
 
-    res.status(201).json({ message: 'Product saved successfully', productVariation });
+    // Ensure quantity is treated as a number
+    const quantity = parseInt(rest.quantity, 10);
+    if (isNaN(quantity)) {
+      return res.status(400).json({ error: 'Valid quantity is required' });
+    }
+
+    // Check if the product already exists in the ProductVariations table
+    const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
+
+    if (existingVariation) {
+      console.log(`Product ID "${product_id}" already exists in variations. Updating stock level.`);
+
+      // Update the stock level in the ProductVariations table
+      await existingVariation.update({
+        stock_level: existingVariation.stock_level + quantity,
+      });
+
+      console.log('Updated stock level in ProductVariations:', existingVariation);
+
+      // Add a new entry in the Products table for the employee's contribution
+      const uniqueProductId = `${product_id}-${e_id}`; // Append e_id to product_id to make it unique
+      const newProduct = await Product.create({
+        product_id: uniqueProductId,
+        product_name,
+        e_id,
+        unit_price: price,
+        product_status: rest.product_status || 'In Stock',
+        status: finalStatus,
+        date_added: new Date(),
+        quantity, // Track the employee's contribution
+        category_id: rest.category_id || null, // Ensure category_id is optional
+        description: rest.description || null,
+        customization_available: rest.customization_available || false,
+      });
+
+      console.log('New product entry created for employee:', newProduct);
+
+      return res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
+    }
+
+    // If the product does not exist in the ProductVariations table, create a new variation
+    console.log(`Product ID "${product_id}" does not exist in variations. Creating a new variation.`);
+
+    const newVariation = await ProductVariation.create({
+      product_id,
+      size: category === 'Clothing' && size ? size : 'N/A',
+      additional_price: price,
+      stock_level: quantity,
+    });
+
+    console.log('New variation created:', newVariation);
+
+    // Add a new entry in the Products table for the employee's contribution
+    const uniqueProductId = `${product_id}-${e_id}`; // Append e_id to product_id to make it unique
+    const newProduct = await Product.create({
+      product_id: uniqueProductId,
+      product_name,
+      e_id,
+      unit_price: price,
+      product_status: rest.product_status || 'In Stock',
+      status: finalStatus,
+      date_added: new Date(),
+      quantity, // Track the employee's contribution
+      category_id: rest.category_id || null, // Ensure category_id is optional
+      description: rest.description || null,
+      customization_available: rest.customization_available || false,
+    });
+
+    console.log('New product entry created for employee:', newProduct);
+
+    res.status(201).json({ message: 'New product and variation created successfully', newProduct });
   } catch (error) {
-    console.error('Error creating product:', error); // Debugging: Log the error
+    console.error('Error creating product:', error);
     res.status(500).json({ error: 'Failed to create product' });
   }
 };

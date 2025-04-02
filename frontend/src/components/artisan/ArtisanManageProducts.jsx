@@ -18,9 +18,9 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const token = localStorage.getItem('token'); // Ensure the token is stored in localStorage
+        const token = localStorage.getItem('artisanToken'); // Use artisanToken for artisan role
         if (!token) {
-          console.error('No token found in localStorage');
+          console.error('No token found for artisan');
           return;
         }
 
@@ -33,7 +33,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
         if (response.ok) {
           const data = await response.json();
           console.log('Fetched products:', data); // Debugging: Log the fetched products
-          setProducts(data);
+          setProducts(data); // Update the products state
         } else {
           const errorData = await response.json();
           console.error('Failed to fetch products:', errorData);
@@ -215,10 +215,12 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                     <td>{product.unit_price}</td>
                     <td>{product.quantity}</td>
                     <td>
-                      {product.variations?.map(variation => variation.size).join(', ') || 'N/A'}
+                      {product.category?.category_name === 'Clothing' && product.variations?.length > 0
+                        ? [...new Set(product.variations.map(variation => variation.size))].join(', ') // Remove duplicate sizes
+                        : 'N/A'}
                     </td>
-                    <td>{new Date(product.date_added).toLocaleDateString()}</td>
-                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Use status */}
+                    <td>{new Date(product.date_added).toISOString().split('T')[0]}</td> {/* Display only the date part */}
+                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">

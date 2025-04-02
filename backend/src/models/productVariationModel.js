@@ -33,6 +33,12 @@ const ProductVariation = sequelize.define('ProductVariation', {
   tableName: 'ProductVariations',
   timestamps: false,
   underscored: true,
+  indexes: [
+    {
+      unique: true,
+      fields: ['product_id', 'size'], // Enforce unique constraint on product_id and size
+    },
+  ],
 });
 
 ProductVariation.associate = (models) => {

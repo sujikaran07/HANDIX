@@ -14,9 +14,9 @@ const ArtisanProductsPage = () => {
   useEffect(() => {
     const fetchLoggedInEmployeeId = async () => {
       try {
-        const token = localStorage.getItem('token'); // Ensure the token is stored in localStorage
+        const token = localStorage.getItem('artisanToken'); // Use artisanToken for artisan role
         if (!token) {
-          console.error('No token found in localStorage');
+          console.error('No token found for artisan');
           return;
         }
 
@@ -71,12 +71,22 @@ const ArtisanProductsPage = () => {
 
   const handleSave = async (newProduct) => {
     try {
+      const token = localStorage.getItem('artisanToken'); // Use artisanToken for artisan role
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
       console.log('Sending product to backend:', newProduct); // Debugging: Log the product data
       const response = await fetch('http://localhost:5000/api/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+        },
         body: JSON.stringify(newProduct),
       });
+
       if (response.ok) {
         console.log('Product saved successfully:', await response.json());
         setShowAddProductForm(false);
@@ -99,7 +109,7 @@ const ArtisanProductsPage = () => {
           <AddProductForm
             onSave={handleSave}
             onCancel={handleCancel}
-            loggedInEmployeeId={loggedInEmployeeId} // Pass the dynamically fetched e_id
+            loggedInEmployeeId={loggedInEmployeeId} // Pass the logged-in employee's ID
             productId={newProductId} // Pass the new product ID to the form
           />
         ) : selectedProduct ? (
