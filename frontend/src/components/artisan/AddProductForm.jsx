@@ -4,7 +4,7 @@ import '../../styles/artisan/ArtisanProducts.css';
 
 const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
   const [product, setProduct] = useState({
-    product_id: productId, // Initialize with the passed productId
+    product_id: productId, 
     name: '',
     description: '',
     category: '',

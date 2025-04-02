@@ -74,6 +74,33 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ error: 'Valid quantity is required' });
     }
 
+    // Fetch the category_id based on the category name
+    let category_id = null;
+    if (category) {
+      const categoryRecord = await Category.findOne({ where: { category_name: category } });
+      if (!categoryRecord) {
+        return res.status(400).json({ error: `Category "${category}" does not exist` });
+      }
+      category_id = categoryRecord.category_id;
+    }
+
+    // Add the product to the Products table
+    const newProduct = await Product.create({
+      product_id,
+      product_name,
+      e_id,
+      unit_price: price,
+      product_status: rest.product_status || 'In Stock',
+      status: finalStatus,
+      date_added: new Date(),
+      quantity, // Track the employee's contribution
+      category_id, // Assign the category_id
+      description: rest.description || null,
+      customization_available: rest.customization_available || false,
+    });
+
+    console.log('New product entry created for employee:', newProduct);
+
     // Check if the product already exists in the ProductVariations table
     const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
 
@@ -86,24 +113,6 @@ const createProduct = async (req, res) => {
       });
 
       console.log('Updated stock level in ProductVariations:', existingVariation);
-
-      // Add a new entry in the Products table for the employee's contribution
-      const uniqueProductId = `${product_id}-${e_id}`; // Append e_id to product_id to make it unique
-      const newProduct = await Product.create({
-        product_id: uniqueProductId,
-        product_name,
-        e_id,
-        unit_price: price,
-        product_status: rest.product_status || 'In Stock',
-        status: finalStatus,
-        date_added: new Date(),
-        quantity, // Track the employee's contribution
-        category_id: rest.category_id || null, // Ensure category_id is optional
-        description: rest.description || null,
-        customization_available: rest.customization_available || false,
-      });
-
-      console.log('New product entry created for employee:', newProduct);
 
       return res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
     }
@@ -119,24 +128,6 @@ const createProduct = async (req, res) => {
     });
 
     console.log('New variation created:', newVariation);
-
-    // Add a new entry in the Products table for the employee's contribution
-    const uniqueProductId = `${product_id}-${e_id}`; // Append e_id to product_id to make it unique
-    const newProduct = await Product.create({
-      product_id: uniqueProductId,
-      product_name,
-      e_id,
-      unit_price: price,
-      product_status: rest.product_status || 'In Stock',
-      status: finalStatus,
-      date_added: new Date(),
-      quantity, // Track the employee's contribution
-      category_id: rest.category_id || null, // Ensure category_id is optional
-      description: rest.description || null,
-      customization_available: rest.customization_available || false,
-    });
-
-    console.log('New product entry created for employee:', newProduct);
 
     res.status(201).json({ message: 'New product and variation created successfully', newProduct });
   } catch (error) {

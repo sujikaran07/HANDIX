@@ -5,8 +5,7 @@ const Product = sequelize.define('Product', {
   product_id: {
     type: DataTypes.STRING(10),
     allowNull: false,
-    primaryKey: true, // Explicitly set product_id as the primary key
-    defaultValue: Sequelize.literal(`'P' || lpad(nextval('product_id_seq')::text, 3, '0')`), // Auto-generate product_id
+    primaryKey: true, // Keep product_id as the primary key
   },
   product_name: {
     type: DataTypes.STRING(255),
