@@ -92,6 +92,9 @@ Product.associate = (models) => {
   if (models.ProductImage) {
     Product.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'images' }); // Define association with ProductImage
   }
+  if (models.ProductEntry) {
+    Product.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'entries' });
+  }
 };
 
 module.exports = Product;

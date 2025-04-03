@@ -2,6 +2,7 @@ const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
 const ProductVariation = require('../../models/productVariationModel');
 const ProductImage = require('../../models/productImageModel'); // Import ProductImage model
+const ProductEntry = require('../../models/productEntryModel'); // Import ProductEntry model
 const { Op } = require('sequelize'); // Import Sequelize's Op for query operators
 
 const getAllProducts = async (req, res) => {
@@ -63,95 +64,93 @@ const createProduct = async (req, res) => {
   try {
     console.log('Received product data:', req.body); // Debugging: Log the received product data
 
-    const { product_id, product_name, size, e_id: bodyEId, category, price, status, ...rest } = req.body;
+    const { product_id, product_name, size, e_id: bodyEId, category, price, status, images, ...rest } = req.body;
     const e_id = bodyEId || req.user.id;
 
-    console.log('e_id from body:', bodyEId);
-    console.log('e_id from token:', req.user.id);
-    console.log('Final e_id:', e_id);
-
     // Validation checks
-    if (!product_name) {
-      return res.status(400).json({ error: 'Product name is required' });
-    }
-    if (!e_id) {
-      return res.status(400).json({ error: 'Employee ID (e_id) is required' });
-    }
-    if (!price || isNaN(price)) {
-      return res.status(400).json({ error: 'Valid unit price is required' });
-    }
+    if (!product_name) return res.status(400).json({ error: 'Product name is required' });
+    if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
+    if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
 
     const validStatuses = ['pending', 'approved', 'rejected'];
     const finalStatus = validStatuses.includes(status) ? status : 'pending';
 
-    // Ensure quantity is treated as a number
     const quantity = parseInt(rest.quantity, 10);
-    if (isNaN(quantity)) {
-      return res.status(400).json({ error: 'Valid quantity is required' });
-    }
+    if (isNaN(quantity)) return res.status(400).json({ error: 'Valid quantity is required' });
 
     // Fetch the category_id based on the category name
     let category_id = null;
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
-      if (!categoryRecord) {
-        return res.status(400).json({ error: `Category "${category}" does not exist` });
-      }
+      if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
       category_id = categoryRecord.category_id;
 
       // Update the stock level of the category
-      await categoryRecord.update({
-        stock_level: categoryRecord.stock_level + quantity,
-      });
-      console.log(`Updated stock level for category "${category}":`, categoryRecord.stock_level);
+      await categoryRecord.update({ stock_level: categoryRecord.stock_level + quantity });
     }
 
-    // Create the product in the Products table
-    const newProduct = await Product.create({
+    // Check if the product already exists
+    let product = await Product.findOne({ where: { product_id } });
+    if (!product) {
+      // Create a new product if it doesn't exist
+      product = await Product.create({
+        product_id,
+        product_name,
+        e_id,
+        unit_price: price,
+        product_status: rest.product_status || 'In Stock',
+        status: finalStatus,
+        date_added: new Date(),
+        quantity,
+        category_id,
+        description: rest.description || null,
+        customization_available: rest.customization_available || false,
+      });
+    } else {
+      // Update the product's quantity if it already exists
+      await product.update({ quantity: product.quantity + quantity });
+    }
+
+    // Create a new entry in the ProductEntry table
+    const productEntry = await ProductEntry.create({
       product_id,
       product_name,
-      e_id,
+      description: rest.description || null,
       unit_price: price,
+      quantity,
       product_status: rest.product_status || 'In Stock',
       status: finalStatus,
-      date_added: new Date(), // Always set the current timestamp for the new row
-      quantity, // Track the employee's contribution
-      category_id, // Assign the category_id
-      description: rest.description || null,
+      e_id,
+      date_added: new Date(),
       customization_available: rest.customization_available || false,
+      category_id,
     });
-
-    console.log('New product entry created for employee:', newProduct);
 
     // Check if the product variation already exists
     const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
-
     if (existingVariation) {
-      console.log(`Product ID "${product_id}" already exists in variations. Updating stock level.`);
-
-      // Update the stock level in the ProductVariations table
-      await existingVariation.update({
-        stock_level: existingVariation.stock_level + quantity,
-      });
-
-      console.log('Updated stock level in ProductVariations:', existingVariation);
+      await existingVariation.update({ stock_level: existingVariation.stock_level + quantity });
     } else {
-      // If the product variation does not exist, create a new variation
-      console.log(`Product ID "${product_id}" does not exist in variations. Creating a new variation.`);
-
       await ProductVariation.create({
         product_id,
         size: category === 'Clothing' && size ? size : 'N/A',
         additional_price: price,
         stock_level: quantity,
       });
-
-      console.log('New variation created.');
     }
 
-    res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
+    // Add images to the ProductImage table
+    if (images && images.length > 0) {
+      const imageRecords = images.map((imageUrl) => ({
+        product_id,
+        image_url: imageUrl,
+      }));
+      await ProductImage.bulkCreate(imageRecords);
+    }
+
+    res.status(201).json({ message: 'Product and related entries created successfully', productEntry });
   } catch (error) {
-    console.error('Error creating product:', error); // Debugging: Log the error
+    console.error('Error creating product:', error);
     res.status(500).json({ error: 'Failed to create product' });
   }
 };
