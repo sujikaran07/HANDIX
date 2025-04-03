@@ -5,7 +5,7 @@ const cors = require("cors");
 const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");
 const employeeRoutes = require("./routes/employees/employeeRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes');
-const productRoutes = require('./routes/products/productRoutes'); // Import product routes
+const productRoutes = require('./routes/products/productRoutes');
 const { connectToDatabase, sequelize } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
 const net = require('net');
@@ -13,26 +13,27 @@ const { Address } = require('./models/addressModel');
 const { Order } = require('./models/orderModel');
 const { OrderDetail } = require('./models/orderDetailModel');
 const { ProfileImage } = require('./models/profileImageModel');
-const Product = require('./models/productModel'); // Ensure the correct import
+const Product = require('./models/productModel');
 const ProductVariation = require('./models/productVariationModel');
 const Category = require('./models/categoryModel');
 const { Customer } = require('./models/customerModel');
-const ProductImage = require('./models/productImageModel'); // Import ProductImage model
+const ProductImage = require('./models/productImageModel');
+const ProductEntry = require('./models/productEntryModel');
 
-// Ensure associations are initialized
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
-Product.associate({ Category, ProductVariation, ProductImage }); // Add ProductImage to Product associations
-Category.associate({ Product });
+Product.associate({ Category, ProductVariation, ProductImage, ProductEntry });
+Category.associate({ Product, ProductEntry });
 ProductVariation.associate({ Product });
-ProductImage.associate({ Product }); // Initialize reverse association
+ProductImage.associate({ Product });
+ProductEntry.associate({ Product, Category });
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Allow requests from the frontend's origin
+  origin: 'http://localhost:5173', // Ensure this matches the frontend's origin
 }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -40,7 +41,7 @@ app.use(express.json());
 app.use("/api/login", employeeLoginRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);
-app.use('/api/products', productRoutes); // Add product routes
+app.use('/api/products', productRoutes);
 
 const PORT = process.env.PORT || 5000;
 

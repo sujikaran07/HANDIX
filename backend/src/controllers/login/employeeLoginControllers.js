@@ -64,6 +64,7 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign({ id: user.eId, role: user.roleId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log('Token generated:', token); // Log the generated JWT token
     console.log('Login successful, token generated');
 
     // Role-based redirection logic

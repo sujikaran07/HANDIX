@@ -77,7 +77,7 @@ ProductEntry.associate = (models) => {
     ProductEntry.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
   }
   if (models.Category) {
-    ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+    ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' }); // Ensure this association is defined
   }
 };
 

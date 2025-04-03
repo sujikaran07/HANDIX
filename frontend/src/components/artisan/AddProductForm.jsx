@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../styles/artisan/ArtisanProducts.css';
 
 const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
   const [product, setProduct] = useState({
-    product_id: productId, 
+    product_id: productId,
     name: '',
     description: '',
     category: '',
@@ -16,10 +16,37 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       chat: false,
     },
     status: 'In Stock',
-    size: '', 
+    size: '',
   });
 
-  const [errors, setErrors] = useState({}); 
+  const [errors, setErrors] = useState({});
+  const [suggestions, setSuggestions] = useState([]);
+
+  const fetchProductSuggestions = async (name) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched product suggestions:', data.products);
+        setSuggestions(data.products || []);
+      } else {
+        console.error('Failed to fetch product suggestions:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching product suggestions:', error);
+    }
+  };
 
   const fetchProductDetails = async (productId) => {
     try {
@@ -34,13 +61,51 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           category: data.category?.category_name || '',
           price: data.unit_price,
           status: data.product_status,
-          // Exclude size and quantity from being auto-filled
         }));
       } else {
-        console.error('Product not found');
+        console.error('Failed to fetch product details:', response.statusText);
       }
     } catch (error) {
       console.error('Error fetching product details:', error);
+    }
+  };
+
+  const fetchProductDetailsByName = async (name) => {
+    try {
+      console.log('Fetching product details for name:', name);
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched product details by name:', data);
+        setProduct((prevProduct) => ({
+          ...prevProduct,
+          product_id: data.product_id,
+          name: data.product_name,
+          description: data.description,
+          category: data.category?.category_name || '',
+          price: data.unit_price,
+          customization: {
+            ...prevProduct.customization,
+            size: data.customization_available,
+          },
+          status: data.product_status,
+        }));
+      } else {
+        console.error('Failed to fetch product details by name:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching product details by name:', error);
     }
   };
 
@@ -52,19 +117,30 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     }));
 
     if (name === 'product_id' && value) {
-      fetchProductDetails(value); 
+      fetchProductDetails(value);
     }
   };
 
-  const handleCustomizationChange = (e) => {
-    const { name, checked } = e.target;
+  const handleNameChange = (e) => {
+    const { value } = e.target;
     setProduct((prevProduct) => ({
       ...prevProduct,
-      customization: {
-        ...prevProduct.customization,
-        [name]: checked,
-      },
+      name: value,
     }));
+
+    if (value.length > 1) {
+      fetchProductSuggestions(value);
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionSelect = (selectedProductName) => {
+    const selectedProduct = suggestions.find((product) => product.product_name === selectedProductName);
+    if (selectedProduct) {
+      fetchProductDetailsByName(selectedProduct.product_name);
+      setSuggestions([]);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -91,13 +167,12 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     if (validateForm()) {
       const productWithUploader = {
         ...product,
-        product_name: product.name, // Map 'name' to 'product_name' for backend compatibility
-        e_id: loggedInEmployeeId, // Ensure e_id is included in the product data
-        size: product.category === 'Clothing' && product.size ? product.size : 'N/A', // Default size to 'N/A' if not Clothing or size not selected
-        price: parseFloat(product.price), // Ensure 'price' is sent as a number
-        status: 'pending', // Default to 'pending' for new products
+        product_name: product.name,
+        e_id: loggedInEmployeeId,
+        size: product.category === 'Clothing' && product.size ? product.size : 'N/A',
+        price: parseFloat(product.price),
+        status: 'pending',
       };
-      console.log('Submitting product:', productWithUploader); // Debugging: Log the product data
       onSave(productWithUploader);
     }
   };
@@ -116,7 +191,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 id="product_id"
                 name="product_id"
                 value={product.product_id}
-                onChange={handleChange} // Allow editing of product_id and fetch details
+                onChange={handleChange}
               />
               {errors.product_id && <div className="invalid-feedback">{errors.product_id}</div>}
             </div>
@@ -128,9 +203,17 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 id="name"
                 name="name"
                 value={product.name}
-                onChange={handleChange}
+                onChange={handleNameChange}
+                list="productSuggestions"
                 required
               />
+              <datalist id="productSuggestions">
+                {suggestions.map((suggestion) => (
+                  <option key={suggestion.product_id} value={suggestion.product_name}>
+                    {suggestion.product_name}
+                  </option>
+                ))}
+              </datalist>
               {errors.name && <div className="invalid-feedback">{errors.name}</div>}
             </div>
             <div className="col-md-4">
@@ -214,63 +297,11 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 name="description"
                 value={product.description}
                 onChange={handleChange}
-                rows="1" /* Adjusted to match the size of other fields */
+                rows="1"
                 required
               ></textarea>
               {errors.description && <div className="invalid-feedback">{errors.description}</div>}
             </div>
-            <div className="col-md-4">
-              <label htmlFor="size" className="form-label">Size</label>
-              <select
-                className="form-select"
-                id="size"
-                name="size"
-                value={product.size}
-                onChange={handleChange}
-                disabled={product.category !== 'Clothing'} // Disable if category is not Clothing
-              >
-                <option value="">Select Size</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-              </select>
-            </div>
-          </div>
-          <div className="row mb-3">
-            <div className="col-md-4">
-              <label className="form-label">Customization</label>
-              <div className="form-check">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  id="chat"
-                  name="chat"
-                  checked={product.customization.chat}
-                  onChange={handleCustomizationChange}
-                />
-                <label htmlFor="chat" className="form-check-label">Customizable</label>
-              </div>
-            </div>
-            {product.customization.chat && (
-              <div className="col-md-4">
-                <label htmlFor="additionalFees" className="form-label">Additional Fees</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="additionalFees"
-                  name="additionalFees"
-                  value={product.additionalFees || ''}
-                  onChange={(e) =>
-                    setProduct((prevProduct) => ({
-                      ...prevProduct,
-                      additionalFees: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            )}
           </div>
           <div className="d-flex justify-content-between mt-auto">
             <button type="submit" className="btn btn-success me-2">Save</button>

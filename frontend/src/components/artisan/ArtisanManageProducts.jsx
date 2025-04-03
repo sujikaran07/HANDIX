@@ -8,57 +8,46 @@ import Pagination from '../Pagination';
 import '../../styles/artisan/ArtisanProducts.css';
 
 const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
-  const [products, setProducts] = useState([]); 
+  const [entries, setEntries] = useState([]); 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 4;
+  const entriesPerPage = 4;
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchEntries = async () => {
       try {
-        const token = localStorage.getItem('artisanToken'); // Use artisanToken for artisan role
+        const token = localStorage.getItem('artisanToken'); 
         if (!token) {
           console.error('No token found for artisan');
-          alert('You are not logged in. Please log in to view your products.');
-          window.location.href = '/login'; // Redirect to login page
+          alert('You are not logged in. Please log in to view your entries.');
+          window.location.href = '/login'; 
           return;
         }
 
-        console.log('Fetching products with token:', token); // Debugging: Log the token
-        const response = await fetch('http://localhost:5000/api/products', {
+        console.log('Fetching product entries with token:', token);
+        const response = await fetch('http://localhost:5000/api/products/entries', {
           headers: {
-            Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+            Authorization: `Bearer ${token}`, 
           },
         });
 
         if (response.ok) {
           const data = await response.json();
-          if (data.products && data.products.length > 0) {
-            console.log('Fetched products:', data.products); // Debugging: Log the fetched products
-            setProducts(data.products); // Update the products state
-          } else {
-            console.log(data.message || 'No products available'); // Debugging: Log the message
-            setProducts([]); // Set products to an empty array
-          }
-        } else if (response.status === 401) {
-          const errorData = await response.json();
-          console.error('Unauthorized:', errorData);
-          alert('Session expired. Please log in again.');
-          localStorage.removeItem('artisanToken'); // Remove expired token
-          window.location.href = '/login'; // Redirect to login page
+          console.log('Fetched product entries:', data.entries); // Debugging: Log the fetched entries
+          setEntries(data.entries); // Update the entries state
         } else {
-          console.error('Failed to fetch products:', response.statusText);
-          alert('Unable to fetch products at the moment. Please try again later.');
+          console.error('Failed to fetch product entries:', response.statusText);
+          alert('Unable to fetch product entries at the moment. Please try again later.');
         }
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching product entries:', error);
         alert('An unexpected error occurred. Please try again later.');
       }
     };
 
-    fetchProducts();
+    fetchEntries();
   }, []);
 
   const handleCategoryChange = (category) => {
@@ -69,20 +58,20 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
     );
   };
 
-  const filteredProducts = products.filter(product => {
+  const filteredEntries = entries.filter(entry => {
     return (
-      (selectedCategories.includes(product.category?.category_name)) && // Use category_name from the nested category object
-      (filterStatus === 'All' || product.status === filterStatus) && // Use status instead of product_status
-      (product.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (selectedCategories.includes(entry.category?.category_name)) && // Use category_name from the nested category object
+      (filterStatus === 'All' || entry.status === filterStatus) && // Use status instead of product_status
+      (entry.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       entry.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       entry.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const indexOfLastEntry = currentPage * entriesPerPage;
+  const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
+  const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
+  const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -97,7 +86,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
               <FaBox className="product-icon" />
               <div className="text-section">
                 <h2>Products</h2>
-                <p>Manage your products</p>
+                <p>Manage your product entries</p>
               </div>
             </div>
           </div>
@@ -214,28 +203,22 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                 <th>Category</th>
                 <th>Unit Price</th>
                 <th>Quantity</th>
-                <th>Size</th>
                 <th>Uploaded Date</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {currentProducts.length > 0 ? (
-                currentProducts.map(product => (
-                  <tr key={product.product_id}>
-                    <td>{product.product_id}</td>
-                    <td>{product.product_name}</td>
-                    <td>{product.category?.category_name}</td>
-                    <td>{product.unit_price}</td>
-                    <td>{product.quantity}</td>
-                    <td>
-                      {product.category?.category_name === 'Clothing' && product.variations?.length > 0
-                        ? [...new Set(product.variations.map(variation => variation.size))].join(', ') // Remove duplicate sizes
-                        : 'N/A'}
-                    </td>
-                    <td>{new Date(product.date_added).toISOString().split('T')[0]}</td> {/* Display only the date part */}
-                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
+              {currentEntries.length > 0 ? (
+                currentEntries.map(entry => (
+                  <tr key={entry.product_id}>
+                    <td>{entry.product_id}</td>
+                    <td>{entry.product_name}</td>
+                    <td>{entry.category?.category_name}</td>
+                    <td>{entry.unit_price}</td>
+                    <td>{entry.quantity}</td>
+                    <td>{new Date(entry.date_added).toISOString().split('T')[0]}</td> {/* Display only the date part */}
+                    <td className={`status ${entry.status.toLowerCase()}`}>{entry.status}</td>
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -243,7 +226,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                         </button>
                         <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                           <li>
-                            <button className="dropdown-item" onClick={() => onViewProduct(product)}>View</button>
+                            <button className="dropdown-item" onClick={() => onViewProduct(entry)}>View</button>
                           </li>
                           <li>
                             <button className="dropdown-item">Edit</button>
@@ -258,7 +241,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="text-center">No products available</td>
+                  <td colSpan="8" className="text-center">No entries available</td>
                 </tr>
               )}
             </tbody>
