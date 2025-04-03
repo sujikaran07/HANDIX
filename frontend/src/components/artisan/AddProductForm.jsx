@@ -10,17 +10,19 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     category: '',
     price: '',
     quantity: '',
+    size: '', // Add size field
+    additional_price: '', // Add additional_price field
     images: null,
     customization: {
       size: false,
       chat: false,
     },
     status: 'In Stock',
-    size: '',
   });
 
   const [errors, setErrors] = useState({});
   const [suggestions, setSuggestions] = useState([]);
+  const [showAdditionalPrice, setShowAdditionalPrice] = useState(false); // State to toggle visibility
 
   const fetchProductSuggestions = async (name) => {
     try {
@@ -150,6 +152,16 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     }));
   };
 
+  const handleAdditionalPriceToggle = () => {
+    setShowAdditionalPrice((prev) => !prev); // Toggle visibility
+    if (!showAdditionalPrice) {
+      setProduct((prevProduct) => ({
+        ...prevProduct,
+        additional_price: '', // Reset additional_price when hidden
+      }));
+    }
+  };
+
   const validateForm = () => {
     const newErrors = {};
     if (!product.product_id) newErrors.product_id = 'Product ID is required';
@@ -171,6 +183,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         e_id: loggedInEmployeeId,
         size: product.category === 'Clothing' && product.size ? product.size : 'N/A',
         price: parseFloat(product.price),
+        additional_price: showAdditionalPrice ? parseFloat(product.additional_price || 0) : 0, // Ensure additional_price is a number
+        customization_available: showAdditionalPrice, // Set customization_available based on checkbox
         status: 'pending',
       };
       onSave(productWithUploader);
@@ -239,6 +253,37 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           </div>
           <div className="row mb-3">
             <div className="col-md-4">
+              <label htmlFor="description" className="form-label">Description</label>
+              <input
+                type="text"
+                className={`form-control ${errors.description ? 'is-invalid' : ''}`}
+                id="description"
+                name="description"
+                value={product.description}
+                onChange={handleChange}
+                required
+              />
+              {errors.description && <div className="invalid-feedback">{errors.description}</div>}
+            </div>
+            <div className="col-md-4">
+              <label htmlFor="size" className="form-label">Size</label>
+              <select
+                className="form-select"
+                id="size"
+                name="size"
+                value={product.size}
+                onChange={handleChange}
+                disabled={product.category !== 'Clothing'} // Disable if category is not "Clothing"
+              >
+                <option value="">Select Size</option>
+                <option value="XS">XS</option>
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+              </select>
+            </div>
+            <div className="col-md-4">
               <label htmlFor="unitPrice" className="form-label">Unit Price</label>
               <input
                 type="text"
@@ -251,6 +296,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
               />
               {errors.price && <div className="invalid-feedback">{errors.price}</div>}
             </div>
+          </div>
+          <div className="row mb-3">
             <div className="col-md-4">
               <label htmlFor="quantity" className="form-label">Stock Quantity</label>
               <input
@@ -263,6 +310,17 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 required
               />
               {errors.quantity && <div className="invalid-feedback">{errors.quantity}</div>}
+            </div>
+            <div className="col-md-4">
+              <label htmlFor="images" className="form-label">Product Images</label>
+              <input
+                type="file"
+                className="form-control"
+                id="images"
+                name="images"
+                onChange={handleImageChange}
+                multiple
+              />
             </div>
             <div className="col-md-4">
               <label htmlFor="status" className="form-label">Product Status</label>
@@ -278,31 +336,34 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
               </select>
             </div>
           </div>
-          <div className="row mb-3">
+          <div className="row mb-3 align-items-center">
             <div className="col-md-4">
-              <label htmlFor="images" className="form-label">Product Images</label>
-              <input
-                type="file"
-                className="form-control"
-                id="images"
-                name="images"
-                onChange={handleImageChange}
-                multiple
-              />
+              <div className="form-check">
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="customizationCheckbox"
+                  checked={showAdditionalPrice}
+                  onChange={handleAdditionalPriceToggle}
+                />
+                <label className="form-check-label" htmlFor="customizationCheckbox">
+                  Customization
+                </label>
+              </div>
             </div>
-            <div className="col-md-4">
-              <label htmlFor="description" className="form-label">Product Description</label>
-              <textarea
-                className={`form-control ${errors.description ? 'is-invalid' : ''}`}
-                id="description"
-                name="description"
-                value={product.description}
-                onChange={handleChange}
-                rows="1"
-                required
-              ></textarea>
-              {errors.description && <div className="invalid-feedback">{errors.description}</div>}
-            </div>
+            {showAdditionalPrice && (
+              <div className="col-md-4">
+                <label htmlFor="additional_price" className="form-label">Enter Customization Price</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  id="additional_price"
+                  name="additional_price"
+                  value={product.additional_price}
+                  onChange={handleChange}
+                />
+              </div>
+            )}
           </div>
           <div className="d-flex justify-content-between mt-auto">
             <button type="submit" className="btn btn-success me-2">Save</button>

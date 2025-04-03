@@ -56,7 +56,7 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { product_id, product_name, size, e_id: bodyEId, category, price, status, images, ...rest } = req.body;
+    const { product_id, product_name, size, additional_price, customization_available, e_id: bodyEId, category, price, status, images, ...rest } = req.body;
     const e_id = bodyEId || req.user.id;
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
@@ -90,7 +90,7 @@ const createProduct = async (req, res) => {
         quantity,
         category_id,
         description: rest.description || null,
-        customization_available: rest.customization_available || false,
+        customization_available: customization_available || false, // Save customization_available
       });
     } else {
       await product.update({ quantity: product.quantity + quantity });
@@ -106,18 +106,19 @@ const createProduct = async (req, res) => {
       status: finalStatus,
       e_id,
       date_added: new Date(),
-      customization_available: rest.customization_available || false,
+      customization_available: customization_available || false, // Save customization_available
       category_id,
     });
 
-    const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
+    const resolvedSize = size || 'N/A'; // Default to 'N/A' if size is not provided
+    const existingVariation = await ProductVariation.findOne({ where: { product_id, size: resolvedSize } });
     if (existingVariation) {
       await existingVariation.update({ stock_level: existingVariation.stock_level + quantity });
     } else {
       await ProductVariation.create({
         product_id,
-        size: category === 'Clothing' && size ? size : 'N/A',
-        additional_price: price,
+        size: resolvedSize,
+        additional_price: additional_price || 0.00,
         stock_level: quantity,
       });
     }
