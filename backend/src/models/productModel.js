@@ -5,7 +5,7 @@ const Product = sequelize.define('Product', {
   product_id: {
     type: DataTypes.STRING(10),
     allowNull: false,
-    primaryKey: true, // Keep product_id as the primary key
+    primaryKey: true, // Set product_id as the primary key
   },
   product_name: {
     type: DataTypes.STRING(255),
@@ -70,9 +70,13 @@ const Product = sequelize.define('Product', {
   indexes: [
     {
       unique: true,
-      fields: ['product_id', 'e_id'], // Composite unique constraint on product_id and e_id
+      fields: ['product_id', 'e_id', 'date_added'], // Composite unique constraint on product_id, e_id, and date_added
     },
   ],
+  // Disable the default `id` column
+  defaultScope: {
+    attributes: { exclude: ['id'] },
+  },
 });
 
 Product.associate = (models) => {

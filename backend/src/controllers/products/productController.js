@@ -8,7 +8,7 @@ const getAllProducts = async (req, res) => {
     console.log('Fetching products for e_id:', e_id); // Debugging: Log the e_id
 
     const products = await Product.findAll({
-      where: { e_id }, // Filter products by e_id
+      where: { e_id }, // Filter by the logged-in user's e_id
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: ProductVariation, as: 'variations' },
@@ -55,6 +55,25 @@ const createProduct = async (req, res) => {
     console.log('e_id from token:', req.user.id);
     console.log('Final e_id:', e_id);
 
+    // Check if the product already exists by product_id or product_name
+    const existingProduct = await Product.findOne({
+      where: {
+        [Product.sequelize.Op.or]: [
+          { product_id },
+          { product_name },
+        ],
+      },
+    });
+
+    if (existingProduct) {
+      console.log(`Product with ID "${product_id}" or name "${product_name}" already exists.`);
+      return res.status(200).json({
+        message: 'Product already exists. Pre-filling fields.',
+        existingProduct,
+      });
+    }
+
+    // Validation checks
     if (!product_name) {
       return res.status(400).json({ error: 'Product name is required' });
     }
@@ -84,24 +103,7 @@ const createProduct = async (req, res) => {
       category_id = categoryRecord.category_id;
     }
 
-    // Add the product to the Products table
-    const newProduct = await Product.create({
-      product_id,
-      product_name,
-      e_id,
-      unit_price: price,
-      product_status: rest.product_status || 'In Stock',
-      status: finalStatus,
-      date_added: new Date(),
-      quantity, // Track the employee's contribution
-      category_id, // Assign the category_id
-      description: rest.description || null,
-      customization_available: rest.customization_available || false,
-    });
-
-    console.log('New product entry created for employee:', newProduct);
-
-    // Check if the product already exists in the ProductVariations table
+    // Check if the product variation already exists
     const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
 
     if (existingVariation) {
@@ -113,23 +115,38 @@ const createProduct = async (req, res) => {
       });
 
       console.log('Updated stock level in ProductVariations:', existingVariation);
+    } else {
+      // If the product variation does not exist, create a new variation
+      console.log(`Product ID "${product_id}" does not exist in variations. Creating a new variation.`);
 
-      return res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
+      await ProductVariation.create({
+        product_id,
+        size: category === 'Clothing' && size ? size : 'N/A',
+        additional_price: price,
+        stock_level: quantity,
+      });
+
+      console.log('New variation created.');
     }
 
-    // If the product does not exist in the ProductVariations table, create a new variation
-    console.log(`Product ID "${product_id}" does not exist in variations. Creating a new variation.`);
-
-    const newVariation = await ProductVariation.create({
+    // Add a new row in the Products table for the employee's contribution
+    const newProduct = await Product.create({
       product_id,
-      size: category === 'Clothing' && size ? size : 'N/A',
-      additional_price: price,
-      stock_level: quantity,
+      product_name,
+      e_id,
+      unit_price: price,
+      product_status: rest.product_status || 'In Stock',
+      status: finalStatus,
+      date_added: new Date(), // Always set the current timestamp for the new row
+      quantity, // Track the employee's contribution
+      category_id, // Assign the category_id
+      description: rest.description || null,
+      customization_available: rest.customization_available || false,
     });
 
-    console.log('New variation created:', newVariation);
+    console.log('New product entry created for employee:', newProduct);
 
-    res.status(201).json({ message: 'New product and variation created successfully', newProduct });
+    res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
   } catch (error) {
     console.error('Error creating product:', error);
     res.status(500).json({ error: 'Failed to create product' });
