@@ -210,7 +210,11 @@ const getProductByName = async (req, res) => {
   try {
     console.log('Fetching product by name:', req.query.name); // Debugging: Log the product name
     const product = await Product.findOne({
-      where: { product_name: req.query.name },
+      where: {
+        product_name: {
+          [Op.iLike]: req.query.name, // Use case-insensitive matching
+        },
+      },
       attributes: ['product_id', 'product_name', 'description', 'unit_price', 'category_id', 'customization_available', 'product_status', 'status'],
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },

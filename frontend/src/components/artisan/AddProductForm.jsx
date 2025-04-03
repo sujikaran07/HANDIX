@@ -72,7 +72,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const fetchProductDetailsByName = async (name) => {
     try {
-      console.log('Fetching product details for name:', name);
+      console.log('Fetching product details for name:', name); // Debugging: Log the product name
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
@@ -87,10 +87,10 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product details by name:', data);
+        console.log('Fetched product details by name:', data); // Debugging: Log the fetched product details
         setProduct((prevProduct) => ({
           ...prevProduct,
-          product_id: data.product_id,
+          product_id: data.product_id, // Update product_id
           name: data.product_name,
           description: data.description,
           category: data.category?.category_name || '',
@@ -204,6 +204,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 name="name"
                 value={product.name}
                 onChange={handleNameChange}
+                onBlur={() => fetchProductDetailsByName(product.name)} // Trigger fetch on blur
                 list="productSuggestions"
                 required
               />
