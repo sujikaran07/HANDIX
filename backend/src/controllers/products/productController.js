@@ -95,6 +95,12 @@ const createProduct = async (req, res) => {
         return res.status(400).json({ error: `Category "${category}" does not exist` });
       }
       category_id = categoryRecord.category_id;
+
+      // Update the stock level of the category
+      await categoryRecord.update({
+        stock_level: categoryRecord.stock_level + quantity,
+      });
+      console.log(`Updated stock level for category "${category}":`, categoryRecord.stock_level);
     }
 
     // Create the product in the Products table

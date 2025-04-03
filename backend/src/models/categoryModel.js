@@ -16,6 +16,11 @@ const Category = sequelize.define('Category', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  stock_level: {
+    type: DataTypes.INTEGER, // New column for stock level
+    defaultValue: 0, // Default value is 0
+    allowNull: true,
+  },
 }, {
   tableName: 'Categories',
   timestamps: false,
@@ -26,4 +31,4 @@ Category.associate = (models) => {
   Category.hasMany(models.Product, { foreignKey: 'category_id', as: 'products' });
 };
 
-module.exports = Category; // Corrected export statement
+module.exports = Category;
