@@ -21,6 +21,8 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
         const token = localStorage.getItem('artisanToken'); // Use artisanToken for artisan role
         if (!token) {
           console.error('No token found for artisan');
+          alert('You are not logged in. Please log in to view your products.');
+          window.location.href = '/login'; // Redirect to login page
           return;
         }
 
@@ -34,12 +36,20 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
           const data = await response.json();
           console.log('Fetched products:', data); // Debugging: Log the fetched products
           setProducts(data); // Update the products state
+        } else if (response.status === 401) {
+          const errorData = await response.json();
+          console.error('Unauthorized:', errorData);
+          alert('Session expired. Please log in again.');
+          localStorage.removeItem('artisanToken'); // Remove expired token
+          window.location.href = '/login'; // Redirect to login page
         } else {
           const errorData = await response.json();
           console.error('Failed to fetch products:', errorData);
+          alert('Failed to fetch products. Please try again later.');
         }
       } catch (error) {
         console.error('Error fetching products:', error);
+        alert('An error occurred while fetching products. Please try again later.');
       }
     };
 

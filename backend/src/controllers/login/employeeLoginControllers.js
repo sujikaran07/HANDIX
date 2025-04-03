@@ -25,9 +25,13 @@ const authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log('Decoded token:', decoded); 
+    console.log('Decoded token:', decoded);
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      console.error('Token expired:', error);
+      return res.status(401).json({ message: 'Token expired. Please log in again.' });
+    }
     console.error('Invalid token:', error);
     return res.status(401).json({ message: 'Invalid token' });
   }
@@ -98,9 +102,27 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+const refreshToken = (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: 'Token is required' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); // Ignore expiration
+    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(200).json({ token: newToken });
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
 module.exports = {
   getEmployees,
   login,
   authMiddleware,
   getCurrentUser,
+  refreshToken,
 };

@@ -1,6 +1,7 @@
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
 const ProductVariation = require('../../models/productVariationModel');
+const { Op } = require('sequelize'); // Import Sequelize's Op for query operators
 
 const getAllProducts = async (req, res) => {
   try {
@@ -55,24 +56,6 @@ const createProduct = async (req, res) => {
     console.log('e_id from token:', req.user.id);
     console.log('Final e_id:', e_id);
 
-    // Check if the product already exists by product_id or product_name
-    const existingProduct = await Product.findOne({
-      where: {
-        [Product.sequelize.Op.or]: [
-          { product_id },
-          { product_name },
-        ],
-      },
-    });
-
-    if (existingProduct) {
-      console.log(`Product with ID "${product_id}" or name "${product_name}" already exists.`);
-      return res.status(200).json({
-        message: 'Product already exists. Pre-filling fields.',
-        existingProduct,
-      });
-    }
-
     // Validation checks
     if (!product_name) {
       return res.status(400).json({ error: 'Product name is required' });
@@ -103,6 +86,23 @@ const createProduct = async (req, res) => {
       category_id = categoryRecord.category_id;
     }
 
+    // Create the product in the Products table
+    const newProduct = await Product.create({
+      product_id,
+      product_name,
+      e_id,
+      unit_price: price,
+      product_status: rest.product_status || 'In Stock',
+      status: finalStatus,
+      date_added: new Date(), // Always set the current timestamp for the new row
+      quantity, // Track the employee's contribution
+      category_id, // Assign the category_id
+      description: rest.description || null,
+      customization_available: rest.customization_available || false,
+    });
+
+    console.log('New product entry created for employee:', newProduct);
+
     // Check if the product variation already exists
     const existingVariation = await ProductVariation.findOne({ where: { product_id, size: size || 'N/A' } });
 
@@ -128,23 +128,6 @@ const createProduct = async (req, res) => {
 
       console.log('New variation created.');
     }
-
-    // Add a new row in the Products table for the employee's contribution
-    const newProduct = await Product.create({
-      product_id,
-      product_name,
-      e_id,
-      unit_price: price,
-      product_status: rest.product_status || 'In Stock',
-      status: finalStatus,
-      date_added: new Date(), // Always set the current timestamp for the new row
-      quantity, // Track the employee's contribution
-      category_id, // Assign the category_id
-      description: rest.description || null,
-      customization_available: rest.customization_available || false,
-    });
-
-    console.log('New product entry created for employee:', newProduct);
 
     res.status(201).json({ message: 'Product variation updated and new product entry added', newProduct });
   } catch (error) {
