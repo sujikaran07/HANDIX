@@ -17,13 +17,15 @@ const Product = require('./models/productModel'); // Ensure the correct import
 const ProductVariation = require('./models/productVariationModel');
 const Category = require('./models/categoryModel');
 const { Customer } = require('./models/customerModel');
+const ProductImage = require('./models/productImageModel'); // Import ProductImage model
 
 // Ensure associations are initialized
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
-Product.associate({ Category, ProductVariation });
+Product.associate({ Category, ProductVariation, ProductImage }); // Add ProductImage to Product associations
 Category.associate({ Product });
 ProductVariation.associate({ Product });
+ProductImage.associate({ Product }); // Initialize reverse association
 
 dotenv.config();
 

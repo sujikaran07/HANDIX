@@ -1,6 +1,7 @@
 const Product = require('../../models/productModel');
 const Category = require('../../models/categoryModel');
 const ProductVariation = require('../../models/productVariationModel');
+const ProductImage = require('../../models/productImageModel'); // Import ProductImage model
 const { Op } = require('sequelize'); // Import Sequelize's Op for query operators
 
 const getAllProducts = async (req, res) => {
@@ -18,6 +19,7 @@ const getAllProducts = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: ProductVariation, as: 'variations' },
+        { model: ProductImage, as: 'images', attributes: ['image_url'] }, // Include ProductImage
       ],
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'], // Added 'status'
     });
@@ -43,6 +45,7 @@ const getProductById = async (req, res) => {
       include: [
         { model: Category, as: 'category' },
         { model: ProductVariation, as: 'variations' },
+        { model: ProductImage, as: 'images', attributes: ['image_url'] }, // Include ProductImage
       ],
     });
     if (!product) {
