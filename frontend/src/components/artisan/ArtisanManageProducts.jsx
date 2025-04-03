@@ -26,6 +26,7 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
           return;
         }
 
+        console.log('Fetching products with token:', token); // Debugging: Log the token
         const response = await fetch('http://localhost:5000/api/products', {
           headers: {
             Authorization: `Bearer ${token}`, // Include the token in the Authorization header
@@ -34,8 +35,13 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched products:', data); // Debugging: Log the fetched products
-          setProducts(data); // Update the products state
+          if (data.products && data.products.length > 0) {
+            console.log('Fetched products:', data.products); // Debugging: Log the fetched products
+            setProducts(data.products); // Update the products state
+          } else {
+            console.log(data.message || 'No products available'); // Debugging: Log the message
+            setProducts([]); // Set products to an empty array
+          }
         } else if (response.status === 401) {
           const errorData = await response.json();
           console.error('Unauthorized:', errorData);
@@ -43,13 +49,12 @@ const ArtisanManageProducts = ({ onViewProduct, onAddProductClick }) => {
           localStorage.removeItem('artisanToken'); // Remove expired token
           window.location.href = '/login'; // Redirect to login page
         } else {
-          const errorData = await response.json();
-          console.error('Failed to fetch products:', errorData);
-          alert('Failed to fetch products. Please try again later.');
+          console.error('Failed to fetch products:', response.statusText);
+          alert('Unable to fetch products at the moment. Please try again later.');
         }
       } catch (error) {
         console.error('Error fetching products:', error);
-        alert('An error occurred while fetching products. Please try again later.');
+        alert('An unexpected error occurred. Please try again later.');
       }
     };
 

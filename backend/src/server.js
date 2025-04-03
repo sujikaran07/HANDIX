@@ -30,7 +30,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'http://localhost:5173', // Allow requests from the frontend's origin
 }));
 app.use(bodyParser.json());
 app.use(express.json());
