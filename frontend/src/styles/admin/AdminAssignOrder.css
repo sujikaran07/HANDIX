@@ -25,6 +25,7 @@ body {
     display: flex;
     flex-wrap: wrap; /* Allow wrapping for overflow */
     flex-direction: column;
+    flex-direction: row;
     height: 100vh;
 }
 
