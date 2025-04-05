@@ -1,0 +1,97 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure consistent box-sizing */
+html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font size for scaling */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Apply Poppins font family */
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+/* Flexbox consistency */
+.artisan-logout-page-unique {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.main-content-unique {
+    flex: 1;
+    background-color: #f4f6fc;
+    padding: 15px;
+    margin-left: 232px;
+    margin-top: 55px;
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+    .main-content-unique {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    .logout-buttons {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+/* Responsive styles for larger screens */
+@media (min-width: 1200px) {
+    .main-content-unique {
+        margin-left: 232px;
+        margin-top: 55px;
+    }
+}
+
+/* Responsive styles for ultra-wide screens */
+@media (min-width: 1600px) {
+    .main-content-unique {
+        max-width: 1400px; /* Limit content width */
+        margin: 0 auto; /* Center content */
+    }
+}
+
+.logout-section-unique {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.logout-buttons {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    gap: 10px;
+}
+
+.logout-wrapper {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn {
+    border-radius: 10px;
+}

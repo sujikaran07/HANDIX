@@ -1,0 +1,133 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure consistent box-sizing */
+html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font size for scaling */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Apply Poppins font family */
+body {
+    font-family: "Poppins", sans-serif;
+}
+
+/* Flexbox consistency */
+.artisan-settings-page {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping for overflow */
+    flex-direction: column;
+    flex-direction: row;
+}
+
+.artisan-settings-page .artisan-main-content {
+    flex: 1;
+    padding: 15px;
+    background-color: #f4f6fc;
+    margin-left: 232px;
+    margin-top: 55px;
+    margin-right: -18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.artisan-settings-page .manage-settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: -40px;
+    margin-top: -10px;
+}
+
+.artisan-settings-page .manage-settings-header h2 {
+    font-size: 22px;
+    color: #333;
+    margin-top: 0px;
+}
+
+.artisan-settings-page .btn-primary {
+    padding: 4px 8px;
+    border: 2px solid;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 12px;
+    font-weight: bold;
+    width: 120px;
+    text-align: center;
+    margin-right: 5px;
+    border-color: #3e87c3;
+    color: #3e87c3;
+    background-color: transparent;
+}
+
+.artisan-settings-page .btn-primary:hover {
+    background-color: #3e87c3;
+    color: #ffffff;
+}
+
+.artisan-manage-settings-container {
+    display: flex;
+    flex-direction: column;
+    flex-direction: row;
+    height: 100%;
+}
+
+.artisan-manage-settings-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.artisan-password-confirmation-modal {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+    .artisan-settings-page .artisan-main-content {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    .artisan-settings-page .btn-primary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Responsive styles for larger screens */
+@media (min-width: 1200px) {
+    .artisan-settings-page .artisan-main-content {
+        margin-left: 232px;
+        margin-top: 55px;
+    }
+}
+
+/* Responsive styles for ultra-wide screens */
+@media (min-width: 1600px) {
+    .artisan-settings-page .artisan-main-content {
+        max-width: 1400px; /* Limit content width */
+        margin: 0 auto; /* Center content */
+    }
+}
