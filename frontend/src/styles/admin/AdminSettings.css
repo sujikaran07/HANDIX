@@ -1,11 +1,29 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+/* Ensure consistent box-sizing */
+html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font size for scaling */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Apply Poppins font family */
 body {
     font-family: "Poppins", sans-serif;
 }
 
+/* Flexbox consistency */
 .admin-settings-page {
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap; /* Allow wrapping for overflow */
     flex-direction: column;
 }
 
@@ -81,4 +99,33 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+    .admin-settings-page .main-content {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    .admin-settings-page .btn-primary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Responsive styles for larger screens */
+@media (min-width: 1200px) {
+    .admin-settings-page .main-content {
+        margin-left: 232px;
+        margin-top: 55px;
+    }
+}
+
+/* Responsive styles for ultra-wide screens */
+@media (min-width: 1600px) {
+    .admin-settings-page .main-content {
+        max-width: 1400px; /* Limit content width */
+        margin: 0 auto; /* Center content */
+    }
 }

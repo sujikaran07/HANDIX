@@ -89,11 +89,6 @@ body {
     color: #ffffff;
 }
 
-.admin-customer-page .add-customer-btn svg,
-.admin-customer-page .export-btn svg {
-    margin-right: 5px;
-}
-
 .admin-customer-page .icon-and-title {
     display: flex;
     align-items: flex-start;
@@ -142,6 +137,7 @@ body {
     border: none;
     text-align: left;
     background-color: #ffffff;
+    vertical-align: middle; /* Ensure consistent vertical alignment */
 }
 
 .admin-customer-page .customer-table th {
@@ -668,36 +664,13 @@ body {
     .admin-customer-page .customer-table td {
         font-size: 12px;
     }
-
-    .admin-customer-page .manage-customer-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .admin-customer-page .pagination {
-        flex-direction: column;
-    }
-
-    .admin-customer-page .customer-table {
-        width: 100%;
-        margin-top: 20px;
-    }
 }
 
 /* Responsive styles for larger screens */
 @media (min-width: 1200px) {
-    .admin-customer-page {
-        flex-direction: row;
-    }
-
     .admin-customer-page .main-content {
         margin-left: 232px;
         margin-top: 55px;
-    }
-
-    .admin-customer-page .customer-table th,
-    .admin-customer-page .customer-table td {
-        padding: 10px;
     }
 }
 

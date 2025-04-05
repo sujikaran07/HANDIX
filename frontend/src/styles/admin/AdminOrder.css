@@ -1,12 +1,29 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+/* Ensure consistent box-sizing */
+html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font size for scaling */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Apply Poppins font family */
 body {
     font-family: "Poppins", sans-serif;
 }
 
 .admin-order-page {
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping for overflow */
     flex-direction: column;
-    flex-direction: row;
     height: 100vh;
 }
 
@@ -286,5 +303,45 @@ body {
 input[type="checkbox"]:checked {
     background-color: #3e87c3;
     border-color: #3e87c3;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+    .admin-order-page .main-content {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    .admin-order-page .btn-primary,
+    .admin-order-page .btn-secondary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .admin-order-page .order-table th,
+    .admin-order-page .order-table td {
+        font-size: 12px;
+    }
+}
+
+/* Responsive styles for larger screens */
+@media (min-width: 1200px) {
+    .admin-order-page .main-content {
+        margin-left: 232px;
+        margin-top: 55px;
+    }
+}
+
+/* Responsive styles for ultra-wide screens */
+@media (min-width: 1600px) {
+    .admin-order-page .main-content {
+        max-width: 1400px; /* Limit content width */
+        margin: 0 auto; /* Center content */
+    }
+
+    .admin-order-page .order-table th,
+    .admin-order-page .order-table td {
+        font-size: 16px; /* Adjust font size for readability */
+    }
 }
 

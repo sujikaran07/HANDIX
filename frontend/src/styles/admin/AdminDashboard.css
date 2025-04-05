@@ -1,3 +1,20 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Ensure consistent box-sizing */
+html {
+    box-sizing: border-box;
+    font-size: 16px; /* Base font size for scaling */
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
 body {
     font-family: "Poppins", sans-serif;
     margin: 0;
@@ -8,6 +25,7 @@ body {
 
 .dashboard-container {
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping for overflow */
     min-height: 100vh;
 }
 
@@ -80,7 +98,7 @@ body {
 }
 
 .dashboard-title {
-    margin-top: 40px;
+    margin-top: 0px;
 }
 
 .dashboard-title h2 {
@@ -289,6 +307,20 @@ body {
 }
 
 @media (max-width: 768px) {
+    .dashboard-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        position: relative;
+    }
+
+    .main-content {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
     .graph-container {
         flex-direction: column;
     }
@@ -296,5 +328,19 @@ body {
     .sales-trend, .product-sales {
         flex: none;
         width: 100%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .main-content {
+        margin-left: 250px;
+        margin-top: 60px;
+    }
+}
+
+@media (min-width: 1600px) {
+    .main-content {
+        max-width: 1400px; /* Limit content width */
+        margin: 0 auto; /* Center content */
     }
 }
