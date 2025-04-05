@@ -1,0 +1,53 @@
+/* CSS Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+html {
+    font-size: 16px; /* Base font size for scaling */
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: "Poppins", sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* Adjust font size for smaller screens */
+    }
+}
+
+@media (min-width: 1200px) {
+    body {
+        font-size: 16px; /* Default font size for larger screens */
+    }
+}
+
+@media (min-width: 1600px) {
+    body {
+        font-size: 18px; /* Increase font size for ultra-wide screens */
+    }
+}
+
+/* Utility classes */
+.full-screen {
+    width: 100vw;
+    height: 100vh;
+}
+
+.centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
