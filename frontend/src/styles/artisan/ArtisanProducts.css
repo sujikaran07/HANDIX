@@ -1,5 +1,11 @@
 body {
-    font-family: "Poppins", sans-serif;
+    font-family: "Poppins", sans-serif, Arial, sans-serif; /* Add fallback fonts */
+    font-size: 1rem; /* Relative to the root font size */
+    line-height: 1.5;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility; /* Improve font rendering */
 }
 
 .artisan-products-page {
@@ -7,6 +13,7 @@ body {
     flex-direction: column;
     flex-direction: row;
     height: 100vh;
+    font-size: var(--font-size-base); /* Use root font size */
 }
 
 .artisan-products-page .artisan-main-content {
@@ -69,6 +76,8 @@ body {
     border: none;
     text-align: left;
     background-color: #ffffff;
+    font-size: 1rem; /* Ensure consistent font size */
+    vertical-align: middle; /* Align content vertically */
 }
 
 .artisan-products-page .product-table th {
@@ -291,4 +300,28 @@ body {
 input[type="checkbox"]:checked {
     background-color: #3e87c3;
     border-color: #3e87c3;
+}
+
+/* Responsive font sizes */
+@media (max-width: 768px) {
+    body {
+        font-size: var(--font-size-small); /* Adjust font size for smaller screens */
+    }
+
+    .artisan-products-page .product-table th,
+    .artisan-products-page .product-table td {
+        font-size: 0.875rem; /* Smaller font size for mobile */
+    }
+}
+
+@media (min-width: 1200px) {
+    body {
+        font-size: var(--font-size-base); /* Default font size for larger screens */
+    }
+}
+
+@media (min-width: 1600px) {
+    body {
+        font-size: var(--font-size-large); /* Increase font size for ultra-wide screens */
+    }
 }

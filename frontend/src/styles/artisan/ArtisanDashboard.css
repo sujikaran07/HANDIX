@@ -1,5 +1,11 @@
 body {
-    font-family: "Poppins", sans-serif;
+    font-family: "Poppins", sans-serif, Arial, sans-serif; /* Add fallback fonts */
+    font-size: 1rem; /* Relative to the root font size */
+    line-height: 1.5;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility; /* Improve font rendering */
     margin: 0;
     padding: 0;
     background-color: #f8f9fa;
@@ -9,6 +15,7 @@ body {
 .artisan-dashboard-container {
     display: flex;
     min-height: 100vh;
+    font-size: var(--font-size-base); /* Use root font size */
 }
 
 .artisan-sidebar {
@@ -168,13 +175,13 @@ body {
 }
 
 .artisan-dashboard-cards .artisan-card h4 {
-    font-size: 16px;
+    font-size: 1rem; /* Ensure consistent font size */
     margin-bottom: 8px;
     color: #333333;
 }
 
 .artisan-dashboard-cards .artisan-card p {
-    font-size: 20px;
+    font-size: 1rem; /* Ensure consistent font size */
     font-weight: bold;
     color: #2790C3;
     margin: 0;
@@ -298,6 +305,15 @@ body {
 }
 
 @media (max-width: 768px) {
+    body {
+        font-size: var(--font-size-small); /* Adjust font size for smaller screens */
+    }
+
+    .artisan-dashboard-cards .artisan-card h4,
+    .artisan-dashboard-cards .artisan-card p {
+        font-size: 0.875rem; /* Smaller font size for mobile */
+    }
+
     .artisan-graph-container {
         flex-direction: column;
     }
@@ -305,5 +321,17 @@ body {
     .artisan-sales-trend-graph, .artisan-product-sales-chart {
         flex: none;
         width: 100%;
+    }
+}
+
+@media (min-width: 1200px) {
+    body {
+        font-size: var(--font-size-base); /* Default font size for larger screens */
+    }
+}
+
+@media (min-width: 1600px) {
+    body {
+        font-size: var(--font-size-large); /* Increase font size for ultra-wide screens */
     }
 }
