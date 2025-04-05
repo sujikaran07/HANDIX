@@ -23,16 +23,26 @@ html {
     scroll-behavior: smooth;
     transform: scale(1); /* Normalize scaling */
     transform-origin: 0 0;
+    height: 100%;
 }
 
 body {
     font-family: "Poppins", sans-serif, Arial, sans-serif; /* Add fallback fonts */
-    line-height: 1.5;
-    font-size: var(--font-size-base);
+    font-size: 1rem; /* Relative to the root font size */
     color: var(--color-primary);
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility; /* Improve font rendering */
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-size: 1.5rem; /* Example: Adjust heading sizes */
+}
+
+p {
+    font-size: 1rem;
+    line-height: 1.5;
 }
 
 /* Responsive font sizes */
@@ -65,3 +75,4 @@ body {
     justify-content: center;
     align-items: center;
 }
+
