@@ -22,29 +22,29 @@ body {
 
 .admin-order-page {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping for overflow */
-    flex-direction: column;
-    flex-direction: row;
+    flex-wrap: nowrap; /* Prevent wrapping */
+    flex-direction: row; /* Ensure row layout */
     height: 100vh;
 }
 
 .admin-order-page .main-content {
     flex: 1;
-    padding: 15px;
+    padding: 1rem; /* Use relative units for padding */
     background-color: #f4f6fc;
-    margin-left: 232px;
-    margin-top: 55px;
-    margin-right: -18px;
+    margin-left: 15rem; /* Adjusted for better scaling */
+    margin-top: 3.5rem;
+    margin-right: 0; /* Removed negative margin */
     display: flex;
     flex-direction: column;
+    overflow: auto; /* Handle overflow for smaller screens */
 }
 
 .admin-order-page .manage-order-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: -40px;
-    margin-top: -10px;
+    margin-bottom: 1rem; /* Adjusted for consistency */
+    margin-top: 0.5rem;
 }
 
 .admin-order-page .manage-order-header h2 {
@@ -78,8 +78,8 @@ body {
 .admin-order-page .order-table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0 10px;
-    margin-top: -15px; 
+    border-spacing: 0 0.625rem; /* Adjust spacing for better alignment */
+    margin-top: 0; /* Remove negative margin */
 }
 
 .admin-order-page .order-table th,
@@ -107,14 +107,14 @@ body {
 .admin-order-page .btn-success,
 .admin-order-page .btn-warning,
 .admin-order-page .btn-danger {
-    padding: 4px 8px;
+    padding: 0.5rem 1rem; /* Adjusted for better scaling */
     border: 2px solid;
     border-radius: 20px;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
-    font-size: 12px;
+    font-size: 0.875rem; /* Use relative font size */
     font-weight: bold;
-    width: 80px;
+    width: auto; /* Allow buttons to scale */
     text-align: center;
     margin-right: 5px;
 }
@@ -308,20 +308,25 @@ input[type="checkbox"]:checked {
 
 /* Responsive styles for smaller screens */
 @media (max-width: 768px) {
+    .admin-order-page {
+        flex-direction: column; /* Stack layout for smaller screens */
+    }
+
     .admin-order-page .main-content {
         margin-left: 0;
-        margin-top: 20px;
+        margin-top: 1.25rem;
+        padding: 1rem;
     }
 
     .admin-order-page .btn-primary,
     .admin-order-page .btn-secondary {
-        width: 100%;
-        margin-bottom: 10px;
+        width: 100%; /* Full width for buttons */
+        margin-bottom: 0.625rem;
     }
 
     .admin-order-page .order-table th,
     .admin-order-page .order-table td {
-        font-size: 12px;
+        font-size: 0.75rem; /* Smaller font size for smaller screens */
     }
 }
 
@@ -336,13 +341,13 @@ input[type="checkbox"]:checked {
 /* Responsive styles for ultra-wide screens */
 @media (min-width: 1600px) {
     .admin-order-page .main-content {
-        max-width: 1400px; /* Limit content width */
+        max-width: 90%; /* Use percentage for better scaling */
         margin: 0 auto; /* Center content */
     }
 
     .admin-order-page .order-table th,
     .admin-order-page .order-table td {
-        font-size: 16px; /* Adjust font size for readability */
+        font-size: 1rem; /* Adjust font size for readability */
     }
 }
 

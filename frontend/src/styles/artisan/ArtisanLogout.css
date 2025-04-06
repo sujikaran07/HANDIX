@@ -37,6 +37,8 @@ body {
     display: flex;
     margin-bottom: -20px;
     flex-direction: column;
+    justify-content: space-between; /* Ensures proper spacing between elements */
+    min-height: 100%; /* Ensures the container fills the available height */
 }
 
 /* Responsive styles for smaller screens */
