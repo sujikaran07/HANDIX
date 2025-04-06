@@ -152,14 +152,47 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id);
+    console.log('Delete request received for product ID:', req.params.id); // Debugging log
+
+    const product = await Product.findByPk(req.params.id, {
+      include: [{ model: Category, as: 'category' }],
+    });
+
     if (!product) {
+      console.log('Product not found in database'); // Debugging log
       return res.status(404).json({ error: 'Product not found' });
     }
-    await product.destroy();
-    res.status(200).json({ message: 'Product deleted successfully' });
+
+    console.log('Product found:', product); // Debugging log
+
+    // Adjust the stock level in the category table
+    if (product.category) {
+      const category = await Category.findByPk(product.category.category_id);
+      if (category) {
+        console.log('Updating category stock level'); // Debugging log
+        await category.update({ stock_level: category.stock_level - product.quantity });
+      }
+    }
+
+    // Adjust the stock level in the ProductVariation table
+    const variations = await ProductVariation.findAll({ where: { product_id: product.product_id } });
+    for (const variation of variations) {
+      console.log('Updating variation stock level for size:', variation.size); // Debugging log
+      await variation.update({ stock_level: variation.stock_level - product.quantity });
+    }
+
+    // Adjust the stock level in the Product table
+    console.log('Updating product stock level'); // Debugging log
+    await product.update({ quantity: product.quantity - product.quantity });
+
+    // Remove associated entries from ProductEntry table
+    console.log('Deleting associated entries from ProductEntry table'); // Debugging log
+    await ProductEntry.destroy({ where: { product_id: product.product_id } });
+
+    res.status(200).json({ message: 'Product entry deleted successfully and stock counts updated' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete product' });
+    console.error('Error deleting product entry:', error); // Debugging log
+    res.status(500).json({ error: 'Failed to delete product entry' });
   }
 };
 

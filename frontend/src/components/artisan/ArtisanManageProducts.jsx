@@ -17,6 +17,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [viewMode, setViewMode] = useState('table'); // 'table', 'view', or 'edit'
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
+  const [productToDelete, setProductToDelete] = useState(null); // Track product to delete
   const entriesPerPage = 4;
 
   useEffect(() => {
@@ -92,6 +94,50 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const handleBackToTable = () => {
     setSelectedProduct(null);
     setViewMode('table');
+  };
+
+  const confirmDelete = (product) => {
+    setProductToDelete(product);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setProductToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (productToDelete) {
+      try {
+        const token = localStorage.getItem('artisanToken');
+        if (!token) {
+          console.error('No token found'); // Debugging log
+          return;
+        }
+
+        console.log('Sending delete request for product ID:', productToDelete.product_id); // Debugging log
+
+        const response = await fetch(`http://localhost:5000/api/products/${productToDelete.product_id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          console.log('Product deleted successfully'); // Debugging log
+          setEntries((prevEntries) =>
+            prevEntries.filter((entry) => entry.product_id !== productToDelete.product_id)
+          );
+          setShowDeleteModal(false);
+          setProductToDelete(null);
+        } else {
+          console.error('Failed to delete product:', response.statusText); // Debugging log
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error); // Debugging log
+      }
+    }
   };
 
   return (
@@ -250,9 +296,11 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                               <li>
                                 <button className="dropdown-item" onClick={() => handleEditProduct(entry)}>Edit</button>
                               </li>
-                              <li>
-                                <button className="dropdown-item">Delete</button>
-                              </li>
+                              {entry.status !== 'Approved' && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => confirmDelete(entry)}>Delete</button>
+                                </li>
+                              )}
                             </ul>
                           </div>
                         </td>
@@ -279,6 +327,18 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           <EditProductForm product={selectedProduct} onSave={(updatedProduct) => { onEditProduct(updatedProduct); handleBackToTable(); }} onCancel={handleBackToTable} />
         )}
       </div>
+
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h5>Are you sure you want to delete this product?</h5>
+            <div className="modal-actions">
+              <button className="btn btn-danger me-2" onClick={handleDelete}>Delete</button>
+              <button className="btn btn-secondary" onClick={handleCancelDelete}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
