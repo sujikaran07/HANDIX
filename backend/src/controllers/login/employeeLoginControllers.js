@@ -63,8 +63,8 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ id: user.eId, role: user.roleId }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    console.log('Token generated:', token); // Log the generated JWT token
+    const token = jwt.sign({ id: user.eId, role: user.roleId }, process.env.JWT_SECRET, { expiresIn: '3h' });
+    console.log('Token generated:', token);
     console.log('Login successful, token generated');
 
     // Role-based redirection logic
@@ -112,7 +112,7 @@ const refreshToken = (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); // Ignore expiration
-    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '3h' });
     res.status(200).json({ token: newToken });
   } catch (error) {
     console.error('Error refreshing token:', error);
