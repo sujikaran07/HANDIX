@@ -24,7 +24,7 @@ body {
 .artisan-logout-page-unique {
     display: flex;
     flex-direction: column;
-    height: 610px; /* Set fixed height */
+    height: 100vh;
 }
 
 .main-content-unique {
