@@ -3,6 +3,8 @@ import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
 import ArtisanManageProducts from '../../components/artisan/ArtisanManageProducts';
 import AddProductForm from '../../components/artisan/AddProductForm';
+import ProductViewForm from '../../components/artisan/ProductViewForm';
+import EditProductForm from '../../components/artisan/EditProductForm';
 import '../../styles/artisan/ArtisanProducts.css';
 
 const ArtisanProductsPage = () => {
@@ -10,6 +12,8 @@ const ArtisanProductsPage = () => {
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [loggedInEmployeeId, setLoggedInEmployeeId] = useState(null);
   const [newProductId, setNewProductId] = useState('');
+  const [showProductDetails, setShowProductDetails] = useState(false);
+  const [showEditProductForm, setShowEditProductForm] = useState(false);
 
   useEffect(() => {
     const fetchLoggedInEmployeeId = async () => {
@@ -35,11 +39,19 @@ const ArtisanProductsPage = () => {
     fetchLoggedInEmployeeId();
   }, []);
 
-  const handleViewProduct = (product) => {
+  const handleViewProduct = async (product) => {
     setSelectedProduct(product);
+    setShowProductDetails(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setSelectedProduct(product);
+    setShowEditProductForm(true);
   };
 
   const handleBackToProducts = () => {
+    setShowProductDetails(false);
+    setShowEditProductForm(false);
     setSelectedProduct(null);
   };
 
@@ -81,23 +93,48 @@ const ArtisanProductsPage = () => {
     } catch (error) {}
   };
 
+  const handleUpdateProduct = async (updatedProduct) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) return;
+
+      await fetch(`http://localhost:5000/api/products/${updatedProduct.product_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedProduct),
+      });
+
+      setShowEditProductForm(false);
+      setSelectedProduct(null);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating product:', error);
+    }
+  };
+
   return (
     <div className="artisan-products-page">
       <ArtisanSidebar />
       <div className="artisan-main-content">
         <ArtisanTopBar />
-        {showAddProductForm ? (
+        {showProductDetails ? (
+          <ProductViewForm product={selectedProduct} onBack={handleBackToProducts} />
+        ) : showEditProductForm ? (
+          <EditProductForm product={selectedProduct} onSave={handleUpdateProduct} onCancel={handleBackToProducts} />
+        ) : showAddProductForm ? (
           <AddProductForm
             onSave={handleSave}
             onCancel={handleCancel}
             loggedInEmployeeId={loggedInEmployeeId}
             productId={newProductId}
           />
-        ) : selectedProduct ? (
-          <ProductDetails product={selectedProduct} onBack={handleBackToProducts} />
         ) : (
           <ArtisanManageProducts
             onViewProduct={handleViewProduct}
+            onEditProduct={handleEditProduct}
             onAddProductClick={handleAddProductClick}
           />
         )}
