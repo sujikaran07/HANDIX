@@ -57,7 +57,17 @@ const ArtisanProductsPage = () => {
 
   const handleAddProductClick = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/products/new-id');
+      const token = localStorage.getItem('artisanToken'); // Ensure token is retrieved
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/products/new-id', {
+        headers: {
+          Authorization: `Bearer ${token}`, // Add token to headers
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setNewProductId(data.product_id);

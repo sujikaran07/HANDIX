@@ -59,35 +59,93 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { product_id, product_name, category, price, quantity, status, ...rest } = req.body;
-    const e_id = req.user.id;
+    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = req.body;
+    const e_id = req.user?.id; 
+
+    console.log('e_id retrieved from token:', e_id); 
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
 
     let category_id = null;
+    let variation_id = null;
+
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
       if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
       category_id = categoryRecord.category_id;
+
+      
+      categoryRecord.stock_level = (Number(categoryRecord.stock_level) || 0) + Number(quantity);
+      await categoryRecord.save();
     }
 
-    const productEntry = await ProductEntry.create({
+  
+    let inventoryRecord = await Inventory.findByPk(product_id);
+    if (!inventoryRecord) {
+    
+      inventoryRecord = await Inventory.create({
+        product_id,
+        product_name,
+        description: rest.description || '',
+        unit_price: price,
+        quantity: Number(quantity),
+        category_id,
+        e_id, 
+      });
+      console.log('Inventory created with e_id:', e_id); 
+    } else {
+      
+      inventoryRecord.quantity = Number(inventoryRecord.quantity) + Number(quantity);
+      await inventoryRecord.save();
+    }
+
+    
+    const normalizedSize = size || "N/A";
+
+    
+    const existingVariation = await ProductVariation.findOne({
+      where: { product_id, size: normalizedSize, additional_price },
+    });
+
+    if (existingVariation) {
+      
+      existingVariation.stock_level = Number(existingVariation.stock_level) + Number(quantity);
+      await existingVariation.save();
+      variation_id = existingVariation.variation_id; 
+    } else {
+      
+      const newVariation = await ProductVariation.create({
+        product_id,
+        size: normalizedSize,
+        additional_price: additional_price || 0,
+        stock_level: Number(quantity),
+      });
+      variation_id = newVariation.variation_id; 
+    }
+
+  
+    const productPayload = {
       product_id,
       product_name,
       unit_price: price,
-      quantity,
+      quantity: Number(quantity),
       product_status: 'In Stock',
       status: status || 'pending',
-      e_id,
+      e_id, 
       category_id,
+      variation_id,
       ...rest,
-    });
+    };
+
+    console.log('Payload for ProductEntry.create:', productPayload);
+
+    const productEntry = await ProductEntry.create(productPayload);
 
     res.status(201).json({ message: 'Product entry created successfully', productEntry });
   } catch (error) {
-    console.error('Error creating product:', error); 
+    console.error('Error creating product:', error);
     res.status(500).json({ error: 'Failed to create product entry' });
   }
 };

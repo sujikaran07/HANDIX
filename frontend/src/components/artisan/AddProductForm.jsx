@@ -52,7 +52,17 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const fetchProductDetails = async (productId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/inventory/${productId}`); 
+      const token = localStorage.getItem('artisanToken'); 
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/inventory/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, 
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setProduct((prevProduct) => ({
@@ -181,23 +191,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         ...product,
         product_name: product.name,
         e_id: loggedInEmployeeId,
-        size: product.category === 'Clothing' && product.size ? product.size : 'N/A',
+        size: product.category === 'Clothing' && product.size ? product.size : null, 
         price: parseFloat(product.price),
         additional_price: showAdditionalPrice ? parseFloat(product.additional_price || 0) : 0, 
-        customization_available: showAdditionalPrice, 
+        customization_available: showAdditionalPrice,
         status: 'pending',
       };
 
-      
-      if (showAdditionalPrice && product.additional_price) {
-        const customizedProduct = {
-          ...productWithUploader,
-          price: parseFloat(product.price) + parseFloat(product.additional_price), 
-        };
-        onSave(customizedProduct); 
-      } else {
-        onSave(productWithUploader); 
-      }
+      onSave(productWithUploader);
     }
   };
 

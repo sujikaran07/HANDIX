@@ -22,38 +22,38 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const entriesPerPage = 4;
 
   useEffect(() => {
-    const fetchEntries = async () => {
-      try {
-        const token = localStorage.getItem('artisanToken');
-        if (!token) {
-          console.error('No token found for artisan');
-          alert('You are not logged in. Please log in to view your entries.');
-          window.location.href = '/login';
-          return;
-        }
-
-        const response = await fetch('http://localhost:5000/api/products/entries', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Fetched product entries:', data); 
-          setEntries(data.entries);
-        } else {
-          console.error('Failed to fetch product entries:', response.statusText);
-          alert('Unable to fetch product entries at the moment. Please try again later.');
-        }
-      } catch (error) {
-        console.error('Error fetching product entries:', error);
-        alert('An unexpected error occurred. Please try again later.');
-      }
-    };
-
     fetchEntries();
   }, []);
+
+  const fetchEntries = async () => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        alert('You are not logged in. Please log in to view your entries.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const response = await fetch('http://localhost:5000/api/products/entries', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Fetched product entries:', data);
+        setEntries(data.entries); 
+      } else {
+        console.error('Failed to fetch product entries:', response.statusText);
+        alert('Unable to fetch product entries at the moment. Please try again later.');
+      }
+    } catch (error) {
+      console.error('Error fetching product entries:', error);
+      alert('An unexpected error occurred. Please try again later.');
+    }
+  };
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
