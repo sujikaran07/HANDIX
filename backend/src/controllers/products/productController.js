@@ -14,7 +14,7 @@ const getAllProducts = async (req, res) => {
     }
 
     const products = await ProductEntry.findAll({
-      where: { e_id: String(e_id) }, // Explicitly cast e_id to a string
+      where: { e_id: String(e_id) },
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
@@ -118,8 +118,20 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
 
+    // Reduce stock count in ProductVariations
+    const variations = await ProductVariation.findAll({
+      where: { product_id: productEntry.product_id },
+    });
+
+    for (const variation of variations) {
+      variation.stock_level = Math.max(0, variation.stock_level - productEntry.quantity); // Reduce stock level
+      await variation.save();
+    }
+
+    // Delete the product entry
     await productEntry.destroy();
-    res.status(200).json({ message: 'Product entry deleted successfully' });
+
+    res.status(200).json({ message: 'Product entry deleted successfully and stock count updated' });
   } catch (error) {
     console.error('Error deleting product entry:', error); // Log the error for debugging
     res.status(500).json({ error: 'Failed to delete product entry' });
@@ -174,11 +186,11 @@ const getAllProductEntries = async (req, res) => {
     const { id: e_id } = req.user;
 
     if (!e_id) {
-      console.error('Employee ID (e_id) is missing'); // Debugging log
+      console.error('Employee ID (e_id) is missing'); 
       return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     }
 
-    console.log('Fetching product entries for e_id:', e_id); // Debugging log
+    console.log('Fetching product entries for e_id:', e_id); 
 
     const entries = await ProductEntry.findAll({
       where: { e_id: String(e_id) }, // Explicitly cast e_id to a string
@@ -188,17 +200,19 @@ const getAllProductEntries = async (req, res) => {
           model: Inventory,
           as: 'inventory',
           attributes: ['product_name', 'description', 'unit_price'],
+          include: [
+            {
+              model: ProductVariation,
+              as: 'variations', // Correct association using Inventory.product_id
+              attributes: ['size', 'additional_price', 'stock_level'],
+            },
+          ],
         },
         {
           model: ProductImage,
-          as: 'entryImages', // Updated alias to match the association in ProductEntry
+          as: 'entryImages',
           attributes: ['image_url'],
-          required: false, // Allow fetching products even if no images are available
-        },
-        {
-          model: ProductVariation,
-          as: 'entryVariations', // Updated alias to match the association in ProductEntry
-          attributes: ['size', 'additional_price', 'stock_level'],
+          required: false,
         },
       ],
       attributes: [
@@ -211,9 +225,10 @@ const getAllProductEntries = async (req, res) => {
         'status',
         'date_added',
       ],
+      logging: console.log, // Log the raw SQL query
     });
 
-    console.log('Fetched entries:', entries); // Debugging log
+    console.log('Fetched entries:', entries); 
 
     if (!entries || entries.length === 0) {
       return res.status(200).json({ message: 'No product entries available', entries: [] });
@@ -221,7 +236,8 @@ const getAllProductEntries = async (req, res) => {
 
     res.status(200).json({ entries });
   } catch (error) {
-    console.error('Error fetching product entries:', error); // Debugging log
+    console.error('Error fetching product entries:', error.message); 
+    console.error('Stack trace:', error.stack); 
     res.status(500).json({ error: 'Failed to fetch product entries' });
   }
 };

@@ -54,7 +54,7 @@ const Inventory = sequelize.define('Inventory', {
     defaultValue: 'pending',
   },
   e_id: {
-    type: DataTypes.STRING(10), // Ensure this matches the database schema
+    type: DataTypes.STRING(10), 
     allowNull: false,
     references: {
       model: 'Employees',
@@ -64,7 +64,7 @@ const Inventory = sequelize.define('Inventory', {
     onUpdate: 'CASCADE',
   },
 }, {
-  tableName: 'Inventory', // Ensure the table name matches the actual table in the database
+  tableName: 'Inventory', 
   timestamps: false,
   underscored: true,
   indexes: [
@@ -84,13 +84,13 @@ Inventory.associate = (models) => {
     Inventory.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
   }
   if (models.ProductVariation) {
-    Inventory.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'inventoryVariations' }); // Updated alias to 'inventoryVariations'
+    Inventory.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' }); 
   }
   if (models.ProductImage) {
-    Inventory.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'inventoryImages' }); // Updated alias to 'inventoryImages'
+    Inventory.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'inventoryImages' });
   }
   if (models.ProductEntry) {
-    Inventory.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' }); // Updated alias to 'inventoryEntries'
+    Inventory.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' }); 
   }
 };
 

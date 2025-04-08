@@ -3,15 +3,15 @@ const { sequelize } = require('../config/db');
 
 const ProductEntry = sequelize.define('ProductEntry', {
   entry_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.INTEGER, // Correctly defined as integer
     autoIncrement: true,
     primaryKey: true,
   },
   product_id: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(10), // Correctly defined as character varying
     allowNull: false,
     references: {
-      model: 'ProductEntries', // Ensure this matches the table name
+      model: 'ProductEntries',
       key: 'product_id',
     },
     onDelete: 'CASCADE',
@@ -41,7 +41,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
     defaultValue: 'pending',
   },
   e_id: {
-    type: DataTypes.STRING(10), // Ensure this matches the database schema
+    type: DataTypes.STRING(10), 
     references: {
       model: 'Employees',
       key: 'e_id',
@@ -83,7 +83,7 @@ ProductEntry.associate = (models) => {
     ProductEntry.hasMany(models.ProductImage, { foreignKey: 'entry_id', as: 'entryImages' }); // Ensure alias is unique
   }
   if (models.ProductVariation) {
-    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); // Ensure alias is unique
+    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); // Use product_id for the association
   }
 };
 

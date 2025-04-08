@@ -1,34 +1,34 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const ProductEntry = require('./productEntryModel'); // Ensure ProductEntry is imported
+const Inventory = require('./inventoryModel'); // Ensure Inventory is imported
 
 const ProductVariation = sequelize.define('ProductVariation', {
   variation_id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.INTEGER, // Correctly defined as integer
     primaryKey: true,
     allowNull: false,
     autoIncrement: true,
   },
   product_id: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(10), // Match Inventory.product_id
     allowNull: false,
     references: {
-      model: 'ProductEntries', // Ensure this matches the table name
+      model: 'Inventory', // Reference the Inventory table
       key: 'product_id',
     },
-    onDelete: 'SET NULL',
+    onDelete: 'CASCADE',
   },
   size: {
-    type: DataTypes.STRING(20),
-    allowNull: true,
+    type: DataTypes.STRING(50),
+    allowNull: false,
   },
   additional_price: {
     type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0.00,
+    allowNull: true,
   },
   stock_level: {
     type: DataTypes.INTEGER,
-    defaultValue: 0,
+    allowNull: false,
   },
 }, {
   tableName: 'ProductVariations',
@@ -43,7 +43,7 @@ const ProductVariation = sequelize.define('ProductVariation', {
 });
 
 ProductVariation.associate = (models) => {
-  ProductVariation.belongsTo(models.ProductEntry, { foreignKey: 'product_id', as: 'variationProductEntry' }); // Updated alias to 'variationProductEntry'
+  ProductVariation.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'inventoryProduct' }); // Use product_id for the association with Inventory
 };
 
 module.exports = ProductVariation;

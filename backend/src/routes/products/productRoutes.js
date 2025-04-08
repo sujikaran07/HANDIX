@@ -23,6 +23,6 @@ router.get('/suggestions', authMiddleware, getProductSuggestions); // Ensure get
 router.get('/:id', authMiddleware, getProductById); // Ensure getProductById is defined
 router.post('/', authMiddleware, createProduct); // Ensure createProduct is defined
 router.put('/:id', authMiddleware, updateProduct); // Ensure updateProduct is defined
-router.delete('/:id', authMiddleware, deleteProduct); // Ensure deleteProduct is defined
+router.delete('/:id', authMiddleware, deleteProduct); 
 
 module.exports = router;

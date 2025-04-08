@@ -10,20 +10,20 @@ const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
-      console.error('Authorization token is missing'); // Debugging log
+      console.error('Authorization token is missing'); 
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
-      id: `${decoded.id}`, // Ensure id is treated as a string
+      id: String(decoded.id), // Ensure id (e_id) is treated as a string
       role: decoded.role,
     };
 
-    console.log('Decoded token:', decoded); // Debugging log
+    console.log('Decoded token:', decoded); 
     next();
   } catch (error) {
-    console.error('Error in authMiddleware:', error); // Debugging log
+    console.error('Error in authMiddleware:', error); 
     res.status(401).json({ error: 'Invalid token' });
   }
 };

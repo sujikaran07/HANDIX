@@ -16,15 +16,15 @@ const { ProfileImage } = require('./models/profileImageModel');
 const Inventory = require('./models/inventoryModel'); 
 const Category = require('./models/categoryModel');
 const ProductImage = require('./models/productImageModel');
-const ProductEntry = require('./models/productEntryModel'); // Ensure ProductEntry is imported before ProductVariation
+const ProductEntry = require('./models/productEntryModel'); 
 const ProductVariation = require('./models/productVariationModel');
 const { Customer } = require('./models/customerModel');
 
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
-Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); // Ensure Inventory is included
+Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); 
 Category.associate({ Inventory, ProductEntry });
-ProductVariation.associate({ Inventory, ProductEntry }); // Ensure ProductEntry is passed here
+ProductVariation.associate({ Inventory, ProductEntry }); 
 ProductImage.associate({ Inventory, ProductEntry }); 
 ProductEntry.associate({ Inventory, Category, ProductImage, ProductVariation }); 
 
