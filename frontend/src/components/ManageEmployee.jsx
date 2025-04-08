@@ -16,8 +16,8 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
   const [showEditEmployeeForm, setShowEditEmployeeForm] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
-  const [employeeToDelete, setEmployeeToDelete] = useState(null); // Track employee to delete
+  const [showDeleteModal, setShowDeleteModal] = useState(false); 
+  const [employeeToDelete, setEmployeeToDelete] = useState(null); 
   const employeesPerPage = 4;
 
   useEffect(() => {

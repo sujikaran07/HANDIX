@@ -117,7 +117,7 @@ const Customer = sequelize.define('Customer', {
   }
 });
 
-// Ensure associations are defined after all models are imported
+
 Customer.associate = (models) => {
   Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' });
   Customer.hasMany(models.Order, { foreignKey: 'c_id', as: 'customerOrders' });

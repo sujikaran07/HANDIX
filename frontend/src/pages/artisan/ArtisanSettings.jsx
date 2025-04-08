@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
-import ArtisanTopbar from '../../components/artisan/ArtisanTopbar';
+import ArtisanTopBar from '../../components/artisan/ArtisanTopbar';
 import ManageArtisanSettings from '../../components/artisan/ManageArtisanSettings';
 import '../../styles/artisan/ArtisanSettings.css';
 
@@ -19,7 +19,7 @@ const ArtisanSettingsPage = () => {
     <div className="artisan-settings-page">
       <ArtisanSidebar />
       <div className="artisan-main-content">
-        <ArtisanTopbar />
+        <ArtisanTopBar />
         {selectedSetting ? (
           <div>
             <button onClick={handleBackToSettings}>Back to Settings</button>

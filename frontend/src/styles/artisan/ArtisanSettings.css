@@ -1,29 +1,28 @@
-/* CSS Reset */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Ensure consistent box-sizing */
+
 html {
     box-sizing: border-box;
-    font-size: 16px; /* Base font size for scaling */
+    font-size: 16px; 
 }
 
 *, *::before, *::after {
     box-sizing: inherit;
 }
 
-/* Apply Poppins font family */
+
 body {
     font-family: "Poppins", sans-serif;
 }
 
-/* Flexbox consistency */
 .artisan-settings-page {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping for overflow */
+    flex-wrap: wrap;
     flex-direction: column;
     flex-direction: row;
 }
@@ -103,7 +102,7 @@ body {
     align-items: center;
 }
 
-/* Responsive styles for smaller screens */
+
 @media (max-width: 768px) {
     .artisan-settings-page .artisan-main-content {
         margin-left: 0;
@@ -116,7 +115,7 @@ body {
     }
 }
 
-/* Responsive styles for larger screens */
+
 @media (min-width: 1200px) {
     .artisan-settings-page .artisan-main-content {
         margin-left: 232px;
@@ -124,10 +123,10 @@ body {
     }
 }
 
-/* Responsive styles for ultra-wide screens */
+
 @media (min-width: 1600px) {
     .artisan-settings-page .artisan-main-content {
-        max-width: 1400px; /* Limit content width */
-        margin: 0 auto; /* Center content */
+        max-width: 1400px; 
+        margin: 0 auto; 
     }
 }

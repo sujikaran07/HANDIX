@@ -32,7 +32,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, { // Corrected endpoint
+      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, { 
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -40,7 +40,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product suggestions:', data); // Debugging log
+        console.log('Fetched product suggestions:', data); 
         setSuggestions(data.products || []);
       } else {
         console.error('Failed to fetch product suggestions:', response.statusText);
@@ -74,14 +74,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const fetchProductDetailsByName = async (name) => {
     try {
-      console.log('Fetching product details for name:', name); // Debugging log
+      console.log('Fetching product details for name:', name); 
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, { // Corrected endpoint
+      const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, { 
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,7 +89,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product details by name:', data); // Debugging log
+        console.log('Fetched product details by name:', data); 
         setProduct((prevProduct) => ({
           ...prevProduct,
           product_id: data.product_id,

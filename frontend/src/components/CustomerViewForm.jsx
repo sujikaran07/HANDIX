@@ -11,7 +11,7 @@ const CustomerViewForm = ({ c_id, onBack }) => {
     const fetchCustomerDetails = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/customers/${c_id}`);
-        console.log('Fetched customer details:', response.data); // Debug log
+        console.log('Fetched customer details:', response.data);
         setCustomer(response.data);
       } catch (error) {
         console.error('Error fetching customer details:', error);

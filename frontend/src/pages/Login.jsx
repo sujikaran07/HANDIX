@@ -7,7 +7,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleLoginSuccess = (redirectUrl) => {
-    navigate(redirectUrl); // Redirect to the appropriate panel
+    navigate(redirectUrl); 
   };
 
   return (

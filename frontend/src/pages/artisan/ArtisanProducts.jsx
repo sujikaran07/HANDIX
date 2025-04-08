@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
-import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
+import ArtisanTopBar from '../../components/artisan/ArtisanTopbar';
 import ArtisanManageProducts from '../../components/artisan/ArtisanManageProducts';
 import AddProductForm from '../../components/artisan/AddProductForm';
 import ProductViewForm from '../../components/artisan/ProductViewForm';
@@ -57,7 +57,7 @@ const ArtisanProductsPage = () => {
 
   const handleAddProductClick = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/products/new-id'); // Updated endpoint
+      const response = await fetch('http://localhost:5000/api/products/new-id');
       if (response.ok) {
         const data = await response.json();
         setNewProductId(data.product_id);
@@ -77,7 +77,7 @@ const ArtisanProductsPage = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/products', { // Updated endpoint
+      const response = await fetch('http://localhost:5000/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ const ArtisanProductsPage = () => {
       const token = localStorage.getItem('artisanToken');
       if (!token) return;
 
-      await fetch(`http://localhost:5000/api/inventory/${updatedProduct.product_id}`, { // Updated endpoint
+      await fetch(`http://localhost:5000/api/products/${updatedProduct.product_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

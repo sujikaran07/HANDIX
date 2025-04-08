@@ -28,13 +28,12 @@ const getCustomerById = async (req, res) => {
       customer.country = billingOrShippingAddress?.country || customer.country || 'N/A';
       customer.registrationDate = customer.createdAt;
 
-      // Fetch totalOrders and totalSpent from the Orders table
       const orders = await Order.findAll({ 
         where: { c_id: req.params.c_id },
         attributes: ['total_amount']
       });
 
-      const totalOrders = orders.length; // Count of orders
+      const totalOrders = orders.length; 
       const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
       customer.totalOrders = totalOrders || 0;
@@ -42,7 +41,7 @@ const getCustomerById = async (req, res) => {
 
       customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
 
-      console.log('Customer data being sent:', JSON.stringify(customer, null, 2)); // Debug log
+      console.log('Customer data being sent:', JSON.stringify(customer, null, 2)); 
       res.json(customer);
     } else {
       res.status(404).json({ message: 'Customer not found' });
@@ -57,9 +56,8 @@ const createCustomer = async (req, res) => {
   try {
     const customerData = req.body;
 
-    // Ensure country consistency between Customer and Address
     if (customerData.addresses && customerData.addresses.length > 0) {
-      customerData.country = customerData.addresses[0].country; // Set Customer country to match the first address
+      customerData.country = customerData.addresses[0].country; 
     }
 
     const customer = await Customer.create(customerData, { include: [{ model: Address, as: 'addresses' }] });
@@ -72,7 +70,7 @@ const createCustomer = async (req, res) => {
 
 const updateCustomer = async (req, res) => {
   try {
-    const { country, ...updateData } = req.body; // Exclude country from updates
+    const { country, ...updateData } = req.body; 
     const [updated] = await Customer.update(updateData, {
       where: { c_id: req.params.c_id }
     });
@@ -145,13 +143,13 @@ const getAllCustomersWithDetails = async (req, res) => {
   try {
     const customers = await Customer.findAll({
       include: [
-        { model: Address, as: 'addresses' }, // Include related addresses
-        { model: Order, as: 'customerOrders' } // Include related orders
+        { model: Address, as: 'addresses' }, 
+        { model: Order, as: 'customerOrders' } 
       ],
       order: [['c_id', 'ASC']]
     });
-    console.log('Fetched customers with details:', JSON.stringify(customers, null, 2)); // Log the fetched data
-    res.json(customers); // Send the fetched data as JSON
+    console.log('Fetched customers with details:', JSON.stringify(customers, null, 2)); 
+    res.json(customers); 
   } catch (error) {
     console.error('Error fetching customers with details:', error);
     res.status(500).json({ message: 'Error fetching customers with details', error: error.message });

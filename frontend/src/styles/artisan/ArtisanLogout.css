@@ -1,26 +1,26 @@
-/* CSS Reset */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Ensure consistent box-sizing */
+
 html {
     box-sizing: border-box;
-    font-size: 16px; /* Base font size for scaling */
+    font-size: 16px; 
 }
 
 *, *::before, *::after {
     box-sizing: inherit;
 }
 
-/* Apply Poppins font family */
+
 body {
     font-family: "Poppins", sans-serif;
 }
 
-/* Flexbox consistency */
+
 .artisan-logout-page-unique {
     display: flex;
     flex-direction: column;
@@ -37,11 +37,11 @@ body {
     display: flex;
     margin-bottom: -20px;
     flex-direction: column;
-    justify-content: space-between; /* Ensures proper spacing between elements */
-    min-height: 100%; /* Ensures the container fills the available height */
+    justify-content: space-between; 
+    min-height: 100%; 
 }
 
-/* Responsive styles for smaller screens */
+
 @media (max-width: 768px) {
     .main-content-unique {
         margin-left: 0;
@@ -54,7 +54,7 @@ body {
     }
 }
 
-/* Responsive styles for larger screens */
+
 @media (min-width: 1200px) {
     .main-content-unique {
         margin-left: 232px;
@@ -62,11 +62,11 @@ body {
     }
 }
 
-/* Responsive styles for ultra-wide screens */
+
 @media (min-width: 1600px) {
     .main-content-unique {
-        max-width: 1400px; /* Limit content width */
-        margin: 0 auto; /* Center content */
+        max-width: 1400px; 
+        margin: 0 auto; 
     }
 }
 

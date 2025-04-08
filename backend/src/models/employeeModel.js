@@ -37,10 +37,10 @@ const Employee = sequelize.define('Employee', {
     type: DataTypes.INTEGER,
     field: 'role_id',
     references: {
-      model: 'Roles', // Ensure this matches the actual table name in your database
+      model: 'Roles', 
       key: 'role_id'
     },
-    onUpdate: 'CASCADE', // Ensure updates cascade properly
+    onUpdate: 'CASCADE', 
     onDelete: 'SET NULL'
   },
   profileImage: { 

@@ -19,7 +19,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     { id: 'O008', customerName: 'Frank Green', orderDate: '2023-10-08', totalAmount: '$450', orderType: 'Wholesale', assignedArtisan: '', status: 'Processing' },
     { id: 'O009', customerName: 'Grace Harris', orderDate: '2023-10-09', totalAmount: '$500', orderType: 'Customized', assignedArtisan: 'Artisan C', status: 'Review' },
     { id: 'O010', customerName: 'Hank Irving', orderDate: '2023-10-10', totalAmount: '$550', orderType: 'Retail', assignedArtisan: '', status: 'Shipped' },
-    // ...more orders
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');

@@ -9,20 +9,20 @@ const {
   getAllProductEntries,
   getProductByName,
   getProductSuggestions,
-} = require('../../controllers/products/productController'); // Ensure all functions are correctly imported
-const { authMiddleware } = require('../../controllers/login/employeeLoginControllers'); // Import authMiddleware
+} = require('../../controllers/products/productController'); 
+const { authMiddleware } = require('../../controllers/login/employeeLoginControllers'); 
 
 const router = express.Router();
 
-// Define routes
-router.get('/', authMiddleware, getAllProducts); // Ensure getAllProducts is defined
-router.get('/new-id', authMiddleware, generateNewProductId); // Ensure authMiddleware is applied
-router.get('/entries', authMiddleware, getAllProductEntries); // Ensure getAllProductEntries is defined
-router.get('/by-name', authMiddleware, getProductByName); // Ensure getProductByName is defined
-router.get('/suggestions', authMiddleware, getProductSuggestions); // Ensure getProductSuggestions is defined
-router.get('/:id', authMiddleware, getProductById); // Ensure getProductById is defined
-router.post('/', authMiddleware, createProduct); // Ensure createProduct is defined
-router.put('/:id', authMiddleware, updateProduct); // Ensure updateProduct is defined
+
+router.get('/', authMiddleware, getAllProducts); 
+router.get('/new-id', authMiddleware, generateNewProductId); 
+router.get('/entries', authMiddleware, getAllProductEntries);
+router.get('/by-name', authMiddleware, getProductByName); 
+router.get('/suggestions', authMiddleware, getProductSuggestions); 
+router.get('/:id', authMiddleware, getProductById); 
+router.post('/', authMiddleware, createProduct); 
+router.put('/:id', authMiddleware, updateProduct); 
 router.delete('/:id', authMiddleware, deleteProduct); 
 
 module.exports = router;

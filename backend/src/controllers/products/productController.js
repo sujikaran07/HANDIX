@@ -87,7 +87,7 @@ const createProduct = async (req, res) => {
 
     res.status(201).json({ message: 'Product entry created successfully', productEntry });
   } catch (error) {
-    console.error('Error creating product:', error); // Log the error for debugging
+    console.error('Error creating product:', error); 
     res.status(500).json({ error: 'Failed to create product entry' });
   }
 };
@@ -105,7 +105,7 @@ const updateProduct = async (req, res) => {
     await productEntry.update(updatedData);
     res.status(200).json({ message: 'Product entry updated successfully', productEntry });
   } catch (error) {
-    console.error('Error updating product entry:', error); // Log the error for debugging
+    console.error('Error updating product entry:', error); 
     res.status(500).json({ error: 'Failed to update product entry' });
   }
 };
@@ -118,22 +118,22 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
 
-    // Reduce stock count in ProductVariations
+    
     const variations = await ProductVariation.findAll({
       where: { product_id: productEntry.product_id },
     });
 
     for (const variation of variations) {
-      variation.stock_level = Math.max(0, variation.stock_level - productEntry.quantity); // Reduce stock level
+      variation.stock_level = Math.max(0, variation.stock_level - productEntry.quantity); 
       await variation.save();
     }
 
-    // Delete the product entry
+    
     await productEntry.destroy();
 
     res.status(200).json({ message: 'Product entry deleted successfully and stock count updated' });
   } catch (error) {
-    console.error('Error deleting product entry:', error); // Log the error for debugging
+    console.error('Error deleting product entry:', error); 
     res.status(500).json({ error: 'Failed to delete product entry' });
   }
 };
@@ -157,7 +157,7 @@ const getProductSuggestions = async (req, res) => {
 
     res.status(200).json({ products });
   } catch (error) {
-    console.error('Error fetching product suggestions:', error); // Log the error for debugging
+    console.error('Error fetching product suggestions:', error); 
     res.status(500).json({ error: 'Failed to fetch product suggestions' });
   }
 };
@@ -176,7 +176,7 @@ const generateNewProductId = async (req, res) => {
 
     res.status(200).json({ product_id: newProductId });
   } catch (error) {
-    console.error('Error generating new product ID:', error); // Log the error for debugging
+    console.error('Error generating new product ID:', error); 
     res.status(500).json({ error: 'Failed to generate new product ID' });
   }
 };
@@ -193,7 +193,7 @@ const getAllProductEntries = async (req, res) => {
     console.log('Fetching product entries for e_id:', e_id); 
 
     const entries = await ProductEntry.findAll({
-      where: { e_id: String(e_id) }, // Explicitly cast e_id to a string
+      where: { e_id: String(e_id) }, 
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         {
@@ -203,7 +203,7 @@ const getAllProductEntries = async (req, res) => {
           include: [
             {
               model: ProductVariation,
-              as: 'variations', // Correct association using Inventory.product_id
+              as: 'variations', 
               attributes: ['size', 'additional_price', 'stock_level'],
             },
           ],
@@ -225,7 +225,7 @@ const getAllProductEntries = async (req, res) => {
         'status',
         'date_added',
       ],
-      logging: console.log, // Log the raw SQL query
+      logging: console.log, 
     });
 
     console.log('Fetched entries:', entries); 
@@ -268,7 +268,7 @@ const getProductByName = async (req, res) => {
 
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product by name:', error); // Log the error for debugging
+    console.error('Error fetching product by name:', error); 
     res.status(500).json({ error: 'Failed to fetch product by name' });
   }
 };

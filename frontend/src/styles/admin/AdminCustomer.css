@@ -1,29 +1,29 @@
-/* CSS Reset */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Ensure consistent box-sizing */
+
 html {
     box-sizing: border-box;
-    font-size: 16px; /* Base font size for scaling */
+    font-size: 16px; 
 }
 
 *, *::before, *::after {
     box-sizing: inherit;
 }
 
-/* Apply Poppins font family */
+
 body {
     font-family: "Poppins", sans-serif;
 }
 
-/* Flexbox consistency */
+
 .admin-customer-page {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping for overflow */
+    flex-wrap: wrap; 
     flex-direction: column;
     flex-direction: row;
     height: 100vh;
@@ -138,7 +138,7 @@ body {
     border: none;
     text-align: left;
     background-color: #ffffff;
-    vertical-align: middle; /* Ensure consistent vertical alignment */
+    vertical-align: middle; 
 }
 
 .admin-customer-page .customer-table th {
@@ -632,7 +632,7 @@ body {
     opacity: 0.5;
 }
 
-/* Unique class for EditCustomerForm */
+
 .edit-customer-form .form-label {
     font-size: 16px; 
     color: #666;
@@ -648,7 +648,7 @@ body {
     background-color: #f8f9fa;
 }
 
-/* Responsive styles for smaller screens */
+
 @media (max-width: 768px) {
     .admin-customer-page .main-content {
         margin-left: 0;
@@ -667,7 +667,7 @@ body {
     }
 }
 
-/* Responsive styles for larger screens */
+
 @media (min-width: 1200px) {
     .admin-customer-page .main-content {
         margin-left: 232px;
@@ -675,15 +675,14 @@ body {
     }
 }
 
-/* Responsive styles for ultra-wide screens */
 @media (min-width: 1600px) {
     .admin-customer-page .main-content {
-        max-width: 1400px; /* Limit content width */
-        margin: 0 auto; /* Center content */
+        max-width: 1400px; 
+        margin: 0 auto; 
     }
 
     .admin-customer-page .customer-table th,
     .admin-customer-page .customer-table td {
-        font-size: 16px; /* Adjust font size for readability */
+        font-size: 16px; 
     }
 }

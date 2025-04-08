@@ -31,8 +31,8 @@ const AdminCustomerPage = () => {
   const handleViewCustomer = async (customer) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/customers/${customer.c_id}`);
-      console.log('Fetched customer details:', response.data); // Debug log
-      setSelectedCustomer(response.data); // Pass the fetched data to selectedCustomer
+      console.log('Fetched customer details:', response.data); 
+      setSelectedCustomer(response.data); 
       setShowCustomerDetails(true);
     } catch (error) {
       console.error('Error fetching customer details:', error);
@@ -91,16 +91,16 @@ const AdminCustomerPage = () => {
   };
 
   const handleCancelEditCustomer = () => {
-    setShowEditCustomerForm(false); // Close the edit form
-    setSelectedCustomer(null); // Clear the selected customer
+    setShowEditCustomerForm(false); 
+    setSelectedCustomer(null); 
   };
 
   const handleUpdateCustomer = async (updatedCustomer) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${updatedCustomer.c_id}`, updatedCustomer);
-      fetchCustomers(); // Refresh the customer list
-      setShowEditCustomerForm(false); // Close the edit form
-      setSelectedCustomer(null); // Clear the selected customer
+      fetchCustomers(); 
+      setShowEditCustomerForm(false); 
+      setSelectedCustomer(null); 
     } catch (error) {
       console.error('Error updating customer:', error);
     }

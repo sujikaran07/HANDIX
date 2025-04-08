@@ -11,8 +11,8 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const [size, setSize] = useState('');
   const [additionalPrice, setAdditionalPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [customization, setCustomization] = useState(false); // Track customization flag
-  const [isApproved, setIsApproved] = useState(false); // Track approval status
+  const [customization, setCustomization] = useState(false); 
+  const [isApproved, setIsApproved] = useState(false); 
 
   useEffect(() => {
     if (product) {
@@ -26,7 +26,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
       setAdditionalPrice(product.additional_price || '');
       setDescription(product.description || '');
       setCustomization(product.customization || false);
-      setIsApproved(product.status === 'Approved'); // Check if the product is approved
+      setIsApproved(product.status === 'Approved');
     }
   }, [product]);
 
@@ -83,7 +83,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            disabled={isApproved} // Disable editing if the product is approved
+            disabled={isApproved} 
           >
         
             <option value="Accessories">Accessories</option>
@@ -147,7 +147,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="size"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            disabled={category !== 'Clothing'} // Enable only if category is Clothing
+            disabled={category !== 'Clothing'} 
           >
             <option value="">Select Size</option>
             <option value="XS">XS</option>
@@ -165,7 +165,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="additionalPrice"
             value={additionalPrice}
             onChange={(e) => setAdditionalPrice(e.target.value)}
-            disabled={!customization} // Enable only if customization is true
+            disabled={!customization} 
           />
         </div>
       </div>

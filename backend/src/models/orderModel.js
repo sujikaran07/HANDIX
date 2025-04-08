@@ -12,7 +12,7 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Customers', // Use table name to avoid circular dependency
+      model: 'Customers', 
       key: 'c_id',
     },
     onDelete: 'SET NULL',

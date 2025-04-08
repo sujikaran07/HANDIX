@@ -16,7 +16,7 @@ const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
-      id: String(decoded.id), // Ensure id (e_id) is treated as a string
+      id: String(decoded.id), 
       role: decoded.role,
     };
 
@@ -58,18 +58,18 @@ const login = async (req, res) => {
     console.log('Token generated:', token);
     console.log('Login successful, token generated');
 
-    // Role-based redirection logic
+
     let redirectUrl = '';
-    let tokenKey = ''; // Key to store the token in localStorage
+    let tokenKey = ''; 
     if (user.roleId === 1) {
       redirectUrl = '/admin/dashboard';
-      tokenKey = 'adminToken'; // Use a separate key for admin
+      tokenKey = 'adminToken'; 
     } else if (user.roleId === 2) {
       redirectUrl = '/artisan/dashboard';
-      tokenKey = 'artisanToken'; // Use a separate key for artisan
+      tokenKey = 'artisanToken'; 
     }
 
-    res.json({ token, redirectUrl, tokenKey }); // Return the token key to the frontend
+    res.json({ token, redirectUrl, tokenKey }); 
   } catch (error) {
     console.error(`Error logging in: ${error}`);
     res.status(500).json({ message: 'Internal server error' });
@@ -78,9 +78,9 @@ const login = async (req, res) => {
 
 const getCurrentUser = async (req, res) => {
   try {
-    const userId = req.user.id; // Extract user ID from the token
+    const userId = req.user.id;
     const user = await Employee.findByPk(userId, {
-      attributes: ['eId', 'firstName', 'lastName', 'email', 'roleId'], // Include eId in the response
+      attributes: ['eId', 'firstName', 'lastName', 'email', 'roleId'], 
     });
 
     if (!user) {
@@ -102,7 +102,7 @@ const refreshToken = (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); // Ignore expiration
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); 
     const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '3h' });
     res.status(200).json({ token: newToken });
   } catch (error) {

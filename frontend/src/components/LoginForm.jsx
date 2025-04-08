@@ -23,8 +23,8 @@ const LoginForm = ({ onLoginSuccess }) => {
       const response = await axios.post('http://localhost:5000/api/login', { email, password });
       console.log('Login successful:', response.data);
       if (response.status === 200) {
-        const { token, redirectUrl, tokenKey } = response.data; // Use tokenKey to store the token
-        localStorage.setItem(tokenKey, token); // Store the token using the provided key
+        const { token, redirectUrl, tokenKey } = response.data; 
+        localStorage.setItem(tokenKey, token); 
         onLoginSuccess(redirectUrl);
       } else {
         setEmailError(true);

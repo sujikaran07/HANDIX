@@ -1,11 +1,11 @@
 body {
-    font-family: "Poppins", sans-serif, Arial, sans-serif; /* Add fallback fonts */
-    font-size: 1rem; /* Relative to the root font size */
+    font-family: "Poppins", sans-serif, Arial, sans-serif; 
+    font-size: 1rem; 
     line-height: 1.5;
     color: #333;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility; /* Improve font rendering */
+    text-rendering: optimizeLegibility; 
     margin: 0;
     padding: 0;
     background-color: #f8f9fa;
@@ -15,7 +15,7 @@ body {
 .artisan-dashboard-container {
     display: flex;
     min-height: 100vh;
-    font-size: var(--font-size-base); /* Use root font size */
+    font-size: var(--font-size-base); 
 }
 
 .artisan-sidebar {
@@ -175,13 +175,13 @@ body {
 }
 
 .artisan-dashboard-cards .artisan-card h4 {
-    font-size: 1rem; /* Ensure consistent font size */
+    font-size: 1rem; 
     margin-bottom: 8px;
     color: #333333;
 }
 
 .artisan-dashboard-cards .artisan-card p {
-    font-size: 1rem; /* Ensure consistent font size */
+    font-size: 1rem; 
     font-weight: bold;
     color: #2790C3;
     margin: 0;
@@ -301,17 +301,17 @@ body {
 }
 
 .artisan-handix-logo {
-    margin-right: 10px; /* Adjust the spacing as needed */
+    margin-right: 10px; 
 }
 
 @media (max-width: 768px) {
     body {
-        font-size: var(--font-size-small); /* Adjust font size for smaller screens */
+        font-size: var(--font-size-small); 
     }
 
     .artisan-dashboard-cards .artisan-card h4,
     .artisan-dashboard-cards .artisan-card p {
-        font-size: 0.875rem; /* Smaller font size for mobile */
+        font-size: 0.875rem; 
     }
 
     .artisan-graph-container {
@@ -326,12 +326,12 @@ body {
 
 @media (min-width: 1200px) {
     body {
-        font-size: var(--font-size-base); /* Default font size for larger screens */
+        font-size: var(--font-size-base); 
     }
 }
 
 @media (min-width: 1600px) {
     body {
-        font-size: var(--font-size-large); /* Increase font size for ultra-wide screens */
+        font-size: var(--font-size-large); 
     }
 }

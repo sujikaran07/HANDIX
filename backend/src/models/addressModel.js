@@ -12,7 +12,7 @@ const Address = sequelize.define('Address', {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
-      model: 'Customers', // Use table name to avoid circular dependency
+      model: 'Customers', 
       key: 'c_id',
     },
     onDelete: 'CASCADE',
@@ -60,7 +60,7 @@ const Address = sequelize.define('Address', {
 });
 
 Address.associate = (models) => {
-  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'associatedCustomer' }); // Updated alias
+  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'associatedCustomer' }); 
 };
 
 module.exports = { Address };

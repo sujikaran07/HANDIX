@@ -11,7 +11,7 @@ const ProductImage = sequelize.define('ProductImage', {
     type: DataTypes.STRING(10),
     allowNull: false,
     references: {
-      model: 'ProductEntries', // Updated to reference ProductEntries instead of Products
+      model: 'ProductEntries', 
       key: 'product_id',
     },
     onDelete: 'CASCADE',
@@ -28,7 +28,7 @@ const ProductImage = sequelize.define('ProductImage', {
 
 ProductImage.associate = (models) => {
   if (models.ProductEntry) {
-    ProductImage.belongsTo(models.ProductEntry, { foreignKey: 'entry_id', as: 'productEntryImage' }); // Updated alias to 'productEntryImage'
+    ProductImage.belongsTo(models.ProductEntry, { foreignKey: 'entry_id', as: 'productEntryImage' }); 
   }
 };
 

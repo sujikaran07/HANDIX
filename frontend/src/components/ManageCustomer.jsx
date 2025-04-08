@@ -29,8 +29,8 @@ const ManageCustomer = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [viewingCustomer, setViewingCustomer] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
-  const [customerToDelete, setCustomerToDelete] = useState(null); // Track customer to delete
+  const [showDeleteModal, setShowDeleteModal] = useState(false); 
+  const [customerToDelete, setCustomerToDelete] = useState(null); 
   const customersPerPage = 4;
 
   console.log('Customers passed to ManageCustomer:', customers);
@@ -62,7 +62,7 @@ const ManageCustomer = ({
   };
 
   const handleEdit = (customer) => {
-    onEditCustomer(customer); // Notify parent to open the edit form
+    onEditCustomer(customer); 
   };
 
   const handleCancelEdit = () => {
@@ -75,7 +75,7 @@ const ManageCustomer = ({
   };
 
   const handleViewCustomer = (customer) => {
-    setViewingCustomer(customer.c_id); // Pass only c_id
+    setViewingCustomer(customer.c_id); 
   };
 
   const handleBackToTable = () => {

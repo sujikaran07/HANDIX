@@ -16,9 +16,9 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [viewMode, setViewMode] = useState('table'); // 'table', 'view', or 'edit'
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for delete modal
-  const [productToDelete, setProductToDelete] = useState(null); // Track product to delete
+  const [viewMode, setViewMode] = useState('table'); 
+  const [showDeleteModal, setShowDeleteModal] = useState(false); 
+  const [productToDelete, setProductToDelete] = useState(null); 
   const entriesPerPage = 4;
 
   useEffect(() => {
@@ -40,7 +40,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched product entries:', data); // Debugging log
+          console.log('Fetched product entries:', data); 
           setEntries(data.entries);
         } else {
           console.error('Failed to fetch product entries:', response.statusText);
@@ -112,11 +112,11 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       try {
         const token = localStorage.getItem('artisanToken');
         if (!token) {
-          console.error('No token found'); // Debugging log
+          console.error('No token found'); 
           return;
         }
 
-        console.log('Sending delete request for product ID:', productToDelete.product_id); // Debugging log
+        console.log('Sending delete request for product ID:', productToDelete.product_id); 
 
         const response = await fetch(`http://localhost:5000/api/products/${productToDelete.product_id}`, {
           method: 'DELETE',
@@ -126,17 +126,17 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         });
 
         if (response.ok) {
-          console.log('Product deleted successfully'); // Debugging log
+          console.log('Product deleted successfully');
           setEntries((prevEntries) =>
             prevEntries.filter((entry) => entry.product_id !== productToDelete.product_id)
           );
           setShowDeleteModal(false);
           setProductToDelete(null);
         } else {
-          console.error('Failed to delete product:', response.statusText); // Debugging log
+          console.error('Failed to delete product:', response.statusText); 
         }
       } catch (error) {
-        console.error('Error deleting product:', error); // Debugging log
+        console.error('Error deleting product:', error); 
       }
     }
   };

@@ -3,12 +3,12 @@ const { sequelize } = require('../config/db');
 
 const ProductEntry = sequelize.define('ProductEntry', {
   entry_id: {
-    type: DataTypes.INTEGER, // Correctly defined as integer
+    type: DataTypes.INTEGER, 
     autoIncrement: true,
     primaryKey: true,
   },
   product_id: {
-    type: DataTypes.STRING(10), // Correctly defined as character varying
+    type: DataTypes.STRING(10), 
     allowNull: false,
     references: {
       model: 'ProductEntries',
@@ -80,10 +80,10 @@ ProductEntry.associate = (models) => {
     ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
   }
   if (models.ProductImage) {
-    ProductEntry.hasMany(models.ProductImage, { foreignKey: 'entry_id', as: 'entryImages' }); // Ensure alias is unique
+    ProductEntry.hasMany(models.ProductImage, { foreignKey: 'entry_id', as: 'entryImages' }); 
   }
   if (models.ProductVariation) {
-    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); // Use product_id for the association
+    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); 
   }
 };
 

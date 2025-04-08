@@ -48,7 +48,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
       lastName,
       email,
       phone: phoneNumber,
-      role: jobRole === 'Admin' ? 1 : 2, // Map jobRole to roleId (1 for Admin, 2 for Artisan)
+      role: jobRole === 'Admin' ? 1 : 2, 
       password,
     };
     try {

@@ -1,11 +1,11 @@
 body {
-    font-family: "Poppins", sans-serif, Arial, sans-serif; /* Add fallback fonts */
-    font-size: 1rem; /* Relative to the root font size */
+    font-family: "Poppins", sans-serif, Arial, sans-serif; 
+    font-size: 1rem; 
     line-height: 1.5;
     color: #333;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility; /* Improve font rendering */
+    text-rendering: optimizeLegibility; 
 }
 
 .artisan-products-page {
@@ -13,7 +13,7 @@ body {
     flex-direction: column;
     flex-direction: row;
     height: 100vh;
-    font-size: var(--font-size-base); /* Use root font size */
+    font-size: var(--font-size-base); 
 }
 
 .artisan-products-page .artisan-main-content {
@@ -76,8 +76,8 @@ body {
     border: none;
     text-align: left;
     background-color: #ffffff;
-    font-size: 1rem; /* Ensure consistent font size */
-    vertical-align: middle; /* Align content vertically */
+    font-size: 1rem; 
+    vertical-align: middle; 
 }
 
 .artisan-products-page .product-table th {
@@ -251,13 +251,13 @@ body {
     width: 120px;
     text-align: center;
     border-color: #6c757d;
-    color: #000000; /* Match AdminEmployee color */
-    background-color: #ffffff; /* Match AdminEmployee background */
+    color: #000000; 
+    background-color: #ffffff; 
 }
 
 .export-btn:hover {
-    background-color: #f0f0f0; /* Match AdminEmployee hover background */
-    color: #ffffff; /* Match AdminEmployee hover text color */
+    background-color: #f0f0f0; 
+    color: #ffffff; 
 }
 
 .product-pagination {
@@ -302,26 +302,26 @@ input[type="checkbox"]:checked {
     border-color: #3e87c3;
 }
 
-/* Responsive font sizes */
+
 @media (max-width: 768px) {
     body {
-        font-size: var(--font-size-small); /* Adjust font size for smaller screens */
+        font-size: var(--font-size-small); 
     }
 
     .artisan-products-page .product-table th,
     .artisan-products-page .product-table td {
-        font-size: 0.875rem; /* Smaller font size for mobile */
+        font-size: 0.875rem;
     }
 }
 
 @media (min-width: 1200px) {
     body {
-        font-size: var(--font-size-base); /* Default font size for larger screens */
+        font-size: var(--font-size-base); 
     }
 }
 
 @media (min-width: 1600px) {
     body {
-        font-size: var(--font-size-large); /* Increase font size for ultra-wide screens */
+        font-size: var(--font-size-large); 
     }
 }

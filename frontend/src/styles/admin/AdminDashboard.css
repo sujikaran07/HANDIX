@@ -1,14 +1,14 @@
-/* CSS Reset */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Ensure consistent box-sizing */
+
 html {
     box-sizing: border-box;
-    font-size: 16px; /* Base font size for scaling */
+    font-size: 16px; 
 }
 
 *, *::before, *::after {
@@ -25,7 +25,7 @@ body {
 
 .dashboard-container {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping for overflow */
+    flex-wrap: wrap; 
     min-height: 100vh;
 }
 
@@ -340,7 +340,7 @@ body {
 
 @media (min-width: 1600px) {
     .main-content {
-        max-width: 1400px; /* Limit content width */
-        margin: 0 auto; /* Center content */
+        max-width: 1400px; 
+        margin: 0 auto; 
     }
 }

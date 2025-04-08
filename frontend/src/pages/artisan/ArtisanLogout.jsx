@@ -1,6 +1,6 @@
 import React from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
-import ArtisanTopbar from '../../components/artisan/ArtisanTopbar'; // Corrected path
+import ArtisanTopBar from '../../components/artisan/ArtisanTopbar'; 
 import ManageArtisanLogout from '../../components/artisan/ManageArtisanLogout';
 import '../../styles/artisan/ArtisanLogout.css';
 
@@ -9,7 +9,7 @@ const ArtisanLogoutPage = () => {
     <div className="artisan-logout-page-unique">
       <ArtisanSidebar />
       <div className="main-content-unique">
-        <ArtisanTopbar />
+        <ArtisanTopBar />
         <ManageArtisanLogout />
       </div>
     </div>

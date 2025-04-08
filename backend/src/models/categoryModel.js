@@ -17,8 +17,8 @@ const Category = sequelize.define('Category', {
     allowNull: true,
   },
   stock_level: {
-    type: DataTypes.INTEGER, // New column for stock level
-    defaultValue: 0, // Default value is 0
+    type: DataTypes.INTEGER, 
+    defaultValue: 0, 
     allowNull: true,
   },
 }, {
@@ -28,7 +28,7 @@ const Category = sequelize.define('Category', {
 });
 
 Category.associate = (models) => {
-  Category.hasMany(models.ProductEntry, { foreignKey: 'category_id', as: 'entries' }); // Updated association
+  Category.hasMany(models.ProductEntry, { foreignKey: 'category_id', as: 'entries' }); 
 };
 
 module.exports = Category;

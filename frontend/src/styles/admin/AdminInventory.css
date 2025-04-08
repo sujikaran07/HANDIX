@@ -1,28 +1,27 @@
-/* CSS Reset */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* Ensure consistent box-sizing */
 html {
     box-sizing: border-box;
-    font-size: 16px; /* Base font size for scaling */
+    font-size: 16px; 
 }
 
 *, *::before, *::after {
     box-sizing: inherit;
 }
 
-/* Apply Poppins font family */
+
 body {
     font-family: "Poppins", sans-serif;
 }
 
 .admin-inventory-page {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping for overflow */
+    flex-wrap: wrap;
     flex-direction: column;
     flex-direction: row;
     height: 100vh;
@@ -71,15 +70,15 @@ body {
 }
 
 .admin-inventory-page .filter-dropdown .form-select {
-    height: 30px; /* Reduced height */
-    padding: 0 10px; /* Adjust padding */
+    height: 30px; 
+    padding: 0 10px; 
 }
 
 .admin-inventory-page .inventory-table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0 10px;
-    margin-top: -15px; /* Reduced margin-top */
+    margin-top: -15px; 
 }
 
 .admin-inventory-page .inventory-table th,
@@ -294,7 +293,7 @@ input[type="checkbox"]:checked {
     border-color: #3e87c3;
 }
 
-/* Responsive styles for smaller screens */
+
 @media (max-width: 768px) {
     .admin-inventory-page .main-content {
         margin-left: 0;
@@ -313,7 +312,7 @@ input[type="checkbox"]:checked {
     }
 }
 
-/* Responsive styles for larger screens */
+
 @media (min-width: 1200px) {
     .admin-inventory-page .main-content {
         margin-left: 232px;
@@ -321,15 +320,15 @@ input[type="checkbox"]:checked {
     }
 }
 
-/* Responsive styles for ultra-wide screens */
+
 @media (min-width: 1600px) {
     .admin-inventory-page .main-content {
-        max-width: 1400px; /* Limit content width */
-        margin: 0 auto; /* Center content */
+        max-width: 1400px; 
+        margin: 0 auto; 
     }
 
     .admin-inventory-page .inventory-table th,
     .admin-inventory-page .inventory-table td {
-        font-size: 16px; /* Adjust font size for readability */
+        font-size: 16px; 
     }
 }

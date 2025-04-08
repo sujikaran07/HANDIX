@@ -1,19 +1,19 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const Inventory = require('./inventoryModel'); // Ensure Inventory is imported
+const Inventory = require('./inventoryModel'); 
 
 const ProductVariation = sequelize.define('ProductVariation', {
   variation_id: {
-    type: DataTypes.INTEGER, // Correctly defined as integer
+    type: DataTypes.INTEGER, 
     primaryKey: true,
     allowNull: false,
     autoIncrement: true,
   },
   product_id: {
-    type: DataTypes.STRING(10), // Match Inventory.product_id
+    type: DataTypes.STRING(10), 
     allowNull: false,
     references: {
-      model: 'Inventory', // Reference the Inventory table
+      model: 'Inventory', 
       key: 'product_id',
     },
     onDelete: 'CASCADE',
@@ -37,13 +37,13 @@ const ProductVariation = sequelize.define('ProductVariation', {
   indexes: [
     {
       unique: true,
-      fields: ['product_id', 'size'], // Enforce unique constraint on product_id and size
+      fields: ['product_id', 'size'], 
     },
   ],
 });
 
 ProductVariation.associate = (models) => {
-  ProductVariation.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'inventoryProduct' }); // Use product_id for the association with Inventory
+  ProductVariation.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'inventoryProduct' });
 };
 
 module.exports = ProductVariation;
