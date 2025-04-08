@@ -15,7 +15,6 @@ const ProductImage = sequelize.define('ProductImage', {
       key: 'product_id',
     },
     onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
   },
   image_url: {
     type: DataTypes.STRING(255),
@@ -28,8 +27,8 @@ const ProductImage = sequelize.define('ProductImage', {
 });
 
 ProductImage.associate = (models) => {
-  if (models.Product) {
-    ProductImage.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' }); // Define reverse association
+  if (models.ProductEntry) {
+    ProductImage.belongsTo(models.ProductEntry, { foreignKey: 'product_id', as: 'entry' }); // Ensure reverse association exists
   }
 };
 

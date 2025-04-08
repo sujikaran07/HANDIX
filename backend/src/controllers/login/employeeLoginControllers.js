@@ -8,7 +8,7 @@ dotenv.config();
 
 const authMiddleware = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log('Authorization header:', authHeader); // Debugging: Log the Authorization header
+  console.log('Authorization header:', authHeader); // Debugging log
 
   if (!authHeader) {
     console.error('Authorization header missing');
@@ -24,8 +24,11 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    console.log('Decoded token:', decoded);
+    req.user = {
+      id: `${decoded.id}`, // Ensure id is treated as a string
+      role: decoded.role,
+    };
+    console.log('Decoded token:', decoded); // Debugging log
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {

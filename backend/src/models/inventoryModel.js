@@ -1,11 +1,11 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
-const Product = sequelize.define('Product', {
+const Inventory = sequelize.define('Inventory', { 
   product_id: {
     type: DataTypes.STRING(10),
     allowNull: false,
-    primaryKey: true, // Set product_id as the primary key
+    primaryKey: true, 
   },
   product_name: {
     type: DataTypes.STRING(255),
@@ -33,7 +33,7 @@ const Product = sequelize.define('Product', {
   },
   date_added: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW, // Automatically set the current timestamp
+    defaultValue: Sequelize.NOW, 
   },
   quantity: {
     type: DataTypes.INTEGER,
@@ -45,56 +45,56 @@ const Product = sequelize.define('Product', {
     defaultValue: false,
   },
   product_status: {
-    type: DataTypes.STRING(10), // Represents the stock status (e.g., 'In Stock', 'Out of Stock')
+    type: DataTypes.STRING(10), 
     defaultValue: 'In Stock',
   },
   status: {
-    type: DataTypes.ENUM('pending', 'approved', 'rejected'), // Represents the approval status of the product
+    type: DataTypes.ENUM('pending', 'approved', 'rejected'), 
     allowNull: false,
     defaultValue: 'pending',
   },
   e_id: {
     type: DataTypes.STRING(10),
-    allowNull: false, // Ensure e_id is required
+    allowNull: false,
     references: {
-      model: 'Employees', // Ensure this matches the actual table name
+      model: 'Employees', 
       key: 'e_id',
     },
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
   },
 }, {
-  tableName: 'Products',
+  tableName: 'Products', 
   timestamps: false,
   underscored: true,
   indexes: [
     {
       unique: true,
-      fields: ['product_id', 'e_id', 'date_added'], // Composite unique constraint on product_id, e_id, and date_added
+      fields: ['product_id', 'e_id', 'date_added'], 
     },
   ],
-  // Disable the default `id` column
+  
   defaultScope: {
     attributes: { exclude: ['id'] },
   },
 });
 
-Product.associate = (models) => {
+Inventory.associate = (models) => {
   if (models.Category) {
-    Product.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+    Inventory.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
   }
   if (models.ProductVariation) {
-    Product.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
+    Inventory.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
   }
   if (models.Employee) {
-    Product.belongsTo(models.Employee, { foreignKey: 'e_id', as: 'employee' });
+    Inventory.belongsTo(models.Employee, { foreignKey: 'e_id', as: 'employee' });
   }
   if (models.ProductImage) {
-    Product.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'images' }); // Define association with ProductImage
+    Inventory.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'images' }); 
   }
   if (models.ProductEntry) {
-    Product.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'entries' });
+    Inventory.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'entries' });
   }
 };
 
-module.exports = Product;
+module.exports = Inventory; 

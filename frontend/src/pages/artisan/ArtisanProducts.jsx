@@ -57,7 +57,7 @@ const ArtisanProductsPage = () => {
 
   const handleAddProductClick = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/products/new-id');
+      const response = await fetch('http://localhost:5000/api/products/new-id'); // Updated endpoint
       if (response.ok) {
         const data = await response.json();
         setNewProductId(data.product_id);
@@ -77,7 +77,7 @@ const ArtisanProductsPage = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/api/products', {
+      const response = await fetch('http://localhost:5000/api/products', { // Updated endpoint
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ const ArtisanProductsPage = () => {
       const token = localStorage.getItem('artisanToken');
       if (!token) return;
 
-      await fetch(`http://localhost:5000/api/products/${updatedProduct.product_id}`, {
+      await fetch(`http://localhost:5000/api/inventory/${updatedProduct.product_id}`, { // Updated endpoint
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

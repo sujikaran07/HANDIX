@@ -1,8 +1,8 @@
-const Product = require('../../models/productModel');
+const ProductEntry = require('../../models/productEntryModel'); 
 const Category = require('../../models/categoryModel');
+const Inventory = require('../../models/inventoryModel');
 const ProductVariation = require('../../models/productVariationModel');
 const ProductImage = require('../../models/productImageModel');
-const ProductEntry = require('../../models/productEntryModel');
 const { Op } = require('sequelize');
 
 const getAllProducts = async (req, res) => {
@@ -13,12 +13,13 @@ const getAllProducts = async (req, res) => {
       return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     }
 
-    const products = await Product.findAll({
-      where: { e_id },
+    const products = await ProductEntry.findAll({
+      where: { e_id: `${e_id}` }, // Ensure e_id is treated as a string
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
-        { model: ProductVariation, as: 'variations' },
+        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
         { model: ProductImage, as: 'images', attributes: ['image_url'] },
+        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
     });
@@ -29,176 +30,129 @@ const getAllProducts = async (req, res) => {
 
     res.status(200).json({ products });
   } catch (error) {
-    res.status(200).json({ message: 'No products available at the moment.', products: [] });
+    console.error('Error fetching products:', error); // Log the error for debugging
+    res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
 
 const getProductById = async (req, res) => {
   try {
-    console.log('Fetching product by ID:', req.params.id); // Debugging: Log the product ID
-    const product = await Product.findByPk(req.params.id, {
+    const product = await ProductEntry.findByPk(req.params.id, {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
-        { model: ProductVariation, as: 'variations' },
+        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
         { model: ProductImage, as: 'images', attributes: ['image_url'] },
+        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
     });
-    console.log('Fetched product:', product); // Debugging: Log the fetched product
+
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product by ID:', error);
+    console.error('Error fetching product:', error); // Log the error for debugging
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 };
 
 const createProduct = async (req, res) => {
   try {
-    const { product_id, product_name, size, additional_price, customization_available, e_id: bodyEId, category, price, status, images, ...rest } = req.body;
-    const e_id = bodyEId || req.user.id;
+    const { product_id, product_name, category, price, quantity, status, ...rest } = req.body;
+    const e_id = req.user.id;
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
-
-    const validStatuses = ['pending', 'approved', 'rejected'];
-    const finalStatus = validStatuses.includes(status) ? status : 'pending';
-
-    const quantity = parseInt(rest.quantity, 10);
-    if (isNaN(quantity)) return res.status(400).json({ error: 'Valid quantity is required' });
 
     let category_id = null;
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
       if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
       category_id = categoryRecord.category_id;
-      await categoryRecord.update({ stock_level: categoryRecord.stock_level + quantity });
-    }
-
-    let product = await Product.findOne({ where: { product_id } });
-    if (!product) {
-      product = await Product.create({
-        product_id,
-        product_name,
-        e_id,
-        unit_price: price,
-        product_status: rest.product_status || 'In Stock',
-        status: finalStatus,
-        date_added: new Date(),
-        quantity,
-        category_id,
-        description: rest.description || null,
-        customization_available: customization_available || false, // Save customization_available
-      });
-    } else {
-      await product.update({ quantity: product.quantity + quantity });
     }
 
     const productEntry = await ProductEntry.create({
       product_id,
       product_name,
-      description: rest.description || null,
       unit_price: price,
       quantity,
-      product_status: rest.product_status || 'In Stock',
-      status: finalStatus,
+      product_status: 'In Stock',
+      status: status || 'pending',
       e_id,
-      date_added: new Date(),
-      customization_available: customization_available || false, // Save customization_available
       category_id,
+      ...rest,
     });
 
-    const resolvedSize = size || 'N/A'; // Default to 'N/A' if size is not provided
-    const existingVariation = await ProductVariation.findOne({ where: { product_id, size: resolvedSize } });
-    if (existingVariation) {
-      await existingVariation.update({ stock_level: existingVariation.stock_level + quantity });
-    } else {
-      await ProductVariation.create({
-        product_id,
-        size: resolvedSize,
-        additional_price: additional_price || 0.00,
-        stock_level: quantity,
-      });
-    }
-
-    if (images && images.length > 0) {
-      const imageRecords = images.map((imageUrl) => ({
-        product_id,
-        image_url: imageUrl,
-      }));
-      await ProductImage.bulkCreate(imageRecords);
-    }
-
-    res.status(201).json({ message: 'Product and related entries created successfully', productEntry });
+    res.status(201).json({ message: 'Product entry created successfully', productEntry });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create product' });
+    console.error('Error creating product:', error); // Log the error for debugging
+    res.status(500).json({ error: 'Failed to create product entry' });
   }
 };
 
 const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByPk(req.params.id);
-    if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const productEntry = await ProductEntry.findByPk(id);
+    if (!productEntry) {
+      return res.status(404).json({ error: 'Product entry not found' });
     }
-    await product.update(req.body);
-    res.status(200).json(product);
+
+    await productEntry.update(updatedData);
+    res.status(200).json({ message: 'Product entry updated successfully', productEntry });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update product' });
+    console.error('Error updating product entry:', error); // Log the error for debugging
+    res.status(500).json({ error: 'Failed to update product entry' });
   }
 };
 
 const deleteProduct = async (req, res) => {
   try {
-    console.log('Delete request received for product ID:', req.params.id); // Debugging log
+    const productEntry = await ProductEntry.findByPk(req.params.id);
 
-    const product = await Product.findByPk(req.params.id, {
-      include: [{ model: Category, as: 'category' }],
+    if (!productEntry) {
+      return res.status(404).json({ error: 'Product entry not found' });
+    }
+
+    await productEntry.destroy();
+    res.status(200).json({ message: 'Product entry deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting product entry:', error); // Log the error for debugging
+    res.status(500).json({ error: 'Failed to delete product entry' });
+  }
+};
+
+const getProductSuggestions = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    if (!search) {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+
+    const products = await ProductEntry.findAll({
+      where: {
+        product_name: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      attributes: ['product_id', 'product_name'],
     });
 
-    if (!product) {
-      console.log('Product not found in database'); // Debugging log
-      return res.status(404).json({ error: 'Product not found' });
-    }
-
-    console.log('Product found:', product); // Debugging log
-
-    // Adjust the stock level in the category table
-    if (product.category) {
-      const category = await Category.findByPk(product.category.category_id);
-      if (category) {
-        console.log('Updating category stock level'); // Debugging log
-        await category.update({ stock_level: category.stock_level - product.quantity });
-      }
-    }
-
-    // Adjust the stock level in the ProductVariation table
-    const variations = await ProductVariation.findAll({ where: { product_id: product.product_id } });
-    for (const variation of variations) {
-      console.log('Updating variation stock level for size:', variation.size); // Debugging log
-      await variation.update({ stock_level: variation.stock_level - product.quantity });
-    }
-
-    // Adjust the stock level in the Product table
-    console.log('Updating product stock level'); // Debugging log
-    await product.update({ quantity: product.quantity - product.quantity });
-
-    // Remove associated entries from ProductEntry table
-    console.log('Deleting associated entries from ProductEntry table'); // Debugging log
-    await ProductEntry.destroy({ where: { product_id: product.product_id } });
-
-    res.status(200).json({ message: 'Product entry deleted successfully and stock counts updated' });
+    res.status(200).json({ products });
   } catch (error) {
-    console.error('Error deleting product entry:', error); // Debugging log
-    res.status(500).json({ error: 'Failed to delete product entry' });
+    console.error('Error fetching product suggestions:', error); // Log the error for debugging
+    res.status(500).json({ error: 'Failed to fetch product suggestions' });
   }
 };
 
 const generateNewProductId = async (req, res) => {
   try {
-    const lastProduct = await Product.findOne({
+    const lastProduct = await ProductEntry.findOne({
       order: [['product_id', 'DESC']],
     });
 
@@ -210,6 +164,7 @@ const generateNewProductId = async (req, res) => {
 
     res.status(200).json({ product_id: newProductId });
   } catch (error) {
+    console.error('Error generating new product ID:', error); // Log the error for debugging
     res.status(500).json({ error: 'Failed to generate new product ID' });
   }
 };
@@ -223,70 +178,71 @@ const getAllProductEntries = async (req, res) => {
     }
 
     const entries = await ProductEntry.findAll({
-      where: { e_id },
+      where: { e_id: `${e_id}` }, // Ensure e_id is treated as a string
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
-        { model: Product, as: 'product', attributes: ['product_name'] },
+        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
+        {
+          model: ProductImage,
+          as: 'images',
+          attributes: ['image_url'],
+          required: false, // Allow fetching products even if no images are available
+        },
+        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
+      attributes: ['entry_id', 'product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
     });
 
     if (!entries || entries.length === 0) {
-      return res.status(200).json({ message: 'No entries available', entries: [] });
+      return res.status(200).json({ message: 'No product entries available', entries: [] });
     }
 
     res.status(200).json({ entries });
   } catch (error) {
+    console.error('Error fetching product entries:', error); // Log the error for debugging
     res.status(500).json({ error: 'Failed to fetch product entries' });
   }
 };
 
 const getProductByName = async (req, res) => {
   try {
-    console.log('Fetching product by name:', req.query.name); // Debugging: Log the product name
-    const product = await Product.findOne({
+    const { name } = req.query;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Product name is required' });
+    }
+
+    const product = await ProductEntry.findOne({
       where: {
         product_name: {
-          [Op.iLike]: req.query.name, // Use case-insensitive matching
+          [Op.iLike]: name, 
         },
       },
-      attributes: ['product_id', 'product_name', 'description', 'unit_price', 'category_id', 'customization_available', 'product_status', 'status'],
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
       ],
+      attributes: ['product_id', 'product_name', 'description', 'unit_price', 'category_id', 'customization_available', 'product_status', 'status'],
     });
-    console.log('Fetched product:', product); // Debugging: Log the fetched product
+
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product by name:', error);
+    console.error('Error fetching product by name:', error); // Log the error for debugging
     res.status(500).json({ error: 'Failed to fetch product by name' });
   }
 };
 
-const getProductSuggestions = async (req, res) => {
-  try {
-    const { search } = req.query; // Extract the search term from the query string
-
-    if (!search) {
-      return res.status(400).json({ error: 'Product name is required' });
-    }
-
-    const products = await Product.findAll({
-      where: {
-        product_name: {
-          [Op.iLike]: `%${search}%`, // Use case-insensitive partial matching
-        },
-      },
-      attributes: ['product_id', 'product_name'], // Only return necessary fields for suggestions
-    });
-
-    res.status(200).json({ products });
-  } catch (error) {
-    console.error('Error fetching product suggestions:', error);
-    res.status(500).json({ error: 'Failed to fetch product suggestions' });
-  }
+module.exports = {
+  getAllProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  generateNewProductId,
+  getAllProductEntries,
+  getProductByName,
+  getProductSuggestions,
 };
-
-module.exports = { getAllProducts, getProductById, createProduct, updateProduct, deleteProduct, generateNewProductId, getAllProductEntries, getProductByName, getProductSuggestions };

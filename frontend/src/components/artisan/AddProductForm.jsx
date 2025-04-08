@@ -10,8 +10,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     category: '',
     price: '',
     quantity: '',
-    size: '', // Add size field
-    additional_price: '', // Add additional_price field
+    size: '', 
+    additional_price: '', 
     images: null,
     customization: {
       size: false,
@@ -22,7 +22,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const [errors, setErrors] = useState({});
   const [suggestions, setSuggestions] = useState([]);
-  const [showAdditionalPrice, setShowAdditionalPrice] = useState(false); // State to toggle visibility
+  const [showAdditionalPrice, setShowAdditionalPrice] = useState(false); 
 
   const fetchProductSuggestions = async (name) => {
     try {
@@ -32,7 +32,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, {
+      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, { // Corrected endpoint
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -40,7 +40,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product suggestions:', data.products);
+        console.log('Fetched product suggestions:', data); // Debugging log
         setSuggestions(data.products || []);
       } else {
         console.error('Failed to fetch product suggestions:', response.statusText);
@@ -52,7 +52,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const fetchProductDetails = async (productId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+      const response = await fetch(`http://localhost:5000/api/inventory/${productId}`); 
       if (response.ok) {
         const data = await response.json();
         setProduct((prevProduct) => ({
@@ -74,14 +74,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const fetchProductDetailsByName = async (name) => {
     try {
-      console.log('Fetching product details for name:', name); // Debugging: Log the product name
+      console.log('Fetching product details for name:', name); // Debugging log
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, {
+      const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, { // Corrected endpoint
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,10 +89,10 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product details by name:', data); // Debugging: Log the fetched product details
+        console.log('Fetched product details by name:', data); // Debugging log
         setProduct((prevProduct) => ({
           ...prevProduct,
-          product_id: data.product_id, // Update product_id
+          product_id: data.product_id,
           name: data.product_name,
           description: data.description,
           category: data.category?.category_name || '',
@@ -153,11 +153,11 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   };
 
   const handleAdditionalPriceToggle = () => {
-    setShowAdditionalPrice((prev) => !prev); // Toggle visibility
+    setShowAdditionalPrice((prev) => !prev);
     if (!showAdditionalPrice) {
       setProduct((prevProduct) => ({
         ...prevProduct,
-        additional_price: '', // Reset additional_price when hidden
+        additional_price: '', 
       }));
     }
   };
@@ -183,11 +183,21 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         e_id: loggedInEmployeeId,
         size: product.category === 'Clothing' && product.size ? product.size : 'N/A',
         price: parseFloat(product.price),
-        additional_price: showAdditionalPrice ? parseFloat(product.additional_price || 0) : 0, // Ensure additional_price is a number
-        customization_available: showAdditionalPrice, // Set customization_available based on checkbox
+        additional_price: showAdditionalPrice ? parseFloat(product.additional_price || 0) : 0, 
+        customization_available: showAdditionalPrice, 
         status: 'pending',
       };
-      onSave(productWithUploader);
+
+      
+      if (showAdditionalPrice && product.additional_price) {
+        const customizedProduct = {
+          ...productWithUploader,
+          price: parseFloat(product.price) + parseFloat(product.additional_price), 
+        };
+        onSave(customizedProduct); 
+      } else {
+        onSave(productWithUploader); 
+      }
     }
   };
 
@@ -218,7 +228,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 name="name"
                 value={product.name}
                 onChange={handleNameChange}
-                onBlur={() => fetchProductDetailsByName(product.name)} // Trigger fetch on blur
+                onBlur={() => fetchProductDetailsByName(product.name)} 
                 list="productSuggestions"
                 required
               />
@@ -273,7 +283,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 name="size"
                 value={product.size}
                 onChange={handleChange}
-                disabled={product.category !== 'Clothing'} // Disable if category is not "Clothing"
+                disabled={product.category !== 'Clothing'} 
               >
                 <option value="">Select Size</option>
                 <option value="XS">XS</option>

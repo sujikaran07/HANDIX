@@ -32,7 +32,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/products/entries', {
+        const response = await fetch('http://localhost:5000/api/products/entries', { // Corrected endpoint
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -40,6 +40,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Fetched product entries:', data); // Debugging log
           setEntries(data.entries);
         } else {
           console.error('Failed to fetch product entries:', response.statusText);

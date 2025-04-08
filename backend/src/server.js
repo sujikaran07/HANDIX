@@ -13,7 +13,7 @@ const { Address } = require('./models/addressModel');
 const { Order } = require('./models/orderModel');
 const { OrderDetail } = require('./models/orderDetailModel');
 const { ProfileImage } = require('./models/profileImageModel');
-const Product = require('./models/productModel');
+const Inventory = require('./models/inventoryModel'); 
 const ProductVariation = require('./models/productVariationModel');
 const Category = require('./models/categoryModel');
 const { Customer } = require('./models/customerModel');
@@ -22,18 +22,18 @@ const ProductEntry = require('./models/productEntryModel');
 
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
-Product.associate({ Category, ProductVariation, ProductImage, ProductEntry });
-Category.associate({ Product, ProductEntry });
-ProductVariation.associate({ Product });
-ProductImage.associate({ Product });
-ProductEntry.associate({ Product, Category });
+Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); // Updated association
+Category.associate({ Inventory, ProductEntry });
+ProductVariation.associate({ Inventory });
+ProductImage.associate({ Inventory, ProductEntry }); // Ensure reverse association is registered
+ProductEntry.associate({ Inventory, Category, ProductImage, ProductVariation }); // Ensure ProductImage is included
 
 dotenv.config();
 
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Ensure this matches the frontend's origin
+  origin: 'http://localhost:5173', 
 }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -68,11 +68,6 @@ checkPort(PORT)
     app.listen(PORT, async () => {
       try {
         await connectToDatabase();
-        await Employee.sync();
-        await Product.sync();
-        await Category.sync();
-        await ProductVariation.sync();
-        await Customer.sync();
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {
         console.error('Error during server startup:', error);

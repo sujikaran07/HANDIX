@@ -42,7 +42,7 @@ const ProductVariation = sequelize.define('ProductVariation', {
 });
 
 ProductVariation.associate = (models) => {
-  ProductVariation.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
+  ProductVariation.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'product' }); // Updated association
 };
 
 module.exports = ProductVariation;

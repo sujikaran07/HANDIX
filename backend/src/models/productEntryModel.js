@@ -41,7 +41,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
     defaultValue: 'pending',
   },
   e_id: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(10), 
     references: {
       model: 'Employees',
       key: 'e_id',
@@ -58,12 +58,12 @@ const ProductEntry = sequelize.define('ProductEntry', {
   },
   category_id: {
     type: DataTypes.INTEGER,
-    allowNull: false, // Ensure category_id is required
+    allowNull: false,
     references: {
-      model: 'Categories', // Reference the Categories table
+      model: 'Categories',
       key: 'category_id',
     },
-    onDelete: 'CASCADE', // Delete product entries if the category is deleted
+    onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   },
 }, {
@@ -73,11 +73,17 @@ const ProductEntry = sequelize.define('ProductEntry', {
 });
 
 ProductEntry.associate = (models) => {
-  if (models.Product) {
-    ProductEntry.belongsTo(models.Product, { foreignKey: 'product_id', as: 'product' });
+  if (models.Inventory) {
+    ProductEntry.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'inventory' });
   }
   if (models.Category) {
-    ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' }); // Ensure this association is defined
+    ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
+  }
+  if (models.ProductImage) {
+    ProductEntry.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'images' }); // Ensure this association exists
+  }
+  if (models.ProductVariation) {
+    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
   }
 };
 
