@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
+const ProductEntry = require('./productEntryModel'); // Ensure ProductEntry is imported
 
 const ProductVariation = sequelize.define('ProductVariation', {
   variation_id: {
@@ -12,7 +13,7 @@ const ProductVariation = sequelize.define('ProductVariation', {
     type: DataTypes.STRING(10),
     allowNull: false,
     references: {
-      model: 'Products',
+      model: 'ProductEntries', // Ensure this matches the table name
       key: 'product_id',
     },
     onDelete: 'SET NULL',
@@ -42,7 +43,7 @@ const ProductVariation = sequelize.define('ProductVariation', {
 });
 
 ProductVariation.associate = (models) => {
-  ProductVariation.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'product' }); // Updated association
+  ProductVariation.belongsTo(models.ProductEntry, { foreignKey: 'product_id', as: 'variationProductEntry' }); // Updated alias to 'variationProductEntry'
 };
 
 module.exports = ProductVariation;

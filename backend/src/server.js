@@ -14,19 +14,19 @@ const { Order } = require('./models/orderModel');
 const { OrderDetail } = require('./models/orderDetailModel');
 const { ProfileImage } = require('./models/profileImageModel');
 const Inventory = require('./models/inventoryModel'); 
-const ProductVariation = require('./models/productVariationModel');
 const Category = require('./models/categoryModel');
-const { Customer } = require('./models/customerModel');
 const ProductImage = require('./models/productImageModel');
-const ProductEntry = require('./models/productEntryModel');
+const ProductEntry = require('./models/productEntryModel'); // Ensure ProductEntry is imported before ProductVariation
+const ProductVariation = require('./models/productVariationModel');
+const { Customer } = require('./models/customerModel');
 
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
-Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); // Updated association
+Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); // Ensure Inventory is included
 Category.associate({ Inventory, ProductEntry });
-ProductVariation.associate({ Inventory });
-ProductImage.associate({ Inventory, ProductEntry }); // Ensure reverse association is registered
-ProductEntry.associate({ Inventory, Category, ProductImage, ProductVariation }); // Ensure ProductImage is included
+ProductVariation.associate({ Inventory, ProductEntry }); // Ensure ProductEntry is passed here
+ProductImage.associate({ Inventory, ProductEntry }); 
+ProductEntry.associate({ Inventory, Category, ProductImage, ProductVariation }); 
 
 dotenv.config();
 

@@ -11,7 +11,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
     type: DataTypes.STRING(10),
     allowNull: false,
     references: {
-      model: 'Products',
+      model: 'ProductEntries', // Ensure this matches the table name
       key: 'product_id',
     },
     onDelete: 'CASCADE',
@@ -41,7 +41,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
     defaultValue: 'pending',
   },
   e_id: {
-    type: DataTypes.STRING(10), 
+    type: DataTypes.STRING(10), // Ensure this matches the database schema
     references: {
       model: 'Employees',
       key: 'e_id',
@@ -80,10 +80,10 @@ ProductEntry.associate = (models) => {
     ProductEntry.belongsTo(models.Category, { foreignKey: 'category_id', as: 'category' });
   }
   if (models.ProductImage) {
-    ProductEntry.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'images' }); // Ensure this association exists
+    ProductEntry.hasMany(models.ProductImage, { foreignKey: 'entry_id', as: 'entryImages' }); // Ensure alias is unique
   }
   if (models.ProductVariation) {
-    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' });
+    ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); // Ensure alias is unique
   }
 };
 

@@ -32,7 +32,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/products/entries', { // Corrected endpoint
+        const response = await fetch('http://localhost:5000/api/products/entries', {
           headers: {
             Authorization: `Bearer ${token}`,
           },

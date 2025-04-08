@@ -7,36 +7,24 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  console.log('Authorization header:', authHeader); // Debugging log
-
-  if (!authHeader) {
-    console.error('Authorization header missing');
-    return res.status(401).json({ message: 'Authorization header missing' });
-  }
-
-  const token = authHeader.split(' ')[1];
-
-  if (!token) {
-    console.error('Token missing');
-    return res.status(401).json({ message: 'Token missing' });
-  }
-
   try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      console.error('Authorization token is missing'); // Debugging log
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
       id: `${decoded.id}`, // Ensure id is treated as a string
       role: decoded.role,
     };
+
     console.log('Decoded token:', decoded); // Debugging log
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      console.error('Token expired:', error);
-      return res.status(401).json({ message: 'Token expired. Please log in again.' });
-    }
-    console.error('Invalid token:', error);
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error('Error in authMiddleware:', error); // Debugging log
+    res.status(401).json({ error: 'Invalid token' });
   }
 };
 

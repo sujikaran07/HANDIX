@@ -28,8 +28,7 @@ const Category = sequelize.define('Category', {
 });
 
 Category.associate = (models) => {
-  Category.hasMany(models.Inventory, { foreignKey: 'category_id', as: 'products' }); // Updated association
-  Category.hasMany(models.ProductEntry, { foreignKey: 'category_id', as: 'entries' });
+  Category.hasMany(models.ProductEntry, { foreignKey: 'category_id', as: 'entries' }); // Updated association
 };
 
 module.exports = Category;

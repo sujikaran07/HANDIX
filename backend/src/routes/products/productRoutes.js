@@ -16,7 +16,7 @@ const router = express.Router();
 
 // Define routes
 router.get('/', authMiddleware, getAllProducts); // Ensure getAllProducts is defined
-router.get('/new-id', generateNewProductId); // Ensure generateNewProductId is defined
+router.get('/new-id', authMiddleware, generateNewProductId); // Ensure authMiddleware is applied
 router.get('/entries', authMiddleware, getAllProductEntries); // Ensure getAllProductEntries is defined
 router.get('/by-name', authMiddleware, getProductByName); // Ensure getProductByName is defined
 router.get('/suggestions', authMiddleware, getProductSuggestions); // Ensure getProductSuggestions is defined

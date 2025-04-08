@@ -14,7 +14,7 @@ const getAllProducts = async (req, res) => {
     }
 
     const products = await ProductEntry.findAll({
-      where: { e_id: `${e_id}` }, // Ensure e_id is treated as a string
+      where: { e_id: String(e_id) }, // Explicitly cast e_id to a string
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
@@ -30,7 +30,7 @@ const getAllProducts = async (req, res) => {
 
     res.status(200).json({ products });
   } catch (error) {
-    console.error('Error fetching products:', error); // Log the error for debugging
+    console.error('Error fetching products:', error); 
     res.status(500).json({ error: 'Failed to fetch products' });
   }
 };
@@ -52,7 +52,7 @@ const getProductById = async (req, res) => {
 
     res.status(200).json(product);
   } catch (error) {
-    console.error('Error fetching product:', error); // Log the error for debugging
+    console.error('Error fetching product:', error); 
     res.status(500).json({ error: 'Failed to fetch product' });
   }
 };
@@ -174,24 +174,46 @@ const getAllProductEntries = async (req, res) => {
     const { id: e_id } = req.user;
 
     if (!e_id) {
+      console.error('Employee ID (e_id) is missing'); // Debugging log
       return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     }
 
+    console.log('Fetching product entries for e_id:', e_id); // Debugging log
+
     const entries = await ProductEntry.findAll({
-      where: { e_id: `${e_id}` }, // Ensure e_id is treated as a string
+      where: { e_id: String(e_id) }, // Explicitly cast e_id to a string
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
-        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
+        {
+          model: Inventory,
+          as: 'inventory',
+          attributes: ['product_name', 'description', 'unit_price'],
+        },
         {
           model: ProductImage,
-          as: 'images',
+          as: 'entryImages', // Updated alias to match the association in ProductEntry
           attributes: ['image_url'],
           required: false, // Allow fetching products even if no images are available
         },
-        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
+        {
+          model: ProductVariation,
+          as: 'entryVariations', // Updated alias to match the association in ProductEntry
+          attributes: ['size', 'additional_price', 'stock_level'],
+        },
       ],
-      attributes: ['entry_id', 'product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
+      attributes: [
+        'entry_id',
+        'product_id',
+        'product_name',
+        'unit_price',
+        'quantity',
+        'product_status',
+        'status',
+        'date_added',
+      ],
     });
+
+    console.log('Fetched entries:', entries); // Debugging log
 
     if (!entries || entries.length === 0) {
       return res.status(200).json({ message: 'No product entries available', entries: [] });
@@ -199,7 +221,7 @@ const getAllProductEntries = async (req, res) => {
 
     res.status(200).json({ entries });
   } catch (error) {
-    console.error('Error fetching product entries:', error); // Log the error for debugging
+    console.error('Error fetching product entries:', error); // Debugging log
     res.status(500).json({ error: 'Failed to fetch product entries' });
   }
 };
