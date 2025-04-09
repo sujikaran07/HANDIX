@@ -9,6 +9,7 @@ dotenv.config();
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
+    console.log('Authorization token:', token);
     if (!token) {
       console.error('Authorization token is missing'); 
       return res.status(401).json({ error: 'Unauthorized' });
@@ -16,7 +17,7 @@ const authMiddleware = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
-      id: String(decoded.id), 
+      id: String(decoded.id),
       role: decoded.role,
     };
 

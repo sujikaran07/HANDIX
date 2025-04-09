@@ -19,7 +19,9 @@ const ArtisanProductsPage = () => {
     const fetchLoggedInEmployeeId = async () => {
       try {
         const token = localStorage.getItem('artisanToken');
+        console.log('Token:', token); 
         if (!token) {
+          console.error('No token found for artisan');
           return;
         }
 
@@ -31,9 +33,14 @@ const ArtisanProductsPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          setLoggedInEmployeeId(data.eId);
+          console.log('Fetched logged-in employee ID:', data.eId);
+          setLoggedInEmployeeId(data.eId); 
+        } else {
+          console.error('Failed to fetch logged-in employee ID');
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error('Error fetching logged-in employee ID:', error);
+      }
     };
 
     fetchLoggedInEmployeeId();
@@ -57,7 +64,7 @@ const ArtisanProductsPage = () => {
 
   const handleAddProductClick = async () => {
     try {
-      const token = localStorage.getItem('artisanToken'); // Ensure token is retrieved
+      const token = localStorage.getItem('artisanToken'); 
       if (!token) {
         console.error('No token found for artisan');
         return;
@@ -65,7 +72,7 @@ const ArtisanProductsPage = () => {
 
       const response = await fetch('http://localhost:5000/api/products/new-id', {
         headers: {
-          Authorization: `Bearer ${token}`, // Add token to headers
+          Authorization: `Bearer ${token}`, 
         },
       });
       if (response.ok) {

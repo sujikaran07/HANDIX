@@ -190,7 +190,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       const productWithUploader = {
         ...product,
         product_name: product.name,
-        e_id: loggedInEmployeeId,
+        e_id: loggedInEmployeeId, // Ensure e_id is included in the payload
         size: product.category === 'Clothing' && product.size ? product.size : null, 
         price: parseFloat(product.price),
         additional_price: showAdditionalPrice ? parseFloat(product.additional_price || 0) : 0, 
@@ -198,6 +198,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         status: 'pending',
       };
 
+      console.log('Submitting product with e_id:', loggedInEmployeeId); // Debug log
       onSave(productWithUploader);
     }
   };

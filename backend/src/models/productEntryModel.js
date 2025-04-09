@@ -42,6 +42,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
   },
   e_id: {
     type: DataTypes.STRING(10), 
+    allowNull: false,
     references: {
       model: 'Employees',
       key: 'e_id',
@@ -70,6 +71,13 @@ const ProductEntry = sequelize.define('ProductEntry', {
   tableName: 'ProductEntries',
   timestamps: false,
   underscored: true,
+  hooks: {
+    beforeCreate: (productEntry, options) => {
+      if (!productEntry.e_id && options.user) {
+        productEntry.e_id = options.user.id; 
+      }
+    },
+  },
 });
 
 ProductEntry.associate = (models) => {

@@ -59,10 +59,12 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = req.body;
-    const e_id = req.user?.id; 
+    console.log('req.user:', req.user); 
 
-    console.log('e_id retrieved from token:', e_id); 
+    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = req.body;
+    const e_id = req.body.e_id || req.user?.id;
+
+    console.log('e_id retrieved from token or body:', e_id); 
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
@@ -76,15 +78,12 @@ const createProduct = async (req, res) => {
       if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
       category_id = categoryRecord.category_id;
 
-      
       categoryRecord.stock_level = (Number(categoryRecord.stock_level) || 0) + Number(quantity);
       await categoryRecord.save();
     }
 
-  
     let inventoryRecord = await Inventory.findByPk(product_id);
     if (!inventoryRecord) {
-    
       inventoryRecord = await Inventory.create({
         product_id,
         product_name,
@@ -92,30 +91,25 @@ const createProduct = async (req, res) => {
         unit_price: price,
         quantity: Number(quantity),
         category_id,
-        e_id, 
+        e_id,
       });
       console.log('Inventory created with e_id:', e_id); 
     } else {
-      
       inventoryRecord.quantity = Number(inventoryRecord.quantity) + Number(quantity);
       await inventoryRecord.save();
     }
 
-    
     const normalizedSize = size || "N/A";
 
-    
     const existingVariation = await ProductVariation.findOne({
       where: { product_id, size: normalizedSize, additional_price },
     });
 
     if (existingVariation) {
-      
       existingVariation.stock_level = Number(existingVariation.stock_level) + Number(quantity);
       await existingVariation.save();
       variation_id = existingVariation.variation_id; 
     } else {
-      
       const newVariation = await ProductVariation.create({
         product_id,
         size: normalizedSize,
@@ -125,7 +119,6 @@ const createProduct = async (req, res) => {
       variation_id = newVariation.variation_id; 
     }
 
-  
     const productPayload = {
       product_id,
       product_name,
@@ -139,7 +132,7 @@ const createProduct = async (req, res) => {
       ...rest,
     };
 
-    console.log('Payload for ProductEntry.create:', productPayload);
+    console.log('Final Payload for ProductEntry.create:', productPayload); 
 
     const productEntry = await ProductEntry.create(productPayload);
 
@@ -176,7 +169,6 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
 
-    
     const variations = await ProductVariation.findAll({
       where: { product_id: productEntry.product_id },
     });
@@ -186,7 +178,6 @@ const deleteProduct = async (req, res) => {
       await variation.save();
     }
 
-    
     await productEntry.destroy();
 
     res.status(200).json({ message: 'Product entry deleted successfully and stock count updated' });
