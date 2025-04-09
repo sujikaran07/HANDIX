@@ -67,6 +67,16 @@ const ProductEntry = sequelize.define('ProductEntry', {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   },
+  variation_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'ProductVariations',
+      key: 'variation_id',
+    },
+    onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
+  },
 }, {
   tableName: 'ProductEntries',
   timestamps: false,
@@ -92,6 +102,7 @@ ProductEntry.associate = (models) => {
   }
   if (models.ProductVariation) {
     ProductEntry.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'entryVariations' }); 
+    ProductEntry.belongsTo(models.ProductVariation, { foreignKey: 'variation_id', as: 'variation' });
   }
 };
 

@@ -59,20 +59,20 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    console.log('req.user:', req.user); 
+    console.log('req.user:', req.user); // Debug log to verify req.user
 
     const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = req.body;
     const e_id = req.body.e_id || req.user?.id;
 
-    console.log('e_id retrieved from token or body:', e_id); 
+    console.log('e_id retrieved from token or body:', e_id); // Debug log for e_id
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
 
     let category_id = null;
-    let variation_id = null;
 
+    // Retrieve or create the category_id
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
       if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
@@ -82,6 +82,7 @@ const createProduct = async (req, res) => {
       await categoryRecord.save();
     }
 
+    // Ensure the Inventory record exists
     let inventoryRecord = await Inventory.findByPk(product_id);
     if (!inventoryRecord) {
       inventoryRecord = await Inventory.create({
@@ -93,32 +94,41 @@ const createProduct = async (req, res) => {
         category_id,
         e_id,
       });
-      console.log('Inventory created with e_id:', e_id); 
+      console.log('Inventory created with product_id:', product_id); 
     } else {
       inventoryRecord.quantity = Number(inventoryRecord.quantity) + Number(quantity);
       await inventoryRecord.save();
     }
 
+    // Retrieve or create the variation_id
     const normalizedSize = size || "N/A";
+    let variation_id = null;
 
-    const existingVariation = await ProductVariation.findOne({
+    const variation = await ProductVariation.findOrCreate({
       where: { product_id, size: normalizedSize, additional_price },
-    });
-
-    if (existingVariation) {
-      existingVariation.stock_level = Number(existingVariation.stock_level) + Number(quantity);
-      await existingVariation.save();
-      variation_id = existingVariation.variation_id; 
-    } else {
-      const newVariation = await ProductVariation.create({
+      defaults: {
         product_id,
         size: normalizedSize,
         additional_price: additional_price || 0,
         stock_level: Number(quantity),
-      });
-      variation_id = newVariation.variation_id; 
+      },
+    });
+
+    if (variation[1]) {
+      console.log('New variation created:', variation[0]); // Debug log for new variation
+    } else {
+      console.log('Existing variation found:', variation[0]); // Debug log for existing variation
+      variation[0].stock_level += Number(quantity);
+      await variation[0].save();
     }
 
+    variation_id = variation[0].variation_id; // Retrieve variation_id
+
+    if (!variation_id) {
+      return res.status(400).json({ error: 'Failed to create or retrieve variation_id' });
+    }
+
+    // Create the product entry
     const productPayload = {
       product_id,
       product_name,
@@ -128,7 +138,7 @@ const createProduct = async (req, res) => {
       status: status || 'pending',
       e_id, 
       category_id,
-      variation_id,
+      variation_id, // Ensure variation_id is included in the payload
       ...rest,
     };
 
