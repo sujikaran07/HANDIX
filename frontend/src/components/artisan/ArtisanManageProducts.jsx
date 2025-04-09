@@ -82,14 +82,56 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     setCurrentPage(pageNumber);
   };
 
-  const handleViewProduct = (product) => {
-    setSelectedProduct(product);
-    setViewMode('view');
+  const handleViewProduct = async (product) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/products/${product.entry_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedProduct(data); // Set the fetched product data
+        setViewMode('view');
+      } else {
+        console.error('Failed to fetch product details:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+    }
   };
 
-  const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setViewMode('edit');
+  const handleEditProduct = async (product) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:5000/api/products/${product.entry_id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSelectedProduct(data); // Set the fetched product data
+        setViewMode('edit');
+      } else {
+        console.error('Failed to fetch product details:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+    }
   };
 
   const handleBackToTable = () => {

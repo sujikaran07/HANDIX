@@ -18,7 +18,7 @@ const getAllProducts = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
-        { model: ProductImage, as: 'images', attributes: ['image_url'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, // Correct alias used here
         { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
@@ -41,8 +41,8 @@ const getProductById = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
-        { model: ProductImage, as: 'images', attributes: ['image_url'] },
-        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, // Correct alias used here
+        { model: ProductVariation, as: 'variation', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
     });
 

@@ -51,11 +51,15 @@ const ProductViewForm = ({ product, onBack }) => {
       <div className="row mb-3">
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Size</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(product.size)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(product.variation?.size)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Additional Price</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(product.additional_price)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(product.variation?.additional_price)}</p>
+        </div>
+        <div className="col-md-4">
+          <label className="form-label font-weight-bold">Stock Level</label>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(product.variation?.stock_level)}</p>
         </div>
       </div>
       <div className="d-flex justify-content-end">

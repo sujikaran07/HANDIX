@@ -22,10 +22,10 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
       setUnitPrice(product.unit_price);
       setQuantity(product.quantity);
       setProductStatus(product.product_status);
-      setSize(product.size || '');
-      setAdditionalPrice(product.additional_price || '');
+      setSize(product.variation?.size || ''); // Populate size from variation
+      setAdditionalPrice(product.variation?.additional_price || ''); // Populate additional price from variation
       setDescription(product.description || '');
-      setCustomization(product.customization || false);
+      setCustomization(product.customization_available || false);
       setIsApproved(product.status === 'Approved');
     }
   }, [product]);
