@@ -11,8 +11,9 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const [size, setSize] = useState('');
   const [additionalPrice, setAdditionalPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [customization, setCustomization] = useState(false); 
-  const [isApproved, setIsApproved] = useState(false); 
+  const [customization, setCustomization] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isMultipleEntries, setIsMultipleEntries] = useState(false); 
 
   useEffect(() => {
     if (product) {
@@ -22,11 +23,14 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
       setUnitPrice(product.unit_price);
       setQuantity(product.quantity);
       setProductStatus(product.product_status);
-      setSize(product.variation?.size || ''); // Populate size from variation
-      setAdditionalPrice(product.variation?.additional_price || ''); // Populate additional price from variation
+      setSize(product.variation?.size || '');
+      setAdditionalPrice(product.variation?.additional_price || '');
       setDescription(product.description || '');
       setCustomization(product.customization_available || false);
       setIsApproved(product.status === 'Approved');
+
+    
+      setIsMultipleEntries(product.multiple_entries || false); 
     }
   }, [product]);
 
@@ -74,6 +78,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="productName"
             value={productName}
             onChange={(e) => setProductName(e.target.value)}
+            disabled={isMultipleEntries} 
           />
         </div>
         <div className="col-md-4">
@@ -83,9 +88,8 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="category"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            disabled={isApproved} 
+            disabled={isMultipleEntries}
           >
-        
             <option value="Accessories">Accessories</option>
             <option value="Clothing">Clothing</option>
             <option value="Crafts">Crafts</option>
@@ -103,6 +107,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="unitPrice"
             value={unitPrice}
             onChange={(e) => setUnitPrice(e.target.value)}
+            disabled={isMultipleEntries} 
           />
         </div>
         <div className="col-md-4">
@@ -122,6 +127,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="productStatus"
             value={productStatus}
             onChange={(e) => setProductStatus(e.target.value)}
+            disabled={isMultipleEntries} 
           >
             <option value="Available">Available</option>
             <option value="Out of Stock">Out of Stock</option>
@@ -138,6 +144,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             className="form-control"
             id="productImage"
             onChange={handleImageChange}
+            disabled={isMultipleEntries} 
           />
         </div>
         <div className="col-md-4">
@@ -147,7 +154,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="size"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            disabled={category !== 'Clothing'} 
+            disabled={isMultipleEntries || category !== 'Clothing'} 
           >
             <option value="">Select Size</option>
             <option value="XS">XS</option>
@@ -165,7 +172,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="additionalPrice"
             value={additionalPrice}
             onChange={(e) => setAdditionalPrice(e.target.value)}
-            disabled={!customization} 
+            disabled={isMultipleEntries || !customization} 
           />
         </div>
       </div>
@@ -178,6 +185,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            disabled={isMultipleEntries} 
           />
         </div>
       </div>
