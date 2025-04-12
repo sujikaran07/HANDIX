@@ -1,0 +1,133 @@
+
+.hero-container {
+    position: relative;
+    background-color: #f8f9fa;
+    overflow: hidden;
+  }
+  
+  .hero-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+  
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    align-items: center;
+  }
+  
+  @media (min-width: 768px) {
+    .hero-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  
+  .hero-text h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  @media (min-width: 768px) {
+    .hero-text h1 {
+      font-size: 3rem;
+    }
+  }
+  
+  .hero-text p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+  }
+  
+  .hero-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .shop-now {
+    background-color: #007bff;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+  
+  .shop-now:hover {
+    background-color: #0069d9;
+  }
+  
+  .our-story {
+    border: 2px solid #007bff;
+    color: #007bff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.25rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .our-story:hover {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .hero-image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .hero-image {
+    border-radius: 0.25rem;
+    overflow: hidden;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    height: 200px;
+  }
+  
+  @media (min-width: 768px) {
+    .hero-image {
+      height: 240px;
+    }
+  }
+  
+  .hero-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .decorative-circle {
+    position: absolute;
+    border-radius: 50%;
+    background-color: #007bff;
+    opacity: 0.2;
+  }
+  
+  .decorative-circle-1 {
+    width: 6rem;
+    height: 6rem;
+    bottom: -1.5rem;
+    right: -1.5rem;
+  }
+  
+  .decorative-circle-2 {
+    width: 4rem;
+    height: 4rem;
+    top: -1rem;
+    left: -1rem;
+  }
+  
+  .wave-decoration {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+  }
