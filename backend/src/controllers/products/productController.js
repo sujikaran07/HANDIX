@@ -245,27 +245,20 @@ const getAllProductEntries = async (req, res) => {
     const { id: e_id } = req.user;
 
     if (!e_id) {
-      console.error('Employee ID (e_id) is missing'); 
+      console.error('Employee ID (e_id) is missing');
       return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     }
 
-    console.log('Fetching product entries for e_id:', e_id); 
+    console.log(`Fetching all product entries for e_id: ${e_id}`);
 
     const entries = await ProductEntry.findAll({
-      where: { e_id: String(e_id) }, 
+      where: { e_id: String(e_id) },
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         {
           model: Inventory,
           as: 'inventory',
           attributes: ['product_name', 'description', 'unit_price'],
-          include: [
-            {
-              model: ProductVariation,
-              as: 'variations', 
-              attributes: ['size', 'additional_price', 'stock_level'],
-            },
-          ],
         },
         {
           model: ProductImage,
@@ -284,20 +277,15 @@ const getAllProductEntries = async (req, res) => {
         'status',
         'date_added',
       ],
-      logging: console.log, 
+      order: [['date_added', 'DESC']], // Order by date_added in descending order
     });
 
-    console.log('Fetched entries:', entries); 
-
-    if (!entries || entries.length === 0) {
-      return res.status(200).json({ message: 'No product entries available', entries: [] });
-    }
+    console.log(`Total entries fetched: ${entries.length}`);
 
     res.status(200).json({ entries });
   } catch (error) {
-    console.error('Error fetching product entries:', error.message); 
-    console.error('Stack trace:', error.stack); 
-    res.status(500).json({ error: 'Failed to fetch product entries' });
+    console.error('Error fetching product entries:', error.message);
+    res.status(500).json({ error: 'Failed to fetch product entries', details: error.message });
   }
 };
 

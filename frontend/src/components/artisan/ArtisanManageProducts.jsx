@@ -19,6 +19,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const [viewMode, setViewMode] = useState('table'); 
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
   const [productToDelete, setProductToDelete] = useState(null); 
+  const [totalPages, setTotalPages] = useState(1); 
   const entriesPerPage = 4;
 
   useEffect(() => {
@@ -35,6 +36,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         return;
       }
 
+      console.log('Fetching all entries');
+
       const response = await fetch('http://localhost:5000/api/products/entries', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -43,15 +46,16 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product entries:', data);
-        setEntries(data.entries); 
+        console.log(`Total entries fetched: ${data.entries.length}`);
+        setEntries(data.entries); // Store all entries in state
+        setTotalPages(Math.ceil(data.entries.length / entriesPerPage)); // Calculate total pages
       } else {
-        console.error('Failed to fetch product entries:', response.statusText);
+        console.error(`Failed to fetch product entries. Status: ${response.status}, Message: ${response.statusText}`);
         alert('Unable to fetch product entries at the moment. Please try again later.');
       }
     } catch (error) {
-      console.error('Error fetching product entries:', error);
-      alert('An unexpected error occurred. Please try again later.');
+      console.error('Error fetching product entries:', error.message);
+      alert('An unexpected error occurred while fetching product entries. Please try again later.');
     }
   };
 
@@ -64,22 +68,34 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   };
 
   const filteredEntries = entries.filter(entry => {
+    // Ensure all filters are applied correctly
     return (
-      (selectedCategories.includes(entry.category?.category_name)) &&
-      (filterStatus === 'All' || entry.status === filterStatus) &&
-      (entry.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       entry.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       entry.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
+      (selectedCategories.includes(entry.category?.category_name)) && // Category filter
+      (filterStatus === 'All' || entry.status === filterStatus) && // Status filter
+      (
+        entry.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product ID
+        entry.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product name
+        entry.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()) // Search by category name
+      )
     );
   });
 
+  console.log(`Filtered entries: ${filteredEntries.length}`); // Debugging log
+
+  // Pagination logic
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
-  const totalPages = Math.ceil(filteredEntries.length / entriesPerPage);
+
+  console.log(`Current entries: ${currentEntries.length}, Page: ${currentPage}`); // Debugging log
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    if (pageNumber < 1 || pageNumber > totalPages) {
+      console.warn(`Invalid page number: ${pageNumber}. Total pages: ${totalPages}`);
+      return;
+    }
+    console.log(`Navigating to page: ${pageNumber}`);
+    setCurrentPage(pageNumber); // Update the current page
   };
 
   const handleViewProduct = async (product) => {
@@ -319,13 +335,13 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                 <tbody>
                   {currentEntries.length > 0 ? (
                     currentEntries.map(entry => (
-                      <tr key={entry.product_id}>
+                      <tr key={entry.entry_id}> {/* Use entry_id to ensure uniqueness */}
                         <td>{entry.product_id}</td>
                         <td>{entry.product_name}</td>
                         <td>{entry.category?.category_name}</td>
                         <td>{entry.unit_price}</td>
                         <td>{entry.quantity}</td>
-                        <td>{new Date(entry.date_added).toISOString().split('T')[0]}</td>
+                        <td>{new Date(entry.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td> {/* Updated to show date and time */}
                         <td className={`status ${entry.status.toLowerCase()}`}>{entry.status}</td>
                         <td className="action-buttons">
                           <div className="dropdown">
