@@ -20,7 +20,7 @@ const LoginForm = ({ onLoginSuccess }) => {
     setPasswordError(false);
     try {
       console.log('Sending login request:', { email, password });
-      const response = await axios.post('http://localhost:5000/api/login', { email, password });
+      const response = await axios.post('http://localhost:5000/api/login', { email, password }); // Ensure URL matches backend
       console.log('Login successful:', response.data);
       if (response.status === 200) {
         const { token, redirectUrl, tokenKey } = response.data; 

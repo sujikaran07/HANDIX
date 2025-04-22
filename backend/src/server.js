@@ -41,7 +41,7 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(express.json());
 
-app.use("/api/login", employeeLoginRoutes);
+app.use("/api", employeeLoginRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);
 app.use('/api/products', productRoutes);

@@ -3,7 +3,7 @@ const { login, refreshToken } = require('../../controllers/login/employeeLoginCo
 
 const router = express.Router();
 
-router.post('/login', login);
+router.post('/login', login); 
 router.post('/refresh-token', refreshToken); 
 
 module.exports = router;
