@@ -8,7 +8,7 @@ const getAllAdminProducts = async (req, res) => {
         { model: require('../../models/categoryModel'), as: 'category', attributes: ['category_name'] },
         { model: require('../../models/inventoryModel'), as: 'inventory', attributes: ['product_name', 'unit_price', 'description'] },
       ],
-      attributes: ['entry_id', 'product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
+      attributes: ['entry_id', 'product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added', 'e_id'], 
     });
 
     res.status(200).json({ products });
