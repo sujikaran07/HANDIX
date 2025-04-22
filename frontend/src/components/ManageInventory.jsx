@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,20 +8,27 @@ import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
 
 const ManageInventory = ({ onViewInventory }) => {
-  const [inventory, setInventory] = useState([
-    { id: 'P001', name: 'Tote Bag', category: 'Carry Goods', quantity: 50, status: 'In Stock', lastUpdated: '2023-10-01' },
-    { id: 'P002', name: 'Beeralu Jewelry', category: 'Accessories', quantity: 30, status: 'Low Stock', lastUpdated: '2023-10-02' },
-    { id: 'P003', name: 'Handloom Sarong', category: 'Clothing', quantity: 20, status: 'Out of Stock', lastUpdated: '2023-10-03' },
-    { id: 'P004', name: 'Coconut Craft', category: 'Crafts', quantity: 40, status: 'In Stock', lastUpdated: '2023-10-04' },
-    { id: 'P005', name: 'Hand-Painted Mask', category: 'Artistry', quantity: 10, status: 'Low Stock', lastUpdated: '2023-10-05' },
-    
-  ]);
+  const [inventory, setInventory] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const inventoryPerPage = 4;
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/admin/inventory');
+        const data = await response.json();
+        setInventory(data.inventory);
+      } catch (error) {
+        console.error('Error fetching inventory:', error);
+      }
+    };
+
+    fetchInventory();
+  }, []);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
@@ -33,11 +40,11 @@ const ManageInventory = ({ onViewInventory }) => {
 
   const filteredInventory = inventory.filter(item => {
     return (
-      (selectedCategories.includes(item.category)) &&
-      (filterStatus === 'All' || item.status === filterStatus) &&
-      (item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       item.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      (selectedCategories.includes(item.category?.category_name)) &&
+      (filterStatus === 'All' || item.product_status === filterStatus) &&
+      (item.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       item.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -183,13 +190,13 @@ const ManageInventory = ({ onViewInventory }) => {
             <tbody>
               {currentInventory.length > 0 ? (
                 currentInventory.map(item => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.name}</td>
-                    <td>{item.category}</td>
+                  <tr key={item.product_id}>
+                    <td>{item.product_id}</td>
+                    <td>{item.product_name}</td>
+                    <td>{item.category?.category_name}</td>
                     <td>{item.quantity}</td>
-                    <td>{item.lastUpdated}</td>
-                    <td className={`stock-status ${item.status.toLowerCase().replace(/\s+/g, '-')}`}>{item.status}</td>
+                    <td>{new Date(item.date_added).toLocaleDateString()}</td>
+                    <td className={`stock-status ${item.product_status.toLowerCase().replace(/\s+/g, '-')}`}>{item.product_status}</td>
 
                     <td className="action-buttons">
                       <div className="dropdown">

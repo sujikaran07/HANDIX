@@ -7,6 +7,7 @@ const employeeRoutes = require("./routes/employees/employeeRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes');
 const productRoutes = require('./routes/products/productRoutes');
 const adminProductRoutes = require('./routes/admin/adminProductRoutes');
+const inventoryRoutes = require('./routes/inventory/inventoryRoutes');
 const { connectToDatabase, sequelize } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
 const net = require('net');
@@ -20,6 +21,7 @@ const ProductImage = require('./models/productImageModel');
 const ProductEntry = require('./models/productEntryModel'); 
 const ProductVariation = require('./models/productVariationModel');
 const { Customer } = require('./models/customerModel');
+const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
@@ -43,7 +45,9 @@ app.use("/api/login", employeeLoginRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/admin/products', adminProductRoutes); // Add admin product routes
+app.use('/api/admin/products', adminProductRoutes); 
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/admin', adminInventoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 
