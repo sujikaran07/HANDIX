@@ -53,6 +53,22 @@ const Order = sequelize.define('Order', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  customer_name: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  customized: {
+    type: DataTypes.STRING,
+    defaultValue: 'no',
+  },
+  payment_method: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  assigned_artisan: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
 }, {
   tableName: 'Orders',
   timestamps: false,
