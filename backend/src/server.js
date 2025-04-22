@@ -22,6 +22,7 @@ const ProductEntry = require('./models/productEntryModel');
 const ProductVariation = require('./models/productVariationModel');
 const { Customer } = require('./models/customerModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
+const orderRoutes = require('./routes/orders/orderRoutes');
 
 Customer.associate({ Address, Order });
 Address.associate({ Customer });
@@ -48,6 +49,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductRoutes); 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
+app.use('/api/orders', orderRoutes);
 
 const PORT = process.env.PORT || 5000;
 
