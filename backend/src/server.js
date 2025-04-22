@@ -6,6 +6,7 @@ const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");
 const employeeRoutes = require("./routes/employees/employeeRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes');
 const productRoutes = require('./routes/products/productRoutes');
+const adminProductRoutes = require('./routes/admin/adminProductRoutes');
 const { connectToDatabase, sequelize } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
 const net = require('net');
@@ -42,6 +43,7 @@ app.use("/api/login", employeeLoginRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/admin/products', adminProductRoutes); // Add admin product routes
 
 const PORT = process.env.PORT || 5000;
 

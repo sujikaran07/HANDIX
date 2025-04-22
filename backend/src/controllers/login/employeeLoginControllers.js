@@ -9,23 +9,29 @@ dotenv.config();
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('Authorization token:', token);
+    console.log('Token received in request:', token); // Log the token
+
     if (!token) {
-      console.error('Authorization token is missing'); 
-      return res.status(401).json({ error: 'Unauthorized' });
+      console.error('Authorization token is missing');
+      return res.status(401).json({ error: 'Authorization token is required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = {
-      id: String(decoded.id),
-      role: decoded.role,
-    };
-
-    console.log('Decoded token:', decoded); 
-    next();
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('Decoded token:', decoded); // Log decoded token
+      req.user = decoded;
+      next();
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        console.error('Authorization token has expired');
+        return res.status(401).json({ error: 'Authorization token has expired' });
+      }
+      console.error('Error verifying token:', error.message);
+      return res.status(401).json({ error: 'Invalid authorization token' });
+    }
   } catch (error) {
-    console.error('Error in authMiddleware:', error); 
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Unexpected error in authMiddleware:', error.message);
+    res.status(500).json({ error: 'Internal server error in authMiddleware' });
   }
 };
 
@@ -99,16 +105,16 @@ const refreshToken = (req, res) => {
   const { token } = req.body;
 
   if (!token) {
-    return res.status(400).json({ message: 'Token is required' });
+    return res.status(400).json({ error: 'Token is required' });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); 
-    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '3h' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); // Decode expired token
+    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '3h' }); // Generate new token
     res.status(200).json({ token: newToken });
   } catch (error) {
-    console.error('Error refreshing token:', error);
-    res.status(401).json({ message: 'Invalid token' });
+    console.error('Error refreshing token:', error.message);
+    res.status(401).json({ error: 'Invalid token' });
   }
 };
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -8,25 +8,63 @@ import Pagination from './Pagination';
 import '../styles/admin/AdminProducts.css';
 
 const ManageProducts = ({ onViewProduct }) => {
-  const [products, setProducts] = useState([
-    { pID: 'P001', name: 'Tote Bag', category: 'Carry Goods', aID: 'A001', price: '$100', quantity: 50, uploadedDate: '2023-10-01', status: 'Approved' },
-    { pID: 'P002', name: 'Beeralu Jewelry', category: 'Accessories', aID: 'A002', price: '$200', quantity: 30, uploadedDate: '2023-10-02', status: 'Pending' },
-    { pID: 'P003', name: 'Handloom Sarong', category: 'Clothing', aID: 'A003', price: '$150', quantity: 20, uploadedDate: '2023-10-03', status: 'Rejected' },
-    { pID: 'P004', name: 'Coconut ', category: 'Crafts', aID: 'A004', price: '$250', quantity: 40, uploadedDate: '2023-10-04', status: 'Approved' },
-    { pID: 'P005', name: 'Hand-Painted Mask', category: 'Artistry', aID: 'A005', price: '$300', quantity: 10, uploadedDate: '2023-10-05', status: 'Pending' },
-    { pID: 'P006', name: 'Handwoven Bag ', category: 'Carry Goods', aID: 'A006', price: '$350', quantity: 60, uploadedDate: '2023-10-06', status: 'Rejected' },
-    { pID: 'P007', name: 'Batik Shawl', category: 'Clothing', aID: 'A007', price: '$400', quantity: 25, uploadedDate: '2023-10-07', status: 'Approved' },
-    { pID: 'P008', name: 'Palmyrah Basket', category: 'Crafts', aID: 'A008', price: '$450', quantity: 35, uploadedDate: '2023-10-08', status: 'Pending' },
-    { pID: 'P009', name: 'Dumbara Mat', category: 'Artistry', aID: 'A009', price: '$500', quantity: 15, uploadedDate: '2023-10-09', status: 'Rejected' },
-    { pID: 'P010', name: 'Coconut Shell ', category: 'Carry Goods', aID: 'A010', price: '$550', quantity: 45, uploadedDate: '2023-10-10', status: 'Approved' },
-    
-  ]);
+  const [products, setProducts] = useState([]); 
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 4;
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        let token = localStorage.getItem('token');
+        console.log('Token being sent:', token); // Log the token
+
+        if (!token) {
+          console.error('No token found in localStorage');
+          return;
+        }
+
+        const response = await fetch('http://localhost:5000/api/admin/products', {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include token for authentication
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched Products:', data.products); // Log fetched products
+          setProducts(data.products); // Set products to state
+        } else if (response.status === 401) {
+          console.warn('Token expired. Attempting to refresh token...');
+          const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            console.log('Token refreshed:', refreshData.token);
+            localStorage.setItem('token', refreshData.token); // Save new token
+            fetchProducts(); // Retry fetching products with the new token
+          } else {
+            console.error('Failed to refresh token:', refreshResponse.statusText);
+          }
+        } else {
+          console.error('Failed to fetch products:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error.message);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
@@ -38,11 +76,12 @@ const ManageProducts = ({ onViewProduct }) => {
 
   const filteredProducts = products.filter(product => {
     return (
-      (selectedCategories.includes(product.category)) &&
-      (filterStatus === 'All' || product.status === filterStatus) &&
-      (product.pID.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       product.category.toLowerCase().includes(searchTerm.toLowerCase()))
+      (selectedCategories.includes(product.category?.category_name)) && // Ensure category_name exists
+      (filterStatus === 'All' || product.status.toLowerCase() === filterStatus.toLowerCase()) && // Match status case-insensitively
+      (product.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || // Match product_id
+       product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Match product_name
+       product.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Match category_name
+       (product.e_id && product.e_id.toLowerCase().includes(searchTerm.toLowerCase()))) // Match e_id if it exists
     );
   });
 
@@ -174,7 +213,7 @@ const ManageProducts = ({ onViewProduct }) => {
                 <th>P-ID</th>
                 <th>Product Name</th>
                 <th>Category</th>
-                <th>A-ID</th>
+                <th>E-ID</th>
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Uploaded Date</th>
@@ -185,15 +224,15 @@ const ManageProducts = ({ onViewProduct }) => {
             <tbody>
               {currentProducts.length > 0 ? (
                 currentProducts.map(product => (
-                  <tr key={product.pID}>
-                    <td>{product.pID}</td>
-                    <td>{product.name}</td>
-                    <td>{product.category}</td>
-                    <td>{product.aID}</td>
-                    <td>{product.price}</td>
-                    <td>{product.quantity}</td>
-                    <td>{product.uploadedDate}</td>
-                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
+                  <tr key={product.entry_id}> {/* Use entry_id as unique key */}
+                    <td>{product.product_id}</td> {/* P-ID */}
+                    <td>{product.product_name}</td> {/* Product Name */}
+                    <td>{product.category?.category_name || 'N/A'}</td> {/* Category */}
+                    <td>{product.e_id || 'N/A'}</td> {/* E-ID */}
+                    <td>{product.unit_price}</td> {/* Price */}
+                    <td>{product.quantity}</td> {/* Quantity */}
+                    <td>{new Date(product.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td> {/* Uploaded Date */}
+                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Status */}
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -203,7 +242,7 @@ const ManageProducts = ({ onViewProduct }) => {
                           <li>
                             <button className="dropdown-item" onClick={() => onViewProduct(product)}>View</button>
                           </li>
-                          {product.status === 'Pending' && (
+                          {product.status.toLowerCase() === 'pending' && (
                             <>
                               <li>
                                 <button className="dropdown-item">Approve</button>
@@ -219,7 +258,7 @@ const ManageProducts = ({ onViewProduct }) => {
                               </li>
                             </>
                           )}
-                          {product.status === 'Approved' && (
+                          {product.status.toLowerCase() === 'approved' && (
                             <>
                               <li>
                                 <button className="dropdown-item">Edit</button>
@@ -232,7 +271,7 @@ const ManageProducts = ({ onViewProduct }) => {
                               </li>
                             </>
                           )}
-                          {product.status === 'Rejected' && (
+                          {product.status.toLowerCase() === 'rejected' && (
                             <>
                               <li>
                                 <button className="dropdown-item">Restore</button>
