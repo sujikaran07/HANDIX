@@ -8,18 +8,7 @@ import Pagination from './Pagination';
 import '../styles/admin/AdminOrder.css';
 
 const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
-  const [orders, setOrders] = useState([
-    { id: 'O001', customerName: 'John Doe', orderDate: '2023-10-01', totalAmount: '$100', orderType: 'Retail', assignedArtisan: '', status: 'Pending' },
-    { id: 'O002', customerName: 'Jane Smith', orderDate: '2023-10-02', totalAmount: '$200', orderType: 'Wholesale', assignedArtisan: '', status: 'Processing' },
-    { id: 'O003', customerName: 'Alice Johnson', orderDate: '2023-10-03', totalAmount: '$150', orderType: 'Customized', assignedArtisan: 'Artisan A', status: 'Review' },
-    { id: 'O004', customerName: 'Bob Brown', orderDate: '2023-10-04', totalAmount: '$250', orderType: 'Retail', assignedArtisan: '', status: 'Shipped' },
-    { id: 'O005', customerName: 'Charlie Davis', orderDate: '2023-10-05', totalAmount: '$300', orderType: 'Wholesale', assignedArtisan: '', status: 'Delivered' },
-    { id: 'O006', customerName: 'Diana Evans', orderDate: '2023-10-06', totalAmount: '$350', orderType: 'Customized', assignedArtisan: 'Artisan B', status: 'Canceled' },
-    { id: 'O007', customerName: 'Eve Foster', orderDate: '2023-10-07', totalAmount: '$400', orderType: 'Retail', assignedArtisan: '', status: 'Pending' },
-    { id: 'O008', customerName: 'Frank Green', orderDate: '2023-10-08', totalAmount: '$450', orderType: 'Wholesale', assignedArtisan: '', status: 'Processing' },
-    { id: 'O009', customerName: 'Grace Harris', orderDate: '2023-10-09', totalAmount: '$500', orderType: 'Customized', assignedArtisan: 'Artisan C', status: 'Review' },
-    { id: 'O010', customerName: 'Hank Irving', orderDate: '2023-10-10', totalAmount: '$550', orderType: 'Retail', assignedArtisan: '', status: 'Shipped' },
-  ]);
+  const [orders, setOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrderTypes, setSelectedOrderTypes] = useState(['Retail', 'Wholesale', 'Customized']);
