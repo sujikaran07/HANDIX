@@ -9,28 +9,27 @@ import '../styles/admin/AdminOrder.css';
 
 const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [orders, setOrders] = useState([]);
-
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedOrderTypes, setSelectedOrderTypes] = useState(['Retail', 'Wholesale', 'Customized']);
+  const [selectedCustomized, setSelectedCustomized] = useState(['Yes', 'No']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 4;
 
-  const handleOrderTypeChange = (orderType) => {
-    setSelectedOrderTypes((prevSelected) =>
-      prevSelected.includes(orderType)
-        ? prevSelected.filter((type) => type !== orderType)
-        : [...prevSelected, orderType]
+  const handleCustomizedChange = (customized) => {
+    setSelectedCustomized((prevSelected) =>
+      prevSelected.includes(customized)
+        ? prevSelected.filter((type) => type !== customized)
+        : [...prevSelected, customized]
     );
   };
 
   const filteredOrders = orders.filter(order => {
     return (
-      (selectedOrderTypes.includes(order.orderType)) &&
+      (selectedCustomized.includes(order.customized)) &&
       (filterStatus === 'All' || order.status === filterStatus) &&
       (order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
        order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       order.orderType.toLowerCase().includes(searchTerm.toLowerCase()))
+       order.customized.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -84,37 +83,26 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
               <input
                 className="form-check-input"
                 type="checkbox"
-                id="retailCheckbox"
-                value="Retail"
-                checked={selectedOrderTypes.includes('Retail')}
-                onChange={() => handleOrderTypeChange('Retail')}
+                id="customizedYesCheckbox"
+                value="Yes"
+                checked={selectedCustomized.includes('Yes')}
+                onChange={() => handleCustomizedChange('Yes')}
               />
-              <label className="form-check-label" htmlFor="retailCheckbox">Retail</label>
+              <label className="form-check-label" htmlFor="customizedYesCheckbox">Yes</label>
             </div>
             <div className="form-check form-check-inline">
               <input
                 className="form-check-input"
                 type="checkbox"
-                id="wholesaleCheckbox"
-                value="Wholesale"
-                checked={selectedOrderTypes.includes('Wholesale')}
-                onChange={() => handleOrderTypeChange('Wholesale')}
+                id="customizedNoCheckbox"
+                value="No"
+                checked={selectedCustomized.includes('No')}
+                onChange={() => handleCustomizedChange('No')}
               />
-              <label className="form-check-label" htmlFor="wholesaleCheckbox">Wholesale</label>
-            </div>
-            <div className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="customizedCheckbox"
-                value="Customized"
-                checked={selectedOrderTypes.includes('Customized')}
-                onChange={() => handleOrderTypeChange('Customized')}
-              />
-              <label className="form-check-label" htmlFor="customizedCheckbox">Customized</label>
+              <label className="form-check-label" htmlFor="customizedNoCheckbox">No</label>
             </div>
           </div>
-          {selectedOrderTypes.includes('Customized') && (
+          {selectedCustomized.includes('Yes') && (
             <div className="filter-dropdown">
               <div className="input-group">
                 <span className="input-group-text bg-light border-0">
@@ -145,7 +133,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                 <th>Customer Name</th>
                 <th>Order Date</th>
                 <th>Total Amount</th>
-                <th>Order Type</th>
+                <th>Customized</th>
                 <th>Assigned Artisan</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -159,8 +147,8 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                     <td>{order.customerName}</td>
                     <td>{order.orderDate}</td>
                     <td>{order.totalAmount}</td>
-                    <td>{order.orderType}</td>
-                    <td>{order.orderType === 'Retail' || order.orderType === 'Wholesale' ? 'N/A' : order.assignedArtisan}</td>
+                    <td>{order.customized}</td>
+                    <td>{order.customized === 'No' ? 'N/A' : order.assignedArtisan}</td>
                     <td className={`status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</td>
                     <td className="action-buttons">
                       <div className="dropdown">
@@ -171,7 +159,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                           <li>
                             <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                           </li>
-                          {order.orderType === 'Customized' && (
+                          {order.customized === 'Yes' && (
                             <li>
                               <button className="dropdown-item">Assign Artisan</button>
                             </li>
@@ -198,7 +186,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
             </tbody>
           </table>
         </div>
-
         <Pagination className="order-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
     </div>
