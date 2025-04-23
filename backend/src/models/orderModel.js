@@ -1,10 +1,9 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 const { Customer } = require('./customerModel');
-const { OrderDetail } = require('./orderDetailModel');
 
 const Order = sequelize.define('Order', {
-  o_id: {
+  order_id: {
     type: DataTypes.STRING,
     primaryKey: true,
     allowNull: false,
@@ -76,8 +75,5 @@ const Order = sequelize.define('Order', {
   timestamps: false,
   underscored: true,
 });
-
-Order.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
-Order.hasMany(OrderDetail, { foreignKey: 'o_id', as: 'orderDetails' });
 
 module.exports = { Order };

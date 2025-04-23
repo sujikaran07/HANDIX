@@ -10,11 +10,13 @@ const ProductEntry = sequelize.define('ProductEntry', {
   product_id: {
     type: DataTypes.STRING(10), 
     allowNull: false,
+    field: 'product_id',
     references: {
-      model: 'ProductEntries',
+      model: 'Inventory',
       key: 'product_id',
     },
     onDelete: 'CASCADE',
+    onUpdate: 'CASCADE',
   },
   product_name: {
     type: DataTypes.STRING(255),

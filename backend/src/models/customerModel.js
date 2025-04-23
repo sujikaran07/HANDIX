@@ -1,15 +1,13 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 const bcrypt = require('bcrypt');
-const { Order } = require('./orderModel');
-const { Address } = require('./addressModel'); // Import the Address model
 
 const Customer = sequelize.define('Customer', {
   c_id: {
     type: DataTypes.STRING,
     primaryKey: true,
     allowNull: false,
-    unique: true, 
+    unique: true,
   },
   firstName: {
     type: DataTypes.STRING,
@@ -34,28 +32,28 @@ const Customer = sequelize.define('Customer', {
   accountType: {
     type: DataTypes.ENUM({
       values: ['Retail', 'Wholesale'],
-      name: 'account_type_enum'  
+      name: 'account_type_enum'
     }),
     defaultValue: 'Retail',
   },
   accountStatus: {
     type: DataTypes.ENUM({
       values: ['Pending', 'Approved', 'Rejected'],
-      name: 'enum_Customers_account_status' 
+      name: 'enum_Customers_account_status'
     }),
     defaultValue: 'Pending',
-  },  
+  },
   registrationDate: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
   },
   totalOrders: {
     type: DataTypes.INTEGER,
-    defaultValue: 0, 
+    defaultValue: 0,
   },
   totalSpent: {
     type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0.00, 
+    defaultValue: 0.00,
   },
   lastOrderDate: {
     type: DataTypes.DATE,
@@ -95,8 +93,8 @@ const Customer = sequelize.define('Customer', {
   },
 }, {
   tableName: 'Customers',
-  timestamps: false,  
-  underscored: true,  
+  timestamps: false,
+  underscored: true,
   getterMethods: {
     fullName() {
       return `${this.firstName} ${this.lastName}`;
@@ -117,13 +115,5 @@ const Customer = sequelize.define('Customer', {
     }
   }
 });
-
-Customer.associate = (models) => {
-  Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' }); // Ensure alias is 'addresses'
-  Customer.hasMany(models.Order, { foreignKey: 'c_id', as: 'customerOrders' });
-};
-
-Customer.hasMany(Address, { foreignKey: 'c_id', as: 'addresses' }); // Add this line
-Customer.hasMany(Order, { foreignKey: 'c_id' });
 
 module.exports = { Customer };

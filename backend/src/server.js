@@ -24,12 +24,25 @@ const { Customer } = require('./models/customerModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
 
-Address.associate({ Customer });
-Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); 
-Category.associate({ Inventory, ProductEntry });
-ProductVariation.associate({ Inventory, ProductEntry }); 
-ProductImage.associate({ Inventory, ProductEntry }); 
-ProductEntry.associate({ Inventory, Category, ProductImage, ProductVariation }); 
+// Define associations after all models are imported
+Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
+OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+
+Customer.hasMany(Address, {
+  foreignKey: 'c_id',
+  as: 'addresses',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+});
+Address.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+
+Order.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+Customer.hasMany(Order, {
+  foreignKey: 'c_id',
+  as: 'customerOrders',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE',
+});
 
 dotenv.config();
 

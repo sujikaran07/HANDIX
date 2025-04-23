@@ -1,9 +1,8 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Customer } = require('./customerModel');
 
 const Address = sequelize.define('Address', {
-  addressId: {
+  address_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -15,7 +14,7 @@ const Address = sequelize.define('Address', {
     allowNull: false,
     field: 'c_id',
     references: {
-      model: Customer,
+      model: 'Customers',
       key: 'c_id',
     },
     onDelete: 'CASCADE',
@@ -62,7 +61,5 @@ const Address = sequelize.define('Address', {
   timestamps: false,
   underscored: true,
 });
-
-Address.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
 
 module.exports = { Address };

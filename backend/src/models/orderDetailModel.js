@@ -3,7 +3,7 @@ const { sequelize } = require('../config/db');
 const { Order } = require('./orderModel');
 
 const OrderDetail = sequelize.define('OrderDetail', {
-  orderDetailId: {
+  order_detail_id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
@@ -11,17 +11,17 @@ const OrderDetail = sequelize.define('OrderDetail', {
     field: 'order_detail_id',
     defaultValue: Sequelize.literal(`nextval('"OrderDetails_order_detail_id_seq"'::regclass)`),
   },
-  o_id: {
+  order_id: {
     type: DataTypes.STRING,
     allowNull: false,
     field: 'order_id',
     references: {
       model: Order,
-      key: 'o_id',
+      key: 'order_id',
     },
     onDelete: 'SET NULL',
   },
-  p_id: {
+  product_id: {
     type: DataTypes.STRING,
     allowNull: false,
     field: 'product_id',
@@ -40,7 +40,5 @@ const OrderDetail = sequelize.define('OrderDetail', {
   timestamps: false,
   underscored: true,
 });
-
-OrderDetail.belongsTo(Order, { foreignKey: 'o_id', as: 'order' });
 
 module.exports = { OrderDetail };
