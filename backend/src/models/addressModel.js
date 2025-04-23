@@ -60,7 +60,7 @@ const Address = sequelize.define('Address', {
 });
 
 Address.associate = (models) => {
-  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'associatedCustomer' }); 
+  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'customer' }); // Updated alias to 'customer'
 };
 
 module.exports = { Address };

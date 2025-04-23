@@ -117,9 +117,8 @@ const Customer = sequelize.define('Customer', {
   }
 });
 
-
 Customer.associate = (models) => {
-  Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' });
+  Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' }); // Ensure alias is 'addresses'
   Customer.hasMany(models.Order, { foreignKey: 'c_id', as: 'customerOrders' });
 };
 
