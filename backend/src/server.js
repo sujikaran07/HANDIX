@@ -24,7 +24,6 @@ const { Customer } = require('./models/customerModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
 
-Customer.associate({ Address, Order });
 Address.associate({ Customer });
 Inventory.associate({ Category, ProductVariation, ProductImage, ProductEntry }); 
 Category.associate({ Inventory, ProductEntry });

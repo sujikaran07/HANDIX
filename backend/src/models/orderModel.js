@@ -1,78 +1,83 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
+const { Customer } = require('./customerModel');
+const { OrderDetail } = require('./orderDetailModel');
 
 const Order = sequelize.define('Order', {
-  order_id: {
+  o_id: {
     type: DataTypes.STRING,
     primaryKey: true,
     allowNull: false,
-    defaultValue: Sequelize.literal(`'O' || lpad(nextval('order_id_seq')::text, 3, '0')`),
+    field: 'order_id',
+    defaultValue: Sequelize.literal(`'O' || LPAD(nextval('order_id_seq')::text, 3, '0')`),
   },
   c_id: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'c_id',
     references: {
-      model: 'Customers', 
+      model: Customer,
       key: 'c_id',
     },
     onDelete: 'SET NULL',
   },
-  order_status: {
+  orderStatus: {
     type: DataTypes.STRING,
     defaultValue: 'Pending',
+    field: 'order_status',
   },
-  total_amount: {
+  totalAmount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
+    field: 'total_amount',
   },
-  payment_status: {
+  paymentStatus: {
     type: DataTypes.STRING,
     defaultValue: 'Pending',
+    field: 'payment_status',
   },
-  shipping_method_id: {
+  shippingMethodId: {
     type: DataTypes.INTEGER,
     allowNull: true,
+    field: 'shipping_method_id',
   },
-  order_date: {
+  orderDate: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
+    field: 'order_date',
   },
-  delivery_date: {
+  deliveryDate: {
     type: DataTypes.DATE,
     allowNull: true,
+    field: 'delivery_date',
   },
-  total_spent: {
-    type: DataTypes.DECIMAL(10, 2),
-    defaultValue: 0.00,
-  },
-  total_orders: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  last_order_date: {
-    type: DataTypes.DATE,
-    allowNull: true,
-  },
-  customer_name: {
+  customerName: {
     type: DataTypes.STRING,
     allowNull: true,
+    field: 'customer_name',
   },
   customized: {
     type: DataTypes.STRING,
     defaultValue: 'no',
+    field: 'customized',
   },
-  payment_method: {
+  paymentMethod: {
     type: DataTypes.STRING,
     allowNull: true,
+    field: 'payment_method',
   },
-  assigned_artisan: {
+  assignedArtisan: {
     type: DataTypes.STRING,
     allowNull: true,
+    field: 'assigned_artisan',
   },
 }, {
   tableName: 'Orders',
   timestamps: false,
   underscored: true,
 });
+
+Order.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+Order.hasMany(OrderDetail, { foreignKey: 'o_id', as: 'orderDetails' });
 
 module.exports = { Order };

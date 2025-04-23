@@ -1,57 +1,61 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
+const { Customer } = require('./customerModel');
 
 const Address = sequelize.define('Address', {
-  address_id: {
+  addressId: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
+    field: 'address_id',
   },
   c_id: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'c_id',
     references: {
-      model: 'Customers', 
+      model: Customer,
       key: 'c_id',
     },
     onDelete: 'CASCADE',
   },
-  address_type: {
+  addressType: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'address_type',
   },
-  address_line_1: {
+  addressLine1: {
     type: DataTypes.TEXT,
-    allowNull: true,
+    field: 'address_line_1',
   },
-  address_line_2: {
+  addressLine2: {
     type: DataTypes.TEXT,
-    allowNull: true,
+    field: 'address_line_2',
   },
   city: {
     type: DataTypes.STRING,
-    allowNull: true,
+    field: 'city',
   },
   state: {
     type: DataTypes.STRING,
-    allowNull: true,
+    field: 'state',
   },
-  postal_code: {
+  postalCode: {
     type: DataTypes.STRING,
-    allowNull: true,
+    field: 'postal_code',
   },
   country: {
     type: DataTypes.STRING,
-    allowNull: true,
+    field: 'country',
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
+    field: 'created_at',
   },
-  updated_at: {
+  updatedAt: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
+    field: 'updated_at',
   },
 }, {
   tableName: 'Addresses',
@@ -59,8 +63,6 @@ const Address = sequelize.define('Address', {
   underscored: true,
 });
 
-Address.associate = (models) => {
-  Address.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'customer' }); // Updated alias to 'customer'
-};
+Address.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
 
 module.exports = { Address };

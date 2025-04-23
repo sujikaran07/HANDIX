@@ -1,6 +1,8 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const bcrypt = require('bcrypt'); 
+const bcrypt = require('bcrypt');
+const { Order } = require('./orderModel');
+const { Address } = require('./addressModel'); // Import the Address model
 
 const Customer = sequelize.define('Customer', {
   c_id: {
@@ -120,5 +122,8 @@ Customer.associate = (models) => {
   Customer.hasMany(models.Address, { foreignKey: 'c_id', as: 'addresses' }); // Ensure alias is 'addresses'
   Customer.hasMany(models.Order, { foreignKey: 'c_id', as: 'customerOrders' });
 };
+
+Customer.hasMany(Address, { foreignKey: 'c_id', as: 'addresses' }); // Add this line
+Customer.hasMany(Order, { foreignKey: 'c_id' });
 
 module.exports = { Customer };
