@@ -254,7 +254,14 @@ const ManageInventory = ({ onViewInventory }) => {
                       <td>{item.product_name}</td>
                       <td>{item.category?.category_name || 'N/A'}</td>
                       <td>{item.quantity}</td>
-                      <td>{new Date(item.date_added).toLocaleDateString()}</td>
+                      <td>{new Date(item.date_added).toLocaleString('en-US', { 
+                        year: '2-digit', 
+                        month: 'numeric', 
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                      })}</td>
                       <td className={`stock-status ${(item.product_status || '').toLowerCase().replace(/\s+/g, '-')}`}>
                         {item.product_status || 'Unknown'}
                       </td>
