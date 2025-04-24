@@ -71,6 +71,7 @@ app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/login', employeeLoginRoutes);
 
 const PORT = process.env.PORT || 5000;
 

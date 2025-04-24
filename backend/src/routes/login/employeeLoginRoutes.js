@@ -1,9 +1,23 @@
 const express = require('express');
-const { login, refreshToken } = require('../../controllers/login/employeeLoginControllers');
-
 const router = express.Router();
+const {
+  getEmployees,
+  login,
+  getCurrentUser,
+  authMiddleware,
+  refreshToken
+} = require('../../controllers/login/employeeLoginControllers');
 
-router.post('/login', login); 
-router.post('/refresh-token', refreshToken); 
+// Login route
+router.post('/', login);
+
+// Get current user route (protected)
+router.get('/me', authMiddleware, getCurrentUser);
+
+// Get all employees (if needed)
+router.get('/employees', authMiddleware, getEmployees);
+
+// Add the refresh token route
+router.post('/refresh-token', refreshToken);
 
 module.exports = router;

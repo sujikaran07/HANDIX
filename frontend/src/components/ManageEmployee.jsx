@@ -18,28 +18,87 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
   const [employeeToDelete, setEmployeeToDelete] = useState(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const employeesPerPage = 4;
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/employees');
-        console.log('Fetched employees:', response.data); 
-        setEmployees(response.data); 
+        const token = localStorage.getItem('token');
+        console.log('Token being sent:', token);
+        
+        if (!token) {
+          console.error('No token found in localStorage');
+          setError('Authentication required. Please login again.');
+          setLoading(false);
+          return;
+        }
+
+        const response = await axios.get('http://localhost:5000/api/employees', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+        
+        console.log('Fetched employees:', response.data);
+        setEmployees(response.data);
+        setLoading(false);
       } catch (error) {
         console.error('Error fetching employees:', error);
+        
+        if (error.response && error.response.status === 401) {
+          console.warn('Token expired. Attempting to refresh token...');
+          try {
+            const token = localStorage.getItem('token');
+            const refreshResponse = await axios.post('http://localhost:5000/api/login/refresh-token', 
+              { token },
+              { headers: { 'Content-Type': 'application/json' } }
+            );
+
+            if (refreshResponse.status === 200) {
+              console.log('Token refreshed:', refreshResponse.data.token);
+              localStorage.setItem('token', refreshResponse.data.token);
+              fetchEmployees();
+            } else {
+              setError('Session expired. Please login again.');
+              setLoading(false);
+            }
+          } catch (refreshError) {
+            console.error('Error refreshing token:', refreshError);
+            setError('Authentication failed. Please login again.');
+            setLoading(false);
+          }
+        } else {
+          setError('Failed to load employees. Please try again.');
+          setLoading(false);
+        }
       }
     };
+    
     fetchEmployees();
   }, []);
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/api/employees/${employeeToDelete.eId}`);
-      setEmployees(employees.filter(emp => emp.eId !== employeeToDelete.eId)); 
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No token found in localStorage');
+        alert('Authentication required. Please login again.');
+        return;
+      }
+      
+      await axios.delete(`http://localhost:5000/api/employees/${employeeToDelete.eId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+      
+      setEmployees(employees.filter(emp => emp.eId !== employeeToDelete.eId));
       console.log(`Employee with E-ID ${employeeToDelete.eId} deleted successfully.`);
-      setShowDeleteModal(false); 
-      setEmployeeToDelete(null); 
+      setShowDeleteModal(false);
+      setEmployeeToDelete(null);
     } catch (error) {
       console.error('Error deleting employee:', error);
       alert('Failed to delete employee. Please try again.');
@@ -73,16 +132,43 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
   const handleSave = async (updatedEmployee) => {
     try {
-      if (showEditEmployeeForm) {
-        setEmployees(employees.map(emp => emp.eId === updatedEmployee.eId ? updatedEmployee : emp)); 
-      } else {
-        const response = await axios.post('http://localhost:5000/api/employees', updatedEmployee);
-        setEmployees([...employees, response.data]); 
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No token found in localStorage');
+        alert('Authentication required. Please login again.');
+        return;
       }
+      
+      if (showEditEmployeeForm) {
+        const response = await axios.put(
+          `http://localhost:5000/api/employees/${updatedEmployee.eId}`, 
+          updatedEmployee,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        setEmployees(employees.map(emp => 
+          emp.eId === updatedEmployee.eId ? response.data : emp
+        ));
+      } else {
+        const response = await axios.post(
+          'http://localhost:5000/api/employees', 
+          updatedEmployee,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        setEmployees([...employees, response.data]);
+      }
+      
       setShowAddEmployeeForm(false);
       setShowEditEmployeeForm(false);
     } catch (error) {
       console.error('Error saving employee:', error);
+      if (error.response && error.response.status === 401) {
+        alert('Session expired. Please login again.');
+      } else {
+        alert('Failed to save employee. Please try again.');
+      }
     }
   };
 
@@ -172,54 +258,67 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
             </div>
 
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
-              <table className="table table-bordered table-striped artisan-table">
-                <thead>
-                  <tr>
-                    <th>E-ID</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Phone Number</th>
-                    <th>Role</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentEmployees.length > 0 ? (
-                    currentEmployees.map(employee => (
-                      <tr key={employee.eId}>
-                        <td>{employee.eId}</td>
-                        <td>{`${employee.firstName} ${employee.lastName}`}</td>
-                        <td>{employee.email}</td>
-                        <td>{employee.phone || 'N/A'}</td>
-                        <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
-                        <td className="action-buttons">
-                          <div className="dropdown">
-                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                              Actions
-                            </button>
-                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              <li>
-                                <button className="dropdown-item" onClick={() => handleEdit(employee.eId)}>
-                                  Edit
-                                </button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item" onClick={() => confirmDelete(employee)}>
-                                  Delete
-                                </button>
-                              </li>
-                            </ul>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2">Loading employees...</p>
+                </div>
+              ) : error ? (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              ) : (
+                <table className="table table-bordered table-striped artisan-table">
+                  <thead>
                     <tr>
-                      <td colSpan="6" className="text-center">No users available</td>
+                      <th>E-ID</th>
+                      <th>Full Name</th>
+                      <th>Email</th>
+                      <th>Phone Number</th>
+                      <th>Role</th>
+                      <th>Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentEmployees.length > 0 ? (
+                      currentEmployees.map(employee => (
+                        <tr key={employee.eId}>
+                          <td>{employee.eId}</td>
+                          <td>{`${employee.firstName} ${employee.lastName}`}</td>
+                          <td>{employee.email}</td>
+                          <td>{employee.phone || 'N/A'}</td>
+                          <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
+                          <td className="action-buttons">
+                            <div className="dropdown">
+                              <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                              </button>
+                              <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleEdit(employee.eId)}>
+                                    Edit
+                                  </button>
+                                </li>
+                                <li>
+                                  <button className="dropdown-item" onClick={() => confirmDelete(employee)}>
+                                    Delete
+                                  </button>
+                                </li>
+                              </ul>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">No users available</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />

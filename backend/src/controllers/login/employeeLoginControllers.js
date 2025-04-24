@@ -101,20 +101,43 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
-const refreshToken = (req, res) => {
-  const { token } = req.body;
-
-  if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
-  }
-
+/**
+ * Refreshes an expired authentication token
+ * @param {Object} req - Request object containing the expired token
+ * @param {Object} res - Response object
+ */
+const refreshToken = async (req, res) => {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true }); // Decode expired token
-    const newToken = jwt.sign({ id: decoded.id, role: decoded.role }, process.env.JWT_SECRET, { expiresIn: '3h' }); // Generate new token
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ error: 'No token provided' });
+    }
+    
+    // Verify the expired token to extract user information
+    let decoded;
+    try {
+      // Set ignoreExpiration to true to allow verification of expired tokens
+      const jwt = require('jsonwebtoken');
+      const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+      decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    // Generate a new token with the same user data
+    const jwt = require('jsonwebtoken');
+    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+    const newToken = jwt.sign(
+      { id: decoded.id, role: decoded.role },
+      JWT_SECRET,
+      { expiresIn: '3h' }  // Set appropriate expiration time
+    );
+    
     res.status(200).json({ token: newToken });
   } catch (error) {
-    console.error('Error refreshing token:', error.message);
-    res.status(401).json({ error: 'Invalid token' });
+    console.error('Error refreshing token:', error);
+    res.status(500).json({ error: 'Failed to refresh token' });
   }
 };
 

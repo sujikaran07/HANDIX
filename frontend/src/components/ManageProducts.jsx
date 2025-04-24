@@ -94,6 +94,87 @@ const ManageProducts = ({ onViewProduct }) => {
     setCurrentPage(pageNumber);
   };
 
+  const handleProductAction = async (productId, action) => {
+    try {
+      let token = localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No token found in localStorage');
+        return;
+      }
+      
+      if (action === 'approve' || action === 'reject') {
+        const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
+        
+        const response = await fetch(`http://localhost:5000/api/admin/products/${productId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (response.ok) {
+          const updatedProduct = await response.json();
+          console.log('Product status updated:', updatedProduct);
+          
+          // Update the products array with the new status
+          setProducts(prevProducts => 
+            prevProducts.map(product => 
+              product.entry_id === productId 
+                ? { ...product, status: newStatus } 
+                : product
+            )
+          );
+        } else if (response.status === 401) {
+          console.warn('Token expired. Attempting to refresh token...');
+          const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            console.log('Token refreshed:', refreshData.token);
+            localStorage.setItem('token', refreshData.token);
+            handleProductAction(productId, action); // Retry with new token
+          } else {
+            console.error('Failed to refresh token:', refreshResponse.statusText);
+          }
+        } else {
+          console.error('Failed to update product status:', response.statusText);
+        }
+      } else if (action === 'delete') {
+        const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          console.log('Product deleted successfully');
+          // Remove the deleted product from the list
+          setProducts(prevProducts => 
+            prevProducts.filter(product => product.entry_id !== productId)
+          );
+        } else if (response.status === 401) {
+          // Handle token expiration similar to above
+          console.warn('Token expired. Attempting to refresh token...');
+          // ...similar token refresh logic as above...
+        } else {
+          console.error('Failed to delete product:', response.statusText);
+        }
+      }
+    } catch (error) {
+      console.error(`Error performing ${action} action:`, error);
+    }
+  };
+
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
@@ -235,26 +316,26 @@ const ManageProducts = ({ onViewProduct }) => {
                     <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Status */}
                     <td className="action-buttons">
                       <div className="dropdown">
-                        <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button className="btn dropdown-toggle" type="button" id={`dropdown-${product.entry_id}`} data-bs-toggle="dropdown" aria-expanded="false">
                           Actions
                         </button>
-                        <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <ul className="dropdown-menu" aria-labelledby={`dropdown-${product.entry_id}`}>
                           <li>
                             <button className="dropdown-item" onClick={() => onViewProduct(product)}>View</button>
                           </li>
                           {product.status.toLowerCase() === 'pending' && (
                             <>
                               <li>
-                                <button className="dropdown-item">Approve</button>
+                                <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'approve')}>Approve</button>
                               </li>
                               <li>
-                                <button className="dropdown-item">Reject</button>
+                                <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'reject')}>Reject</button>
                               </li>
                               <li>
                                 <button className="dropdown-item">Edit</button>
                               </li>
                               <li>
-                                <button className="dropdown-item">Delete</button>
+                                <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'delete')}>Delete</button>
                               </li>
                             </>
                           )}
