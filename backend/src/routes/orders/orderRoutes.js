@@ -5,11 +5,13 @@ const {
   createOrder,
   updateOrder,
   deleteOrder,
+  getArtisansWithOrderInfo
 } = require('../../controllers/orders/orderController'); 
 
 const router = express.Router();
 
 router.get('/', getAllOrders); 
+router.get('/artisans-info', getArtisansWithOrderInfo); 
 router.get('/:id', getOrderById); 
 router.post('/', createOrder); 
 router.put('/:id', updateOrder); 

@@ -1,6 +1,8 @@
 const { Order } = require('../../models/orderModel');
 const { OrderDetail } = require('../../models/orderDetailModel');
 const { Customer } = require('../../models/customerModel');
+const { Employee } = require('../../models/employeeModel');
+const { Sequelize, Op } = require('sequelize');
 
 const getAllOrders = async (req, res) => {
   try {
@@ -78,10 +80,111 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+const getArtisansWithOrderInfo = async (req, res) => {
+  try {
+    console.log('Starting getArtisansWithOrderInfo function');
+    
+    let employees = [];
+    try {
+      employees = await Employee.findAll({
+        attributes: ['eId', 'firstName', 'lastName']
+      });
+      console.log(`Found ${employees.length} total employees`);
+    } catch (err) {
+      console.error('Error querying employees:', err);
+      return res.status(200).json([]); 
+    }
+    
+    if (!employees || employees.length === 0) {
+      console.log('No employees found');
+      return res.status(200).json([]);
+    }
+
+    const artisansWithOrderInfo = await Promise.all(employees.map(async (employee) => {
+      try {
+        console.log(`Processing employee with ID: ${employee.eId}`);
+        
+        const ongoingRegularOrdersCount = await Order.count({
+          where: {
+            assignedArtisanId: employee.eId,
+            isCustomized: false, 
+            status: {
+              [Op.notIn]: ['Shipped', 'Delivered', 'Cancelled'] 
+            }
+          }
+        });
+        
+        const ongoingCustomizedOrdersCount = await Order.count({
+          where: {
+            assignedArtisanId: employee.eId,
+            isCustomized: true, 
+            status: {
+              [Op.notIn]: ['Shipped', 'Delivered', 'Cancelled'] 
+            }
+          }
+        });
+
+        const totalOngoingOrdersCount = ongoingRegularOrdersCount + ongoingCustomizedOrdersCount;
+        
+        console.log(`Employee ${employee.eId} has ${totalOngoingOrdersCount} ongoing orders (${ongoingRegularOrdersCount} regular, ${ongoingCustomizedOrdersCount} customized)`);
+
+        const lastCompletedOrder = await Order.findOne({
+          where: {
+            assignedArtisanId: employee.eId,
+            status: 'Shipped' 
+          },
+          order: [['updatedAt', 'DESC']] 
+        });
+
+        let availability = 'Available';
+        
+        
+        if (totalOngoingOrdersCount > 3 && ongoingCustomizedOrdersCount >= 2 && ongoingRegularOrdersCount >= 1) {
+          availability = 'Busy';
+        }
+        else if (totalOngoingOrdersCount >= 5) {
+          availability = 'Busy';
+        }
+
+        return {
+          id: employee.eId,
+          name: `${employee.firstName} ${employee.lastName}`,
+          availability: availability,
+          lastCompletedOrder: lastCompletedOrder ? lastCompletedOrder.updatedAt : 'N/A', 
+          ongoingOrders: totalOngoingOrdersCount === 0 ? '0 Orders' : 
+                         totalOngoingOrdersCount === 1 ? '1 Order' : 
+                         `${totalOngoingOrdersCount} Orders`,
+          expertise: 'Artisan',
+          canAssign: availability === 'Available' 
+        };
+      } catch (err) {
+        console.error(`Error processing employee ${employee.eId}:`, err);
+        return {
+          id: employee.eId,
+          name: `${employee.firstName} ${employee.lastName}`,
+          availability: 'Available',
+          lastCompletedOrder: 'N/A',
+          ongoingOrders: '0 Orders',
+          expertise: 'Artisan',
+          canAssign: true 
+        };
+      }
+    }));
+
+    console.log(`Returning ${artisansWithOrderInfo.length} artisans with order info`);
+    res.status(200).json(Array.isArray(artisansWithOrderInfo) ? artisansWithOrderInfo : []);
+    
+  } catch (error) {
+    console.error('Error in getArtisansWithOrderInfo:', error);
+    res.status(200).json([]);
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
   createOrder,
   updateOrder,
   deleteOrder,
+  getArtisansWithOrderInfo
 };

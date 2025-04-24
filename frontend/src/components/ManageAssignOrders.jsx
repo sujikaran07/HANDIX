@@ -1,18 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
 import { FaTasks, FaPlus } from 'react-icons/fa';
 import Pagination from './Pagination';
+import axios from 'axios';
 
 const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
-  const [artisans, setArtisans] = useState([
-    { id: 'A001', name: 'Emily Carter', availability: 'Available', lastCompletedOrder: 'Jan 15, 2025', ongoingOrders: '1 Order', expertise: 'Handloom', canAssign: true },
-    { id: 'A002', name: 'Michael Brown', availability: 'Busy', lastCompletedOrder: 'Feb 5, 2025', ongoingOrders: '3 Orders', expertise: 'Pottery', canAssign: false },
-    { id: 'A003', name: 'Sarah Johnson', availability: 'Available', lastCompletedOrder: 'Jan 28, 2025', ongoingOrders: '0 Orders', expertise: 'Wood Carving', canAssign: true },
-    { id: 'A004', name: 'John Doe', availability: 'Available', lastCompletedOrder: 'Mar 10, 2025', ongoingOrders: '2 Orders', expertise: 'Metal Work', canAssign: true },
-    { id: 'A005', name: 'Jane Smith', availability: 'Busy', lastCompletedOrder: 'Apr 1, 2025', ongoingOrders: '4 Orders', expertise: 'Textiles', canAssign: false },
-  ]);
+  const [artisans, setArtisans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -21,6 +18,55 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
   const [showEditAssignOrderForm, setShowEditAssignOrderForm] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const artisansPerPage = 4;
+
+  useEffect(() => {
+    const fetchArtisans = async () => {
+      try {
+        setLoading(true);
+        
+        // Update API URL to point to the correct backend server
+        // Replace this URL with your actual backend URL
+        const BACKEND_URL = 'http://localhost:5000'; // or whichever port your backend uses
+        const response = await axios.get(`${BACKEND_URL}/api/orders/artisans-info`);
+        
+        console.log("API Response:", response.data);
+        
+        // Ensure we're setting an array to the state
+        if (Array.isArray(response.data)) {
+          setArtisans(response.data);
+        } else {
+          console.error("API did not return an array:", response.data);
+          setArtisans([]);
+          setError("Invalid data format received from server");
+        }
+      } catch (err) {
+        console.error('Error fetching artisans data:', err);
+        setError('Failed to load artisans. Please try again later.');
+        setArtisans([]); 
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtisans();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'No orders completed') return dateString;
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+    
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    } catch (err) {
+      return dateString;
+    }
+  };
 
   const handleDelete = (id) => {
     setArtisans(artisans.filter(artisan => artisan.id !== id));
@@ -51,14 +97,21 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     setShowEditAssignOrderForm(false);
   };
 
-  const filteredArtisans = artisans.filter(artisan => {
-    return (
-      (filterStatus === 'All' || artisan.availability.includes(filterStatus)) &&
-      (artisan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       artisan.lastCompletedOrder.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       artisan.ongoingOrders.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
+  const filteredArtisans = Array.isArray(artisans) 
+    ? artisans.filter(artisan => {
+        if (!artisan) return false;
+        
+        return (
+          (filterStatus === 'All' || 
+           (artisan.availability && artisan.availability.includes(filterStatus))) &&
+          ((artisan.name && artisan.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+           (artisan.lastCompletedOrder && 
+            artisan.lastCompletedOrder.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+           (artisan.ongoingOrders && 
+            artisan.ongoingOrders.toLowerCase().includes(searchTerm.toLowerCase())))
+        );
+      }) 
+    : [];
 
   const indexOfLastArtisan = currentPage * artisansPerPage;
   const indexOfFirstArtisan = indexOfLastArtisan - artisansPerPage;
@@ -139,49 +192,64 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
             </div>
 
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
-              <table className="table table-bordered table-striped assign-order-table">
-                <thead>
-                  <tr>
-                    <th>A-ID</th>
-                    <th>Artisan Name</th>
-                    <th>Ongoing Orders</th>
-                    <th>Last Order Completed</th>
-                    <th>Availability</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentArtisans.length > 0 ? (
-                    currentArtisans.map(artisan => (
-                      <tr key={artisan.id}>
-                        <td>{artisan.id}</td>
-                        <td>{artisan.name}</td>
-                        <td>{artisan.ongoingOrders}</td>
-                        <td>{artisan.lastCompletedOrder}</td>
-                        <td style={{ color: getAvailabilityColor(artisan.availability) }}>{artisan.availability}</td>
-                        <td className="action-buttons">
-                          <div className="dropdown">
-                            <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                              Actions
-                            </button>
-                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {artisan.canAssign && <li><button className="dropdown-item" onClick={() => handleEdit(artisan.id)}>Assign</button></li>}
-                              <li><button className="dropdown-item">View</button></li>
-                            </ul>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
+              {loading ? (
+                <div className="text-center p-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                  <p className="mt-2">Loading artisans data...</p>
+                </div>
+              ) : error ? (
+                <div className="alert alert-danger" role="alert">
+                  {error}
+                </div>
+              ) : (
+                <table className="table table-bordered table-striped assign-order-table">
+                  <thead>
                     <tr>
-                      <td colSpan="6" className="text-center">No artisans available</td>
+                      <th>E-ID</th>
+                      <th>Artisan Name</th>
+                      <th>Ongoing Orders</th>
+                      <th>Last Order Completed</th>
+                      <th>Availability</th>
+                      <th>Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {currentArtisans.length > 0 ? (
+                      currentArtisans.map(artisan => (
+                        <tr key={artisan.id}>
+                          <td>{artisan.id}</td>
+                          <td>{artisan.name}</td>
+                          <td>{artisan.ongoingOrders}</td>
+                          <td>{formatDate(artisan.lastCompletedOrder)}</td>
+                          <td style={{ color: getAvailabilityColor(artisan.availability) }}>{artisan.availability}</td>
+                          <td className="action-buttons">
+                            <div className="dropdown">
+                              <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                Actions
+                              </button>
+                              <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                {artisan.canAssign && <li><button className="dropdown-item" onClick={() => handleEdit(artisan.id)}>Assign</button></li>}
+                                <li><button className="dropdown-item">View</button></li>
+                              </ul>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center">No artisans available</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
 
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            {!loading && !error && (
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            )}
           </>
         )}
       </div>
