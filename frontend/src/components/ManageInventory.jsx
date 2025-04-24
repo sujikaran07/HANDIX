@@ -9,6 +9,8 @@ import '../styles/admin/AdminInventory.css';
 
 const ManageInventory = ({ onViewInventory }) => {
   const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
@@ -19,11 +21,56 @@ const ManageInventory = ({ onViewInventory }) => {
   useEffect(() => {
     const fetchInventory = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/inventory');
-        const data = await response.json();
-        setInventory(data.inventory);
+        setLoading(true);
+        // Get the auth token from localStorage
+        const token = localStorage.getItem('token');
+        
+        if (!token) {
+          console.error('No token found in localStorage');
+          setError('Authentication required. Please login again.');
+          setLoading(false);
+          return;
+        }
+        
+        const response = await fetch('http://localhost:5000/api/admin/inventory', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched inventory data:', data);
+          setInventory(data.inventory);
+          setLoading(false);
+        } else if (response.status === 401) {
+          console.warn('Token expired. Attempting to refresh token...');
+          const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ token }),
+          });
+
+          if (refreshResponse.ok) {
+            const refreshData = await refreshResponse.json();
+            console.log('Token refreshed:', refreshData.token);
+            localStorage.setItem('token', refreshData.token);
+            // Retry fetching inventory with new token
+            fetchInventory();
+          } else {
+            setError('Session expired. Please login again.');
+            setLoading(false);
+          }
+        } else {
+          setError(`Failed to fetch inventory: ${response.statusText}`);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Error fetching inventory:', error);
+        setError('An error occurred while fetching inventory data.');
+        setLoading(false);
       }
     };
 
@@ -175,53 +222,67 @@ const ManageInventory = ({ onViewInventory }) => {
         </div>
 
         <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
-          <table className="table table-bordered table-striped inventory-table">
-            <thead>
-              <tr>
-                <th>P-ID</th>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Stock Quantity</th>
-                <th>Last Updated</th>
-                <th>Stock Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentInventory.length > 0 ? (
-                currentInventory.map(item => (
-                  <tr key={item.product_id}>
-                    <td>{item.product_id}</td>
-                    <td>{item.product_name}</td>
-                    <td>{item.category?.category_name}</td>
-                    <td>{item.quantity}</td>
-                    <td>{new Date(item.date_added).toLocaleDateString()}</td>
-                    <td className={`stock-status ${item.product_status.toLowerCase().replace(/\s+/g, '-')}`}>{item.product_status}</td>
-
-                    <td className="action-buttons">
-                      <div className="dropdown">
-                        <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                          Actions
-                        </button>
-                        <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                          <li>
-                            <button className="dropdown-item">Update</button>
-                          </li>
-                          <li>
-                            <button className="dropdown-item">Restock</button>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+          {loading ? (
+            <div className="text-center py-4">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2">Loading inventory data...</p>
+            </div>
+          ) : error ? (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          ) : (
+            <table className="table table-bordered table-striped inventory-table">
+              <thead>
                 <tr>
-                  <td colSpan="7" className="text-center">No inventory items available</td>
+                  <th>P-ID</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Stock Quantity</th>
+                  <th>Last Updated</th>
+                  <th>Stock Status</th>
+                  <th>Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentInventory.length > 0 ? (
+                  currentInventory.map(item => (
+                    <tr key={item.product_id}>
+                      <td>{item.product_id}</td>
+                      <td>{item.product_name}</td>
+                      <td>{item.category?.category_name || 'N/A'}</td>
+                      <td>{item.quantity}</td>
+                      <td>{new Date(item.date_added).toLocaleDateString()}</td>
+                      <td className={`stock-status ${(item.product_status || '').toLowerCase().replace(/\s+/g, '-')}`}>
+                        {item.product_status || 'Unknown'}
+                      </td>
+                      <td className="action-buttons">
+                        <div className="dropdown">
+                          <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actions
+                          </button>
+                          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <li>
+                              <button className="dropdown-item">Update</button>
+                            </li>
+                            <li>
+                              <button className="dropdown-item">Restock</button>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center">No inventory items available</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         <Pagination className="inventory-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
