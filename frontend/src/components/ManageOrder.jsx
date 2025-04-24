@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -13,7 +14,68 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [selectedCustomized, setSelectedCustomized] = useState(['Yes', 'No']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const ordersPerPage = 4;
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:5000/api/orders');
+      console.log("API Response:", response.data);
+      
+      // Map the response data to match the component's expected format
+      const formattedOrders = response.data.map(order => {
+        // Handle customer name correctly
+        let customerName = 'Unknown';
+        if (order.customer && order.customer.first_name && order.customer.last_name) {
+          customerName = `${order.customer.first_name} ${order.customer.last_name}`;
+        } else if (order.customerName) {
+          customerName = order.customerName;
+        }
+        
+        // Handle date correctly
+        let orderDate = 'N/A';
+        if (order.orderDate || order.order_date) {
+          const dateValue = order.orderDate || order.order_date;
+          const parsedDate = new Date(dateValue);
+          if (!isNaN(parsedDate.getTime())) {
+            orderDate = parsedDate.toLocaleDateString();
+          }
+        }
+        
+        // Format the total amount as a plain number without currency symbol
+        const totalAmount = order.totalAmount || order.total_amount || 0;
+        
+        // Handle customized field
+        const customizedValue = order.customized || 'No';
+        const customized = customizedValue.charAt(0).toUpperCase() + customizedValue.slice(1);
+        
+        return {
+          id: order.order_id || order.id,
+          customerName,
+          orderDate,
+          totalAmount: `${totalAmount}`,  // Display as number only, without currency prefix
+          customized,
+          assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
+          status: order.orderStatus || order.order_status || 'Processing'
+        };
+      });
+      
+      console.log("Formatted Orders:", formattedOrders);
+      setOrders(formattedOrders);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch orders:", err);
+      setError("Failed to load orders. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCustomizedChange = (customized) => {
     setSelectedCustomized((prevSelected) =>
@@ -27,9 +89,9 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     return (
       (selectedCustomized.includes(order.customized)) &&
       (filterStatus === 'All' || order.status === filterStatus) &&
-      (order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       order.customized.toLowerCase().includes(searchTerm.toLowerCase()))
+      (order.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       order.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       order.customized?.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -126,67 +188,82 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         </div>
 
         <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
-          <table className="table table-bordered table-striped order-table">
-            <thead>
-              <tr>
-                <th>O-ID</th>
-                <th>Customer Name</th>
-                <th>Order Date</th>
-                <th>Total Amount</th>
-                <th>Customized</th>
-                <th>Assigned Artisan</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentOrders.length > 0 ? (
-                currentOrders.map(order => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{order.customerName}</td>
-                    <td>{order.orderDate}</td>
-                    <td>{order.totalAmount}</td>
-                    <td>{order.customized}</td>
-                    <td>{order.customized === 'No' ? 'N/A' : order.assignedArtisan}</td>
-                    <td className={`status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</td>
-                    <td className="action-buttons">
-                      <div className="dropdown">
-                        <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                          Actions
-                        </button>
-                        <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                          <li>
-                            <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
-                          </li>
-                          {order.customized === 'Yes' && (
-                            <li>
-                              <button className="dropdown-item">Assign Artisan</button>
-                            </li>
-                          )}
-                          <li>
-                            <button className="dropdown-item">Confirm</button>
-                          </li>
-                          <li>
-                            <button className="dropdown-item">Update</button>
-                          </li>
-                          <li>
-                            <button className="dropdown-item">Cancel</button>
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+          {loading ? (
+            <div className="text-center p-5">
+              <div className="spinner-border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="mt-2">Loading orders...</p>
+            </div>
+          ) : error ? (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          ) : (
+            <table className="table table-bordered table-striped order-table">
+              <thead>
                 <tr>
-                  <td colSpan="8" className="text-center">No orders available</td>
+                  <th>O-ID</th>
+                  <th>Customer Name</th>
+                  <th>Order Date</th>
+                  <th>Total Amount</th>
+                  <th>Customized</th>
+                  <th>Assigned Artisan</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentOrders.length > 0 ? (
+                  currentOrders.map(order => (
+                    <tr key={order.id}>
+                      <td>{order.id}</td>
+                      <td>{order.customerName}</td>
+                      <td>{order.orderDate}</td>
+                      <td>{order.totalAmount}</td>
+                      <td>{order.customized}</td>
+                      <td>{order.customized === 'No' ? 'N/A' : order.assignedArtisan}</td>
+                      <td className={`status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</td>
+                      <td className="action-buttons">
+                        <div className="dropdown">
+                          <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actions
+                          </button>
+                          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <li>
+                              <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
+                            </li>
+                            {order.customized === 'Yes' && (
+                              <li>
+                                <button className="dropdown-item">Assign Artisan</button>
+                              </li>
+                            )}
+                            <li>
+                              <button className="dropdown-item">Confirm</button>
+                            </li>
+                            <li>
+                              <button className="dropdown-item">Update</button>
+                            </li>
+                            <li>
+                              <button className="dropdown-item">Cancel</button>
+                            </li>
+                          </ul>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="8" className="text-center">No orders available</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
-        <Pagination className="order-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+        {!loading && !error && (
+          <Pagination className="order-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+        )}
       </div>
     </div>
   );
