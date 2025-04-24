@@ -63,7 +63,7 @@ const ProductEntry = sequelize.define('ProductEntry', {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'Categories',
+      model: 'Category',  
       key: 'category_id',
     },
     onDelete: 'CASCADE',

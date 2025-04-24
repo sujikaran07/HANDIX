@@ -22,7 +22,7 @@ const Inventory = sequelize.define('Inventory', {
   category_id: {
     type: DataTypes.INTEGER,
     references: {
-      model: 'Categories',
+      model: 'Category',  
       key: 'category_id',
     },
     onDelete: 'SET NULL',

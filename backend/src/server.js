@@ -24,9 +24,18 @@ const { Customer } = require('./models/customerModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
 
-// Define associations after all models are imported
+
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+
+Inventory.hasMany(ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' });
+ProductEntry.belongsTo(Inventory, { foreignKey: 'product_id', as: 'inventory' });
+
+Category.hasMany(ProductEntry, { foreignKey: 'category_id', as: 'entries' });
+ProductEntry.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
+
+ProductEntry.hasMany(ProductImage, { foreignKey: 'product_id', sourceKey: 'product_id', as: 'entryImages' });
+ProductImage.belongsTo(ProductEntry, { foreignKey: 'product_id', targetKey: 'product_id', as: 'productEntry' });
 
 Customer.hasMany(Address, {
   foreignKey: 'c_id',
