@@ -21,7 +21,6 @@ const injectEId = (req, res, next) => {
   next();
 };
 
-// Add a new route for uploading product images
 router.post('/images', authMiddleware, async (req, res) => {
   try {
     const { product_id, entry_id, image_url } = req.body;

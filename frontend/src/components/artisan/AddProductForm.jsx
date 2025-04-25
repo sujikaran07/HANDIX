@@ -64,7 +64,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       });
       if (response.ok) {
         const data = await response.json();
-        // Store the original quantity to preserve user input
         const originalQuantity = formData.quantity;
         
         setFormData((prevProduct) => ({
@@ -74,9 +73,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           description: data.description,
           category: data.category?.category_name || '',
           price: data.unit_price,
-          quantity: originalQuantity, // Keep original quantity
+          quantity: originalQuantity, 
           product_status: data.product_status,
-          // Additional fields as needed
           customization_available: data.customization_available ? 'Yes' : 'No',
           size: data.size || 'N/A',
           additional_price: data.additional_price || ''
@@ -130,9 +128,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Handle special cases for dependent fields
     if (name === 'category') {
-      // Reset size to N/A if category is not Clothing
       if (value !== 'Clothing') {
         setFormData(prev => ({
           ...prev,
@@ -140,7 +136,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           size: 'N/A'
         }));
       } 
-      // Reset customization to No if category is not Artistry
       if (value !== 'Artistry') {
         setFormData(prev => ({
           ...prev,
@@ -155,7 +150,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         }));
       }
     } 
-    // Clear additional price when customization is changed to No
     else if (name === 'customization_available' && value === 'No') {
       setFormData(prev => ({
         ...prev,
@@ -163,7 +157,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         additional_price: ''
       }));
     }
-    // For all other cases
     else {
       setFormData((prevProduct) => ({
         ...prevProduct,
@@ -227,14 +220,12 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     if (!formData.quantity || isNaN(formData.quantity)) newErrors.quantity = 'Valid Stock Quantity is required';
     if (!formData.description) newErrors.description = 'Product Description is required';
     
-    // Category-dependent validations
     if (formData.category === 'Clothing' && formData.size === 'N/A') 
       newErrors.size = 'Size is required for Clothing items';
     if (formData.category === 'Artistry' && formData.customization_available === 'Yes' && 
       (!formData.additional_price || isNaN(formData.additional_price))) 
       newErrors.additional_price = 'Additional Price is required for customized products';
     
-    // Check if images are added
     if (images.length === 0) newErrors.images = 'At least one product image is required';
 
     setErrors(newErrors);
@@ -250,7 +241,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         size: formData.category === 'Clothing' && formData.size !== 'N/A' ? formData.size : null, 
         price: parseFloat(formData.price),
         additional_price: formData.customization_available === 'Yes' ? parseFloat(formData.additional_price || 0) : 0, 
-        customization_available: formData.customization_available, // Send the Yes/No value to backend
+        customization_available: formData.customization_available, 
         status: 'pending',
         images: images
       };
@@ -264,7 +255,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     setImages(prevImages => prevImages.filter((_, i) => i !== index));
   };
 
-  // Add a handler for when user finishes typing product ID
   const handleProductIdBlur = (e) => {
     const productId = e.target.value.trim();
     if (productId) {
@@ -277,7 +267,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       <div className="card p-4 mb-3 flex-grow-1" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
         <h4 className="mb-4">Add New Product</h4>
         <form onSubmit={handleSubmit} className="d-flex flex-column h-100">
-          {/* First row: Product ID, Product Name, Category */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Product ID<span className="text-danger">*</span></label>
@@ -324,7 +313,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
-          {/* Second row: Description, Price, Stock Quantity */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Description<span className="text-danger">*</span></label>
@@ -368,7 +356,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
-          {/* Third row with Size, Product Images, Product Status */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">
@@ -423,7 +410,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
-          {/* Fourth row: Customization, Additional Price */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Customization Available</label>
@@ -458,11 +444,9 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
               {errors.additional_price && <div className="text-danger small">{errors.additional_price}</div>}
             </div>
             <div className="col-md-4">
-              {/* Intentionally left empty as per requirements */}
             </div>
           </div>
 
-          {/* Form action buttons */}
           <div className="d-flex justify-content-end mt-4">
             <button type="button" className="btn btn-secondary me-2" onClick={onCancel}>
               Cancel

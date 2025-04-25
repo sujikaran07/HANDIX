@@ -47,8 +47,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       if (response.ok) {
         const data = await response.json();
         console.log(`Total entries fetched: ${data.entries.length}`);
-        setEntries(data.entries); // Store all entries in state
-        setTotalPages(Math.ceil(data.entries.length / entriesPerPage)); // Calculate total pages
+        setEntries(data.entries);
+        setTotalPages(Math.ceil(data.entries.length / entriesPerPage)); 
       } else {
         console.error(`Failed to fetch product entries. Status: ${response.status}, Message: ${response.statusText}`);
         alert('Unable to fetch product entries at the moment. Please try again later.');
@@ -68,26 +68,24 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   };
 
   const filteredEntries = entries.filter(entry => {
-    // Ensure all filters are applied correctly
     return (
-      (selectedCategories.includes(entry.category?.category_name)) && // Category filter
-      (filterStatus === 'All' || entry.status === filterStatus) && // Status filter
+      (selectedCategories.includes(entry.category?.category_name)) && 
+      (filterStatus === 'All' || entry.status === filterStatus) && 
       (
-        entry.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product ID
-        entry.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Search by product name
-        entry.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()) // Search by category name
+        entry.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        entry.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        entry.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
   });
 
-  console.log(`Filtered entries: ${filteredEntries.length}`); // Debugging log
+  console.log(`Filtered entries: ${filteredEntries.length}`); 
 
-  // Pagination logic
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
 
-  console.log(`Current entries: ${currentEntries.length}, Page: ${currentPage}`); // Debugging log
+  console.log(`Current entries: ${currentEntries.length}, Page: ${currentPage}`); 
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) {
@@ -95,7 +93,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       return;
     }
     console.log(`Navigating to page: ${pageNumber}`);
-    setCurrentPage(pageNumber); // Update the current page
+    setCurrentPage(pageNumber); 
   };
 
   const handleViewProduct = async (product) => {
@@ -114,7 +112,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        setSelectedProduct(data); // Set the fetched product data
+        setSelectedProduct(data); 
         setViewMode('view');
       } else {
         console.error('Failed to fetch product details:', response.statusText);
@@ -140,7 +138,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        setSelectedProduct(data); // Set the fetched product data
+        setSelectedProduct(data); 
         setViewMode('edit');
       } else {
         console.error('Failed to fetch product details:', response.statusText);

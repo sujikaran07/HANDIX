@@ -59,7 +59,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   return (
     <div>
       <h4 className="mb-4">Edit Product</h4>
-{/* First row: Product ID, Product Name, Category */}
 <div className="row mb-3">
   <div className="col-md-4">
     <label className="form-label">Product ID</label>
@@ -101,7 +100,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   </div>
 </div>
 
-{/* Second row: Description, Price, Stock Quantity */}
 <div className="row mb-3">
   <div className="col-md-4">
     <label className="form-label">Description</label>
@@ -141,7 +139,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   </div>
 </div>
 
-{/* Third row with Size, Product Images, Product Status */}
 <div className="row mb-3">
   <div className="col-md-4">
     <label className="form-label">Size</label>
@@ -168,7 +165,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
       onChange={handleImageUpload} 
     />
     
-    {/* Display existing images */}
     {formData.entryImages && formData.entryImages.length > 0 && (
       <div className="mt-2 d-flex flex-wrap">
         {formData.entryImages.map((img, index) => (
@@ -186,7 +182,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
       </div>
     )}
     
-    {/* Display new images */}
+
     {newImages.length > 0 && (
       <div className="mt-2 d-flex flex-wrap">
         {newImages.map((img, index) => (
@@ -218,7 +214,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   </div>
 </div>
 
-{/* Fourth row: Customization, Additional Price */}
 <div className="row mb-3">
   <div className="col-md-4">
     <label className="form-label">Customization Available</label>
@@ -245,11 +240,9 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
     />
   </div>
   <div className="col-md-4">
-    {/* Intentionally left empty as per requirements */}
   </div>
 </div>
 
-{/* Form action buttons */}
 <div className="d-flex justify-content-end mt-4">
   <button type="button" className="btn btn-secondary me-2" onClick={onCancel}>
     Cancel

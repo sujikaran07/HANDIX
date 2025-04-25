@@ -96,11 +96,11 @@ const createProduct = async (req, res) => {
         quantity: Number(quantity),
         category_id,
         e_id,
-        customization_available: isCustomizationAvailable, // Add this line to ensure boolean value is saved
+        customization_available: isCustomizationAvailable, 
       });
       console.log('Inventory created with product_id:', product_id); 
     } else {
-      // Update inventory record with the latest customization setting if it's different
+
       if (inventoryRecord.customization_available !== isCustomizationAvailable) {
         inventoryRecord.customization_available = isCustomizationAvailable;
         console.log(`Updated customization_available to ${isCustomizationAvailable} in inventory`);
@@ -110,11 +110,9 @@ const createProduct = async (req, res) => {
       await inventoryRecord.save();
     }
 
-    // Handle product variation with better error handling for duplicates
     const normalizedSize = size || "N/A";
     let variation_id = null;
     
-    // First check if this product variation already exists
     let existingVariation = await ProductVariation.findOne({
       where: { 
         product_id, 
@@ -124,14 +122,12 @@ const createProduct = async (req, res) => {
 
     if (existingVariation) {
       console.log('Found existing variation:', existingVariation.variation_id);
-      // Update the existing variation
       existingVariation.additional_price = additional_price || existingVariation.additional_price;
       existingVariation.stock_level += Number(quantity);
       await existingVariation.save();
       variation_id = existingVariation.variation_id;
       console.log('Updated existing variation, new stock level:', existingVariation.stock_level);
     } else {
-      // Create a new variation if none exists
       const newVariation = await ProductVariation.create({
         product_id,
         size: normalizedSize,
@@ -164,7 +160,6 @@ const createProduct = async (req, res) => {
 
     const productEntry = await ProductEntry.create(productPayload);
 
-    // Save product images if provided
     if (images && Array.isArray(images) && images.length > 0) {
       console.log(`Trying to save ${images.length} images for product ${product_id}`);
       
@@ -187,7 +182,6 @@ const createProduct = async (req, res) => {
   } catch (error) {
     console.error('Error creating product:', error);
     
-    // Provide more specific error messages based on the error type
     if (error.name === 'SequelizeUniqueConstraintError') {
       const field = error.errors[0]?.path;
       res.status(400).json({ 
