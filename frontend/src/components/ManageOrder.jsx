@@ -28,9 +28,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
       const response = await axios.get('http://localhost:5000/api/orders');
       console.log("API Response:", response.data);
       
-      // Map the response data to match the component's expected format
       const formattedOrders = response.data.map(order => {
-        // Handle customer name correctly
         let customerName = 'Unknown';
         if (order.customer && order.customer.first_name && order.customer.last_name) {
           customerName = `${order.customer.first_name} ${order.customer.last_name}`;
@@ -38,7 +36,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           customerName = order.customerName;
         }
         
-        // Handle date correctly
         let orderDate = 'N/A';
         if (order.orderDate || order.order_date) {
           const dateValue = order.orderDate || order.order_date;
@@ -48,10 +45,8 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           }
         }
         
-        // Format the total amount as a plain number without currency symbol
         const totalAmount = order.totalAmount || order.total_amount || 0;
         
-        // Handle customized field
         const customizedValue = order.customized || 'No';
         const customized = customizedValue.charAt(0).toUpperCase() + customizedValue.slice(1);
         
@@ -59,7 +54,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           id: order.order_id || order.id,
           customerName,
           orderDate,
-          totalAmount: `${totalAmount}`,  // Display as number only, without currency prefix
+          totalAmount: `${totalAmount}`,  
           customized,
           assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
           status: order.orderStatus || order.order_status || 'Processing'

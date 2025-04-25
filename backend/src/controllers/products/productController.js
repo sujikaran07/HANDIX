@@ -277,7 +277,7 @@ const getAllProductEntries = async (req, res) => {
         'status',
         'date_added',
       ],
-      order: [['date_added', 'DESC']], // Order by date_added in descending order
+      order: [['date_added', 'DESC']], 
     });
 
     console.log(`Total entries fetched: ${entries.length}`);

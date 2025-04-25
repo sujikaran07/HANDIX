@@ -141,7 +141,7 @@ const ManageProducts = ({ onViewProduct }) => {
             const refreshData = await refreshResponse.json();
             console.log('Token refreshed:', refreshData.token);
             localStorage.setItem('token', refreshData.token);
-            handleProductAction(productId, action); // Retry with new token
+            handleProductAction(productId, action); 
           } else {
             console.error('Failed to refresh token:', refreshResponse.statusText);
           }
@@ -158,14 +158,14 @@ const ManageProducts = ({ onViewProduct }) => {
         
         if (response.ok) {
           console.log('Product deleted successfully');
-          // Remove the deleted product from the list
+          
           setProducts(prevProducts => 
             prevProducts.filter(product => product.entry_id !== productId)
           );
         } else if (response.status === 401) {
-          // Handle token expiration similar to above
+          
           console.warn('Token expired. Attempting to refresh token...');
-          // ...similar token refresh logic as above...
+         
         } else {
           console.error('Failed to delete product:', response.statusText);
         }
@@ -305,13 +305,13 @@ const ManageProducts = ({ onViewProduct }) => {
             <tbody>
               {currentProducts.length > 0 ? (
                 currentProducts.map(product => (
-                  <tr key={product.entry_id}> {/* Use entry_id as unique key */}
-                    <td>{product.product_id}</td> {/* P-ID */}
-                    <td>{product.product_name}</td> {/* Product Name */}
-                    <td>{product.category?.category_name || 'N/A'}</td> {/* Category */}
-                    <td>{product.e_id || 'N/A'}</td> {/* E-ID */}
-                    <td>{product.unit_price}</td> {/* Price */}
-                    <td>{product.quantity}</td> {/* Quantity */}
+                  <tr key={product.entry_id}> 
+                    <td>{product.product_id}</td> 
+                    <td>{product.product_name}</td> 
+                    <td>{product.category?.category_name || 'N/A'}</td>
+                    <td>{product.e_id || 'N/A'}</td> 
+                    <td>{product.unit_price}</td> 
+                    <td>{product.quantity}</td> 
                     <td>{new Date(product.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td> {/* Uploaded Date */}
                     <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Status */}
                     <td className="action-buttons">

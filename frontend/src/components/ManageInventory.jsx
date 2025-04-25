@@ -57,7 +57,6 @@ const ManageInventory = ({ onViewInventory }) => {
             const refreshData = await refreshResponse.json();
             console.log('Token refreshed:', refreshData.token);
             localStorage.setItem('token', refreshData.token);
-            // Retry fetching inventory with new token
             fetchInventory();
           } else {
             setError('Session expired. Please login again.');

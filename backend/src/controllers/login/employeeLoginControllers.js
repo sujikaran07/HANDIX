@@ -9,7 +9,7 @@ dotenv.config();
 const authMiddleware = (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
-    console.log('Token received in request:', token); // Log the token
+    console.log('Token received in request:', token); 
 
     if (!token) {
       console.error('Authorization token is missing');
@@ -18,7 +18,7 @@ const authMiddleware = (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('Decoded token:', decoded); // Log decoded token
+      console.log('Decoded token:', decoded); 
       req.user = decoded;
       next();
     } catch (error) {
@@ -101,11 +101,6 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
-/**
- * Refreshes an expired authentication token
- * @param {Object} req - Request object containing the expired token
- * @param {Object} res - Response object
- */
 const refreshToken = async (req, res) => {
   try {
     const { token } = req.body;
@@ -114,10 +109,10 @@ const refreshToken = async (req, res) => {
       return res.status(400).json({ error: 'No token provided' });
     }
     
-    // Verify the expired token to extract user information
+    
     let decoded;
     try {
-      // Set ignoreExpiration to true to allow verification of expired tokens
+     
       const jwt = require('jsonwebtoken');
       const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
       decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
@@ -125,13 +120,13 @@ const refreshToken = async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
     
-    // Generate a new token with the same user data
+    
     const jwt = require('jsonwebtoken');
     const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
     const newToken = jwt.sign(
       { id: decoded.id, role: decoded.role },
       JWT_SECRET,
-      { expiresIn: '3h' }  // Set appropriate expiration time
+      { expiresIn: '3h' }  
     );
     
     res.status(200).json({ token: newToken });

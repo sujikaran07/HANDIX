@@ -23,15 +23,13 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     const fetchArtisans = async () => {
       try {
         setLoading(true);
-        
-        // Update API URL to point to the correct backend server
-        // Replace this URL with your actual backend URL
-        const BACKEND_URL = 'http://localhost:5000'; // or whichever port your backend uses
+       
+        const BACKEND_URL = 'http://localhost:5000'; 
         const response = await axios.get(`${BACKEND_URL}/api/orders/artisans-info`);
         
         console.log("API Response:", response.data);
         
-        // Ensure we're setting an array to the state
+      
         if (Array.isArray(response.data)) {
           setArtisans(response.data);
         } else {

@@ -335,7 +335,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                 <tbody>
                   {currentEntries.length > 0 ? (
                     currentEntries.map(entry => (
-                      <tr key={entry.entry_id}> {/* Use entry_id to ensure uniqueness */}
+                      <tr key={entry.entry_id}> 
                         <td>{entry.product_id}</td>
                         <td>{entry.product_name}</td>
                         <td>{entry.category?.category_name}</td>

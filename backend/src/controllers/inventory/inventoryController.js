@@ -21,13 +21,12 @@ const getInventory = async (req, res) => {
       attributes: ['product_id', 'product_name', 'quantity', 'unit_price', 'description', 'product_status', 'date_added'],
     });
     
-    // Transform the data to match the expected format in the frontend
+    
     const formattedInventory = inventory.map(item => {
       const entry = item.inventoryEntries && item.inventoryEntries[0];
       return {
         ...item.toJSON(),
         category: entry ? entry.category : null,
-        // Remove the nested inventoryEntries to clean up the response
         inventoryEntries: undefined
       };
     });

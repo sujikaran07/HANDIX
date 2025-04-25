@@ -8,8 +8,8 @@ const { authMiddleware } = require('../../controllers/login/employeeLoginControl
 
 const router = express.Router();
 
-router.get('/', authMiddleware, getAllAdminProducts); // Fetch all products for admin
-router.put('/:id/status', authMiddleware, updateAdminProductStatus); // Update product status
-router.delete('/:id', authMiddleware, deleteAdminProduct); // Delete a product
+router.get('/', authMiddleware, getAllAdminProducts); 
+router.put('/:id/status', authMiddleware, updateAdminProductStatus); 
+router.delete('/:id', authMiddleware, deleteAdminProduct); 
 
 module.exports = router;
