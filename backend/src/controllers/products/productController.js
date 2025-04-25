@@ -60,18 +60,22 @@ const getProductById = async (req, res) => {
 const createProduct = async (req, res) => {
   try {
     console.log('req.user:', req.user); 
+    console.log('Full request body:', req.body);
 
-    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = req.body;
+    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, images, ...rest } = req.body;
     const e_id = req.body.e_id || req.user?.id;
 
     console.log('e_id retrieved from token or body:', e_id); 
+    console.log('Images received:', images);
+    
+    const isCustomizationAvailable = customization_available === 'Yes' ? true : false;
+    console.log('Customization available:', isCustomizationAvailable);
 
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
     if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
 
     let category_id = null;
-
     
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
@@ -82,7 +86,6 @@ const createProduct = async (req, res) => {
       await categoryRecord.save();
     }
 
-  
     let inventoryRecord = await Inventory.findByPk(product_id);
     if (!inventoryRecord) {
       inventoryRecord = await Inventory.create({
@@ -93,42 +96,56 @@ const createProduct = async (req, res) => {
         quantity: Number(quantity),
         category_id,
         e_id,
+        customization_available: isCustomizationAvailable, // Add this line to ensure boolean value is saved
       });
       console.log('Inventory created with product_id:', product_id); 
     } else {
+      // Update inventory record with the latest customization setting if it's different
+      if (inventoryRecord.customization_available !== isCustomizationAvailable) {
+        inventoryRecord.customization_available = isCustomizationAvailable;
+        console.log(`Updated customization_available to ${isCustomizationAvailable} in inventory`);
+      }
+      
       inventoryRecord.quantity = Number(inventoryRecord.quantity) + Number(quantity);
       await inventoryRecord.save();
     }
 
-    
+    // Handle product variation with better error handling for duplicates
     const normalizedSize = size || "N/A";
     let variation_id = null;
+    
+    // First check if this product variation already exists
+    let existingVariation = await ProductVariation.findOne({
+      where: { 
+        product_id, 
+        size: normalizedSize 
+      }
+    });
 
-    const variation = await ProductVariation.findOrCreate({
-      where: { product_id, size: normalizedSize, additional_price },
-      defaults: {
+    if (existingVariation) {
+      console.log('Found existing variation:', existingVariation.variation_id);
+      // Update the existing variation
+      existingVariation.additional_price = additional_price || existingVariation.additional_price;
+      existingVariation.stock_level += Number(quantity);
+      await existingVariation.save();
+      variation_id = existingVariation.variation_id;
+      console.log('Updated existing variation, new stock level:', existingVariation.stock_level);
+    } else {
+      // Create a new variation if none exists
+      const newVariation = await ProductVariation.create({
         product_id,
         size: normalizedSize,
         additional_price: additional_price || 0,
-        stock_level: Number(quantity),
-      },
-    });
-
-    if (variation[1]) {
-      console.log('New variation created:', variation[0]); 
-    } else {
-      console.log('Existing variation found:', variation[0]); 
-      variation[0].stock_level += Number(quantity);
-      await variation[0].save();
+        stock_level: Number(quantity)
+      });
+      variation_id = newVariation.variation_id;
+      console.log('Created new variation with ID:', variation_id);
     }
-
-    variation_id = variation[0].variation_id; 
 
     if (!variation_id) {
       return res.status(400).json({ error: 'Failed to create or retrieve variation_id' });
     }
 
-    
     const productPayload = {
       product_id,
       product_name,
@@ -138,7 +155,8 @@ const createProduct = async (req, res) => {
       status: status || 'pending',
       e_id, 
       category_id,
-      variation_id, 
+      variation_id,
+      customization_available: isCustomizationAvailable,
       ...rest,
     };
 
@@ -146,10 +164,39 @@ const createProduct = async (req, res) => {
 
     const productEntry = await ProductEntry.create(productPayload);
 
+    // Save product images if provided
+    if (images && Array.isArray(images) && images.length > 0) {
+      console.log(`Trying to save ${images.length} images for product ${product_id}`);
+      
+      const imagePromises = images.map(imageUrl => {
+        console.log(`Saving image URL: ${imageUrl}`);
+        return ProductImage.create({
+          product_id: product_id,
+          image_url: imageUrl,
+          entry_id: productEntry.entry_id
+        });
+      });
+      
+      const savedImages = await Promise.all(imagePromises);
+      console.log(`Successfully saved ${savedImages.length} images for product ${product_id}`);
+    } else {
+      console.log('No images provided for this product');
+    }
+
     res.status(201).json({ message: 'Product entry created successfully', productEntry });
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(500).json({ error: 'Failed to create product entry' });
+    
+    // Provide more specific error messages based on the error type
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors[0]?.path;
+      res.status(400).json({ 
+        error: 'Duplicate entry error', 
+        details: `A product with this ${field} already exists.` 
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to create product entry' });
+    }
   }
 };
 

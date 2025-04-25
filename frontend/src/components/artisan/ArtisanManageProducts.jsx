@@ -341,7 +341,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                         <td>{entry.category?.category_name}</td>
                         <td>{entry.unit_price}</td>
                         <td>{entry.quantity}</td>
-                        <td>{new Date(entry.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td> {/* Updated to show date and time */}
+                        <td>{new Date(entry.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
                         <td className={`status ${entry.status.toLowerCase()}`}>{entry.status}</td>
                         <td className="action-buttons">
                           <div className="dropdown">

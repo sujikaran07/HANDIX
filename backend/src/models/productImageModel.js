@@ -2,7 +2,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
 
 const ProductImage = sequelize.define('ProductImage', {
-  image_id: {
+  product_image_id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
@@ -11,14 +11,23 @@ const ProductImage = sequelize.define('ProductImage', {
     type: DataTypes.STRING(10),
     allowNull: false,
     references: {
-      model: 'ProductEntries', 
+      model: 'Inventory', 
       key: 'product_id',
     },
-    onDelete: 'CASCADE',
+    onDelete: 'NO ACTION',
   },
   image_url: {
     type: DataTypes.STRING(255),
     allowNull: false,
+  },
+  entry_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'ProductEntries',
+      key: 'entry_id',
+    },
+    onDelete: 'CASCADE',
   },
 }, {
   tableName: 'ProductImages',
@@ -28,7 +37,10 @@ const ProductImage = sequelize.define('ProductImage', {
 
 ProductImage.associate = (models) => {
   if (models.ProductEntry) {
-    ProductImage.belongsTo(models.ProductEntry, { foreignKey: 'entry_id', as: 'productEntryImage' }); 
+    ProductImage.belongsTo(models.ProductEntry, { foreignKey: 'entry_id', as: 'productEntry' }); 
+  }
+  if (models.Inventory) {
+    ProductImage.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'product' });
   }
 };
 
