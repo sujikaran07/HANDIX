@@ -20,6 +20,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   const [errors, setErrors] = useState({});
   const [suggestions, setSuggestions] = useState([]);
   const [showAdditionalPrice, setShowAdditionalPrice] = useState(false); 
+  const [isLoading, setIsLoading] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
 
   const fetchProductSuggestions = async (name) => {
     try {
@@ -29,7 +31,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/suggestions?search=${name}`, { 
+      const response = await fetch(`http://localhost:5000/api/products/inventory-suggestions?search=${name}`, { 
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +39,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product suggestions:', data); 
+        console.log('Fetched inventory product suggestions:', data); 
         setSuggestions(data.products || []);
       } else {
         console.error('Failed to fetch product suggestions:', response.statusText);
@@ -55,37 +57,122 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
 
+      setIsLoading(true);
+      setFeedbackMessage(null);
       console.log('Fetching product details for ID:', productId);
       
-      const response = await fetch(`http://localhost:5000/api/inventory/${productId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, 
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const originalQuantity = formData.quantity;
+      setImages([]);
+      setExistingImageUrls([]);
+      
+      let productData = null;
+      let fetchSuccess = false;
+      
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`, 
+          },
+        });
         
-        setFormData((prevProduct) => ({
-          ...prevProduct,
-          product_id: data.product_id,
-          product_name: data.product_name,
-          description: data.description,
-          category: data.category?.category_name || '',
-          price: data.unit_price,
-          quantity: originalQuantity, 
-          product_status: data.product_status,
-          customization_available: data.customization_available ? 'Yes' : 'No',
-          size: data.size || 'N/A',
-          additional_price: data.additional_price || ''
-        }));
-        
-        console.log('Populated form data from existing product');
-      } else {
-        console.error('Failed to fetch product details:', response.statusText);
+        if (response.ok) {
+          productData = await response.json();
+          fetchSuccess = true;
+          console.log('Successfully fetched from products endpoint:', productData);
+          
+          if (productData.entryImages && productData.entryImages.length > 0) {
+            const productImages = productData.entryImages.map(img => img.image_url);
+            console.log('Found images in product data:', productImages);
+            setImages(productImages);
+            setExistingImageUrls(productImages); 
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching from products endpoint:', error);
       }
+      
+      if (!fetchSuccess) {
+        try {
+          const response = await fetch(`http://localhost:5000/api/inventory/${productId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`, 
+            },
+          });
+          
+          if (response.ok) {
+            productData = await response.json();
+            fetchSuccess = true;
+            console.log('Successfully fetched from inventory endpoint:', productData);
+          }
+        } catch (error) {
+          console.error('Error fetching from inventory endpoint:', error);
+        }
+      }
+   
+      if (!fetchSuccess) {
+        setIsLoading(false);
+        setFeedbackMessage({ type: 'error', message: 'Product not found with this ID' });
+        return;
+      }
+      
+      
+      console.log('Explicitly fetching images for product ID:', productId);
+      try {
+        const imagesResponse = await fetch(`http://localhost:5000/api/products/${productId}/images`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        
+        if (imagesResponse.ok) {
+          const imagesData = await imagesResponse.json();
+          console.log('Images API response:', imagesData);
+          
+          if (imagesData.images && imagesData.images.length > 0) {
+            const productImages = imagesData.images.map(img => img.image_url);
+            console.log('Successfully fetched', productImages.length, 'product images');
+            setImages(productImages);
+            setExistingImageUrls(productImages); 
+          } else {
+            console.log('No images found for product ID:', productId);
+          }
+        } else {
+          console.error('Failed to fetch images. Status:', imagesResponse.status);
+        }
+      } catch (imageError) {
+        console.error('Error fetching product images:', imageError);
+      }
+      
+      const originalQuantity = formData.quantity;
+      
+      setFormData((prevProduct) => ({
+        ...prevProduct,
+        product_id: productData.product_id,
+        product_name: productData.product_name || productData.inventory?.product_name || '',
+        description: productData.description || productData.inventory?.description || '',
+        category: productData.category?.category_name || '',
+        price: productData.unit_price || '',
+        quantity: originalQuantity, 
+        product_status: productData.product_status || 'In Stock',
+        customization_available: productData.customization_available ? 'Yes' : 'No',
+        size: (productData.variations && productData.variations.length > 0) ? 
+          productData.variations[0].size : 
+          (productData.size || 'N/A'),
+        additional_price: (productData.variations && productData.variations.length > 0) ? 
+          productData.variations[0].additional_price : 
+          (productData.additional_price || '')
+      }));
+      
+      setFeedbackMessage({ 
+        type: 'success', 
+        message: `Product "${productData.product_name}" details loaded successfully!` 
+      });
+      console.log('Populated form data from existing product');
+      
+      setIsLoading(false);
     } catch (error) {
+      setIsLoading(false);
       console.error('Error fetching product details:', error);
+      setFeedbackMessage({ type: 'error', message: 'Error fetching product details' });
     }
   };
 
@@ -98,6 +185,10 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
 
+      setIsLoading(true);
+      setImages([]);
+      setExistingImageUrls([]);
+
       const response = await fetch(`http://localhost:5000/api/products/by-name?name=${name}`, { 
         headers: {
           Authorization: `Bearer ${token}`,
@@ -106,7 +197,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product details by name:', data); 
+        console.log('Fetched product details by name:', data);
+
         setFormData((prevProduct) => ({
           ...prevProduct,
           product_id: data.product_id,
@@ -116,12 +208,60 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           price: data.unit_price,
           customization_available: data.customization_available ? 'Yes' : 'No',
           product_status: data.product_status,
+          size: (data.variations && data.variations.length > 0) ? 
+            data.variations[0].size : 
+            (data.size || 'N/A'),
+          additional_price: (data.variations && data.variations.length > 0) ? 
+            data.variations[0].additional_price : 
+            (data.additional_price || '')
         }));
+        
+        if (data.product_id) {
+          try {
+            console.log('Fetching images for product ID:', data.product_id);
+            const imagesResponse = await fetch(`http://localhost:5000/api/products/${data.product_id}/images`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+            
+            if (imagesResponse.ok) {
+              const imagesData = await imagesResponse.json();
+              console.log('Images API response:', imagesData);
+              
+              if (imagesData.images && imagesData.images.length > 0) {
+                const productImages = imagesData.images.map(img => img.image_url);
+                console.log('Successfully fetched', productImages.length, 'product images');
+                setImages(productImages);
+                setExistingImageUrls(productImages);
+              } else {
+                console.log('No images found for product ID:', data.product_id);
+              }
+            }
+          } catch (imageError) {
+            console.error('Error fetching product images:', imageError);
+          }
+        }
+        
+        setFeedbackMessage({ 
+          type: 'success', 
+          message: `Product "${data.product_name}" details loaded successfully!` 
+        });
       } else {
         console.error('Failed to fetch product details by name:', response.statusText);
+        setFeedbackMessage({ 
+          type: 'error', 
+          message: 'Failed to fetch product details' 
+        });
       }
+      setIsLoading(false);
     } catch (error) {
       console.error('Error fetching product details by name:', error);
+      setFeedbackMessage({ 
+        type: 'error', 
+        message: 'Error fetching product details' 
+      });
+      setIsLoading(false);
     }
   };
 
@@ -192,13 +332,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   };
 
   const [images, setImages] = useState([]);
-
+  const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]); 
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const newImageUrls = files.map(file => URL.createObjectURL(file));
+    console.log("New images to upload:", newImageUrls);
     setImages(prevImages => [...prevImages, ...newImageUrls]);
-    
-    console.log("Images to upload:", newImageUrls);
+    setImageFiles(prevFiles => [...prevFiles, ...files]); 
   };
 
   const handleAdditionalPriceToggle = () => {
@@ -235,19 +376,26 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const productData = {
-        ...formData,
-        e_id: loggedInEmployeeId, 
-        size: formData.category === 'Clothing' && formData.size !== 'N/A' ? formData.size : null, 
-        price: parseFloat(formData.price),
-        additional_price: formData.customization_available === 'Yes' ? parseFloat(formData.additional_price || 0) : 0, 
-        customization_available: formData.customization_available, 
-        status: 'pending',
-        images: images
-      };
-
-      console.log('Submitting product with e_id:', loggedInEmployeeId); 
-      onSave(productData);
+      const formDataObj = new FormData();
+    
+      Object.keys(formData).forEach(key => {
+        formDataObj.append(key, formData[key]);
+      });
+   
+      formDataObj.append('e_id', loggedInEmployeeId);
+      formDataObj.append('price', parseFloat(formData.price));
+      formDataObj.append('hasExistingImages', existingImageUrls.length > 0);
+  
+      imageFiles.forEach((file, index) => {
+        if (!existingImageUrls.includes(images[index])) {
+          formDataObj.append('productImages', file);
+        }
+      });
+      
+      console.log('Submitting product with e_id:', loggedInEmployeeId);
+      console.log('New images to upload:', imageFiles.length - existingImageUrls.length);
+   
+      onSave(formDataObj);
     }
   };
 
@@ -266,10 +414,18 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     <div className="container mt-4 d-flex flex-column" style={{ height: '100vh' }}>
       <div className="card p-4 mb-3 flex-grow-1" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
         <h4 className="mb-4">Add New Product</h4>
+        
         <form onSubmit={handleSubmit} className="d-flex flex-column h-100">
           <div className="row mb-3">
             <div className="col-md-4">
-              <label className="form-label">Product ID<span className="text-danger">*</span></label>
+              <label className="form-label">
+                Product ID<span className="text-danger">*</span>
+                {isLoading && (
+                  <span className="ms-2">
+                    <span className="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-control"
@@ -283,14 +439,56 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
             <div className="col-md-4">
               <label className="form-label">Product Name<span className="text-danger">*</span></label>
-              <input
-                type="text"
-                className="form-control"
-                name="product_name"
-                value={formData.product_name}
-                onChange={handleChange}
-                required
-              />
+              <div className="position-relative">
+                <input
+                  type="text"
+                  className="form-control"
+                  name="product_name"
+                  value={formData.product_name}
+                  onChange={handleNameChange}
+                  placeholder="Enter product name"
+                  required
+                />
+            
+                {suggestions.length > 0 && (
+                  <span className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
+                    <i className="fas fa-caret-down text-secondary"></i>
+                  </span>
+                )}
+                
+                {suggestions.length > 0 && (
+                  <div 
+                    className="position-absolute w-100 border rounded mt-1 bg-white shadow-sm"
+                    style={{ 
+                      zIndex: 1000, 
+                      maxHeight: '200px', 
+                      overflowY: 'auto',
+                      left: 0
+                    }}
+                  >
+                    {suggestions.map((product, index) => (
+                      <div
+                        key={index}
+                        className="py-2 px-3 border-bottom"
+                        style={{ 
+                          cursor: 'pointer', 
+                          backgroundColor: 'white', 
+                          transition: 'background-color 0.2s'
+                        }}
+                        onClick={() => {
+                          setFormData(prev => ({...prev, product_name: product.product_name}));
+                          fetchProductDetailsByName(product.product_name);
+                          setSuggestions([]);
+                        }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                      >
+                        {product.product_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               {errors.product_name && <div className="text-danger small">{errors.product_name}</div>}
             </div>
             <div className="col-md-4">
@@ -385,7 +583,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 className="form-control" 
                 multiple 
                 onChange={handleImageUpload} 
-                required
+                required={images.length === 0}
               />
               {errors.images && <div className="text-danger small">{errors.images}</div>}
               {images.length > 0 && (

@@ -98,13 +98,14 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleViewProduct = async (product) => {
     try {
+      console.log("Viewing product:", product);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/${product.entry_id}`, {
+      const response = await fetch(`http://localhost:5000/api/products/${product.product_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -112,25 +113,51 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        setSelectedProduct(data); 
+        console.log("Product data fetched:", data);
+        
+        try {
+          const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (imagesResponse.ok) {
+            const imagesData = await imagesResponse.json();
+            console.log("Images data fetched:", imagesData);
+
+            if (imagesData.images && imagesData.images.length > 0) {
+              data.entryImages = imagesData.images;
+            }
+          } else {
+            console.error("Failed to fetch images:", imagesResponse.statusText);
+          }
+        } catch (imageError) {
+          console.error("Error fetching images:", imageError);
+        }
+        
+        setSelectedProduct(data);
         setViewMode('view');
       } else {
         console.error('Failed to fetch product details:', response.statusText);
+        alert("Failed to load product details. Please try again.");
       }
     } catch (error) {
       console.error('Error fetching product details:', error);
+      alert("An error occurred while fetching product details.");
     }
   };
 
   const handleEditProduct = async (product) => {
     try {
+      console.log("Editing product:", product.entry_id);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/${product.entry_id}`, {
+      const response = await fetch(`http://localhost:5000/api/products/${product.product_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -138,13 +165,16 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Product data fetched for editing:", data);
         setSelectedProduct(data); 
         setViewMode('edit');
       } else {
         console.error('Failed to fetch product details:', response.statusText);
+        alert("Failed to load product details for editing. Please try again.");
       }
     } catch (error) {
       console.error('Error fetching product details:', error);
+      alert("An error occurred while fetching product details for editing.");
     }
   };
 
@@ -172,9 +202,9 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           return;
         }
 
-        console.log('Sending delete request for product ID:', productToDelete.product_id); 
+        console.log('Sending delete request for entry ID:', productToDelete.entry_id); 
 
-        const response = await fetch(`http://localhost:5000/api/products/${productToDelete.product_id}`, {
+        const response = await fetch(`http://localhost:5000/api/products/${productToDelete.entry_id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -184,15 +214,17 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         if (response.ok) {
           console.log('Product deleted successfully');
           setEntries((prevEntries) =>
-            prevEntries.filter((entry) => entry.product_id !== productToDelete.product_id)
+            prevEntries.filter((entry) => entry.entry_id !== productToDelete.entry_id)
           );
           setShowDeleteModal(false);
           setProductToDelete(null);
         } else {
-          console.error('Failed to delete product:', response.statusText); 
+          console.error('Failed to delete product:', response.statusText);
+          alert('Failed to delete product. Please try again.');
         }
       } catch (error) {
-        console.error('Error deleting product:', error); 
+        console.error('Error deleting product:', error);
+        alert('An error occurred while trying to delete the product.');
       }
     }
   };
@@ -343,19 +375,58 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                         <td className={`status ${entry.status.toLowerCase()}`}>{entry.status}</td>
                         <td className="action-buttons">
                           <div className="dropdown">
-                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button 
+                              className="btn dropdown-toggle" 
+                              type="button"
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false"
+                              onClick={(e) => {
+                                const dropdownEl = e.currentTarget.nextElementSibling;
+                                if (window.bootstrap && window.bootstrap.Dropdown) {
+                                  const dropdown = new window.bootstrap.Dropdown(e.currentTarget);
+                                  dropdown.toggle();
+                                }
+                              }}
+                            >
                               Actions
                             </button>
-                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <ul className="dropdown-menu">
                               <li>
-                                <button className="dropdown-item" onClick={() => handleViewProduct(entry)}>View</button>
+                                <button 
+                                  className="dropdown-item" 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewProduct(entry);
+                                  }}
+                                >
+                                  View
+                                </button>
                               </li>
                               <li>
-                                <button className="dropdown-item" onClick={() => handleEditProduct(entry)}>Edit</button>
+                                <button 
+                                  className="dropdown-item" 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditProduct(entry);
+                                  }}
+                                >
+                                  Edit
+                                </button>
                               </li>
                               {entry.status !== 'Approved' && (
                                 <li>
-                                  <button className="dropdown-item" onClick={() => confirmDelete(entry)}>Delete</button>
+                                  <button 
+                                    className="dropdown-item" 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      confirmDelete(entry);
+                                    }}
+                                  >
+                                    Delete
+                                  </button>
                                 </li>
                               )}
                             </ul>

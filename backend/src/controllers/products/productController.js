@@ -18,7 +18,7 @@ const getAllProducts = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
-        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, // Correct alias used here
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, 
         { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
       ],
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
@@ -37,12 +37,14 @@ const getAllProducts = async (req, res) => {
 
 const getProductById = async (req, res) => {
   try {
-    const product = await ProductEntry.findByPk(req.params.id, {
+    const product = await ProductEntry.findOne({
+      where: { 
+        product_id: req.params.id 
+      },
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
-        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, // Correct alias used here
-        { model: ProductVariation, as: 'variation', attributes: ['size', 'additional_price', 'stock_level'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }
       ],
     });
 
@@ -50,19 +52,57 @@ const getProductById = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.status(200).json(product);
+    let variations = [];
+    try {
+      variations = await ProductVariation.findAll({
+        where: { product_id: product.product_id },
+        attributes: ['size', 'additional_price', 'stock_level']
+      });
+    } catch (variationError) {
+      console.error('Error fetching variations:', variationError);
+    }
+
+    const productWithVariations = product.toJSON();
+    productWithVariations.variations = variations;
+
+    res.status(200).json(productWithVariations);
   } catch (error) {
     console.error('Error fetching product:', error); 
-    res.status(500).json({ error: 'Failed to fetch product' });
+    res.status(500).json({ error: 'Failed to fetch product', details: error.message });
   }
 };
 
 const createProduct = async (req, res) => {
   try {
-    console.log('req.user:', req.user); 
-    console.log('Full request body:', req.body);
+    console.log('req.user:', req.user);
+    
+    let productData;
+    let images = [];
+    
+    if (req.files && req.files.productImages) {
 
-    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, images, ...rest } = req.body;
+      productData = req.body;
+
+      const uploadedFiles = Array.isArray(req.files.productImages) 
+        ? req.files.productImages 
+        : [req.files.productImages];
+      
+      
+      images = await Promise.all(uploadedFiles.map(async (file) => {
+        const filename = `${Date.now()}-${file.name}`;
+        const filePath = `/uploads/${filename}`;
+
+        await file.mv(`./public${filePath}`);
+
+        return `http://localhost:5000${filePath}`;
+      }));
+    } else {
+
+      productData = req.body;
+      images = productData.images || [];
+    } 
+    
+    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = productData;
     const e_id = req.body.e_id || req.user?.id;
 
     console.log('e_id retrieved from token or body:', e_id); 
@@ -160,11 +200,10 @@ const createProduct = async (req, res) => {
 
     const productEntry = await ProductEntry.create(productPayload);
 
-    if (images && Array.isArray(images) && images.length > 0) {
-      console.log(`Trying to save ${images.length} images for product ${product_id}`);
+    if (images.length > 0) {
+      console.log(`Saving ${images.length} images for product ${product_id}`);
       
       const imagePromises = images.map(imageUrl => {
-        console.log(`Saving image URL: ${imageUrl}`);
         return ProductImage.create({
           product_id: product_id,
           image_url: imageUrl,
@@ -172,8 +211,9 @@ const createProduct = async (req, res) => {
         });
       });
       
-      const savedImages = await Promise.all(imagePromises);
-      console.log(`Successfully saved ${savedImages.length} images for product ${product_id}`);
+      await Promise.all(imagePromises);
+    } else if (hasExistingImages) {
+      console.log('Product already has images in the database - not adding new images');
     } else {
       console.log('No images provided for this product');
     }
@@ -262,6 +302,31 @@ const getProductSuggestions = async (req, res) => {
   }
 };
 
+const getInventorySuggestions = async (req, res) => {
+  try {
+    const { search } = req.query;
+
+    if (!search) {
+      return res.status(200).json({ products: [] });
+    }
+
+    const products = await Inventory.findAll({
+      where: {
+        product_name: {
+          [Op.iLike]: `%${search}%`,
+        },
+      },
+      attributes: ['product_id', 'product_name'],
+      limit: 10
+    });
+
+    res.status(200).json({ products });
+  } catch (error) {
+    console.error('Error fetching inventory suggestions:', error); 
+    res.status(500).json({ error: 'Failed to fetch inventory suggestions' });
+  }
+};
+
 const generateNewProductId = async (req, res) => {
   try {
     const lastProduct = await ProductEntry.findOne({
@@ -346,6 +411,7 @@ const getProductByName = async (req, res) => {
       },
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }
       ],
       attributes: ['product_id', 'product_name', 'description', 'unit_price', 'category_id', 'customization_available', 'product_status', 'status'],
     });
@@ -354,7 +420,20 @@ const getProductByName = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    res.status(200).json(product);
+    let variations = [];
+    try {
+      variations = await ProductVariation.findAll({
+        where: { product_id: product.product_id },
+        attributes: ['size', 'additional_price', 'stock_level']
+      });
+    } catch (variationError) {
+      console.error('Error fetching variations:', variationError);
+    }
+
+    const productWithVariations = product.toJSON();
+    productWithVariations.variations = variations;
+
+    res.status(200).json(productWithVariations);
   } catch (error) {
     console.error('Error fetching product by name:', error); 
     res.status(500).json({ error: 'Failed to fetch product by name' });
@@ -371,4 +450,5 @@ module.exports = {
   getAllProductEntries,
   getProductByName,
   getProductSuggestions,
+  getInventorySuggestions, 
 };
