@@ -75,6 +75,7 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
     const ProductImage = require('../../models/productImageModel');
     const ProductVariation = require('../../models/productVariationModel');
     
+    // Get the entry without trying to associate with variation
     const entry = await ProductEntry.findByPk(entryId, {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
@@ -87,18 +88,31 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
     
+    // Fetch the specific variation for this entry
+    let entryVariation = null;
+    if (entry.variation_id) {
+      try {
+        entryVariation = await ProductVariation.findByPk(entry.variation_id);
+        console.log(`Found specific variation for entry: ${entry.variation_id}`);
+      } catch (err) {
+        console.error(`Error fetching specific variation for entry: ${err.message}`);
+      }
+    }
+    
+    // Also get all variations for this product
     let variations = [];
     try {
       variations = await ProductVariation.findAll({
         where: { product_id: entry.product_id },
-        attributes: ['size', 'additional_price', 'stock_level']
+        attributes: ['variation_id', 'size', 'additional_price', 'stock_level']
       });
     } catch (variationError) {
       console.error('Error fetching variations:', variationError);
     }
     
     const entryWithVariations = entry.toJSON();
-    entryWithVariations.variations = variations;
+    entryWithVariations.entryVariation = entryVariation; // Add the specific variation
+    entryWithVariations.variations = variations;         // Keep all variations
     
     res.status(200).json(entryWithVariations);
   } catch (error) {

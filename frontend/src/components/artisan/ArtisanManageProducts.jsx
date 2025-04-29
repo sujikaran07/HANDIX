@@ -225,13 +225,16 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         product_name: updatedProduct.product_name,
         description: updatedProduct.description,
         category: updatedProduct.category,
-        unit_price: updatedProduct.unit_price,
+        unit_price: updatedProduct.price || updatedProduct.unit_price, // Handle both price formats
         quantity: updatedProduct.quantity,
         product_status: updatedProduct.product_status,
-        customization_available: updatedProduct.customization_available,
-        size: updatedProduct.size,
-        additional_price: updatedProduct.additional_price
+        customization_available: updatedProduct.customization_available === 'Yes',
+        size: updatedProduct.size, // Make sure size is included
+        additional_price: updatedProduct.additional_price,
+        variation_id: updatedProduct.variation_id // Include the variation ID
       };
+      
+      console.log("Formatted product data for API:", productData);
       
       const response = await fetch(`http://localhost:5000/api/products/${updatedProduct.entry_id}`, {
         method: 'PUT',

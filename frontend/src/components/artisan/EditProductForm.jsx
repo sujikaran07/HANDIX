@@ -9,7 +9,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
     category: '',
     price: '',
     quantity: '',
-    size: 'N/A',
     additional_price: '',
     customization_available: 'No',
     product_status: 'In Stock',
@@ -19,6 +18,10 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const [images, setImages] = useState([]);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [hasMultipleEntries, setHasMultipleEntries] = useState(false);
+  const [selectedSize, setSelectedSize] = useState(
+    product.entryVariation ? product.entryVariation.size : 
+    (product.variations && product.variations.length > 0 ? product.variations[0].size : 'N/A')
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,8 +33,8 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
         category: product.category?.category_name || '',
         price: product.unit_price || '',
         quantity: product.quantity || '',
-        size: product.variations && product.variations.length > 0 ? product.variations[0].size : 'N/A',
-        additional_price: product.variations && product.variations.length > 0 ? product.variations[0].additional_price : '',
+        additional_price: product.variations && product.variations.length > 0 
+          ? product.variations[0].additional_price : '',
         customization_available: product.customization_available ? 'Yes' : 'No',
         product_status: product.product_status || 'In Stock',
       });
@@ -100,78 +103,27 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        setIsLoading(true);
-        
-        let updatedProductData;
-        
-        if (hasMultipleEntries) {
-          // For multiple entries with clothing category
-          if (formData.category === 'Clothing') {
-            updatedProductData = {
-              product_id: formData.product_id,
-              entry_id: product.entry_id,
-              quantity: parseInt(formData.quantity, 10),
-              product_status: formData.product_status,
-              size: formData.size, // Allow size to be updated for clothing
-              // Keep original values for non-editable fields
-              product_name: product.product_name,
-              description: product.description,
-              category: product.category?.category_name,
-              unit_price: product.unit_price,
-              additional_price: product.variations && product.variations.length > 0 
-                ? product.variations[0].additional_price : 0,
-              customization_available: product.customization_available
-            };
-          } else {
-            // For multiple entries with non-clothing category (only quantity and status)
-            updatedProductData = {
-              product_id: formData.product_id,
-              entry_id: product.entry_id,
-              quantity: parseInt(formData.quantity, 10),
-              product_status: formData.product_status,
-              // Keep original values for non-editable fields
-              product_name: product.product_name,
-              description: product.description,
-              category: product.category?.category_name,
-              unit_price: product.unit_price,
-              size: product.variations && product.variations.length > 0 ? product.variations[0].size : 'N/A',
-              additional_price: product.variations && product.variations.length > 0 
-                ? product.variations[0].additional_price : 0,
-              customization_available: product.customization_available
-            };
-          }
-        } else {
-          // For single entry, all fields can be updated
-          updatedProductData = {
-            product_id: formData.product_id,
-            entry_id: product.entry_id,
-            product_name: formData.product_name,
-            description: formData.description,
-            category: formData.category,
-            unit_price: parseFloat(formData.price),
-            quantity: parseInt(formData.quantity, 10),
-            size: formData.size,
-            additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
-            customization_available: formData.customization_available === 'Yes',
-            product_status: formData.product_status
-          };
-        }
-        
-        console.log("Submitting updated product:", updatedProductData);
-        
-        // Pass the updated data to parent component's onSave function
-        onSave(updatedProductData);
-      } catch (error) {
-        console.error("Error preparing product update:", error);
-        alert("Failed to update product. Please try again.");
-      } finally {
-        setIsLoading(false);
+    
+    // Find the variation ID that corresponds to the selected size
+    let variation_id = null;
+    
+    if (product.variations && selectedSize) {
+      const matchingVariation = product.variations.find(v => v.size === selectedSize);
+      if (matchingVariation) {
+        variation_id = matchingVariation.variation_id;
+        console.log(`Found matching variation ID ${variation_id} for size ${selectedSize}`);
       }
     }
+    
+    // Include variation_id in the data to be submitted
+    onSave({
+      ...formData,
+      entry_id: product.entry_id,
+      size: selectedSize, // Make sure to pass the selected size
+      variation_id: variation_id // Pass the variation ID that matches the selected size
+    });
   };
 
   return (
@@ -286,25 +238,45 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
         <div className="row mb-3">
           <div className="col-md-4">
             <label className="form-label">
-              Size {formData.category === 'Clothing' && <span className="text-danger">*</span>}
-              {hasMultipleEntries && formData.category === 'Clothing' && <small className="ms-2 text-info">(Editable)</small>}
+              Size
             </label>
             <select
               className="form-select"
               name="size"
-              value={formData.size}
-              onChange={handleChange}
-              // Only enable if it's Clothing category (regardless of multiple entries) 
-              // OR if it's single entry
-              disabled={formData.category !== 'Clothing' || (hasMultipleEntries && formData.category !== 'Clothing')}
-              required={formData.category === 'Clothing'}
+              value={selectedSize}
+              onChange={(e) => {
+                setSelectedSize(e.target.value);
+                // Also update your form data
+                handleChange({
+                  target: {
+                    name: 'size',
+                    value: e.target.value
+                  }
+                });
+              }}
             >
-              <option value="N/A">Select Size</option>
+              <option value="N/A">N/A</option>
               <option value="XS">XS</option>
               <option value="S">S</option>
               <option value="M">M</option>
               <option value="L">L</option>
               <option value="XL">XL</option>
+              {/* Also include existing variations from the product */}
+              {product.variations?.map(variation => {
+                // Only add the variation if it's not already in the standard sizes
+                const standardSizes = ["N/A", "XS", "S", "M", "L", "XL", "XXL"];
+                if (!standardSizes.includes(variation.size)) {
+                  return (
+                    <option 
+                      key={variation.variation_id || variation.size} 
+                      value={variation.size}
+                    >
+                      {variation.size}
+                    </option>
+                  );
+                }
+                return null;
+              })}
             </select>
           </div>
           <div className="col-md-4">

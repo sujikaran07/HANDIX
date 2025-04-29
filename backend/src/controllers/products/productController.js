@@ -216,7 +216,39 @@ const updateProduct = async (req, res) => {
     const originalSize = productEntry.size || 'N/A';
     const newSize = updatedData.size || 'N/A';
     
-    // 2. Update the product entry
+    // 2. Find or create the new variation if size changed
+    let newVariation = null;
+    if (originalSize !== newSize) {
+      console.log(`Size is changing from ${originalSize} to ${newSize}`);
+      
+      // Check if variation for the new size already exists
+      newVariation = await ProductVariation.findOne({
+        where: { 
+          product_id: productEntry.product_id,
+          size: newSize
+        }
+      });
+      
+      // If no existing variation for this size, create a new one
+      if (!newVariation) {
+        newVariation = await ProductVariation.create({
+          product_id: productEntry.product_id,
+          size: newSize,
+          additional_price: updatedData.additional_price || 0,
+          stock_level: updatedData.quantity
+        });
+        console.log(`Created new variation with ID ${newVariation.variation_id} for size ${newSize}`);
+      } else {
+        // Update existing variation's stock
+        await newVariation.update({
+          additional_price: updatedData.additional_price || newVariation.additional_price,
+          stock_level: newVariation.stock_level + updatedData.quantity
+        });
+        console.log(`Updated existing variation (${newVariation.variation_id}) for size ${newSize}`);
+      }
+    }
+    
+    // 3. Update the product entry with new data and variation_id if size changed
     await productEntry.update({
       product_name: updatedData.product_name,
       description: updatedData.description,
@@ -224,12 +256,13 @@ const updateProduct = async (req, res) => {
       quantity: updatedData.quantity,
       product_status: updatedData.product_status,
       customization_available: updatedData.customization_available,
-      size: newSize  // Add this line to update the size field
+      // Very important: update the variation_id to connect to the new size
+      variation_id: newVariation ? newVariation.variation_id : productEntry.variation_id
     });
     
-    console.log(`Updated product size from ${originalSize} to ${newSize}`);
+    console.log(`Updated product entry with variation_id: ${productEntry.variation_id}`);
     
-    // 3. Update the corresponding inventory record
+    // 4. Update the corresponding inventory record
     const inventoryRecord = await Inventory.findOne({ 
       where: { product_id: productEntry.product_id } 
     });
@@ -244,7 +277,24 @@ const updateProduct = async (req, res) => {
       console.log('Updated inventory record');
     }
     
-    // 4. Update category if changed
+    // 5. Update stock in old variation if size changed
+    if (originalSize !== newSize) {
+      const oldVariation = await ProductVariation.findOne({
+        where: { 
+          product_id: productEntry.product_id,
+          size: originalSize
+        }
+      });
+      
+      if (oldVariation) {
+        // Reduce stock from old variation
+        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
+        await oldVariation.update({ stock_level: newStockLevel });
+        console.log(`Reduced stock for original size ${originalSize} variation to ${newStockLevel}`);
+      }
+    }
+    
+    // 6. Update category if changed
     if (updatedData.category) {
       const categoryRecord = await Category.findOne({ 
         where: { category_name: updatedData.category } 
@@ -254,53 +304,6 @@ const updateProduct = async (req, res) => {
         productEntry.category_id = categoryRecord.category_id;
         await productEntry.save();
         console.log('Updated category to:', updatedData.category);
-      }
-    }
-    
-    // 5. Update variation if applicable
-    const variationToUpdate = await ProductVariation.findOne({
-      where: { 
-        product_id: productEntry.product_id,
-        size: newSize
-      }
-    });
-    
-    const oldVariation = newSize !== originalSize ? await ProductVariation.findOne({
-      where: { 
-        product_id: productEntry.product_id,
-        size: originalSize
-      }
-    }) : null;
-    
-    if (variationToUpdate) {
-      // Update existing variation for this size
-      await variationToUpdate.update({
-        additional_price: updatedData.additional_price || 0,
-        stock_level: variationToUpdate.stock_level + updatedData.quantity
-      });
-      console.log(`Updated existing variation for size ${newSize}`);
-      
-      // If size changed, reduce quantity from old size variation
-      if (oldVariation && newSize !== originalSize) {
-        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
-        await oldVariation.update({ stock_level: newStockLevel });
-        console.log(`Reduced stock for original size ${originalSize} to ${newStockLevel}`);
-      }
-    } else {
-      // Create a new variation if it doesn't exist
-      await ProductVariation.create({
-        product_id: productEntry.product_id,
-        size: newSize,
-        additional_price: updatedData.additional_price || 0,
-        stock_level: updatedData.quantity
-      });
-      console.log(`Created new variation for size ${newSize} with stock ${updatedData.quantity}`);
-      
-      // If size changed, reduce quantity from old variation
-      if (oldVariation && newSize !== originalSize) {
-        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
-        await oldVariation.update({ stock_level: newStockLevel });
-        console.log(`Reduced stock for original size ${originalSize} to ${newStockLevel}`);
       }
     }
     

@@ -154,17 +154,20 @@ const ProductViewForm = ({ product, onBack }) => {
         <div className="col-md-4">
           <strong>Size:</strong>
           <p className="bg-light p-1 rounded mb-2">
-            {product.variations && product.variations.length > 0 
+            {product.entryVariation ? product.entryVariation.size : 
+             (product.variations && product.variations.length > 0 
               ? product.variations[0].size 
-              : 'N/A'}
+              : 'N/A')}
           </p>
         </div>
         <div className="col-md-4">
           <strong>Additional Price:</strong>
           <p className="bg-light p-1 rounded mb-2">
-            {product.variations && product.variations.length > 0 && product.variations[0].additional_price > 0
-              ? `$${parseFloat(product.variations[0].additional_price).toFixed(2)}`
-              : 'N/A'}
+            {product.entryVariation && product.entryVariation.additional_price > 0
+              ? `$${parseFloat(product.entryVariation.additional_price).toFixed(2)}`
+              : (product.variations && product.variations.length > 0 && product.variations[0].additional_price > 0
+                 ? `$${parseFloat(product.variations[0].additional_price).toFixed(2)}`
+                 : 'N/A')}
           </p>
         </div>
         <div className="col-md-4">
