@@ -18,6 +18,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const [errors, setErrors] = useState({});
   const [images, setImages] = useState([]);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
+  const [hasMultipleEntries, setHasMultipleEntries] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,8 +41,39 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
         setImages(productImages);
         setExistingImageUrls(productImages);
       }
+
+      // Check if this product has multiple entries
+      checkMultipleEntries(product.product_id);
     }
   }, [product]);
+
+  const checkMultipleEntries = async (productId) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+      
+      const response = await fetch('http://localhost:5000/api/products/entries', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.entries) {
+          // Count how many entries have this product_id
+          const entriesWithSameId = data.entries.filter(entry => entry.product_id === productId);
+          setHasMultipleEntries(entriesWithSameId.length > 1);
+          console.log(`This product has ${entriesWithSameId.length} entries. Multiple entries:`, entriesWithSameId.length > 1);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking for multiple entries:', error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -68,24 +100,77 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      setIsLoading(true);
-
-      const newImages = images.filter(img => !existingImageUrls.includes(img));
-      
-      const updatedProductData = {
-        ...formData,
-        entry_id: product.entry_id,
-        price: parseFloat(formData.price),
-        quantity: parseInt(formData.quantity, 10),
-        images: newImages,
-        hasExistingImages: existingImageUrls.length > 0
-      };
-      
-      onSave(updatedProductData);
-      setIsLoading(false);
+      try {
+        setIsLoading(true);
+        
+        let updatedProductData;
+        
+        if (hasMultipleEntries) {
+          // For multiple entries with clothing category
+          if (formData.category === 'Clothing') {
+            updatedProductData = {
+              product_id: formData.product_id,
+              entry_id: product.entry_id,
+              quantity: parseInt(formData.quantity, 10),
+              product_status: formData.product_status,
+              size: formData.size, // Allow size to be updated for clothing
+              // Keep original values for non-editable fields
+              product_name: product.product_name,
+              description: product.description,
+              category: product.category?.category_name,
+              unit_price: product.unit_price,
+              additional_price: product.variations && product.variations.length > 0 
+                ? product.variations[0].additional_price : 0,
+              customization_available: product.customization_available
+            };
+          } else {
+            // For multiple entries with non-clothing category (only quantity and status)
+            updatedProductData = {
+              product_id: formData.product_id,
+              entry_id: product.entry_id,
+              quantity: parseInt(formData.quantity, 10),
+              product_status: formData.product_status,
+              // Keep original values for non-editable fields
+              product_name: product.product_name,
+              description: product.description,
+              category: product.category?.category_name,
+              unit_price: product.unit_price,
+              size: product.variations && product.variations.length > 0 ? product.variations[0].size : 'N/A',
+              additional_price: product.variations && product.variations.length > 0 
+                ? product.variations[0].additional_price : 0,
+              customization_available: product.customization_available
+            };
+          }
+        } else {
+          // For single entry, all fields can be updated
+          updatedProductData = {
+            product_id: formData.product_id,
+            entry_id: product.entry_id,
+            product_name: formData.product_name,
+            description: formData.description,
+            category: formData.category,
+            unit_price: parseFloat(formData.price),
+            quantity: parseInt(formData.quantity, 10),
+            size: formData.size,
+            additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
+            customization_available: formData.customization_available === 'Yes',
+            product_status: formData.product_status
+          };
+        }
+        
+        console.log("Submitting updated product:", updatedProductData);
+        
+        // Pass the updated data to parent component's onSave function
+        onSave(updatedProductData);
+      } catch (error) {
+        console.error("Error preparing product update:", error);
+        alert("Failed to update product. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -105,24 +190,32 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             />
           </div>
           <div className="col-md-4">
-            <label className="form-label">Product Name<span className="text-danger">*</span></label>
+            <label className="form-label">
+              Product Name
+              <span className="text-danger">*</span>
+            </label>
             <input
               type="text"
               className="form-control"
               name="product_name"
               value={formData.product_name}
               onChange={handleChange}
+              disabled={hasMultipleEntries}
               required
             />
             {errors.product_name && <div className="text-danger small">{errors.product_name}</div>}
           </div>
           <div className="col-md-4">
-            <label className="form-label">Category<span className="text-danger">*</span></label>
+            <label className="form-label">
+              Category
+              <span className="text-danger">*</span>
+            </label>
             <select
               className="form-select"
               name="category"
               value={formData.category}
               onChange={handleChange}
+              disabled={hasMultipleEntries}
               required
             >
               <option value="">Select Category</option>
@@ -138,19 +231,26 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
 
         <div className="row mb-3">
           <div className="col-md-4">
-            <label className="form-label">Description<span className="text-danger">*</span></label>
+            <label className="form-label">
+              Description
+              <span className="text-danger">*</span>
+            </label>
             <input
               type="text"
               className="form-control"
               name="description"
               value={formData.description}
               onChange={handleChange}
+              disabled={hasMultipleEntries}
               required
             />
             {errors.description && <div className="text-danger small">{errors.description}</div>}
           </div>
           <div className="col-md-4">
-            <label className="form-label">Price<span className="text-danger">*</span></label>
+            <label className="form-label">
+              Price
+              <span className="text-danger">*</span>
+            </label>
             <input
               type="number"
               className="form-control"
@@ -159,12 +259,17 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               onChange={handleChange}
               min="0"
               step="0.01"
+              disabled={hasMultipleEntries}
               required
             />
             {errors.price && <div className="text-danger small">{errors.price}</div>}
           </div>
           <div className="col-md-4">
-            <label className="form-label">Stock Quantity<span className="text-danger">*</span></label>
+            <label className="form-label">
+              Stock Quantity
+              <span className="text-danger">*</span>
+              {hasMultipleEntries && <small className="ms-2 text-info">(Editable)</small>}
+            </label>
             <input
               type="number"
               className="form-control"
@@ -182,13 +287,16 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
           <div className="col-md-4">
             <label className="form-label">
               Size {formData.category === 'Clothing' && <span className="text-danger">*</span>}
+              {hasMultipleEntries && formData.category === 'Clothing' && <small className="ms-2 text-info">(Editable)</small>}
             </label>
             <select
               className="form-select"
               name="size"
               value={formData.size}
               onChange={handleChange}
-              disabled={formData.category !== 'Clothing'}
+              // Only enable if it's Clothing category (regardless of multiple entries) 
+              // OR if it's single entry
+              disabled={formData.category !== 'Clothing' || (hasMultipleEntries && formData.category !== 'Clothing')}
               required={formData.category === 'Clothing'}
             >
               <option value="N/A">Select Size</option>
@@ -201,7 +309,9 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
           </div>
           <div className="col-md-4">
             <label className="form-label">
-              Product Status<span className="text-danger">*</span>
+              Product Status
+              <span className="text-danger">*</span>
+              <small className="ms-2 text-info">(Editable)</small>
             </label>
             <select
               className="form-select"
@@ -215,12 +325,15 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
             </select>
           </div>
           <div className="col-md-4">
-            <label className="form-label">Product Images</label>
+            <label className="form-label">
+              Product Images
+            </label>
             <input
               type="file"
               className="form-control"
               multiple
               onChange={handleImageUpload}
+              disabled={hasMultipleEntries} // Disable for multiple entries
             />
             {images.length > 0 && (
               <div className="mt-2 text-success small">
@@ -233,13 +346,16 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
 
         <div className="row mb-3">
           <div className="col-md-4">
-            <label className="form-label">Customization Available</label>
+            <label className="form-label">
+              Customization Available
+            </label>
             <select
               className="form-select"
               name="customization_available"
               value={formData.customization_available}
               onChange={handleChange}
-              disabled={formData.category !== 'Artistry'}
+              // Always disable for multiple entries, regardless of category
+              disabled={hasMultipleEntries || formData.category !== 'Artistry'}
             >
               <option value="Yes">Yes</option>
               <option value="No">No</option>
@@ -259,7 +375,8 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               onChange={handleChange}
               min="0"
               step="0.01"
-              disabled={formData.customization_available !== 'Yes' || formData.category !== 'Artistry'}
+              // Always disable for multiple entries, and also based on other conditions
+              disabled={hasMultipleEntries || formData.customization_available !== 'Yes' || formData.category !== 'Artistry'}
             />
           </div>
         </div>

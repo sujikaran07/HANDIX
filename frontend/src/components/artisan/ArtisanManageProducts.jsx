@@ -150,14 +150,21 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleEditProduct = async (product) => {
     try {
-      console.log("Editing product:", product.entry_id);
+      // Check if the product is approved
+      if (product.status === 'Approved') {
+        alert("Approved products cannot be edited.");
+        return;
+      }
+      
+      console.log("Editing product entry:", product.entry_id);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/${product.product_id}`, {
+      // Use the new endpoint to fetch by entry_id
+      const response = await fetch(`http://localhost:5000/api/products/entry/${product.entry_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -166,6 +173,29 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       if (response.ok) {
         const data = await response.json();
         console.log("Product data fetched for editing:", data);
+        
+        try {
+          // Also fetch images for this product
+          const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          
+          if (imagesResponse.ok) {
+            const imagesData = await imagesResponse.json();
+            console.log("Images data fetched for editing:", imagesData);
+
+            if (imagesData.images && imagesData.images.length > 0) {
+              data.entryImages = imagesData.images;
+            }
+          } else {
+            console.error("Failed to fetch images:", imagesResponse.statusText);
+          }
+        } catch (imageError) {
+          console.error("Error fetching images:", imageError);
+        }
+        
         setSelectedProduct(data); 
         setViewMode('edit');
       } else {
@@ -178,12 +208,73 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     }
   };
 
+  const handleProductUpdate = async (updatedProduct) => {
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        console.error('No token found for artisan');
+        return;
+      }
+      
+      console.log("Sending update for product:", updatedProduct);
+      
+      // Format data for API
+      const productData = {
+        product_name: updatedProduct.product_name,
+        description: updatedProduct.description,
+        category: updatedProduct.category,
+        unit_price: updatedProduct.unit_price,
+        quantity: updatedProduct.quantity,
+        product_status: updatedProduct.product_status,
+        customization_available: updatedProduct.customization_available,
+        size: updatedProduct.size,
+        additional_price: updatedProduct.additional_price
+      };
+      
+      const response = await fetch(`http://localhost:5000/api/products/${updatedProduct.entry_id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(productData)
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Product updated successfully:", result);
+        
+        alert("Product successfully updated!");
+        
+        // Refresh the entries list to show updated data
+        await fetchEntries();
+        
+        // Return to table view
+        setViewMode('table');
+        setSelectedProduct(null);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update product:', errorData);
+        alert(`Failed to update product: ${errorData.error || response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error updating product:', error);
+      alert("An error occurred while updating the product.");
+    }
+  };
+
   const handleBackToTable = () => {
     setSelectedProduct(null);
     setViewMode('table');
   };
 
   const confirmDelete = (product) => {
+    // Check if the product is approved
+    if (product.status === 'Approved') {
+      alert("Approved products cannot be deleted.");
+      return;
+    }
+    
     setProductToDelete(product);
     setShowDeleteModal(true);
   };
@@ -195,6 +286,14 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleDelete = async () => {
     if (productToDelete) {
+      // Check if the product is approved
+      if (productToDelete.status === 'Approved') {
+        alert("Approved products cannot be deleted.");
+        setShowDeleteModal(false);
+        setProductToDelete(null);
+        return;
+      }
+      
       try {
         const token = localStorage.getItem('artisanToken');
         if (!token) {
@@ -403,31 +502,33 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                                   View
                                 </button>
                               </li>
-                              <li>
-                                <button 
-                                  className="dropdown-item" 
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditProduct(entry);
-                                  }}
-                                >
-                                  Edit
-                                </button>
-                              </li>
                               {entry.status !== 'Approved' && (
-                                <li>
-                                  <button 
-                                    className="dropdown-item" 
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      confirmDelete(entry);
-                                    }}
-                                  >
-                                    Delete
-                                  </button>
-                                </li>
+                                <>
+                                  <li>
+                                    <button 
+                                      className="dropdown-item" 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditProduct(entry);
+                                      }}
+                                    >
+                                      Edit
+                                    </button>
+                                  </li>
+                                  <li>
+                                    <button 
+                                      className="dropdown-item" 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        confirmDelete(entry);
+                                      }}
+                                    >
+                                      Delete
+                                    </button>
+                                  </li>
+                                </>
                               )}
                             </ul>
                           </div>
@@ -452,7 +553,11 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         )}
 
         {viewMode === 'edit' && selectedProduct && (
-          <EditProductForm product={selectedProduct} onSave={(updatedProduct) => { onEditProduct(updatedProduct); handleBackToTable(); }} onCancel={handleBackToTable} />
+          <EditProductForm 
+            product={selectedProduct} 
+            onSave={handleProductUpdate} 
+            onCancel={handleBackToTable} 
+          />
         )}
       </div>
 

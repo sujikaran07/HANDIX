@@ -198,17 +198,106 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const updatedData = req.body;
+    console.log('Updating product entry with ID:', id);
+    console.log('Update data received:', updatedData);
 
+    // 1. Find the product entry
     const productEntry = await ProductEntry.findByPk(id);
     if (!productEntry) {
       return res.status(404).json({ error: 'Product entry not found' });
     }
+    
+    // Check if the product is approved - prevent updates
+    if (productEntry.status === 'Approved') {
+      return res.status(403).json({ error: 'Approved products cannot be modified' });
+    }
 
-    await productEntry.update(updatedData);
-    res.status(200).json({ message: 'Product entry updated successfully', productEntry });
+    // 2. Update the product entry
+    await productEntry.update({
+      product_name: updatedData.product_name,
+      description: updatedData.description,
+      unit_price: updatedData.unit_price,
+      quantity: updatedData.quantity,
+      product_status: updatedData.product_status,
+      customization_available: updatedData.customization_available
+    });
+    
+    // 3. Update the corresponding inventory record
+    const inventoryRecord = await Inventory.findOne({ 
+      where: { product_id: productEntry.product_id } 
+    });
+    
+    if (inventoryRecord) {
+      await inventoryRecord.update({
+        product_name: updatedData.product_name,
+        description: updatedData.description,
+        unit_price: updatedData.unit_price,
+        customization_available: updatedData.customization_available
+      });
+      console.log('Updated inventory record');
+    }
+    
+    // 4. Update category if changed
+    if (updatedData.category) {
+      const categoryRecord = await Category.findOne({ 
+        where: { category_name: updatedData.category } 
+      });
+      
+      if (categoryRecord && categoryRecord.category_id !== productEntry.category_id) {
+        productEntry.category_id = categoryRecord.category_id;
+        await productEntry.save();
+        console.log('Updated category to:', updatedData.category);
+      }
+    }
+    
+    // 5. Update variation if applicable
+    if (updatedData.size) {
+      const variation = await ProductVariation.findOne({
+        where: { 
+          product_id: productEntry.product_id,
+          size: updatedData.size
+        }
+      });
+      
+      if (variation) {
+        await variation.update({
+          additional_price: updatedData.additional_price || 0,
+          // Only adjust stock if quantity changed
+          stock_level: variation.stock_level + (updatedData.quantity - productEntry.quantity)
+        });
+        console.log('Updated product variation');
+      } else {
+        // Create a new variation if it doesn't exist
+        await ProductVariation.create({
+          product_id: productEntry.product_id,
+          size: updatedData.size,
+          additional_price: updatedData.additional_price || 0,
+          stock_level: updatedData.quantity
+        });
+        console.log('Created new product variation');
+      }
+    }
+    
+    // Fetch the updated product with all relations for the response
+    const updatedProductEntry = await ProductEntry.findByPk(id, {
+      include: [
+        { model: Category, as: 'category', attributes: ['category_name'] },
+        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }
+      ]
+    });
+    
+    console.log('Product updated successfully');
+    res.status(200).json({ 
+      message: 'Product entry updated successfully', 
+      productEntry: updatedProductEntry 
+    });
   } catch (error) {
     console.error('Error updating product entry:', error); 
-    res.status(500).json({ error: 'Failed to update product entry' });
+    res.status(500).json({ 
+      error: 'Failed to update product entry',
+      details: error.message
+    });
   }
 };
 
@@ -220,6 +309,12 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
 
+    // Check if the product is approved - prevent deletion
+    if (productEntry.status === 'Approved') {
+      return res.status(403).json({ error: 'Approved products cannot be deleted' });
+    }
+
+    // Process with deletion for non-approved products
     const variations = await ProductVariation.findAll({
       where: { product_id: productEntry.product_id },
     });

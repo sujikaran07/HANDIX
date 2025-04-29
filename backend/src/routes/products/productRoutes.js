@@ -60,4 +60,51 @@ router.post('/', authMiddleware, injectEId, createProduct);
 router.put('/:id', authMiddleware, updateProduct);
 router.delete('/:id', authMiddleware, deleteProduct); 
 
+// Add route to get product entry by entry_id
+router.get('/entry/:entryId', authMiddleware, async (req, res) => {
+  try {
+    const { entryId } = req.params;
+    
+    if (!entryId) {
+      return res.status(400).json({ error: 'Entry ID is required' });
+    }
+    
+    const ProductEntry = require('../../models/productEntryModel');
+    const Category = require('../../models/categoryModel');
+    const Inventory = require('../../models/inventoryModel');
+    const ProductImage = require('../../models/productImageModel');
+    const ProductVariation = require('../../models/productVariationModel');
+    
+    const entry = await ProductEntry.findByPk(entryId, {
+      include: [
+        { model: Category, as: 'category', attributes: ['category_name'] },
+        { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
+        { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }
+      ],
+    });
+    
+    if (!entry) {
+      return res.status(404).json({ error: 'Product entry not found' });
+    }
+    
+    let variations = [];
+    try {
+      variations = await ProductVariation.findAll({
+        where: { product_id: entry.product_id },
+        attributes: ['size', 'additional_price', 'stock_level']
+      });
+    } catch (variationError) {
+      console.error('Error fetching variations:', variationError);
+    }
+    
+    const entryWithVariations = entry.toJSON();
+    entryWithVariations.variations = variations;
+    
+    res.status(200).json(entryWithVariations);
+  } catch (error) {
+    console.error('Error fetching product entry:', error);
+    res.status(500).json({ error: 'Failed to fetch product entry' });
+  }
+});
+
 module.exports = router;
