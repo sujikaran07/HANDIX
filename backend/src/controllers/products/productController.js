@@ -74,163 +74,122 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    console.log('req.user:', req.user);
+    // Log the request body
+    console.log('Request received for product creation:', req.body);
     
-    let productData;
-    let images = [];
+    // Destructure the request body
+    const {
+      product_id,
+      product_name,
+      description,
+      category,
+      price,
+      quantity,
+      size,
+      additional_price,
+      customization_available,
+      product_status,
+      e_id
+    } = req.body;
     
-    if (req.files && req.files.productImages) {
-
-      productData = req.body;
-
-      const uploadedFiles = Array.isArray(req.files.productImages) 
-        ? req.files.productImages 
-        : [req.files.productImages];
-      
-      
-      images = await Promise.all(uploadedFiles.map(async (file) => {
-        const filename = `${Date.now()}-${file.name}`;
-        const filePath = `/uploads/${filename}`;
-
-        await file.mv(`./public${filePath}`);
-
-        return `http://localhost:5000${filePath}`;
-      }));
-    } else {
-
-      productData = req.body;
-      images = productData.images || [];
-    } 
-    
-    const { product_id, product_name, category, price, quantity, size, additional_price, status, customization_available, ...rest } = productData;
-    const e_id = req.body.e_id || req.user?.id;
-
-    console.log('e_id retrieved from token or body:', e_id); 
-    console.log('Images received:', images);
-    
-    const isCustomizationAvailable = customization_available === 'Yes' ? true : false;
-    console.log('Customization available:', isCustomizationAvailable);
-
+    // Basic validation
+    if (!product_id) return res.status(400).json({ error: 'Product ID is required' });
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
-    if (!e_id) return res.status(400).json({ error: 'Employee ID (e_id) is required' });
-    if (!price || isNaN(price)) return res.status(400).json({ error: 'Valid unit price is required' });
-
-    let category_id = null;
+    if (!e_id) return res.status(400).json({ error: 'Employee ID is required' });
+    if (!price || isNaN(Number(price))) return res.status(400).json({ error: 'Valid price is required' });
+    if (!quantity || isNaN(Number(quantity))) return res.status(400).json({ error: 'Valid quantity is required' });
     
+    console.log('All required fields validated');
+    
+    // Step 1: Handle category
+    let category_id = null;
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
-      if (!categoryRecord) return res.status(400).json({ error: `Category "${category}" does not exist` });
+      if (!categoryRecord) {
+        return res.status(400).json({ error: `Category "${category}" does not exist` });
+      }
       category_id = categoryRecord.category_id;
-
-      categoryRecord.stock_level = (Number(categoryRecord.stock_level) || 0) + Number(quantity);
-      await categoryRecord.save();
+      console.log(`Category found: ${category} (ID: ${category_id})`);
     }
-
-    let inventoryRecord = await Inventory.findByPk(product_id);
+    
+    // Step 2: Create inventory record
+    console.log('Creating inventory record');
+    let inventoryRecord = await Inventory.findOne({ where: { product_id } });
+    
     if (!inventoryRecord) {
       inventoryRecord = await Inventory.create({
         product_id,
         product_name,
-        description: rest.description || '',
-        unit_price: price,
+        description: description || '',
+        unit_price: Number(price),
         quantity: Number(quantity),
         category_id,
         e_id,
-        customization_available: isCustomizationAvailable, 
+        customization_available: customization_available === 'Yes'
       });
-      console.log('Inventory created with product_id:', product_id); 
+      console.log('New inventory record created:', inventoryRecord.product_id);
     } else {
-
-      if (inventoryRecord.customization_available !== isCustomizationAvailable) {
-        inventoryRecord.customization_available = isCustomizationAvailable;
-        console.log(`Updated customization_available to ${isCustomizationAvailable} in inventory`);
-      }
-      
-      inventoryRecord.quantity = Number(inventoryRecord.quantity) + Number(quantity);
-      await inventoryRecord.save();
+      console.log('Existing inventory record found, updating');
+      await inventoryRecord.update({
+        product_name,
+        description: description || inventoryRecord.description,
+        unit_price: Number(price),
+        quantity: inventoryRecord.quantity + Number(quantity),
+        customization_available: customization_available === 'Yes'
+      });
     }
-
-    const normalizedSize = size || "N/A";
-    let variation_id = null;
     
-    let existingVariation = await ProductVariation.findOne({
-      where: { 
-        product_id, 
-        size: normalizedSize 
-      }
+    // Step 3: Create variation
+    console.log('Creating product variation');
+    const normalizedSize = size || 'N/A';
+    let variationRecord = await ProductVariation.findOne({
+      where: { product_id, size: normalizedSize }
     });
-
-    if (existingVariation) {
-      console.log('Found existing variation:', existingVariation.variation_id);
-      existingVariation.additional_price = additional_price || existingVariation.additional_price;
-      existingVariation.stock_level += Number(quantity);
-      await existingVariation.save();
-      variation_id = existingVariation.variation_id;
-      console.log('Updated existing variation, new stock level:', existingVariation.stock_level);
-    } else {
-      const newVariation = await ProductVariation.create({
+    
+    if (!variationRecord) {
+      variationRecord = await ProductVariation.create({
         product_id,
         size: normalizedSize,
-        additional_price: additional_price || 0,
+        additional_price: Number(additional_price || 0),
         stock_level: Number(quantity)
       });
-      variation_id = newVariation.variation_id;
-      console.log('Created new variation with ID:', variation_id);
+      console.log('New variation created with ID:', variationRecord.variation_id);
+    } else {
+      console.log('Existing variation found, updating');
+      await variationRecord.update({
+        additional_price: Number(additional_price || variationRecord.additional_price),
+        stock_level: variationRecord.stock_level + Number(quantity)
+      });
     }
-
-    if (!variation_id) {
-      return res.status(400).json({ error: 'Failed to create or retrieve variation_id' });
-    }
-
-    const productPayload = {
+    
+    // Step 4: Create product entry
+    console.log('Creating product entry');
+    const productEntry = await ProductEntry.create({
       product_id,
       product_name,
-      unit_price: price,
+      unit_price: Number(price),
       quantity: Number(quantity),
-      product_status: 'In Stock',
-      status: status || 'pending',
-      e_id, 
+      product_status: product_status || 'In Stock',
+      status: 'pending',
+      e_id,
       category_id,
-      variation_id,
-      customization_available: isCustomizationAvailable,
-      ...rest,
-    };
-
-    console.log('Final Payload for ProductEntry.create:', productPayload); 
-
-    const productEntry = await ProductEntry.create(productPayload);
-
-    if (images.length > 0) {
-      console.log(`Saving ${images.length} images for product ${product_id}`);
-      
-      const imagePromises = images.map(imageUrl => {
-        return ProductImage.create({
-          product_id: product_id,
-          image_url: imageUrl,
-          entry_id: productEntry.entry_id
-        });
-      });
-      
-      await Promise.all(imagePromises);
-    } else if (hasExistingImages) {
-      console.log('Product already has images in the database - not adding new images');
-    } else {
-      console.log('No images provided for this product');
-    }
-
-    res.status(201).json({ message: 'Product entry created successfully', productEntry });
-  } catch (error) {
-    console.error('Error creating product:', error);
+      variation_id: variationRecord.variation_id,
+      customization_available: customization_available === 'Yes',
+      description: description || ''
+    });
     
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      const field = error.errors[0]?.path;
-      res.status(400).json({ 
-        error: 'Duplicate entry error', 
-        details: `A product with this ${field} already exists.` 
-      });
-    } else {
-      res.status(500).json({ error: 'Failed to create product entry' });
-    }
+    console.log('Product entry created successfully:', productEntry.entry_id);
+    
+    res.status(201).json({ 
+      message: 'Product created successfully',
+      productEntry 
+    });
+  } catch (error) {
+    console.error('Error in createProduct:', error);
+    res.status(500).json({ 
+      error: 'Failed to create product',
+      details: error.message
+    });
   }
 };
 

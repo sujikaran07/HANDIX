@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../styles/artisan/ArtisanProducts.css';
 
 const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
+  const navigate = useNavigate(); // Hook for programmatic navigation
   const [formData, setFormData] = useState({
     product_id: productId,
     product_name: '',
@@ -373,29 +375,127 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const formDataObj = new FormData();
-    
-      Object.keys(formData).forEach(key => {
-        formDataObj.append(key, formData[key]);
-      });
-   
-      formDataObj.append('e_id', loggedInEmployeeId);
-      formDataObj.append('price', parseFloat(formData.price));
-      formDataObj.append('hasExistingImages', existingImageUrls.length > 0);
-  
-      imageFiles.forEach((file, index) => {
-        if (!existingImageUrls.includes(images[index])) {
-          formDataObj.append('productImages', file);
+      try {
+        setIsLoading(true);
+        
+        // Prepare the JSON payload
+        const jsonPayload = {
+          product_id: formData.product_id,
+          product_name: formData.product_name,
+          description: formData.description,
+          category: formData.category,
+          price: parseFloat(formData.price),
+          quantity: parseInt(formData.quantity, 10),
+          size: formData.size,
+          additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
+          customization_available: formData.customization_available,
+          product_status: formData.product_status,
+          e_id: loggedInEmployeeId
+        };
+        
+        console.log('Submitting product with JSON payload:', jsonPayload);
+        
+        const token = localStorage.getItem('artisanToken');
+        if (!token) {
+          console.error('No token found');
+          alert('Authentication error. Please log in again.');
+          return;
         }
-      });
-      
-      console.log('Submitting product with e_id:', loggedInEmployeeId);
-      console.log('New images to upload:', imageFiles.length - existingImageUrls.length);
-   
-      onSave(formDataObj);
+        
+        // First, create the product using JSON
+        const response = await fetch('http://localhost:5000/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(jsonPayload)
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to create product');
+        }
+        
+        const productData = await response.json();
+        console.log('Product created successfully:', productData);
+        
+        // Fix the image upload function to properly handle FormData
+        const uploadImages = async (productId, entryId) => {
+          try {
+            const token = localStorage.getItem('artisanToken');
+            console.log(`Starting image upload for product ${productId}, entry ${entryId}`);
+            console.log(`Total images to upload: ${imageFiles.length}`);
+            
+            // Create a single FormData object for all images
+            const formData = new FormData();
+            
+            // Add product and entry IDs
+            formData.append('product_id', productId);
+            formData.append('entry_id', entryId);
+            
+            // Add all image files
+            imageFiles.forEach((file) => {
+              formData.append('productImages', file);
+              console.log(`Appending image: ${file.name}, size: ${file.size} bytes`);
+            });
+            
+            // Make a single request with all images
+            const response = await fetch('http://localhost:5000/api/products/images', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: formData
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Failed to upload images:', errorText);
+              throw new Error(`Failed to upload images: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('Images uploaded successfully:', result);
+            return result;
+          } catch (error) {
+            console.error('Error during image upload:', error);
+            throw error;
+          }
+        };
+
+        // Handle image uploads BEFORE redirecting
+        if (imageFiles.length > 0) {
+          try {
+            console.log(`Uploading ${imageFiles.length} images for product ${productData.productEntry.product_id}`);
+            await uploadImages(productData.productEntry.product_id, productData.productEntry.entry_id);
+            console.log('All images uploaded successfully');
+          } catch (imageError) {
+            console.error('Error uploading images:', imageError);
+            // We'll show the success message anyway since the product was created
+          }
+        }
+        
+        // Show success message
+        alert('Product added successfully!');
+        
+        // Notify parent component
+        onSave(productData.productEntry);
+        
+        // Redirect to products page after both product creation and image upload
+        window.location.href = '/artisan/products';
+        
+      } catch (error) {
+        console.error('Error adding product:', error);
+        setFeedbackMessage({ 
+          type: 'error', 
+          message: error.message || 'Failed to add product. Please try again.' 
+        });
+        setIsLoading(false);
+      }
     }
   };
 
