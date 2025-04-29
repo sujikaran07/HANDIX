@@ -363,8 +363,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     if (!formData.quantity || isNaN(formData.quantity)) newErrors.quantity = 'Valid Stock Quantity is required';
     if (!formData.description) newErrors.description = 'Product Description is required';
     
-    if (formData.category === 'Clothing' && formData.size === 'N/A') 
-      newErrors.size = 'Size is required for Clothing items';
     if (formData.category === 'Artistry' && formData.customization_available === 'Yes' && 
       (!formData.additional_price || isNaN(formData.additional_price))) 
       newErrors.additional_price = 'Additional Price is required for customized products';
@@ -389,7 +387,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           category: formData.category,
           price: parseFloat(formData.price),
           quantity: parseInt(formData.quantity, 10),
-          size: formData.size,
+          size: formData.size || 'N/A',  // Ensure size is 'N/A' if not selected
           additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
           customization_available: formData.customization_available,
           product_status: formData.product_status,
@@ -657,15 +655,13 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">
-                Size {formData.category === 'Clothing' && <span className="text-danger">*</span>}
+                Size {/* Remove the conditional required indicator */}
               </label>
               <select
                 className="form-select"
                 name="size"
                 value={formData.size}
                 onChange={handleChange}
-                disabled={formData.category !== 'Clothing'}
-                required={formData.category === 'Clothing'}
               >
                 <option value="N/A">Select Size</option>
                 <option value="XS">XS</option>

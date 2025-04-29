@@ -98,14 +98,15 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleViewProduct = async (product) => {
     try {
-      console.log("Viewing product:", product);
+      console.log("Viewing product entry ID:", product.entry_id);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
         console.error('No token found for artisan');
         return;
       }
 
-      const response = await fetch(`http://localhost:5000/api/products/${product.product_id}`, {
+      // Use entry_id instead of product_id for fetching product details
+      const response = await fetch(`http://localhost:5000/api/products/entry/${product.entry_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -116,6 +117,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         console.log("Product data fetched:", data);
         
         try {
+          // We still need to fetch images using product_id as they're associated with the product
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -163,7 +165,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         return;
       }
 
-      // Use the new endpoint to fetch by entry_id
+      // Already using the correct endpoint with entry_id
       const response = await fetch(`http://localhost:5000/api/products/entry/${product.entry_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -175,7 +177,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         console.log("Product data fetched for editing:", data);
         
         try {
-          // Also fetch images for this product
+          // We still need to fetch images using product_id as they're associated with the product
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               Authorization: `Bearer ${token}`,

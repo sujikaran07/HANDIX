@@ -212,6 +212,10 @@ const updateProduct = async (req, res) => {
       return res.status(403).json({ error: 'Approved products cannot be modified' });
     }
 
+    // Store the original size for comparison
+    const originalSize = productEntry.size || 'N/A';
+    const newSize = updatedData.size || 'N/A';
+    
     // 2. Update the product entry
     await productEntry.update({
       product_name: updatedData.product_name,
@@ -219,8 +223,11 @@ const updateProduct = async (req, res) => {
       unit_price: updatedData.unit_price,
       quantity: updatedData.quantity,
       product_status: updatedData.product_status,
-      customization_available: updatedData.customization_available
+      customization_available: updatedData.customization_available,
+      size: newSize  // Add this line to update the size field
     });
+    
+    console.log(`Updated product size from ${originalSize} to ${newSize}`);
     
     // 3. Update the corresponding inventory record
     const inventoryRecord = await Inventory.findOne({ 
@@ -251,30 +258,49 @@ const updateProduct = async (req, res) => {
     }
     
     // 5. Update variation if applicable
-    if (updatedData.size) {
-      const variation = await ProductVariation.findOne({
-        where: { 
-          product_id: productEntry.product_id,
-          size: updatedData.size
-        }
+    const variationToUpdate = await ProductVariation.findOne({
+      where: { 
+        product_id: productEntry.product_id,
+        size: newSize
+      }
+    });
+    
+    const oldVariation = newSize !== originalSize ? await ProductVariation.findOne({
+      where: { 
+        product_id: productEntry.product_id,
+        size: originalSize
+      }
+    }) : null;
+    
+    if (variationToUpdate) {
+      // Update existing variation for this size
+      await variationToUpdate.update({
+        additional_price: updatedData.additional_price || 0,
+        stock_level: variationToUpdate.stock_level + updatedData.quantity
       });
+      console.log(`Updated existing variation for size ${newSize}`);
       
-      if (variation) {
-        await variation.update({
-          additional_price: updatedData.additional_price || 0,
-          // Only adjust stock if quantity changed
-          stock_level: variation.stock_level + (updatedData.quantity - productEntry.quantity)
-        });
-        console.log('Updated product variation');
-      } else {
-        // Create a new variation if it doesn't exist
-        await ProductVariation.create({
-          product_id: productEntry.product_id,
-          size: updatedData.size,
-          additional_price: updatedData.additional_price || 0,
-          stock_level: updatedData.quantity
-        });
-        console.log('Created new product variation');
+      // If size changed, reduce quantity from old size variation
+      if (oldVariation && newSize !== originalSize) {
+        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
+        await oldVariation.update({ stock_level: newStockLevel });
+        console.log(`Reduced stock for original size ${originalSize} to ${newStockLevel}`);
+      }
+    } else {
+      // Create a new variation if it doesn't exist
+      await ProductVariation.create({
+        product_id: productEntry.product_id,
+        size: newSize,
+        additional_price: updatedData.additional_price || 0,
+        stock_level: updatedData.quantity
+      });
+      console.log(`Created new variation for size ${newSize} with stock ${updatedData.quantity}`);
+      
+      // If size changed, reduce quantity from old variation
+      if (oldVariation && newSize !== originalSize) {
+        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
+        await oldVariation.update({ stock_level: newStockLevel });
+        console.log(`Reduced stock for original size ${originalSize} to ${newStockLevel}`);
       }
     }
     
@@ -314,22 +340,95 @@ const deleteProduct = async (req, res) => {
       return res.status(403).json({ error: 'Approved products cannot be deleted' });
     }
 
-    // Process with deletion for non-approved products
-    const variations = await ProductVariation.findAll({
-      where: { product_id: productEntry.product_id },
-    });
+    console.log(`Deleting product entry ID: ${productEntry.entry_id}, product ID: ${productEntry.product_id}`);
+    const productId = productEntry.product_id;
+    const quantityToRemove = productEntry.quantity;
 
-    for (const variation of variations) {
-      variation.stock_level = Math.max(0, variation.stock_level - productEntry.quantity); 
-      await variation.save();
+    // 1. Update inventory quantity
+    const inventoryRecord = await Inventory.findOne({ 
+      where: { product_id: productId }
+    });
+    
+    if (inventoryRecord) {
+      console.log(`Reducing inventory quantity by ${quantityToRemove} units`);
+      const newQuantity = Math.max(0, inventoryRecord.quantity - quantityToRemove);
+      await inventoryRecord.update({ quantity: newQuantity });
+      console.log(`Updated inventory quantity: ${newQuantity}`);
     }
 
-    await productEntry.destroy();
+    // 2. Update product variations stock levels
+    const variations = await ProductVariation.findAll({
+      where: { product_id: productId },
+    });
 
-    res.status(200).json({ message: 'Product entry deleted successfully and stock count updated' });
+    if (variations.length > 0) {
+      console.log(`Updating stock levels for ${variations.length} variations`);
+      for (const variation of variations) {
+        const newStockLevel = Math.max(0, variation.stock_level - quantityToRemove); 
+        await variation.update({ stock_level: newStockLevel });
+        console.log(`Updated variation (${variation.size}) stock level: ${newStockLevel}`);
+      }
+    }
+
+    // 3. Update category stock level if applicable
+    if (productEntry.category_id) {
+      try {
+        const categoryRecord = await Category.findByPk(productEntry.category_id);
+        if (categoryRecord) {
+          console.log(`Checking category ID ${productEntry.category_id} for stock level field`);
+          
+          // Check if category has stock_level field
+          if (typeof categoryRecord.stock_level !== 'undefined') {
+            console.log(`Reducing category stock level by ${quantityToRemove} units`);
+            const newStockLevel = Math.max(0, categoryRecord.stock_level - quantityToRemove);
+            await categoryRecord.update({ stock_level: newStockLevel });
+            console.log(`Updated category stock level to ${newStockLevel}`);
+          } else {
+            console.log(`Category does not have a stock_level field`);
+          }
+        }
+      } catch (categoryError) {
+        console.error('Error updating category stock level:', categoryError);
+      }
+    }
+
+    // 4. Delete product images associated with this entry
+    try {
+      const productImages = await ProductImage.findAll({
+        where: { entry_id: productEntry.entry_id }
+      });
+      
+      console.log(`Found ${productImages.length} images associated with this entry`);
+      
+      for (const image of productImages) {
+        // If using Cloudinary, delete the image from cloud storage
+        if (image.cloudinary_id) {
+          try {
+            await cloudinary.uploader.destroy(image.cloudinary_id);
+            console.log(`Deleted image from Cloudinary: ${image.cloudinary_id}`);
+          } catch (cloudinaryError) {
+            console.error('Error deleting image from Cloudinary:', cloudinaryError);
+          }
+        }
+        
+        // Delete the image record
+        await image.destroy();
+      }
+    } catch (imageError) {
+      console.error('Error handling product images during deletion:', imageError);
+    }
+
+    // 5. Finally delete the product entry
+    await productEntry.destroy();
+    console.log('Product entry successfully deleted');
+
+    res.status(200).json({ 
+      message: 'Product entry deleted successfully',
+      details: 'Associated inventory quantities, variations, and category stock have been updated'
+    });
   } catch (error) {
     console.error('Error deleting product entry:', error); 
-    res.status(500).json({ error: 'Failed to delete product entry' });
+    res.status(500).json({ error: 'Failed to delete product entry', details: error.message });
   }
 };
 
