@@ -423,14 +423,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         const productData = await response.json();
         console.log('Product created successfully:', productData);
         
-        // Fix the image upload function to properly handle FormData
+        // Enhanced image upload to Cloudinary
         const uploadImages = async (productId, entryId) => {
           try {
             const token = localStorage.getItem('artisanToken');
             console.log(`Starting image upload for product ${productId}, entry ${entryId}`);
             console.log(`Total images to upload: ${imageFiles.length}`);
             
-            // Create a single FormData object for all images
+            // Create FormData for Cloudinary upload
             const formData = new FormData();
             
             // Add product and entry IDs
@@ -443,7 +443,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
               console.log(`Appending image: ${file.name}, size: ${file.size} bytes`);
             });
             
-            // Make a single request with all images
+            // Upload to Cloudinary via our API
             const response = await fetch('http://localhost:5000/api/products/images', {
               method: 'POST',
               headers: {
@@ -454,27 +454,27 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             
             if (!response.ok) {
               const errorText = await response.text();
-              console.error('Failed to upload images:', errorText);
+              console.error('Failed to upload images to Cloudinary:', errorText);
               throw new Error(`Failed to upload images: ${errorText}`);
             }
             
             const result = await response.json();
-            console.log('Images uploaded successfully:', result);
+            console.log('Images uploaded successfully to Cloudinary:', result);
             return result;
           } catch (error) {
-            console.error('Error during image upload:', error);
+            console.error('Error during Cloudinary image upload:', error);
             throw error;
           }
         };
 
-        // Handle image uploads BEFORE redirecting
+        // Handle Cloudinary image uploads BEFORE redirecting
         if (imageFiles.length > 0) {
           try {
-            console.log(`Uploading ${imageFiles.length} images for product ${productData.productEntry.product_id}`);
+            console.log(`Uploading ${imageFiles.length} images to Cloudinary for product ${productData.productEntry.product_id}`);
             await uploadImages(productData.productEntry.product_id, productData.productEntry.entry_id);
-            console.log('All images uploaded successfully');
+            console.log('All images uploaded successfully to Cloudinary');
           } catch (imageError) {
-            console.error('Error uploading images:', imageError);
+            console.error('Error uploading images to Cloudinary:', imageError);
             // We'll show the success message anyway since the product was created
           }
         }

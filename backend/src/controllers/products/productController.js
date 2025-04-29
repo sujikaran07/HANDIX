@@ -4,6 +4,7 @@ const Inventory = require('../../models/inventoryModel');
 const ProductVariation = require('../../models/productVariationModel');
 const ProductImage = require('../../models/productImageModel');
 const { Op } = require('sequelize');
+const { cloudinary } = require('../../utils/cloudinaryConfig');
 
 const getAllProducts = async (req, res) => {
   try {
@@ -399,6 +400,74 @@ const getProductByName = async (req, res) => {
   }
 };
 
+// Add a new function to handle product image uploads to Cloudinary
+const uploadProductImages = async (req, res) => {
+  try {
+    console.log('Image upload request received');
+    
+    // Check if product_id is provided
+    if (!req.body.product_id) {
+      return res.status(400).json({ error: 'Product ID is required for image upload' });
+    }
+    
+    // Check if files are uploaded
+    if (!req.files || !req.files.length) {
+      return res.status(400).json({ error: 'No image files provided' });
+    }
+    
+    const productId = req.body.product_id;
+    const entryId = req.body.entry_id || null;
+    const uploadedImages = [];
+    
+    // Process each file
+    for (const file of req.files) {
+      try {
+        console.log(`Processing file: ${file.originalname}, size: ${file.size} bytes`);
+        
+        // Upload to Cloudinary
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: 'handix_products',
+          use_filename: true,
+          unique_filename: true,
+        });
+        
+        console.log('Cloudinary upload result:', result);
+        
+        // Save image URL to database
+        const productImage = await ProductImage.create({
+          product_id: productId,
+          image_url: result.secure_url,
+          cloudinary_id: result.public_id,
+          entry_id: entryId
+        });
+        
+        uploadedImages.push({
+          id: productImage.id,
+          image_url: result.secure_url,
+          cloudinary_id: result.public_id
+        });
+        
+        console.log(`Image record created: ${productImage.id}`);
+      } catch (fileError) {
+        console.error(`Error processing file ${file.originalname}:`, fileError);
+      }
+    }
+    
+    console.log(`Successfully uploaded ${uploadedImages.length} images`);
+    res.status(201).json({ 
+      message: 'Images uploaded successfully', 
+      images: uploadedImages 
+    });
+    
+  } catch (error) {
+    console.error('Error in image upload endpoint:', error);
+    res.status(500).json({ 
+      error: 'Failed to upload images', 
+      details: error.message 
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
@@ -409,5 +478,6 @@ module.exports = {
   getAllProductEntries,
   getProductByName,
   getProductSuggestions,
-  getInventorySuggestions, 
+  getInventorySuggestions,
+  uploadProductImages
 };
