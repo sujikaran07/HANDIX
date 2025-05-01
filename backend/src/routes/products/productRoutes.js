@@ -10,7 +10,8 @@ const {
   getProductByName,
   getProductSuggestions,
   getInventorySuggestions,
-  uploadProductImages
+  uploadProductImages,
+  updateProductStatus // Add the new function
 } = require('../../controllers/products/productController'); 
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers'); 
 const { upload } = require('../../utils/cloudinaryConfig');
@@ -120,5 +121,8 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch product entry' });
   }
 });
+
+// Add new route for updating product status
+router.put('/:id/status', authMiddleware, updateProductStatus);
 
 module.exports = router;

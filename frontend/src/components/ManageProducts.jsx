@@ -20,7 +20,7 @@ const ManageProducts = ({ onViewProduct }) => {
     const fetchProducts = async () => {
       try {
         let token = localStorage.getItem('token');
-        console.log('Token being sent:', token); // Log the token
+        console.log('Token being sent:', token);
 
         if (!token) {
           console.error('No token found in localStorage');
@@ -29,14 +29,20 @@ const ManageProducts = ({ onViewProduct }) => {
 
         const response = await fetch('http://localhost:5000/api/admin/products', {
           headers: {
-            Authorization: `Bearer ${token}`, // Include token for authentication
+            Authorization: `Bearer ${token}`,
           },
         });
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched Products:', data.products); // Log fetched products
-          setProducts(data.products); // Set products to state
+          console.log('Fetched Products:', data.products);
+          
+          // Sort products with newest entries first
+          const sortedProducts = data.products.sort((a, b) => {
+            return new Date(b.date_added) - new Date(a.date_added);
+          });
+          
+          setProducts(sortedProducts);
         } else if (response.status === 401) {
           console.warn('Token expired. Attempting to refresh token...');
           const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
@@ -106,7 +112,8 @@ const ManageProducts = ({ onViewProduct }) => {
       if (action === 'approve' || action === 'reject') {
         const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
         
-        const response = await fetch(`http://localhost:5000/api/admin/products/${productId}/status`, {
+        // Use the new dedicated status update endpoint
+        const response = await fetch(`http://localhost:5000/api/products/${productId}/status`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -127,6 +134,9 @@ const ManageProducts = ({ onViewProduct }) => {
                 : product
             )
           );
+          
+          // Show success message
+          alert(`Product ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
         } else if (response.status === 401) {
           console.warn('Token expired. Attempting to refresh token...');
           const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
@@ -147,6 +157,7 @@ const ManageProducts = ({ onViewProduct }) => {
           }
         } else {
           console.error('Failed to update product status:', response.statusText);
+          alert(`Failed to ${action} product. Please try again.`);
         }
       } else if (action === 'delete') {
         const response = await fetch(`http://localhost:5000/api/admin/products/${productId}`, {
@@ -172,6 +183,7 @@ const ManageProducts = ({ onViewProduct }) => {
       }
     } catch (error) {
       console.error(`Error performing ${action} action:`, error);
+      alert(`An error occurred while trying to ${action} the product.`);
     }
   };
 

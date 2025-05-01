@@ -275,9 +275,16 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         setFormData(prev => ({
           ...prev,
           [name]: value,
-          size: 'N/A'
+          size: 'N/A'  // Reset size to N/A when category is not Clothing
         }));
-      } 
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          // Don't reset size when switching to Clothing
+        }));
+      }
+      
       if (value !== 'Artistry') {
         setFormData(prev => ({
           ...prev,
@@ -655,13 +662,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">
-                Size {/* Remove the conditional required indicator */}
+                Size {formData.category === 'Clothing' ? '' : '(N/A for non-clothing items)'}
               </label>
               <select
                 className="form-select"
                 name="size"
                 value={formData.size}
                 onChange={handleChange}
+                disabled={formData.category !== 'Clothing'} // Only enable for clothing
               >
                 <option value="N/A">Select Size</option>
                 <option value="XS">XS</option>
@@ -670,7 +678,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 <option value="L">L</option>
                 <option value="XL">XL</option>
               </select>
-              {errors.size && <div className="text-danger small">{errors.size}</div>}
             </div>
             <div className="col-md-4">
               <label className="form-label">Product Images<span className="text-danger">*</span></label>
