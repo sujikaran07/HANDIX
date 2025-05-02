@@ -15,12 +15,20 @@ const ProductsPage = () => {
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
   
-  // Parse URL parameters on component mount
+  // Parse URL parameters on component mount and when URL changes
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryParam = params.get('category');
+    
     if (categoryParam) {
-      setSelectedCategory(categoryParam);
+      // Find matching category (case-insensitive)
+      const matchedCategory = categories.find(
+        cat => cat.toLowerCase() === categoryParam.toLowerCase()
+      );
+      
+      if (matchedCategory) {
+        setSelectedCategory(matchedCategory);
+      }
     }
   }, [location.search]);
   
@@ -34,7 +42,9 @@ const ProductsPage = () => {
     
     // Apply category filter
     if (selectedCategory) {
-      result = result.filter(p => p.category === selectedCategory);
+      result = result.filter(p => 
+        p.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
     }
     
     // Apply price range filter
@@ -63,6 +73,31 @@ const ProductsPage = () => {
     setPriceRange([0, 10000]);
     setMinRating(0);
     setSearchTerm('');
+    
+    // Also clear URL parameters
+    const url = new URL(window.location);
+    url.searchParams.delete('category');
+    window.history.pushState({}, '', url);
+  };
+  
+  // Function to handle category selection
+  const handleCategoryChange = (category) => {
+    // If already selected, clear the selection
+    if (selectedCategory === category) {
+      setSelectedCategory(null);
+      
+      // Update URL to remove category parameter
+      const url = new URL(window.location);
+      url.searchParams.delete('category');
+      window.history.pushState({}, '', url);
+    } else {
+      setSelectedCategory(category);
+      
+      // Update URL to include category parameter
+      const url = new URL(window.location);
+      url.searchParams.set('category', category.toLowerCase());
+      window.history.pushState({}, '', url);
+    }
   };
   
   const toggleFilters = () => {
@@ -77,7 +112,9 @@ const ProductsPage = () => {
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           {/* Header and search */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">Shop All Products</h1>
+            <h1 className="text-3xl font-bold mb-4">
+              {selectedCategory ? `${selectedCategory} Products` : 'Shop All Products'}
+            </h1>
             <div className="relative">
               <input
                 type="text"
@@ -137,7 +174,7 @@ const ProductsPage = () => {
                           type="radio"
                           name="category"
                           checked={selectedCategory === category}
-                          onChange={() => setSelectedCategory(category)}
+                          onChange={() => handleCategoryChange(category)}
                           className="mr-2 accent-primary"
                         />
                         <span>{category}</span>
@@ -188,6 +225,20 @@ const ProductsPage = () => {
             
             {/* Products grid */}
             <div className="lg:col-span-3">
+              {selectedCategory && (
+                <div className="mb-4">
+                  <div className="inline-flex items-center bg-blue-50 text-primary px-3 py-1 rounded-full">
+                    <span className="mr-2">{selectedCategory}</span>
+                    <button 
+                      onClick={() => handleCategoryChange(selectedCategory)}
+                      className="focus:outline-none"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              
               <div className="mb-4 flex justify-between items-center">
                 <p className="text-gray-600">
                   Showing {filteredProducts.length} products

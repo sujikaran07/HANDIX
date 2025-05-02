@@ -24,7 +24,7 @@ const HomePage = () => {
       <main className="flex-grow">
         {/* Hero Section - Simple Banner */}
         <section className="hero-banner relative h-[500px] flex items-center justify-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200')" }}>
+          style={{ backgroundImage: "url(https://i.pinimg.com/736x/e8/aa/6b/e8aa6b806882008a84d62d4b5434e609.jpg)" }}>
           <div className="hero-overlay absolute inset-0 bg-black bg-opacity-40"></div>
           <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%] hero-content relative z-10 text-center text-white">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Discover Unique Handcrafted Treasures</h1>
@@ -39,11 +39,11 @@ const HomePage = () => {
             <h2 className="text-3xl font-bold mb-12 text-center">Shop by Category</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center">
               {[
-                { name: "Carry Goods", image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158", count: 24 },
-                { name: "Clothing", image: "https://images.unsplash.com/photo-1472396961693-142e6e269027", count: 18 },
-                { name: "Artistry", image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5", count: 32 },
-                { name: "Crafts", image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7", count: 15 },
-                { name: "Accessories", image: "https://images.unsplash.com/photo-1500673922987-e212871fec22", count: 27 }
+                { name: "Carry Goods", image: "https://i.pinimg.com/736x/aa/54/65/aa5465fbf05cc1227a770a23704f8cdf.jpg", count: 24 },
+                { name: "Clothing", image: "https://i.pinimg.com/736x/25/af/8a/25af8af775b256edb23e34a1ad02a8d8.jpg", count: 18 },
+                { name: "Artistry", image: "https://i.pinimg.com/736x/5b/f3/80/5bf3804de21db62d78a8281be01cc026.jpg", count: 32 },
+                { name: "Crafts", image: "https://i.pinimg.com/736x/fb/6a/e5/fb6ae547e543e097408b974b7889cbfd.jpg", count: 15 },
+                { name: "Accessories", image: "https://i.pinimg.com/736x/e4/b9/35/e4b935d3a0537aa49b76be1e8666e53b.jpg", count: 27 }
               ].map((category, index) => (
                 <CategoryCard 
                   key={index}

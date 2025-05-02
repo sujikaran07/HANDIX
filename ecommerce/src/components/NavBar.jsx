@@ -61,7 +61,10 @@ const NavBar = () => {
               <DropdownMenuContent className="bg-white shadow-lg rounded-md border border-gray-200 py-2 w-56 mt-1 animate-fade-in">
                 {categories.map((category) => (
                   <DropdownMenuItem key={category} asChild className="cursor-pointer px-4 py-2 hover:bg-gray-50 transition-colors">
-                    <Link to={`/products?category=${category.toLowerCase()}`} className="w-full block">
+                    <Link 
+                      to={`/products?category=${category.toLowerCase()}`} 
+                      className="w-full block"
+                    >
                       {category}
                     </Link>
                   </DropdownMenuItem>
@@ -227,7 +230,7 @@ const NavBar = () => {
                   {categories.map((category) => (
                     <Link 
                       key={category}
-                      to={`/products?category=${category.toLowerCase()}`} 
+                      to={`/products?category=${category.toLowerCase()}`}
                       className="py-1 hover:text-primary" 
                       onClick={() => setMenuOpen(false)}
                     >
