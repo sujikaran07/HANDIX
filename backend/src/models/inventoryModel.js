@@ -87,10 +87,19 @@ Inventory.associate = (models) => {
     Inventory.hasMany(models.ProductVariation, { foreignKey: 'product_id', as: 'variations' }); 
   }
   if (models.ProductImage) {
-    Inventory.hasMany(models.ProductImage, { foreignKey: 'product_id', as: 'inventoryImages' });
+    // Make sure this association uses the correct foreign key
+    Inventory.hasMany(models.ProductImage, { 
+      foreignKey: 'product_id', 
+      sourceKey: 'product_id', // Important for string primary key
+      as: 'inventoryImages' 
+    });
   }
   if (models.ProductEntry) {
-    Inventory.hasMany(models.ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' }); 
+    Inventory.hasMany(models.ProductEntry, { 
+      foreignKey: 'product_id',
+      sourceKey: 'product_id', // Important for string primary key
+      as: 'inventoryEntries'
+    }); 
   }
 };
 

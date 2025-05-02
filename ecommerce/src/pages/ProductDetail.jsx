@@ -4,12 +4,15 @@ import { Star, ChevronRight, Minus, Plus, Check, ShoppingCart } from 'lucide-rea
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import { fetchProducts } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState('');
@@ -19,30 +22,47 @@ const ProductDetailPage = () => {
   const { addItem } = useCart();
   
   useEffect(() => {
-    // Find the product
-    if (id) {
-      const foundProduct = products.find(p => p.id === parseInt(id));
-      if (foundProduct) {
-        setProduct(foundProduct);
-        setSelectedImage(foundProduct.images[0]);
-        setIsCustomizing(false); // Reset customization state
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const products = await fetchProducts();
+        setAllProducts(products);
         
-        // Set default size if available
-        if (foundProduct.sizes && foundProduct.sizes.length > 0) {
-          setSelectedSize(foundProduct.sizes[0]);
-        } else {
-          setSelectedSize('');
+        if (id) {
+          const foundProduct = products.find(p => p.id === id);
+          
+          if (foundProduct) {
+            setProduct(foundProduct);
+            setSelectedImage(foundProduct.images[0]);
+            setIsCustomizing(false); // Reset customization state
+            
+            // Set default size if available
+            if (foundProduct.sizes && foundProduct.sizes.length > 0) {
+              setSelectedSize(foundProduct.sizes[0]);
+            } else {
+              setSelectedSize('');
+            }
+            
+            // Find related products (same category, but not this product)
+            const related = products.filter(p => 
+              p.category === foundProduct.category && 
+              p.id !== foundProduct.id
+            ).slice(0, 4);
+            
+            setRelatedProducts(related);
+          } else {
+            setError("Product not found");
+          }
         }
-        
-        // Find related products (same category, but not this product)
-        const related = products.filter(p => 
-          p.category === foundProduct.category && 
-          p.id !== foundProduct.id
-        ).slice(0, 4);
-        
-        setRelatedProducts(related);
+      } catch (err) {
+        console.error("Error loading product:", err);
+        setError("Failed to load product data");
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    
+    loadData();
   }, [id]);
   
   const handleQuantityChange = (amount) => {
@@ -65,12 +85,24 @@ const ProductDetailPage = () => {
     }
   };
   
-  if (!product) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%] py-16 flex justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error || !product) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%] py-16 text-center">
-          <p className="text-xl">Product not found</p>
+          <p className="text-xl">{error || "Product not found"}</p>
           <Link to="/products" className="text-primary hover:underline mt-4 inline-block">
             Return to shop
           </Link>
@@ -267,11 +299,15 @@ const ProductDetailPage = () => {
               <div className="border-t pt-4 text-sm text-gray-500">
                 <p className="flex items-center mb-2">
                   <Check size={16} className="mr-2 text-green-500" />
-                  Free shipping on orders over LKR 5,000
+                  Handcrafted by local artisans
+                </p>
+                <p className="flex items-center mb-2">
+                  <Check size={16} className="mr-2 text-green-500" />
+                  Premium quality materials
                 </p>
                 <p className="flex items-center">
                   <Check size={16} className="mr-2 text-green-500" />
-                  Handcrafted by local artisans
+                  Supports local communities
                 </p>
               </div>
             </div>

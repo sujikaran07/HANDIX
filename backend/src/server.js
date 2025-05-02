@@ -37,6 +37,18 @@ ProductEntry.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 ProductEntry.hasMany(ProductImage, { foreignKey: 'product_id', sourceKey: 'product_id', as: 'entryImages' });
 ProductImage.belongsTo(ProductEntry, { foreignKey: 'product_id', targetKey: 'product_id', as: 'productEntry' });
 
+Inventory.hasMany(ProductImage, { 
+  foreignKey: 'product_id',
+  sourceKey: 'product_id',
+  as: 'productImages'
+});
+
+ProductImage.belongsTo(Inventory, { 
+  foreignKey: 'product_id', 
+  targetKey: 'product_id',
+  as: 'inventory' 
+});
+
 Customer.hasMany(Address, {
   foreignKey: 'c_id',
   as: 'addresses',
@@ -58,12 +70,11 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: ['http://localhost:5173', 'http://localhost:5174'], 
 }));
 app.use(bodyParser.json());
 app.use(express.json());
 
-// Use routes
 app.use("/api", employeeLoginRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/customers", customerRoutes);

@@ -1,13 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Package, Users, Grid, LogOut, Plus, Search, Edit, Trash2 } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
-import { products } from '../data/products';
+import { fetchProducts } from '../data/products';
 
 const AdminDashboardPage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('products');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+        setError("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
   
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -98,57 +118,75 @@ const AdminDashboardPage = () => {
                       <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                     </div>
                     
-                    <div className="overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="text-left border-b">
-                            <th className="pb-3">Image</th>
-                            <th className="pb-3">Name</th>
-                            <th className="pb-3">Price</th>
-                            <th className="pb-3">Category</th>
-                            <th className="pb-3">Stock</th>
-                            <th className="pb-3">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filteredProducts.map(product => (
-                            <tr key={product.id} className="border-b">
-                              <td className="py-3">
-                                <img 
-                                  src={product.images[0]} 
-                                  alt={product.name} 
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                              </td>
-                              <td>{product.name}</td>
-                              <td>{product.currency} {product.price.toLocaleString()}</td>
-                              <td>{product.category}</td>
-                              <td>
-                                {product.inStock ? (
-                                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                    In Stock
-                                  </span>
-                                ) : (
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                    Out of Stock
-                                  </span>
-                                )}
-                              </td>
-                              <td>
-                                <div className="flex space-x-2">
-                                  <button className="p-1 hover:text-primary">
-                                    <Edit size={16} />
-                                  </button>
-                                  <button className="p-1 hover:text-red-500">
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </td>
+                    {loading ? (
+                      <div className="flex justify-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                      </div>
+                    ) : error ? (
+                      <div className="bg-red-50 p-4 rounded-md text-red-600 text-center">
+                        {error}
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead>
+                            <tr className="text-left border-b">
+                              <th className="pb-3">Image</th>
+                              <th className="pb-3">Name</th>
+                              <th className="pb-3">Price</th>
+                              <th className="pb-3">Category</th>
+                              <th className="pb-3">Stock</th>
+                              <th className="pb-3">Actions</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {filteredProducts.length > 0 ? (
+                              filteredProducts.map(product => (
+                                <tr key={product.id} className="border-b">
+                                  <td className="py-3">
+                                    <img 
+                                      src={product.images[0]} 
+                                      alt={product.name} 
+                                      className="w-12 h-12 object-cover rounded"
+                                    />
+                                  </td>
+                                  <td>{product.name}</td>
+                                  <td>{product.currency} {product.price.toLocaleString()}</td>
+                                  <td>{product.category}</td>
+                                  <td>
+                                    {product.inStock ? (
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                        In Stock
+                                      </span>
+                                    ) : (
+                                      <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                        Out of Stock
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <div className="flex space-x-2">
+                                      <button className="p-1 hover:text-primary">
+                                        <Edit size={16} />
+                                      </button>
+                                      <button className="p-1 hover:text-red-500">
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="6" className="py-4 text-center text-gray-500">
+                                  No products found
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
                   </div>
                 )}
                 

@@ -4,16 +4,38 @@ import { Search, SlidersHorizontal, X } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import ProductGrid from '../components/ProductGrid';
-import { products, categories } from '../data/products';
+import { fetchProducts, categories } from '../data/products';
 
 const ProductsPage = () => {
   const location = useLocation();
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
+  
+  // Fetch products on component mount
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProducts();
+        console.log('Products loaded:', data);
+        setProducts(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading products:', err);
+        setError('Failed to load products. Please try again later.');
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
   
   // Parse URL parameters on component mount and when URL changes
   useEffect(() => {
@@ -32,10 +54,12 @@ const ProductsPage = () => {
     }
   }, [location.search]);
   
-  // Apply filters when any filter changes
+  // Apply filters when products or filter criteria change
   useEffect(() => {
-    applyFilters();
-  }, [selectedCategory, priceRange, minRating, searchTerm]);
+    if (products.length > 0) {
+      applyFilters();
+    }
+  }, [products, selectedCategory, priceRange, minRating, searchTerm]);
   
   const applyFilters = () => {
     let result = [...products];
@@ -43,7 +67,7 @@ const ProductsPage = () => {
     // Apply category filter
     if (selectedCategory) {
       result = result.filter(p => 
-        p.category.toLowerCase() === selectedCategory.toLowerCase()
+        p.category && p.category.toLowerCase() === selectedCategory.toLowerCase()
       );
     }
     
@@ -59,9 +83,9 @@ const ProductsPage = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(p => 
-        p.name.toLowerCase().includes(term) ||
-        p.description.toLowerCase().includes(term) ||
-        p.category.toLowerCase().includes(term)
+        (p.name && p.name.toLowerCase().includes(term)) ||
+        (p.description && p.description.toLowerCase().includes(term)) ||
+        (p.category && p.category.toLowerCase().includes(term))
       );
     }
     
@@ -241,7 +265,7 @@ const ProductsPage = () => {
               
               <div className="mb-4 flex justify-between items-center">
                 <p className="text-gray-600">
-                  Showing {filteredProducts.length} products
+                  {loading ? 'Loading products...' : `Showing ${filteredProducts.length} products`}
                 </p>
                 <select className="border rounded-md p-2">
                   <option>Sort by: Featured</option>
@@ -251,7 +275,24 @@ const ProductsPage = () => {
                   <option>Newest First</option>
                 </select>
               </div>
-              <ProductGrid products={filteredProducts} />
+              
+              {loading ? (
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                </div>
+              ) : error ? (
+                <div className="bg-red-50 p-4 rounded-md text-red-600 text-center">
+                  <p>{error}</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-2 text-primary hover:underline"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : (
+                <ProductGrid products={filteredProducts} />
+              )}
             </div>
           </div>
         </div>

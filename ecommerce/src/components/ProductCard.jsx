@@ -57,24 +57,18 @@ const ProductCard = ({ product }) => {
             alt={product.name} 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
-          {!product.inStock && (
-            <div className="stock-badge stock-badge-out">
-              Out of Stock
-            </div>
-          )}
-          {product.inStock && (
-            <div className="stock-badge stock-badge-in">
-              In Stock
-            </div>
-          )}
-          {product.isCustomizable && (
-            <div className="customizable-badge">
-              Customizable
-            </div>
-          )}
+          
+          {/* Stock status badge (top right) */}
+          <div className={`absolute top-2 right-2 px-2 py-1 text-xs rounded-md text-white font-medium bg-opacity-80 ${
+            product.inStock ? 'bg-green-600' : 'bg-red-600'
+          }`}>
+            {product.inStock ? 'In Stock' : 'Out of Stock'}
+          </div>
+          
+          {/* Favorite button (top left) */}
           <button 
             onClick={toggleFavorite}
-            className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
+            className="absolute top-2 left-2 p-1.5 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart 
@@ -82,6 +76,13 @@ const ProductCard = ({ product }) => {
               className={`${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'} transition-colors`} 
             />
           </button>
+          
+          {/* Customizable badge (bottom left) */}
+          {product.isCustomizable && (
+            <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">
+              Customizable
+            </div>
+          )}
         </div>
       </Link>
 
@@ -90,10 +91,12 @@ const ProductCard = ({ product }) => {
           <Link to={`/products?category=${product.category.toLowerCase()}`} className="text-xs sm:text-sm text-gray-500 category-badge">
             {product.category}
           </Link>
-          <div className="product-rating flex items-center">
-            <Star size={16} className="text-yellow-500 fill-yellow-500" />
-            <span className="text-xs sm:text-sm ml-1">{product.rating.toFixed(1)}</span>
-          </div>
+          {product.rating !== undefined && product.rating !== null && (
+            <div className="product-rating flex items-center">
+              <Star size={16} className="text-yellow-500 fill-yellow-500" />
+              <span className="text-xs sm:text-sm ml-1">{product.rating.toFixed(1)}</span>
+            </div>
+          )}
         </div>
         
         <Link to={`/products/${product.id}`}>

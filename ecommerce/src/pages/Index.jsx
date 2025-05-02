@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Star, ArrowRight, ShoppingBag } from 'lucide-react';
 import NavBar from '../components/NavBar';
@@ -6,14 +6,38 @@ import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import ProductSection from '../components/ProductSection';
 import CategoryCard from '../components/CategoryCard';
-import { products, categories } from '../data/products';
+import { fetchProducts, categories } from '../data/products';
 import { Progress } from '../components/ui/progress';
 
 const HomePage = () => {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProducts();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+        setError("Failed to load products");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadProducts();
+  }, []);
+  
   // Get featured products (first 4)
   const featuredProducts = products.slice(0, 4);
-  // Get popular products (based on rating)
-  const popularProducts = [...products].sort((a, b) => b.rating - a.rating).slice(0, 4);
+  // Get popular products (based on rating if available)
+  const popularProducts = [...products]
+    .filter(p => p.rating !== undefined)
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 4);
   // New arrivals (simulating with last 4 products)
   const newArrivals = products.slice(-4).reverse();
   
@@ -60,6 +84,7 @@ const HomePage = () => {
         <ProductSection 
           title="Featured Products"
           products={featuredProducts}
+          loading={loading}
           bgColor="bg-gray-50"
         />
         
@@ -67,6 +92,7 @@ const HomePage = () => {
         <ProductSection 
           title="Popular Right Now"
           products={popularProducts}
+          loading={loading}
           viewAllLink="/products?sort=popular"
         />
         
@@ -74,10 +100,10 @@ const HomePage = () => {
         <ProductSection 
           title="New Arrivals"
           products={newArrivals}
+          loading={loading}
           viewAllLink="/products?sort=new"
           bgColor="bg-gray-50"
         />
-        
         
         {/* Testimonials */}
         <section className="py-16 bg-gray-50">
