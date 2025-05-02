@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .product-card {
+    @apply bg-white rounded-lg shadow-sm overflow-hidden transition-all hover:shadow-md hover:-translate-y-1 duration-300;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-white px-4 py-2 rounded hover:bg-primary-hover transition-colors;
+  }
+
+  .section-padding {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  .product-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6;
+  }
+
+  .container-custom {
+    @apply container mx-auto px-4 sm:px-6 lg:max-w-7xl;
+  }
+  
+  /* Container custom with reduced horizontal padding */
+  .container-custom {
+    width: 100%;
+    max-width: 1280px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;  /* Reduced from previous value (likely 1.5rem or 2rem) */
+    padding-right: 1rem; /* Reduced from previous value (likely 1.5rem or 2rem) */
+  }
+
+  @media (min-width: 640px) {
+    .container-custom {
+      padding-left: 1.5rem;  /* Reduced from previous value */
+      padding-right: 1.5rem; /* Reduced from previous value */
+    }
+  }
+
+  /* Modern UI styling */
+  .category-badge {
+    @apply inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-sky-100 text-sky-800 transition-colors hover:bg-sky-200;
+  }
+  
+  .stock-badge {
+    @apply absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-md shadow-sm;
+  }
+  
+  .stock-badge-in {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .stock-badge-out {
+    @apply bg-red-100 text-red-800;
+  }
+  
+  .customizable-badge {
+    @apply absolute top-2 left-2 bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-md shadow-sm;
+  }
+  
+  .product-image-container {
+    @apply aspect-w-1 aspect-h-1 w-full overflow-hidden bg-gray-100 rounded-lg;
+  }
+  
+  .product-rating {
+    @apply flex items-center;
+  }
+  
+  .price-tag {
+    @apply font-semibold text-gray-900;
+  }
+  
+  /* Modern categories */
+  .category-card {
+    @apply relative overflow-hidden rounded-lg shadow-md transition-all duration-300 hover:shadow-lg hover:scale-105;
+  }
+  
+  .category-card-img {
+    @apply w-full h-52 object-cover transition-transform duration-500 hover:scale-110;
+  }
+  
+  .category-card-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-5 text-white;
+  }
+  
+  .payment-option {
+    @apply flex items-center p-4 border rounded-lg transition-all hover:border-primary cursor-pointer;
+  }
+  
+  .payment-option.active {
+    @apply border-primary bg-blue-50;
+  }
+  
+  /* Animations */
+  .animate-fade-in {
+    @apply animate-[fadeIn_0.3s_ease-in-out];
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-slide-in {
+    @apply animate-[slideIn_0.4s_ease-out];
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  /* Button hover effects */
+  .btn-primary {
+    @apply bg-primary text-white px-5 py-2.5 rounded-md hover:bg-primary/90 transition-all duration-300 inline-flex items-center justify-center;
+  }
+  
+  .btn-primary:hover {
+    @apply shadow-md transform -translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-primary border border-primary px-5 py-2.5 rounded-md transition-all duration-300 inline-flex items-center justify-center;
+  }
+  
+  .btn-secondary:hover {
+    @apply bg-primary/5;
+  }
+}
