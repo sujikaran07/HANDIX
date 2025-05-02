@@ -261,9 +261,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               <option value="M">M</option>
               <option value="L">L</option>
               <option value="XL">XL</option>
-              {/* Also include existing variations from the product */}
               {product.variations?.map(variation => {
-                // Only add the variation if it's not already in the standard sizes
                 const standardSizes = ["N/A", "XS", "S", "M", "L", "XL", "XXL"];
                 if (!standardSizes.includes(variation.size)) {
                   return (
@@ -305,7 +303,7 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               className="form-control"
               multiple
               onChange={handleImageUpload}
-              disabled={hasMultipleEntries} // Disable for multiple entries
+              disabled={hasMultipleEntries}
             />
             {images.length > 0 && (
               <div className="mt-2 text-success small">
@@ -326,7 +324,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               name="customization_available"
               value={formData.customization_available}
               onChange={handleChange}
-              // Always disable for multiple entries, regardless of category
               disabled={hasMultipleEntries || formData.category !== 'Artistry'}
             >
               <option value="Yes">Yes</option>
@@ -347,7 +344,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               onChange={handleChange}
               min="0"
               step="0.01"
-              // Always disable for multiple entries, and also based on other conditions
               disabled={hasMultipleEntries || formData.customization_available !== 'Yes' || formData.category !== 'Artistry'}
             />
           </div>

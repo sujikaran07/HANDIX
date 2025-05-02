@@ -105,7 +105,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         return;
       }
 
-      // Use entry_id instead of product_id for fetching product details
       const response = await fetch(`http://localhost:5000/api/products/entry/${product.entry_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -117,7 +116,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         console.log("Product data fetched:", data);
         
         try {
-          // We still need to fetch images using product_id as they're associated with the product
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -152,7 +150,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleEditProduct = async (product) => {
     try {
-      // Check if the product is approved
+
       if (product.status === 'Approved') {
         alert("Approved products cannot be edited.");
         return;
@@ -165,7 +163,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         return;
       }
 
-      // Already using the correct endpoint with entry_id
       const response = await fetch(`http://localhost:5000/api/products/entry/${product.entry_id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -177,7 +174,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         console.log("Product data fetched for editing:", data);
         
         try {
-          // We still need to fetch images using product_id as they're associated with the product
+         
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -220,18 +217,18 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       
       console.log("Sending update for product:", updatedProduct);
       
-      // Format data for API
+
       const productData = {
         product_name: updatedProduct.product_name,
         description: updatedProduct.description,
         category: updatedProduct.category,
-        unit_price: updatedProduct.price || updatedProduct.unit_price, // Handle both price formats
+        unit_price: updatedProduct.price || updatedProduct.unit_price, 
         quantity: updatedProduct.quantity,
         product_status: updatedProduct.product_status,
         customization_available: updatedProduct.customization_available === 'Yes',
-        size: updatedProduct.size, // Make sure size is included
+        size: updatedProduct.size,
         additional_price: updatedProduct.additional_price,
-        variation_id: updatedProduct.variation_id // Include the variation ID
+        variation_id: updatedProduct.variation_id 
       };
       
       console.log("Formatted product data for API:", productData);
@@ -251,10 +248,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         
         alert("Product successfully updated!");
         
-        // Refresh the entries list to show updated data
         await fetchEntries();
-        
-        // Return to table view
+
         setViewMode('table');
         setSelectedProduct(null);
       } else {
@@ -274,7 +269,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   };
 
   const confirmDelete = (product) => {
-    // Check if the product is approved
     if (product.status === 'Approved') {
       alert("Approved products cannot be deleted.");
       return;
@@ -291,7 +285,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
   const handleDelete = async () => {
     if (productToDelete) {
-      // Check if the product is approved
       if (productToDelete.status === 'Approved') {
         alert("Approved products cannot be deleted.");
         setShowDeleteModal(false);

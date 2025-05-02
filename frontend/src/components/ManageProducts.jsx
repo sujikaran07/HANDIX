@@ -36,8 +36,7 @@ const ManageProducts = ({ onViewProduct }) => {
         if (response.ok) {
           const data = await response.json();
           console.log('Fetched Products:', data.products);
-          
-          // Sort products with newest entries first
+         
           const sortedProducts = data.products.sort((a, b) => {
             return new Date(b.date_added) - new Date(a.date_added);
           });
@@ -56,8 +55,8 @@ const ManageProducts = ({ onViewProduct }) => {
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
             console.log('Token refreshed:', refreshData.token);
-            localStorage.setItem('token', refreshData.token); // Save new token
-            fetchProducts(); // Retry fetching products with the new token
+            localStorage.setItem('token', refreshData.token); 
+            fetchProducts();
           } else {
             console.error('Failed to refresh token:', refreshResponse.statusText);
           }
@@ -82,12 +81,12 @@ const ManageProducts = ({ onViewProduct }) => {
 
   const filteredProducts = products.filter(product => {
     return (
-      (selectedCategories.includes(product.category?.category_name)) && // Ensure category_name exists
-      (filterStatus === 'All' || product.status.toLowerCase() === filterStatus.toLowerCase()) && // Match status case-insensitively
-      (product.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || // Match product_id
-       product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Match product_name
-       product.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()) || // Match category_name
-       (product.e_id && product.e_id.toLowerCase().includes(searchTerm.toLowerCase()))) // Match e_id if it exists
+      (selectedCategories.includes(product.category?.category_name)) && 
+      (filterStatus === 'All' || product.status.toLowerCase() === filterStatus.toLowerCase()) && 
+      (product.product_id.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       product.product_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       product.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       (product.e_id && product.e_id.toLowerCase().includes(searchTerm.toLowerCase()))) 
     );
   });
 
@@ -112,7 +111,7 @@ const ManageProducts = ({ onViewProduct }) => {
       if (action === 'approve' || action === 'reject') {
         const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
         
-        // Use the new dedicated status update endpoint
+
         const response = await fetch(`http://localhost:5000/api/products/${productId}/status`, {
           method: 'PUT',
           headers: {
@@ -126,7 +125,7 @@ const ManageProducts = ({ onViewProduct }) => {
           const updatedProduct = await response.json();
           console.log('Product status updated:', updatedProduct);
           
-          // Update the products array with the new status
+  
           setProducts(prevProducts => 
             prevProducts.map(product => 
               product.entry_id === productId 
@@ -134,8 +133,7 @@ const ManageProducts = ({ onViewProduct }) => {
                 : product
             )
           );
-          
-          // Show success message
+      
           alert(`Product ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
         } else if (response.status === 401) {
           console.warn('Token expired. Attempting to refresh token...');

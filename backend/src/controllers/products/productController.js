@@ -75,10 +75,8 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
   try {
-    // Log the request body
     console.log('Request received for product creation:', req.body);
-    
-    // Destructure the request body
+
     const {
       product_id,
       product_name,
@@ -92,8 +90,7 @@ const createProduct = async (req, res) => {
       product_status,
       e_id
     } = req.body;
-    
-    // Basic validation
+
     if (!product_id) return res.status(400).json({ error: 'Product ID is required' });
     if (!product_name) return res.status(400).json({ error: 'Product name is required' });
     if (!e_id) return res.status(400).json({ error: 'Employee ID is required' });
@@ -102,7 +99,7 @@ const createProduct = async (req, res) => {
     
     console.log('All required fields validated');
     
-    // Step 1: Handle category - just get the ID without updating stock
+
     let category_id = null;
     if (category) {
       const categoryRecord = await Category.findOne({ where: { category_name: category } });
@@ -113,8 +110,6 @@ const createProduct = async (req, res) => {
       console.log(`Category found: ${category} (ID: ${category_id})`);
     }
     
-    // Step 2: Create a dummy inventory record with minimal info just to satisfy the foreign key constraint
-    // This will be properly updated when the product is approved
     console.log('Creating temporary inventory record with zero quantity');
     let inventoryRecord = await Inventory.findOne({ where: { product_id } });
     
@@ -124,7 +119,7 @@ const createProduct = async (req, res) => {
         product_name,
         description: description || '',
         unit_price: Number(price),
-        quantity: 0, // Start with zero quantity until approved
+        quantity: 0, 
         category_id,
         e_id,
         customization_available: customization_available === 'Yes'
@@ -132,7 +127,6 @@ const createProduct = async (req, res) => {
       console.log('New inventory record created with zero quantity:', inventoryRecord.product_id);
     }
     
-    // Step 3: Create variation
     console.log('Creating product variation');
     const normalizedSize = size || 'N/A';
     const variationRecord = await ProductVariation.create({
@@ -143,7 +137,6 @@ const createProduct = async (req, res) => {
     });
     console.log('New variation created with ID:', variationRecord.variation_id);
     
-    // Step 4: Create product entry with status 'pending'
     console.log('Creating product entry');
     const productEntry = await ProductEntry.create({
       product_id,
@@ -151,7 +144,7 @@ const createProduct = async (req, res) => {
       unit_price: Number(price),
       quantity: Number(quantity),
       product_status: product_status || 'In Stock',
-      status: 'pending', // Always start as pending
+      status: 'pending', 
       e_id,
       category_id,
       variation_id: variationRecord.variation_id,
@@ -181,27 +174,24 @@ const updateProduct = async (req, res) => {
     console.log('Updating product entry with ID:', id);
     console.log('Update data received:', updatedData);
 
-    // 1. Find the product entry
     const productEntry = await ProductEntry.findByPk(id);
     if (!productEntry) {
       return res.status(404).json({ error: 'Product entry not found' });
     }
     
-    // Check if the product is approved - prevent updates
+  
     if (productEntry.status === 'Approved') {
       return res.status(403).json({ error: 'Approved products cannot be modified' });
     }
 
-    // Store the original size for comparison
+  
     const originalSize = productEntry.size || 'N/A';
     const newSize = updatedData.size || 'N/A';
-    
-    // 2. Find or create the new variation if size changed
+
     let newVariation = null;
     if (originalSize !== newSize) {
       console.log(`Size is changing from ${originalSize} to ${newSize}`);
       
-      // Check if variation for the new size already exists
       newVariation = await ProductVariation.findOne({
         where: { 
           product_id: productEntry.product_id,
@@ -209,7 +199,6 @@ const updateProduct = async (req, res) => {
         }
       });
       
-      // If no existing variation for this size, create a new one
       if (!newVariation) {
         newVariation = await ProductVariation.create({
           product_id: productEntry.product_id,
@@ -219,7 +208,6 @@ const updateProduct = async (req, res) => {
         });
         console.log(`Created new variation with ID ${newVariation.variation_id} for size ${newSize}`);
       } else {
-        // Update existing variation's stock
         await newVariation.update({
           additional_price: updatedData.additional_price || newVariation.additional_price,
           stock_level: newVariation.stock_level + updatedData.quantity
@@ -228,7 +216,6 @@ const updateProduct = async (req, res) => {
       }
     }
     
-    // 3. Update the product entry with new data and variation_id if size changed
     await productEntry.update({
       product_name: updatedData.product_name,
       description: updatedData.description,
@@ -236,13 +223,13 @@ const updateProduct = async (req, res) => {
       quantity: updatedData.quantity,
       product_status: updatedData.product_status,
       customization_available: updatedData.customization_available,
-      // Very important: update the variation_id to connect to the new size
+      
       variation_id: newVariation ? newVariation.variation_id : productEntry.variation_id
     });
     
     console.log(`Updated product entry with variation_id: ${productEntry.variation_id}`);
     
-    // 4. Update the corresponding inventory record
+
     const inventoryRecord = await Inventory.findOne({ 
       where: { product_id: productEntry.product_id } 
     });
@@ -257,7 +244,7 @@ const updateProduct = async (req, res) => {
       console.log('Updated inventory record');
     }
     
-    // 5. Update stock in old variation if size changed
+
     if (originalSize !== newSize) {
       const oldVariation = await ProductVariation.findOne({
         where: { 
@@ -267,14 +254,13 @@ const updateProduct = async (req, res) => {
       });
       
       if (oldVariation) {
-        // Reduce stock from old variation
+
         const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
         await oldVariation.update({ stock_level: newStockLevel });
         console.log(`Reduced stock for original size ${originalSize} variation to ${newStockLevel}`);
       }
     }
     
-    // 6. Update category if changed
     if (updatedData.category) {
       const categoryRecord = await Category.findOne({ 
         where: { category_name: updatedData.category } 
@@ -287,7 +273,6 @@ const updateProduct = async (req, res) => {
       }
     }
     
-    // Fetch the updated product with all relations for the response
     const updatedProductEntry = await ProductEntry.findByPk(id, {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
@@ -318,7 +303,6 @@ const deleteProduct = async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
 
-    // Check if the product is approved - prevent deletion
     if (productEntry.status === 'Approved') {
       return res.status(403).json({ error: 'Approved products cannot be deleted' });
     }
@@ -327,7 +311,6 @@ const deleteProduct = async (req, res) => {
     const productId = productEntry.product_id;
     const quantityToRemove = productEntry.quantity;
 
-    // 1. Update inventory quantity
     const inventoryRecord = await Inventory.findOne({ 
       where: { product_id: productId }
     });
@@ -339,7 +322,6 @@ const deleteProduct = async (req, res) => {
       console.log(`Updated inventory quantity: ${newQuantity}`);
     }
 
-    // 2. Update product variations stock levels
     const variations = await ProductVariation.findAll({
       where: { product_id: productId },
     });
@@ -353,14 +335,14 @@ const deleteProduct = async (req, res) => {
       }
     }
 
-    // 3. Update category stock level if applicable
+
     if (productEntry.category_id) {
       try {
         const categoryRecord = await Category.findByPk(productEntry.category_id);
         if (categoryRecord) {
           console.log(`Checking category ID ${productEntry.category_id} for stock level field`);
           
-          // Check if category has stock_level field
+   
           if (typeof categoryRecord.stock_level !== 'undefined') {
             console.log(`Reducing category stock level by ${quantityToRemove} units`);
             const newStockLevel = Math.max(0, categoryRecord.stock_level - quantityToRemove);
@@ -375,7 +357,6 @@ const deleteProduct = async (req, res) => {
       }
     }
 
-    // 4. Delete product images associated with this entry
     try {
       const productImages = await ProductImage.findAll({
         where: { entry_id: productEntry.entry_id }
@@ -384,7 +365,7 @@ const deleteProduct = async (req, res) => {
       console.log(`Found ${productImages.length} images associated with this entry`);
       
       for (const image of productImages) {
-        // If using Cloudinary, delete the image from cloud storage
+
         if (image.cloudinary_id) {
           try {
             await cloudinary.uploader.destroy(image.cloudinary_id);
@@ -393,15 +374,13 @@ const deleteProduct = async (req, res) => {
             console.error('Error deleting image from Cloudinary:', cloudinaryError);
           }
         }
-        
-        // Delete the image record
+
         await image.destroy();
       }
     } catch (imageError) {
       console.error('Error handling product images during deletion:', imageError);
     }
 
-    // 5. Finally delete the product entry
     await productEntry.destroy();
     console.log('Product entry successfully deleted');
 
@@ -577,17 +556,14 @@ const getProductByName = async (req, res) => {
   }
 };
 
-// Add a new function to handle product image uploads to Cloudinary
 const uploadProductImages = async (req, res) => {
   try {
     console.log('Image upload request received');
-    
-    // Check if product_id is provided
+   
     if (!req.body.product_id) {
       return res.status(400).json({ error: 'Product ID is required for image upload' });
     }
-    
-    // Check if files are uploaded
+   
     if (!req.files || !req.files.length) {
       return res.status(400).json({ error: 'No image files provided' });
     }
@@ -596,12 +572,10 @@ const uploadProductImages = async (req, res) => {
     const entryId = req.body.entry_id || null;
     const uploadedImages = [];
     
-    // Process each file
     for (const file of req.files) {
       try {
         console.log(`Processing file: ${file.originalname}, size: ${file.size} bytes`);
         
-        // Upload to Cloudinary
         const result = await cloudinary.uploader.upload(file.path, {
           folder: 'handix_products',
           use_filename: true,
@@ -609,8 +583,7 @@ const uploadProductImages = async (req, res) => {
         });
         
         console.log('Cloudinary upload result:', result);
-        
-        // Save image URL to database
+    
         const productImage = await ProductImage.create({
           product_id: productId,
           image_url: result.secure_url,
@@ -645,39 +618,34 @@ const uploadProductImages = async (req, res) => {
   }
 };
 
-// Update the existing updateProductStatus function to handle inventory updates properly
 const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     
     console.log(`Updating product status for entry ID ${id} to ${status}`);
-    
-    // Validate status
+ 
     if (!['Approved', 'Rejected', 'pending'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
     }
     
-    // Find the product entry
     const productEntry = await ProductEntry.findByPk(id);
     if (!productEntry) {
       return res.status(404).json({ error: 'Product entry not found' });
     }
     
     const oldStatus = productEntry.status;
-    
-    // Update the product entry status
+  
     await productEntry.update({ status });
     
-    // If the status is changed to Approved, update inventory and category
+    
     if (oldStatus !== 'Approved' && status === 'Approved') {
       console.log('Status changed to Approved, updating inventory and category');
       
-      // 1. Update inventory record
       let inventoryRecord = await Inventory.findOne({ where: { product_id: productEntry.product_id } });
       
       if (inventoryRecord) {
-        // Update existing inventory record with the actual quantity
+       
         await inventoryRecord.update({
           product_name: productEntry.product_name,
           description: productEntry.description || inventoryRecord.description,
@@ -687,8 +655,7 @@ const updateProductStatus = async (req, res) => {
         });
         console.log('Updated existing inventory record with actual quantity');
       }
-      
-      // 2. Update category stock level if applicable
+    
       if (productEntry.category_id) {
         try {
           const categoryRecord = await Category.findByPk(productEntry.category_id);
@@ -730,5 +697,5 @@ module.exports = {
   getProductSuggestions,
   getInventorySuggestions,
   uploadProductImages,
-  updateProductStatus // Add the new function to the exports
+  updateProductStatus 
 };

@@ -22,7 +22,6 @@ const ManageInventory = ({ onViewInventory }) => {
     const fetchInventory = async () => {
       try {
         setLoading(true);
-        // Get the auth token from localStorage
         const token = localStorage.getItem('token');
         
         if (!token) {

@@ -133,7 +133,7 @@ const ProductViewForm = ({ product, onBack }) => {
           <div className="row mb-2">
             <div className="col-md-6">
               <strong>Price:</strong>
-              <p className="bg-light p-1 rounded mb-2">${parseFloat(product.unit_price || 0).toFixed(2)}</p>
+              <p className="bg-light p-1 rounded mb-2">LKR {parseFloat(product.unit_price || 0).toFixed(2)}</p>
             </div>
             <div className="col-md-6">
               <strong>Quantity:</strong>
@@ -164,9 +164,9 @@ const ProductViewForm = ({ product, onBack }) => {
           <strong>Additional Price:</strong>
           <p className="bg-light p-1 rounded mb-2">
             {product.entryVariation && product.entryVariation.additional_price > 0
-              ? `$${parseFloat(product.entryVariation.additional_price).toFixed(2)}`
+              ? `LKR ${parseFloat(product.entryVariation.additional_price).toFixed(2)}`
               : (product.variations && product.variations.length > 0 && product.variations[0].additional_price > 0
-                 ? `$${parseFloat(product.variations[0].additional_price).toFixed(2)}`
+                 ? `LKR ${parseFloat(product.variations[0].additional_price).toFixed(2)}`
                  : 'N/A')}
           </p>
         </div>

@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../styles/artisan/ArtisanProducts.css';
 
 const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
-  const navigate = useNavigate(); // Hook for programmatic navigation
+  const navigate = useNavigate(); 
   const [formData, setFormData] = useState({
     product_id: productId,
     product_name: '',
@@ -275,13 +275,12 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         setFormData(prev => ({
           ...prev,
           [name]: value,
-          size: 'N/A'  // Reset size to N/A when category is not Clothing
+          size: 'N/A'
         }));
       } else {
         setFormData(prev => ({
           ...prev,
           [name]: value,
-          // Don't reset size when switching to Clothing
         }));
       }
       
@@ -386,7 +385,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       try {
         setIsLoading(true);
         
-        // Prepare the JSON payload
         const jsonPayload = {
           product_id: formData.product_id,
           product_name: formData.product_name,
@@ -394,7 +392,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           category: formData.category,
           price: parseFloat(formData.price),
           quantity: parseInt(formData.quantity, 10),
-          size: formData.size || 'N/A',  // Ensure size is 'N/A' if not selected
+          size: formData.size || 'N/A',  
           additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
           customization_available: formData.customization_available,
           product_status: formData.product_status,
@@ -410,7 +408,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           return;
         }
         
-        // First, create the product using JSON
         const response = await fetch('http://localhost:5000/api/products', {
           method: 'POST',
           headers: {
@@ -428,27 +425,23 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         const productData = await response.json();
         console.log('Product created successfully:', productData);
         
-        // Enhanced image upload to Cloudinary
         const uploadImages = async (productId, entryId) => {
           try {
             const token = localStorage.getItem('artisanToken');
             console.log(`Starting image upload for product ${productId}, entry ${entryId}`);
             console.log(`Total images to upload: ${imageFiles.length}`);
-            
-            // Create FormData for Cloudinary upload
+           
             const formData = new FormData();
-            
-            // Add product and entry IDs
+
             formData.append('product_id', productId);
             formData.append('entry_id', entryId);
-            
-            // Add all image files
+  
             imageFiles.forEach((file) => {
               formData.append('productImages', file);
               console.log(`Appending image: ${file.name}, size: ${file.size} bytes`);
             });
             
-            // Upload to Cloudinary via our API
+ 
             const response = await fetch('http://localhost:5000/api/products/images', {
               method: 'POST',
               headers: {
@@ -472,7 +465,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           }
         };
 
-        // Handle Cloudinary image uploads BEFORE redirecting
         if (imageFiles.length > 0) {
           try {
             console.log(`Uploading ${imageFiles.length} images to Cloudinary for product ${productData.productEntry.product_id}`);
@@ -480,17 +472,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             console.log('All images uploaded successfully to Cloudinary');
           } catch (imageError) {
             console.error('Error uploading images to Cloudinary:', imageError);
-            // We'll show the success message anyway since the product was created
+            
           }
         }
-        
-        // Show success message
+
         alert('Product added successfully!');
-        
-        // Notify parent component
+     
         onSave(productData.productEntry);
-        
-        // Redirect to products page after both product creation and image upload
+       
         window.location.href = '/artisan/products';
         
       } catch (error) {
