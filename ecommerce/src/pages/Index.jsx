@@ -1,18 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Star, ArrowRight, ShoppingBag } from 'lucide-react';
+import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
 import ProductSection from '../components/ProductSection';
 import CategoryCard from '../components/CategoryCard';
-import { fetchProducts, categories } from '../data/products';
+import { fetchProducts } from '../data/products';
 import { Progress } from '../components/ui/progress';
+
+// Fix the environment variable reference for Vite
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const HomePage = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Fetch categories directly in component
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/categories`);
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      throw error;
+    }
+  };
   
   useEffect(() => {
     const loadProducts = async () => {
@@ -28,7 +45,20 @@ const HomePage = () => {
       }
     };
     
+    const loadCategories = async () => {
+      try {
+        setCategoriesLoading(true);
+        const data = await fetchCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error("Error loading categories:", err);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    
     loadProducts();
+    loadCategories();
   }, []);
   
   // Get featured products (first 4)
@@ -40,6 +70,15 @@ const HomePage = () => {
     .slice(0, 4);
   // New arrivals (simulating with last 4 products)
   const newArrivals = products.slice(-4).reverse();
+  
+  // Category images mapping - you might want to store these in the database later
+  const categoryImages = {
+    "Carry Goods": "https://i.pinimg.com/736x/aa/54/65/aa5465fbf05cc1227a770a23704f8cdf.jpg",
+    "Clothing": "https://i.pinimg.com/736x/25/af/8a/25af8af775b256edb23e34a1ad02a8d8.jpg",
+    "Artistry": "https://i.pinimg.com/736x/5b/f3/80/5bf3804de21db62d78a8281be01cc026.jpg",
+    "Crafts": "https://i.pinimg.com/736x/fb/6a/e5/fb6ae547e543e097408b974b7889cbfd.jpg",
+    "Accessories": "https://i.pinimg.com/736x/e4/b9/35/e4b935d3a0537aa49b76be1e8666e53b.jpg"
+  };
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -61,22 +100,26 @@ const HomePage = () => {
         <section className="py-16 bg-white">
           <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
             <h2 className="text-3xl font-bold mb-12 text-center">Shop by Category</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center">
-              {[
-                { name: "Carry Goods", image: "https://i.pinimg.com/736x/aa/54/65/aa5465fbf05cc1227a770a23704f8cdf.jpg", count: 24 },
-                { name: "Clothing", image: "https://i.pinimg.com/736x/25/af/8a/25af8af775b256edb23e34a1ad02a8d8.jpg", count: 18 },
-                { name: "Artistry", image: "https://i.pinimg.com/736x/5b/f3/80/5bf3804de21db62d78a8281be01cc026.jpg", count: 32 },
-                { name: "Crafts", image: "https://i.pinimg.com/736x/fb/6a/e5/fb6ae547e543e097408b974b7889cbfd.jpg", count: 15 },
-                { name: "Accessories", image: "https://i.pinimg.com/736x/e4/b9/35/e4b935d3a0537aa49b76be1e8666e53b.jpg", count: 27 }
-              ].map((category, index) => (
-                <CategoryCard 
-                  key={index}
-                  category={category.name}
-                  image={category.image}
-                  count={category.count}
-                />
-              ))}
-            </div>
+            {categoriesLoading ? (
+              <div className="flex justify-center items-center h-40">
+                <div className="text-center">
+                  <Progress className="w-56 mb-2" />
+                  <p className="text-sm text-gray-500">Loading categories...</p>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 justify-items-center">
+                {categories.map((category) => (
+                  <CategoryCard 
+                    key={category.category_id}
+                    category={category.category_name}
+                    image={categoryImages[category.category_name] || 
+                          "https://placehold.co/300x300?text=Category"}
+                    count={parseInt(category.product_count)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </section>
         

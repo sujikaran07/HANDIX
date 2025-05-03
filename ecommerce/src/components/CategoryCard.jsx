@@ -15,7 +15,7 @@ const CategoryCard = ({ category, image, count }) => {
         />
       </div>
       <h3 className="text-base sm:text-lg font-semibold text-center group-hover:text-primary transition-colors">{category}</h3>
-      {count && <p className="text-xs sm:text-sm text-gray-500">{count} products</p>}
+      {count !== undefined && <p className="text-xs sm:text-sm text-gray-500">{count} {count === 1 ? 'product' : 'products'}</p>}
     </Link>
   );
 };
