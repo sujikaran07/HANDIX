@@ -17,11 +17,25 @@ const NavBar = () => {
   const { itemCount } = useCart();
   // Check localStorage for authentication status on component mount
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
+  // Add state for user data
+  const [userData, setUserData] = useState(null);
   
   useEffect(() => {
     const authStatus = localStorage.getItem('isAuthenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
+      
+      // Get user data from localStorage
+      try {
+        const userDataString = localStorage.getItem('user');
+        if (userDataString) {
+          const parsedUserData = JSON.parse(userDataString);
+          setUserData(parsedUserData);
+          console.log('User data loaded:', parsedUserData);
+        }
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
     }
   }, []);
   
@@ -37,6 +51,20 @@ const NavBar = () => {
       localStorage.setItem('isAuthenticated', 'true');
     } else {
       localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      setUserData(null);
+    }
+  };
+
+  // Function to get user's full name
+  const getUserFullName = () => {
+    if (userData && userData.firstName && userData.lastName) {
+      return `${userData.firstName} ${userData.lastName}`;
+    } else if (userData && userData.firstName) {
+      return userData.firstName;
+    } else {
+      return "User";
     }
   };
 
@@ -74,7 +102,7 @@ const NavBar = () => {
           </div>
           
           {/* Search Bar - Center */}
-          <div className="hidden md:flex flex-1 mx-1 lg:mx-2 max-w-3xl">
+          <div className="hidden md:flex flex-1 mx-1 lg:mx-2 max-w-md lg:max-w-xl xl:max-w-2xl">
             <div className="relative w-full">
               <input
                 type="text"
@@ -89,7 +117,7 @@ const NavBar = () => {
           </div>
           
           {/* Right Side Icons */}
-          <div className="hidden md:flex items-center space-x-3 lg:space-x-4">
+          <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 min-w-[120px] lg:min-w-[140px]">
             {!isAuthenticated ? (
               <Link to="/login" className="text-gray-600 hover:text-primary transition-colors flex items-center">
                 <span>Sign in</span>
@@ -100,7 +128,7 @@ const NavBar = () => {
                   <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-1.5">
                     <User size={16} />
                   </div>
-                  <span>Account</span>
+                  <span className="max-w-[80px] lg:max-w-[120px] truncate">{userData?.firstName || "Account"}</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 bg-white p-0 shadow-lg rounded-lg border border-gray-200 mt-1">
                   <div className="bg-blue-50 p-4 flex items-start gap-3">
@@ -108,7 +136,7 @@ const NavBar = () => {
                       <User size={20} />
                     </div>
                     <div>
-                      <p className="font-semibold">Sujikaran Mahenthiran</p>
+                      <p className="font-semibold">{getUserFullName()}</p>
                       <Link to="/profile" className="text-sm text-gray-600 hover:text-primary">View your profile</Link>
                     </div>
                   </div>
@@ -255,7 +283,7 @@ const NavBar = () => {
                       <User size={20} />
                     </div>
                     <div>
-                      <p className="font-medium">Sujikaran Mahenthiran</p>
+                      <p className="font-medium">{getUserFullName()}</p>
                       <Link 
                         to="/profile" 
                         className="text-xs text-gray-600 hover:text-primary"

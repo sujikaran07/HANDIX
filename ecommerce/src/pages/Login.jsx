@@ -69,18 +69,24 @@ const LoginPage = () => {
         console.log('Login response received:', response.status);
         
         if (response.data && response.data.token) {
-          // Store user data and token in localStorage
+          // Store complete user data from database in localStorage
           localStorage.setItem('token', response.data.token);
+          
+          // Make sure we store the complete user object that came from the database
+          console.log('Storing user data:', response.data.user);
           localStorage.setItem('user', JSON.stringify(response.data.user));
           localStorage.setItem('isAuthenticated', 'true');
           
-          toast({
-            title: "Login Successful",
-            description: "Welcome back to Handix!",
-          });
-          
-          // Navigate to home page
-          navigate('/');
+          // Force a window reload to update the NavBar with the latest user data
+          setTimeout(() => {
+            // Navigate to home page
+            navigate('/');
+            
+            toast({
+              title: "Login Successful",
+              description: "Welcome back to Handix!",
+            });
+          }, 100);
         }
       } catch (error) {
         console.error('Login error details:', error);
