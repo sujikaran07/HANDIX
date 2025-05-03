@@ -106,8 +106,59 @@ const createCustomer = async (req, res) => {
       customerData.country = customerData.addresses[0].country; 
     }
 
-    // Create customer
+    // Store the original password before hashing for verification
+    let originalPassword = null;
+
+    // Hash password if provided - ensure consistent salt rounds
+    if (customerData.password) {
+      // Save the original password for testing verification
+      originalPassword = String(customerData.password).trim();
+      
+      console.log('Registration password hashing:');
+      console.log('- Original password:', originalPassword);
+      console.log('- Password type:', typeof originalPassword);
+      console.log('- Password length:', originalPassword.length);
+      
+      // Use the standard bcrypt hash with 10 rounds
+      const salt = await bcrypt.genSalt(10);
+      customerData.password = await bcrypt.hash(originalPassword, salt);
+      
+      console.log('- Generated hash:', customerData.password);
+    }
+
+    // Create customer in database
     const customer = await Customer.create(customerData, { include: [{ model: Address, as: 'addresses' }] });
+    
+    // Now test if the password can be verified
+    if (originalPassword) {
+      try {
+        const verifyPassword = await bcrypt.compare(originalPassword, customer.password);
+        console.log('VERIFICATION TEST:', verifyPassword ? 'SUCCESS' : 'FAILED');
+        
+        // If verification fails, try fixing the password with a new hash
+        if (!verifyPassword) {
+          console.log('⚠️ Initial verification failed - attempting fix');
+          
+          // Create a new proper hash
+          const newSalt = await bcrypt.genSalt(10);
+          const newHash = await bcrypt.hash(originalPassword, newSalt);
+          
+          // Update the customer record with the new hash
+          await Customer.update({ password: newHash }, {
+            where: { c_id: customer.c_id }
+          });
+          
+          console.log('💡 Password hash fixed in database');
+          
+          // Verify again with the new hash
+          const refreshedCustomer = await Customer.findByPk(customer.c_id);
+          const secondVerify = await bcrypt.compare(originalPassword, refreshedCustomer.password);
+          console.log('SECOND VERIFICATION TEST:', secondVerify ? 'SUCCESS' : 'FAILED');
+        }
+      } catch (verifyError) {
+        console.error('Password verification error:', verifyError);
+      }
+    }
     
     // Print OTP for development
     console.log(`🔐 OTP for ${customerData.email}: ${verificationOTP} (valid for 15 minutes)`);
@@ -289,6 +340,30 @@ const verifyOTP = async (req, res) => {
     
     if (!customer) {
       return res.status(400).json({ message: 'Invalid or expired verification code' });
+    }
+    
+    // Additional check - let's make sure the password hash is working
+    if (customer.password && customer.password.startsWith('$2')) {
+      try {
+        // Test with a temp password in dev mode
+        if (process.env.NODE_ENV !== 'production' && req.body.testPassword) {
+          const isValid = await bcrypt.compare(req.body.testPassword, customer.password);
+          console.log(`Test password verification: ${isValid ? 'VALID' : 'INVALID'}`);
+          
+          // If invalid and in dev mode, we can try to fix it
+          if (!isValid && process.env.NODE_ENV !== 'production') {
+            console.log('Attempting to fix invalid hash during verification');
+            
+            const newSalt = await bcrypt.genSalt(10);
+            const newHash = await bcrypt.hash(req.body.testPassword, newSalt);
+            customer.password = newHash;
+            
+            // We'll save this with other changes below
+          }
+        }
+      } catch (e) {
+        console.error('Password verification test error:', e);
+      }
     }
     
     // Update customer as verified

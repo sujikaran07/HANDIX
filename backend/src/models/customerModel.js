@@ -99,6 +99,16 @@ const Customer = sequelize.define('Customer', {
     allowNull: true,
     field: 'verification_expires'
   },
+  resetPasswordToken: {
+    type: DataTypes.STRING,
+    field: 'reset_password_token',
+    allowNull: true
+  },
+  resetPasswordExpires: {
+    type: DataTypes.DATE,
+    field: 'reset_password_expires',
+    allowNull: true
+  },
   addedByAdmin: {
     type: DataTypes.VIRTUAL, // Changed from BOOLEAN to VIRTUAL
     defaultValue: false,

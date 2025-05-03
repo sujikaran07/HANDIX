@@ -25,7 +25,10 @@ import HelpCenterPage from "./pages/HelpCenterPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import VerifyEmail from "./pages/VerifyEmail";
 import VerifyOTP from './pages/VerifyOTP';
-
+import ForgotPasswordPage from './pages/ForgotPassword';
+import VerifyResetCodePage from './pages/VerifyResetCode';
+import ResetPasswordPage from './pages/ResetPassword';
+import ChangePasswordPage from './pages/ChangePassword';
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -54,6 +57,10 @@ const App = () => (
             <Route path="/settings" element={<AccountSettingsPage />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/verify-reset-code" element={<VerifyResetCodePage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

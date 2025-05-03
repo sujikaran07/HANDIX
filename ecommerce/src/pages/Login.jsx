@@ -19,12 +19,18 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  // Check if user was redirected after successful verification
+  // Check if user was redirected after successful verification or password change
   useEffect(() => {
     if (location.state?.verificationSuccess) {
       toast({
         title: "Email Verified",
         description: "Your email has been verified. You can now log in.",
+      });
+    } else if (location.state?.passwordChanged) {
+      toast({
+        title: "Password Changed",
+        description: "Please log in with your new password.",
+        variant: "default"
       });
     }
   }, [location.state]);
@@ -327,9 +333,9 @@ const LoginPage = () => {
                     />
                     <span className="text-sm">Remember me</span>
                   </label>
-                  <a href="#" className="text-sm text-primary hover:underline">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
                 
                 <button

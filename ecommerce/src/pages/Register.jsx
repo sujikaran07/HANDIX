@@ -80,12 +80,18 @@ const RegisterPage = () => {
       setLoading(true);
       
       try {
+        // Trim password fields before sending
+        const trimmedPassword = formData.password.trim();
+        
+        console.log('Submitting registration with trimmed password length:', trimmedPassword.length);
+        
         // Prepare data for backend
         const customerData = {
           firstName: formData.firstName,
           lastName: formData.lastName,
           email: formData.email,
-          password: formData.password,
+          // Always send password as a string
+          password: String(trimmedPassword),
           accountType: formData.accountType === 'retail' ? 'Retail' : 'Wholesale',
           phone: '',
           accountStatus: 'Pending',
