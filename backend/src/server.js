@@ -23,7 +23,7 @@ const ProductVariation = require('./models/productVariationModel');
 const { Customer } = require('./models/customerModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
-
+const authRoutes = require('./routes/auth/authRoutes'); // Add this line
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
@@ -84,6 +84,7 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/login', employeeLoginRoutes);
+app.use('/api/auth', authRoutes); // Add this line
 
 const PORT = process.env.PORT || 5000;
 

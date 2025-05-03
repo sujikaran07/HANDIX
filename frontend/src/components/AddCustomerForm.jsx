@@ -29,7 +29,8 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
     };
     try {
       console.log('Saving customer with data:', newCustomer); 
-      await axios.post('http://localhost:5000/api/customers', newCustomer);
+      // Use the admin create endpoint instead of the regular endpoint
+      await axios.post('http://localhost:5000/api/customers/admin/create', newCustomer);
       onSave(newCustomer); 
       onCancel(); 
     } catch (error) {

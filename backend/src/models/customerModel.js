@@ -83,6 +83,31 @@ const Customer = sequelize.define('Customer', {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  isEmailVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: true, 
+    field: 'is_email_verified'
+  },
+  verificationToken: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'verification_token'
+  },
+  verificationExpires: {
+    type: DataTypes.DATE,
+    allowNull: true,
+    field: 'verification_expires'
+  },
+  addedByAdmin: {
+    type: DataTypes.VIRTUAL, // Changed from BOOLEAN to VIRTUAL
+    defaultValue: false,
+    get() {
+      // Return based on other fields in the model
+      // For example, assume admin-added if already verified without token
+      return this.isEmailVerified && !this.verificationToken;
+    }
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
@@ -103,12 +128,23 @@ const Customer = sequelize.define('Customer', {
   hooks: {
     beforeCreate: async (customer) => {
       if (customer.password) {
+        // Use a consistent salt rounds number (10 is standard)
         const salt = await bcrypt.genSalt(10);
         customer.password = await bcrypt.hash(customer.password, salt);
+        console.log('Hashed password for new user:', customer.password.substring(0, 20) + '...');
       }
+      
+      // Remove references to addedByAdmin field
+      if (customer.get('isEmailVerified') && customer.get('accountType') === 'Retail') {
+        customer.accountStatus = 'Approved';
+      }
+      
+      // Only approve retail accounts after email verification
+      // This will be handled in the verifyEmail function
     },
     beforeUpdate: async (customer) => {
-      if (customer.password) {
+      // Only hash if password field is being modified
+      if (customer.changed('password') && customer.password) {
         const salt = await bcrypt.genSalt(10);
         customer.password = await bcrypt.hash(customer.password, salt);
       }

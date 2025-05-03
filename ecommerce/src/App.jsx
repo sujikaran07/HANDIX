@@ -23,6 +23,8 @@ import PurchasesPage from "./pages/PurchasesPage";
 import MessagesPage from "./pages/MessagesPage";
 import HelpCenterPage from "./pages/HelpCenterPage";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
+import VerifyEmail from "./pages/VerifyEmail";
+import VerifyOTP from './pages/VerifyOTP';
 
 const queryClient = new QueryClient();
 
@@ -50,6 +52,8 @@ const App = () => (
             <Route path="/messages" element={<MessagesPage />} />
             <Route path="/help" element={<HelpCenterPage />} />
             <Route path="/settings" element={<AccountSettingsPage />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>

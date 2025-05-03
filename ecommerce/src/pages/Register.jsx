@@ -4,6 +4,7 @@ import { Eye, EyeOff, ShoppingBag, Building2 } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { useToast } from '@/hooks/use-toast';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,10 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
+  const [verificationLink, setVerificationLink] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -59,23 +64,158 @@ const RegisterPage = () => {
     if (!formData.accountType) {
       newErrors.accountType = 'Please select an account type';
     }
+
+    if (!acceptTerms) {
+      newErrors.terms = 'You must accept the Terms of Service and Privacy Policy';
+    }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      // Demo registration - in a real app, this would register with a backend
-      toast({
-        title: "Registration Successful",
-        description: `Welcome to Handix! Your ${formData.accountType} account has been created.`,
-      });
-      navigate('/');
+      setLoading(true);
+      
+      try {
+        // Prepare data for backend
+        const customerData = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          accountType: formData.accountType === 'retail' ? 'Retail' : 'Wholesale',
+          phone: '',
+          accountStatus: 'Pending',
+          country: '',
+          city: '',
+          state: '',
+          postalCode: ''
+        };
+        
+        // Make API call to create customer
+        const response = await axios.post('http://localhost:5000/api/customers', customerData);
+        
+        toast({
+          title: "Registration Successful",
+          description: "Please check your email for the verification code.",
+          duration: 5000,
+        });
+        
+        // Navigate to OTP verification page with email
+        navigate('/verify-otp', { 
+          state: { 
+            email: customerData.email
+          } 
+        });
+        
+      } catch (error) {
+        console.error('Registration error:', error);
+        if (error.response && error.response.data) {
+          // Handle specific error responses
+          if (error.response.status === 409) {
+            setErrors({ email: 'This email is already registered' });
+            toast({
+              title: "Registration Failed",
+              description: "This email address is already registered. Please login or use a different email.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Registration Failed",
+              description: error.response.data.message || "Failed to create account. Please try again.",
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Connection Error",
+            description: "Unable to connect to the server. Please try again.",
+            variant: "destructive"
+          });
+        }
+      } finally {
+        setLoading(false);
+      }
     }
   };
+  
+  if (registrationComplete) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        
+        <main className="flex-grow bg-gray-50 py-12">
+          <div className="container-custom max-w-lg">
+            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+              <h1 className="text-2xl font-bold mb-6">Email Verification Required</h1>
+              
+              <div className="mb-6">
+                <div className="flex justify-center mb-4">
+                  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="24" height="24" className="fill-primary" rx="12" />
+                    <path d="M7 13L10 16L17 9" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <p className="text-lg font-medium mb-2">Registration Successful!</p>
+                <p className="text-gray-600 mb-4">
+                  We've sent a verification link to <span className="font-medium">{formData.email}</span>. 
+                  Please check your inbox and click the link to verify your email address and activate your account.
+                </p>
+                
+                {/* Show verification link directly for local testing */}
+                {verificationLink && (
+                  <div className="my-6 p-4 bg-gray-100 rounded-md text-left">
+                    <p className="font-medium mb-2">Since you're in development mode, you can use this link to verify your account:</p>
+                    <div className="overflow-x-auto">
+                      <a 
+                        href={verificationLink} 
+                        className="text-primary break-all hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {verificationLink}
+                      </a>
+                    </div>
+                    <button 
+                      onClick={() => window.open(verificationLink, '_blank')}
+                      className="mt-3 px-4 py-1 bg-primary text-white text-sm rounded"
+                    >
+                      Open Verification Link
+                    </button>
+                  </div>
+                )}
+                
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 text-sm text-blue-700 mt-4 text-left">
+                  <p className="font-medium">Important:</p>
+                  <p>You must verify your email before you can log in. If you don't see our email, please check your spam folder.</p>
+                </div>
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-center space-y-3 md:space-y-0 md:space-x-4">
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Go to Login
+                </Link>
+                <button
+                  onClick={() => navigate('/check-email')}
+                  className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover"
+                >
+                  Open Email Client
+                </button>
+              </div>
+            </div>
+          </div>
+        </main>
+        
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -240,7 +380,9 @@ const RegisterPage = () => {
                 <label className="flex items-center">
                   <input
                     type="checkbox"
-                    className="mr-2 accent-primary"
+                    className={`mr-2 accent-primary ${errors.terms ? 'border-red-500' : ''}`}
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
                   />
                   <span className="text-sm">
                     I agree to the{' '}
@@ -253,13 +395,19 @@ const RegisterPage = () => {
                     </a>
                   </span>
                 </label>
+                {errors.terms && (
+                  <p className="text-red-500 text-sm mt-1">{errors.terms}</p>
+                )}
               </div>
               
               <button
                 type="submit"
-                className="w-full py-3 px-6 rounded-md bg-primary text-white hover:bg-primary-hover"
+                disabled={loading}
+                className={`w-full py-3 px-6 rounded-md bg-primary text-white hover:bg-primary-hover ${
+                  loading ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </button>
             </form>
             
