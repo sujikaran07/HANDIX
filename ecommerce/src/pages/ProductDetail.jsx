@@ -4,7 +4,7 @@ import { Star, ChevronRight, Minus, Plus, Check, ShoppingCart } from 'lucide-rea
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
-import { fetchProducts } from '../data/products';
+import { fetchProducts, fetchProductById } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 
 const ProductDetailPage = () => {
@@ -19,34 +19,99 @@ const ProductDetailPage = () => {
   const [customization, setCustomization] = useState('');
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [selectedSize, setSelectedSize] = useState('');
+  const [selectedVariation, setSelectedVariation] = useState(null);
   const { addItem } = useCart();
   
+  // Get max available quantity based on selected variation or base product
+  const getMaxAvailableQuantity = () => {
+    if (selectedVariation && selectedVariation.stockLevel !== undefined) {
+      return selectedVariation.stockLevel;
+    }
+    return product ? product.quantity : 0;
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const products = await fetchProducts();
-        setAllProducts(products);
+        
+        // First fetch all products for related products
+        const allProducts = await fetchProducts();
+        setAllProducts(allProducts);
         
         if (id) {
-          const foundProduct = products.find(p => p.id === id);
+          // Now fetch the specific product with all details
+          const productDetails = await fetchProductById(id);
           
-          if (foundProduct) {
-            setProduct(foundProduct);
-            setSelectedImage(foundProduct.images[0]);
-            setIsCustomizing(false); // Reset customization state
+          if (productDetails) {
+            console.log("CRITICAL DEBUG - Product data:", {
+              id: productDetails.id,
+              name: productDetails.name,
+              category: productDetails.category,
+              variations: productDetails.variations.map(v => ({
+                id: v.id,
+                size: v.size,
+                stock: v.stockLevel
+              })),
+              hasSizeOptions: productDetails.hasSizeOptions,
+              hasNoSizeOptions: productDetails.hasNoSizeOptions
+            });
             
-            // Set default size if available
-            if (foundProduct.sizes && foundProduct.sizes.length > 0) {
-              setSelectedSize(foundProduct.sizes[0]);
+            setProduct(productDetails);
+            setSelectedImage(productDetails.images[0]);
+            setIsCustomizing(false);
+            
+            // Handle variations with improved logging for clothing items
+            if (productDetails.category === 'Clothing') {
+              console.log("DEBUG: Processing clothing product variations");
+              
+              if (productDetails.variations && productDetails.variations.length > 0) {
+                // For clothing, prioritize non-N/A size variations
+                const actualSizeVariations = productDetails.variations.filter(v => 
+                  v.stockLevel > 0 && v.size !== 'N/A'
+                );
+                
+                if (actualSizeVariations.length > 0) {
+                  console.log("DEBUG: Found clothing with actual sizes:", 
+                    actualSizeVariations.map(v => v.size).join(', '));
+                  // Select first size variation
+                  setSelectedSize(actualSizeVariations[0].size);
+                  setSelectedVariation(actualSizeVariations[0]);
+                } else {
+                  // If no actual sizes, use N/A variation if available
+                  const naVariation = productDetails.variations.find(v => 
+                    v.stockLevel > 0 && v.size === 'N/A'
+                  );
+                  
+                  if (naVariation) {
+                    console.log("DEBUG: Clothing with only N/A size");
+                    setSelectedSize('N/A');
+                    setSelectedVariation(naVariation);
+                  } else {
+                    setSelectedSize('');
+                    setSelectedVariation(null);
+                  }
+                }
+              } else {
+                console.log("DEBUG: Clothing product has no variations");
+                setSelectedSize('');
+                setSelectedVariation(null);
+              }
+            } 
+            // Non-clothing products with variations
+            else if (productDetails.variations && productDetails.variations.length > 0) {
+              // Just take the first variation with stock
+              setSelectedSize(productDetails.variations[0].size);
+              setSelectedVariation(productDetails.variations[0]);
             } else {
               setSelectedSize('');
+              setSelectedVariation(null);
             }
             
             // Find related products (same category, but not this product)
-            const related = products.filter(p => 
-              p.category === foundProduct.category && 
-              p.id !== foundProduct.id
+            const related = allProducts.filter(p => 
+              p.category === productDetails.category && 
+              p.id !== productDetails.id
             ).slice(0, 4);
             
             setRelatedProducts(related);
@@ -67,11 +132,22 @@ const ProductDetailPage = () => {
   
   const handleQuantityChange = (amount) => {
     const newQuantity = quantity + amount;
-    if (newQuantity >= 1 && newQuantity <= 10) {
+    const maxAvailable = getMaxAvailableQuantity();
+    
+    // Ensure quantity doesn't exceed available stock, no arbitrary limit of 10
+    if (newQuantity >= 1 && newQuantity <= maxAvailable) {
       setQuantity(newQuantity);
     }
   };
   
+  // When variation/size changes, adjust quantity if needed
+  useEffect(() => {
+    const maxAvailable = getMaxAvailableQuantity();
+    if (quantity > maxAvailable) {
+      setQuantity(maxAvailable > 0 ? maxAvailable : 1);
+    }
+  }, [selectedVariation]);
+
   const toggleCustomization = () => {
     setIsCustomizing(!isCustomizing);
     if (!isCustomizing) {
@@ -79,10 +155,46 @@ const ProductDetailPage = () => {
     }
   };
   
+  const handleSizeChange = (size, variation) => {
+    setSelectedSize(size);
+    setSelectedVariation(variation);
+    
+    // Check if selected quantity exceeds new variation's stock level
+    if (variation && variation.stockLevel < quantity) {
+      setQuantity(variation.stockLevel > 0 ? variation.stockLevel : 1);
+    }
+  };
+  
   const handleAddToCart = () => {
     if (product) {
-      addItem(product, quantity, isCustomizing ? customization : undefined);
+      const itemToAdd = {
+        ...product,
+        selectedSize: selectedSize,
+        selectedVariation: selectedVariation,
+        customization: isCustomizing ? customization : undefined
+      };
+      
+      addItem(itemToAdd, quantity);
     }
+  };
+  
+  // Calculate final price including any additional costs
+  const calculateFinalPrice = () => {
+    if (!product) return 0;
+    
+    let finalPrice = product.price;
+    
+    // Add variation price if selected
+    if (selectedVariation && selectedVariation.additionalPrice) {
+      finalPrice += selectedVariation.additionalPrice;
+    }
+    
+    // Add customization fee if applicable
+    if (isCustomizing && product.customizationFee) {
+      finalPrice += product.customizationFee;
+    }
+    
+    return finalPrice;
   };
   
   if (loading) {
@@ -187,37 +299,90 @@ const ProductDetailPage = () => {
               </div>
               
               <p className="text-xl font-bold mb-4 text-primary">
-                {product.currency} {product.price.toLocaleString()}
-                {isCustomizing && product.customizationFee && (
-                  <span className="text-sm text-gray-500 ml-2">
-                    + {product.currency} {product.customizationFee.toLocaleString()} (customization fee)
+                {product.currency} {calculateFinalPrice().toLocaleString()}
+                {selectedVariation && selectedVariation.additionalPrice > 0 && (
+                  <span className="text-sm text-gray-600 ml-2">
+                    (Includes {product.currency} {selectedVariation.additionalPrice.toLocaleString()} for {selectedVariation.size})
                   </span>
+                )}
+                {isCustomizing && product.customizationFee > 0 && (
+                  <div className="text-sm text-gray-600">
+                    + {product.currency} {product.customizationFee.toLocaleString()} (customization fee)
+                  </div>
                 )}
               </p>
               
               <p className="text-gray-600 mb-6">{product.description}</p>
               
-              {/* Size Selection (only for Clothing) */}
-              {product.category === 'Clothing' && (
-                <div className="mb-6">
-                  <h3 className="font-medium mb-2">Select Size</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {['XS', 'S', 'M', 'L', 'XL'].map(size => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`border rounded-md py-2 px-4 min-w-[64px] transition ${
-                          selectedSize === size 
-                            ? 'border-primary bg-primary text-white' 
-                            : 'border-gray-300 hover:border-primary'
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Size/Variation Selection - Showing all standard sizes for clothing */}
+              <div className="mb-6">
+                {/* Clothing Products - Always show standard sizes */}
+                {product.category === 'Clothing' && (
+                  <>
+                    <h3 className="font-medium mb-2">Size</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {/* Standard sizes for all clothing products */}
+                      {['XS', 'S', 'M', 'L', 'XL'].map(size => {
+                        // Check if this size exists in variations
+                        const variation = product.variations?.find(v => v.size === size && v.stockLevel > 0);
+                        const isAvailable = !!variation;
+                        
+                        return (
+                          <button
+                            key={size}
+                            onClick={() => variation && handleSizeChange(size, variation)}
+                            className={`border rounded-md py-2 px-4 transition ${
+                              selectedSize === size 
+                                ? 'border-primary bg-primary text-white' 
+                                : isAvailable 
+                                  ? 'border-gray-300 hover:border-primary' 
+                                  : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                            disabled={!isAvailable}
+                            title={isAvailable ? `${size} size` : `${size} size - Out of stock`}
+                          >
+                            {size}
+                            {variation?.additionalPrice > 0 && 
+                              ` (+${product.currency} ${variation.additionalPrice.toLocaleString()})`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Show "One size fits all" only if no variations with size other than N/A */}
+                    {(!product.variations || product.variations.length === 0 || 
+                      product.variations.every(v => v.size === 'N/A')) && (
+                      <p className="text-sm text-gray-500 mt-2">One size fits all</p>
+                    )}
+                  </>
+                )}
+                
+                {/* Non-Clothing Products with Variations */}
+                {product.category !== 'Clothing' && product.variations && product.variations.length > 0 && (
+                  <>
+                    <h3 className="font-medium mb-2">Select Option</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {product.variations
+                        .filter(v => v.stockLevel > 0)
+                        .map(variation => (
+                          <button
+                            key={variation.id}
+                            onClick={() => handleSizeChange(variation.size, variation)}
+                            className={`border rounded-md py-2 px-4 transition ${
+                              selectedSize === variation.size 
+                                ? 'border-primary bg-primary text-white' 
+                                : 'border-gray-300 hover:border-primary'
+                            }`}
+                          >
+                            {variation.size === 'N/A' ? 'One Size' : variation.size}
+                            {variation.additionalPrice > 0 && 
+                              ` (+${product.currency} ${variation.additionalPrice.toLocaleString()})`}
+                          </button>
+                        ))}
+                    </div>
+                  </>
+                )}
+              </div>
               
               {/* Customization Option (only for Artistry) */}
               {product.category === 'Artistry' && product.isCustomizable && (
@@ -266,33 +431,44 @@ const ProductDetailPage = () => {
                   <input
                     type="number"
                     min="1"
-                    max="10"
+                    max={getMaxAvailableQuantity()}
                     value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      const maxAvailable = getMaxAvailableQuantity();
+                      if (val >= 1 && val <= maxAvailable) {
+                        setQuantity(val);
+                      }
+                    }}
                     className="border-t border-b border-gray-300 p-2 w-16 text-center focus:outline-none"
                   />
                   <button
                     onClick={() => handleQuantityChange(1)}
                     className="border border-gray-300 rounded-r-md p-2 hover:bg-gray-50"
-                    disabled={quantity >= 10}
+                    disabled={quantity >= getMaxAvailableQuantity()}
                   >
                     <Plus size={18} />
                   </button>
                 </div>
+                {getMaxAvailableQuantity() <= 5 && getMaxAvailableQuantity() > 0 && (
+                  <p className="text-sm text-amber-600 mt-1">
+                    Only {getMaxAvailableQuantity()} {getMaxAvailableQuantity() === 1 ? 'item' : 'items'} left in stock
+                  </p>
+                )}
               </div>
               
               {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
-                disabled={!product.inStock}
+                disabled={!product.inStock || getMaxAvailableQuantity() < 1}
                 className={`w-full py-3 px-6 rounded-md mb-4 flex items-center justify-center ${
-                  product.inStock 
+                  (product.inStock && getMaxAvailableQuantity() > 0)
                     ? 'bg-primary text-white hover:bg-primary-hover' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 <ShoppingCart size={20} className="mr-2" />
-                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                {getMaxAvailableQuantity() > 0 ? 'Add to Cart' : 'Out of Stock'}
               </button>
               
               {/* Additional Info */}
