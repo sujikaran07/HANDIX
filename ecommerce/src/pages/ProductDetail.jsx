@@ -22,7 +22,6 @@ const ProductDetailPage = () => {
   const [selectedVariation, setSelectedVariation] = useState(null);
   const { addItem } = useCart();
   
-  // Get max available quantity based on selected variation or base product
   const getMaxAvailableQuantity = () => {
     if (selectedVariation && selectedVariation.stockLevel !== undefined) {
       return selectedVariation.stockLevel;
@@ -35,12 +34,10 @@ const ProductDetailPage = () => {
       try {
         setLoading(true);
         
-        // First fetch all products for related products
         const allProducts = await fetchProducts();
         setAllProducts(allProducts);
         
         if (id) {
-          // Now fetch the specific product with all details
           const productDetails = await fetchProductById(id);
           
           if (productDetails) {
@@ -61,12 +58,10 @@ const ProductDetailPage = () => {
             setSelectedImage(productDetails.images[0]);
             setIsCustomizing(false);
             
-            // Handle variations with improved logging for clothing items
             if (productDetails.category === 'Clothing') {
               console.log("DEBUG: Processing clothing product variations");
               
               if (productDetails.variations && productDetails.variations.length > 0) {
-                // For clothing, prioritize non-N/A size variations
                 const actualSizeVariations = productDetails.variations.filter(v => 
                   v.stockLevel > 0 && v.size !== 'N/A'
                 );
@@ -74,11 +69,9 @@ const ProductDetailPage = () => {
                 if (actualSizeVariations.length > 0) {
                   console.log("DEBUG: Found clothing with actual sizes:", 
                     actualSizeVariations.map(v => v.size).join(', '));
-                  // Select first size variation
                   setSelectedSize(actualSizeVariations[0].size);
                   setSelectedVariation(actualSizeVariations[0]);
                 } else {
-                  // If no actual sizes, use N/A variation if available
                   const naVariation = productDetails.variations.find(v => 
                     v.stockLevel > 0 && v.size === 'N/A'
                   );
@@ -98,9 +91,7 @@ const ProductDetailPage = () => {
                 setSelectedVariation(null);
               }
             } 
-            // Non-clothing products with variations
             else if (productDetails.variations && productDetails.variations.length > 0) {
-              // Just take the first variation with stock
               setSelectedSize(productDetails.variations[0].size);
               setSelectedVariation(productDetails.variations[0]);
             } else {
@@ -108,7 +99,6 @@ const ProductDetailPage = () => {
               setSelectedVariation(null);
             }
             
-            // Find related products (same category, but not this product)
             const related = allProducts.filter(p => 
               p.category === productDetails.category && 
               p.id !== productDetails.id
@@ -134,13 +124,11 @@ const ProductDetailPage = () => {
     const newQuantity = quantity + amount;
     const maxAvailable = getMaxAvailableQuantity();
     
-    // Ensure quantity doesn't exceed available stock, no arbitrary limit of 10
     if (newQuantity >= 1 && newQuantity <= maxAvailable) {
       setQuantity(newQuantity);
     }
   };
   
-  // When variation/size changes, adjust quantity if needed
   useEffect(() => {
     const maxAvailable = getMaxAvailableQuantity();
     if (quantity > maxAvailable) {
@@ -159,7 +147,6 @@ const ProductDetailPage = () => {
     setSelectedSize(size);
     setSelectedVariation(variation);
     
-    // Check if selected quantity exceeds new variation's stock level
     if (variation && variation.stockLevel < quantity) {
       setQuantity(variation.stockLevel > 0 ? variation.stockLevel : 1);
     }
@@ -178,18 +165,15 @@ const ProductDetailPage = () => {
     }
   };
   
-  // Calculate final price including any additional costs
   const calculateFinalPrice = () => {
     if (!product) return 0;
     
     let finalPrice = product.price;
     
-    // Add variation price if selected
     if (selectedVariation && selectedVariation.additionalPrice) {
       finalPrice += selectedVariation.additionalPrice;
     }
     
-    // Add customization fee if applicable
     if (isCustomizing && product.customizationFee) {
       finalPrice += product.customizationFee;
     }
@@ -230,7 +214,6 @@ const ProductDetailPage = () => {
       
       <main className="flex-grow py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
-          {/* Breadcrumb */}
           <div className="flex items-center mb-6 text-sm text-gray-500">
             <Link to="/" className="hover:text-primary">Home</Link>
             <ChevronRight size={14} className="mx-2" />
@@ -244,7 +227,6 @@ const ProductDetailPage = () => {
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12">
-            {/* Product Images - Larger Size */}
             <div className="max-w-lg mx-auto w-full">
               <div className="mb-4 aspect-square overflow-hidden rounded-lg shadow-sm max-h-[420px]">
                 <img 
@@ -272,7 +254,6 @@ const ProductDetailPage = () => {
               </div>
             </div>
             
-            {/* Product Info */}
             <div>
               <div className="mb-2 flex items-center">
                 <span className={`px-2 py-1 text-xs rounded-full ${
@@ -314,16 +295,12 @@ const ProductDetailPage = () => {
               
               <p className="text-gray-600 mb-6">{product.description}</p>
               
-              {/* Size/Variation Selection - Showing all standard sizes for clothing */}
               <div className="mb-6">
-                {/* Clothing Products - Always show standard sizes */}
                 {product.category === 'Clothing' && (
                   <>
                     <h3 className="font-medium mb-2">Size</h3>
                     <div className="flex flex-wrap gap-2">
-                      {/* Standard sizes for all clothing products */}
                       {['XS', 'S', 'M', 'L', 'XL'].map(size => {
-                        // Check if this size exists in variations
                         const variation = product.variations?.find(v => v.size === size && v.stockLevel > 0);
                         const isAvailable = !!variation;
                         
@@ -349,7 +326,6 @@ const ProductDetailPage = () => {
                       })}
                     </div>
                     
-                    {/* Show "One size fits all" only if no variations with size other than N/A */}
                     {(!product.variations || product.variations.length === 0 || 
                       product.variations.every(v => v.size === 'N/A')) && (
                       <p className="text-sm text-gray-500 mt-2">One size fits all</p>
@@ -357,7 +333,6 @@ const ProductDetailPage = () => {
                   </>
                 )}
                 
-                {/* Non-Clothing Products with Variations */}
                 {product.category !== 'Clothing' && product.variations && product.variations.length > 0 && (
                   <>
                     <h3 className="font-medium mb-2">Select Option</h3>
@@ -384,7 +359,6 @@ const ProductDetailPage = () => {
                 )}
               </div>
               
-              {/* Customization Option (only for Artistry) */}
               {product.category === 'Artistry' && product.isCustomizable && (
                 <div className="mb-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
                   <div className="flex items-center mb-2">
@@ -417,7 +391,6 @@ const ProductDetailPage = () => {
                 </div>
               )}
               
-              {/* Quantity Selector */}
               <div className="mb-6">
                 <h3 className="font-medium mb-2">Quantity</h3>
                 <div className="flex items-center">
@@ -457,7 +430,6 @@ const ProductDetailPage = () => {
                 )}
               </div>
               
-              {/* Add to Cart Button */}
               <button
                 onClick={handleAddToCart}
                 disabled={!product.inStock || getMaxAvailableQuantity() < 1}
@@ -471,7 +443,6 @@ const ProductDetailPage = () => {
                 {getMaxAvailableQuantity() > 0 ? 'Add to Cart' : 'Out of Stock'}
               </button>
               
-              {/* Additional Info */}
               <div className="border-t pt-4 text-sm text-gray-500">
                 <p className="flex items-center mb-2">
                   <Check size={16} className="mr-2 text-green-500" />
@@ -489,7 +460,6 @@ const ProductDetailPage = () => {
             </div>
           </div>
           
-          {/* Product Reviews */}
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -526,7 +496,6 @@ const ProductDetailPage = () => {
             </div>
           </div>
           
-          {/* Related Products */}
           <div>
             <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
