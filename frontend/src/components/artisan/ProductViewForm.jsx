@@ -142,39 +142,30 @@ const ProductViewForm = ({ product, onBack }) => {
           </div>
           
           <div className="row mb-2">
+            <div className="col-md-6">
+              <strong>Additional Price:</strong>
+              <p className="bg-light p-1 rounded mb-2">
+                {product.entryVariation && product.entryVariation.additional_price > 0
+                  ? `LKR ${parseFloat(product.entryVariation.additional_price).toFixed(2)}`
+                  : (product.variations && product.variations.length > 0 && product.variations[0].additional_price > 0
+                     ? `LKR ${parseFloat(product.variations[0].additional_price).toFixed(2)}`
+                     : 'N/A')}
+              </p>
+            </div>
+            <div className="col-md-6">
+              <strong>Customization Available:</strong>
+              <p className="bg-light p-1 rounded mb-2">
+                {product.customization_available ? 'Yes' : 'No'}
+              </p>
+            </div>
+          </div>
+          
+          <div className="row mb-2">
             <div className="col-12">
               <strong>Description:</strong>
               <p className="bg-light p-1 rounded mb-2">{product.description || 'No description available'}</p>
             </div>
           </div>
-        </div>
-      </div>
-      
-      <div className="row mb-2">
-        <div className="col-md-4">
-          <strong>Size:</strong>
-          <p className="bg-light p-1 rounded mb-2">
-            {product.entryVariation ? product.entryVariation.size : 
-             (product.variations && product.variations.length > 0 
-              ? product.variations[0].size 
-              : 'N/A')}
-          </p>
-        </div>
-        <div className="col-md-4">
-          <strong>Additional Price:</strong>
-          <p className="bg-light p-1 rounded mb-2">
-            {product.entryVariation && product.entryVariation.additional_price > 0
-              ? `LKR ${parseFloat(product.entryVariation.additional_price).toFixed(2)}`
-              : (product.variations && product.variations.length > 0 && product.variations[0].additional_price > 0
-                 ? `LKR ${parseFloat(product.variations[0].additional_price).toFixed(2)}`
-                 : 'N/A')}
-          </p>
-        </div>
-        <div className="col-md-4">
-          <strong>Customization Available:</strong>
-          <p className="bg-light p-1 rounded mb-2">
-            {product.customization_available ? 'Yes' : 'No'}
-          </p>
         </div>
       </div>
       

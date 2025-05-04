@@ -18,10 +18,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const [images, setImages] = useState([]);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [hasMultipleEntries, setHasMultipleEntries] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(
-    product.entryVariation ? product.entryVariation.size : 
-    (product.variations && product.variations.length > 0 ? product.variations[0].size : 'N/A')
-  );
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -106,23 +102,19 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Find the variation ID that corresponds to the selected size
+    // Find the variation ID that corresponds to any customization
     let variation_id = null;
     
-    if (product.variations && selectedSize) {
-      const matchingVariation = product.variations.find(v => v.size === selectedSize);
-      if (matchingVariation) {
-        variation_id = matchingVariation.variation_id;
-        console.log(`Found matching variation ID ${variation_id} for size ${selectedSize}`);
-      }
+    if (product.variations && product.variations.length > 0) {
+      variation_id = product.variations[0].variation_id;
+      console.log(`Using variation ID ${variation_id} for customization`);
     }
     
     // Include variation_id in the data to be submitted
     onSave({
       ...formData,
       entry_id: product.entry_id,
-      size: selectedSize, // Make sure to pass the selected size
-      variation_id: variation_id // Pass the variation ID that matches the selected size
+      variation_id: variation_id
     });
   };
 
@@ -238,47 +230,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
         <div className="row mb-3">
           <div className="col-md-4">
             <label className="form-label">
-              Size
-            </label>
-            <select
-              className="form-select"
-              name="size"
-              value={selectedSize}
-              onChange={(e) => {
-                setSelectedSize(e.target.value);
-                // Also update your form data
-                handleChange({
-                  target: {
-                    name: 'size',
-                    value: e.target.value
-                  }
-                });
-              }}
-            >
-              <option value="N/A">N/A</option>
-              <option value="XS">XS</option>
-              <option value="S">S</option>
-              <option value="M">M</option>
-              <option value="L">L</option>
-              <option value="XL">XL</option>
-              {product.variations?.map(variation => {
-                const standardSizes = ["N/A", "XS", "S", "M", "L", "XL", "XXL"];
-                if (!standardSizes.includes(variation.size)) {
-                  return (
-                    <option 
-                      key={variation.variation_id || variation.size} 
-                      value={variation.size}
-                    >
-                      {variation.size}
-                    </option>
-                  );
-                }
-                return null;
-              })}
-            </select>
-          </div>
-          <div className="col-md-4">
-            <label className="form-label">
               Product Status
               <span className="text-danger">*</span>
               <small className="ms-2 text-info">(Editable)</small>
@@ -312,9 +263,6 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               </div>
             )}
           </div>
-        </div>
-
-        <div className="row mb-3">
           <div className="col-md-4">
             <label className="form-label">
               Customization Available
@@ -330,6 +278,9 @@ const EditProductForm = ({ product, onSave, onCancel }) => {
               <option value="No">No</option>
             </select>
           </div>
+        </div>
+
+        <div className="row mb-3">
           <div className="col-md-4">
             <label className="form-label">
               Additional Price

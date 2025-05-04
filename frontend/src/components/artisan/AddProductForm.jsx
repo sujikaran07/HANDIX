@@ -12,7 +12,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     category: '',
     price: '',
     quantity: '',
-    size: 'N/A',
     additional_price: '', 
     images: null,
     customization_available: 'No',
@@ -156,9 +155,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         quantity: originalQuantity, 
         product_status: productData.product_status || 'In Stock',
         customization_available: productData.customization_available ? 'Yes' : 'No',
-        size: (productData.variations && productData.variations.length > 0) ? 
-          productData.variations[0].size : 
-          (productData.size || 'N/A'),
         additional_price: (productData.variations && productData.variations.length > 0) ? 
           productData.variations[0].additional_price : 
           (productData.additional_price || '')
@@ -210,9 +206,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           price: data.unit_price,
           customization_available: data.customization_available ? 'Yes' : 'No',
           product_status: data.product_status,
-          size: (data.variations && data.variations.length > 0) ? 
-            data.variations[0].size : 
-            (data.size || 'N/A'),
           additional_price: (data.variations && data.variations.length > 0) ? 
             data.variations[0].additional_price : 
             (data.additional_price || '')
@@ -271,19 +264,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     const { name, value } = e.target;
     
     if (name === 'category') {
-      if (value !== 'Clothing') {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-          size: 'N/A'
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          [name]: value,
-        }));
-      }
-      
       if (value !== 'Artistry') {
         setFormData(prev => ({
           ...prev,
@@ -392,7 +372,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           category: formData.category,
           price: parseFloat(formData.price),
           quantity: parseInt(formData.quantity, 10),
-          size: formData.size || 'N/A',  
           additional_price: formData.additional_price ? parseFloat(formData.additional_price) : 0,
           customization_available: formData.customization_available,
           product_status: formData.product_status,
@@ -650,58 +629,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
           <div className="row mb-3">
             <div className="col-md-4">
-              <label className="form-label">
-                Size {formData.category === 'Clothing' ? '' : '(N/A for non-clothing items)'}
-              </label>
-              <select
-                className="form-select"
-                name="size"
-                value={formData.size}
-                onChange={handleChange}
-                disabled={formData.category !== 'Clothing'} // Only enable for clothing
-              >
-                <option value="N/A">Select Size</option>
-                <option value="XS">XS</option>
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Product Images<span className="text-danger">*</span></label>
-              <input 
-                type="file" 
-                className="form-control" 
-                multiple 
-                onChange={handleImageUpload} 
-                required={images.length === 0}
-              />
-              {errors.images && <div className="text-danger small">{errors.images}</div>}
-              {images.length > 0 && (
-                <div className="mt-2 text-success small">
-                  {images.length} image{images.length !== 1 ? 's' : ''} selected
-                </div>
-              )}
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Product Status<span className="text-danger">*</span></label>
-              <select
-                className="form-select"
-                name="product_status"
-                value={formData.product_status}
-                onChange={handleChange}
-                required
-              >
-                <option value="In Stock">In Stock</option>
-                <option value="Out of Stock">Out of Stock</option>
-              </select>
-              {errors.product_status && <div className="text-danger small">{errors.product_status}</div>}
-            </div>
-          </div>
-
-          <div className="row mb-3">
-            <div className="col-md-4">
               <label className="form-label">Customization Available</label>
               <select
                 className="form-select"
@@ -732,6 +659,41 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                 required={formData.customization_available === 'Yes' && formData.category === 'Artistry'}
               />
               {errors.additional_price && <div className="text-danger small">{errors.additional_price}</div>}
+            </div>
+            <div className="col-md-4">
+              <label className="form-label">Product Images<span className="text-danger">*</span></label>
+              <input 
+                type="file" 
+                className="form-control" 
+                multiple 
+                onChange={handleImageUpload} 
+                required={images.length === 0}
+              />
+              {errors.images && <div className="text-danger small">{errors.images}</div>}
+              {images.length > 0 && (
+                <div className="mt-2 text-success small">
+                  {images.length} image{images.length !== 1 ? 's' : ''} selected
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="row mb-3">
+            <div className="col-md-4">
+              <label className="form-label">Product Status<span className="text-danger">*</span></label>
+              <select
+                className="form-select"
+                name="product_status"
+                value={formData.product_status}
+                onChange={handleChange}
+                required
+              >
+                <option value="In Stock">In Stock</option>
+                <option value="Out of Stock">Out of Stock</option>
+              </select>
+              {errors.product_status && <div className="text-danger small">{errors.product_status}</div>}
+            </div>
+            <div className="col-md-4">
             </div>
             <div className="col-md-4">
             </div>
