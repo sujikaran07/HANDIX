@@ -49,49 +49,14 @@ const ProductDetailPage = () => {
                 id: v.id,
                 size: v.size,
                 stock: v.stockLevel
-              })),
-              hasSizeOptions: productDetails.hasSizeOptions,
-              hasNoSizeOptions: productDetails.hasNoSizeOptions
+              }))
             });
             
             setProduct(productDetails);
             setSelectedImage(productDetails.images[0]);
             setIsCustomizing(false);
             
-            if (productDetails.category === 'Clothing') {
-              console.log("DEBUG: Processing clothing product variations");
-              
-              if (productDetails.variations && productDetails.variations.length > 0) {
-                const actualSizeVariations = productDetails.variations.filter(v => 
-                  v.stockLevel > 0 && v.size !== 'N/A'
-                );
-                
-                if (actualSizeVariations.length > 0) {
-                  console.log("DEBUG: Found clothing with actual sizes:", 
-                    actualSizeVariations.map(v => v.size).join(', '));
-                  setSelectedSize(actualSizeVariations[0].size);
-                  setSelectedVariation(actualSizeVariations[0]);
-                } else {
-                  const naVariation = productDetails.variations.find(v => 
-                    v.stockLevel > 0 && v.size === 'N/A'
-                  );
-                  
-                  if (naVariation) {
-                    console.log("DEBUG: Clothing with only N/A size");
-                    setSelectedSize('N/A');
-                    setSelectedVariation(naVariation);
-                  } else {
-                    setSelectedSize('');
-                    setSelectedVariation(null);
-                  }
-                }
-              } else {
-                console.log("DEBUG: Clothing product has no variations");
-                setSelectedSize('');
-                setSelectedVariation(null);
-              }
-            } 
-            else if (productDetails.variations && productDetails.variations.length > 0) {
+            if (productDetails.variations && productDetails.variations.length > 0) {
               setSelectedSize(productDetails.variations[0].size);
               setSelectedVariation(productDetails.variations[0]);
             } else {
@@ -296,42 +261,7 @@ const ProductDetailPage = () => {
               <p className="text-gray-600 mb-6">{product.description}</p>
               
               <div className="mb-6">
-                {product.category === 'Clothing' && (product.hasSizeOptions || product.hasNoSizeOptions) && (
-                  <>
-                    <h3 className="font-medium mb-2">Size</h3>
-                    {product.hasSizeOptions ? (
-                      <div className="flex flex-wrap gap-2">
-                        {['XS', 'S', 'M', 'L', 'XL'].map(size => {
-                          const variation = product.variations?.find(v => v.size === size && v.stockLevel > 0);
-                          const isAvailable = !!variation;
-                          
-                          return (
-                            <button
-                              key={size}
-                              onClick={() => variation && handleSizeChange(size, variation)}
-                              className={`border rounded-md py-2 px-4 transition ${
-                                selectedSize === size 
-                                  ? 'border-primary bg-primary text-white' 
-                                  : isAvailable 
-                                    ? 'border-gray-300 hover:border-primary' 
-                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                              }`}
-                              disabled={!isAvailable}
-                              title={isAvailable ? `${size} size` : `${size} size - Out of stock`}
-                            >
-                              {size}
-                              {variation?.additionalPrice > 0 && 
-                                ` (+${product.currency} ${variation.additionalPrice.toLocaleString()})`}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : product.hasNoSizeOptions ? (
-                      <p className="text-sm text-gray-500 mt-2">One size fits all</p>
-                    ) : null}
-                  </>
-                )}
-                {product.category !== 'Clothing' && product.variations && product.variations.length > 0 && (
+                {product.variations && product.variations.length > 0 && (
                   <>
                     <h3 className="font-medium mb-2">Select Option</h3>
                     <div className="flex flex-wrap gap-2">

@@ -81,19 +81,6 @@ export const fetchProducts = async () => {
             inStock: true
           }));
 
-          if (product.category === 'Clothing') {
-            // Determine size options for clothing
-            const clothingSizes = ['XS', 'S', 'M', 'L', 'XL'];
-            const allSizes = product.variations.map(v => v.size);
-            const hasClothingSize = product.variations.some(v => clothingSizes.includes(v.size));
-            const allSizesAreNA = product.variations.every(v => v.size === 'N/A');
-            if (hasClothingSize) {
-              product.hasSizeOptions = true;
-            } else if (allSizesAreNA) {
-              product.hasNoSizeOptions = true;
-            }
-          }
-          
           if (product.variations.length === 0) {
             console.log(`Product ${product.id} has variations but none with stock`);
             product.inStock = quantity > 0;
@@ -102,9 +89,6 @@ export const fetchProducts = async () => {
           }
         } else {
           product.variations = [];
-          if (product.category === 'Clothing') {
-            product.hasNoSizeOptions = true;
-          }
           product.inStock = quantity > 0;
         }
 
@@ -202,24 +186,7 @@ export const fetchProductById = async (productId) => {
         };
       });
       
-      console.log(`DEBUG: All sizes from all variations: ${product.allVariations.map(v => v.size).join(', ')}`);
-      
       product.variations = product.allVariations.filter(v => v.stockLevel > 0);
-      
-      console.log(`DEBUG: Products with stock: ${product.variations.length}/${product.allVariations.length}`);
-      
-      if (product.category === 'Clothing') {
-        // Determine size options for clothing
-        const clothingSizes = ['XS', 'S', 'M', 'L', 'XL'];
-        const hasClothingSize = product.allVariations.some(v => clothingSizes.includes(v.size));
-        const allSizesAreNA = product.allVariations.every(v => v.size === 'N/A');
-        if (hasClothingSize) {
-          product.hasSizeOptions = true;
-          product.actualSizes = product.allVariations.filter(v => clothingSizes.includes(v.size)).map(v => v.size);
-        } else if (allSizesAreNA) {
-          product.hasNoSizeOptions = true;
-        }
-      }
       
       const anyVariationInStock = product.variations.some(v => v.stockLevel > 0);
       if (!anyVariationInStock) {
@@ -244,10 +211,7 @@ export const fetchProductById = async (productId) => {
       name: product.name,
       category: product.category,
       hasVariations: product.variations && product.variations.length > 0,
-      variationsCount: product.variations ? product.variations.length : 0,
-      hasSizeOptions: product.hasSizeOptions,
-      hasNoSizeOptions: product.hasNoSizeOptions,
-      actualSizes: product.actualSizes
+      variationsCount: product.variations ? product.variations.length : 0
     });
     
     return product;
