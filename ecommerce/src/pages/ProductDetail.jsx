@@ -296,43 +296,41 @@ const ProductDetailPage = () => {
               <p className="text-gray-600 mb-6">{product.description}</p>
               
               <div className="mb-6">
-                {product.category === 'Clothing' && (
+                {product.category === 'Clothing' && (product.hasSizeOptions || product.hasNoSizeOptions) && (
                   <>
                     <h3 className="font-medium mb-2">Size</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {['XS', 'S', 'M', 'L', 'XL'].map(size => {
-                        const variation = product.variations?.find(v => v.size === size && v.stockLevel > 0);
-                        const isAvailable = !!variation;
-                        
-                        return (
-                          <button
-                            key={size}
-                            onClick={() => variation && handleSizeChange(size, variation)}
-                            className={`border rounded-md py-2 px-4 transition ${
-                              selectedSize === size 
-                                ? 'border-primary bg-primary text-white' 
-                                : isAvailable 
-                                  ? 'border-gray-300 hover:border-primary' 
-                                  : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
-                            disabled={!isAvailable}
-                            title={isAvailable ? `${size} size` : `${size} size - Out of stock`}
-                          >
-                            {size}
-                            {variation?.additionalPrice > 0 && 
-                              ` (+${product.currency} ${variation.additionalPrice.toLocaleString()})`}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    
-                    {(!product.variations || product.variations.length === 0 || 
-                      product.variations.every(v => v.size === 'N/A')) && (
+                    {product.hasSizeOptions ? (
+                      <div className="flex flex-wrap gap-2">
+                        {['XS', 'S', 'M', 'L', 'XL'].map(size => {
+                          const variation = product.variations?.find(v => v.size === size && v.stockLevel > 0);
+                          const isAvailable = !!variation;
+                          
+                          return (
+                            <button
+                              key={size}
+                              onClick={() => variation && handleSizeChange(size, variation)}
+                              className={`border rounded-md py-2 px-4 transition ${
+                                selectedSize === size 
+                                  ? 'border-primary bg-primary text-white' 
+                                  : isAvailable 
+                                    ? 'border-gray-300 hover:border-primary' 
+                                    : 'border-gray-200 text-gray-400 cursor-not-allowed'
+                              }`}
+                              disabled={!isAvailable}
+                              title={isAvailable ? `${size} size` : `${size} size - Out of stock`}
+                            >
+                              {size}
+                              {variation?.additionalPrice > 0 && 
+                                ` (+${product.currency} ${variation.additionalPrice.toLocaleString()})`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : product.hasNoSizeOptions ? (
                       <p className="text-sm text-gray-500 mt-2">One size fits all</p>
-                    )}
+                    ) : null}
                   </>
                 )}
-                
                 {product.category !== 'Clothing' && product.variations && product.variations.length > 0 && (
                   <>
                     <h3 className="font-medium mb-2">Select Option</h3>

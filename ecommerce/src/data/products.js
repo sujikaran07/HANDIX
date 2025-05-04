@@ -80,19 +80,17 @@ export const fetchProducts = async () => {
             stockLevel: parseInt(variation.stock_level || 0),
             inStock: true
           }));
-          
+
           if (product.category === 'Clothing') {
+            // Determine size options for clothing
+            const clothingSizes = ['XS', 'S', 'M', 'L', 'XL'];
             const allSizes = product.variations.map(v => v.size);
-            console.log(`All sizes for ${product.id}:`, allSizes);
-            
-            const nonNASizes = product.variations.filter(v => v.size !== 'N/A');
-            
-            if (nonNASizes.length > 0) {
+            const hasClothingSize = product.variations.some(v => clothingSizes.includes(v.size));
+            const allSizesAreNA = product.variations.every(v => v.size === 'N/A');
+            if (hasClothingSize) {
               product.hasSizeOptions = true;
-              console.log(`Product ${product.id} has size options:`, nonNASizes.map(v => v.size));
-            } else {
+            } else if (allSizesAreNA) {
               product.hasNoSizeOptions = true;
-              console.log(`Product ${product.id} has no specific size options`);
             }
           }
           
@@ -211,22 +209,15 @@ export const fetchProductById = async (productId) => {
       console.log(`DEBUG: Products with stock: ${product.variations.length}/${product.allVariations.length}`);
       
       if (product.category === 'Clothing') {
-        console.log(`DEBUG: ALL variations for clothing product ${productId}:`, 
-          product.allVariations.map(v => `${v.size} (stock: ${v.stockLevel})`));
-        
-        const actualSizes = product.variations
-          .filter(v => v.size !== 'N/A')
-          .map(v => v.size);
-        
-        console.log(`DEBUG: Actual sizes with stock for ${productId}: [${actualSizes.join(', ')}]`);
-        
-        if (actualSizes.length > 0) {
+        // Determine size options for clothing
+        const clothingSizes = ['XS', 'S', 'M', 'L', 'XL'];
+        const hasClothingSize = product.allVariations.some(v => clothingSizes.includes(v.size));
+        const allSizesAreNA = product.allVariations.every(v => v.size === 'N/A');
+        if (hasClothingSize) {
           product.hasSizeOptions = true;
-          product.actualSizes = actualSizes;
-          console.log(`DEBUG: Setting hasSizeOptions=true because found sizes: ${actualSizes.join(', ')}`);
-        } else {
+          product.actualSizes = product.allVariations.filter(v => clothingSizes.includes(v.size)).map(v => v.size);
+        } else if (allSizesAreNA) {
           product.hasNoSizeOptions = true;
-          console.log(`DEBUG: Setting hasNoSizeOptions=true because no actual sizes found`);
         }
       }
       
