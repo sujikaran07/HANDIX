@@ -11,35 +11,27 @@ const ProductVariation = sequelize.define('ProductVariation', {
   },
   product_id: {
     type: DataTypes.STRING(10), 
-    allowNull: false,
+    allowNull: true,
     references: {
       model: 'Inventory', 
       key: 'product_id',
     },
     onDelete: 'CASCADE',
   },
-  size: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-  },
   additional_price: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: true,
+    defaultValue: 0,
   },
   stock_level: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: 0,
   },
 }, {
   tableName: 'ProductVariations',
   timestamps: false,
   underscored: true,
-  indexes: [
-    {
-      unique: true,
-      fields: ['product_id', 'size'], 
-    },
-  ],
 });
 
 ProductVariation.associate = (models) => {
