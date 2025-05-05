@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Star, ChevronRight, Minus, Plus, Check, ShoppingCart } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -9,6 +9,7 @@ import { useCart } from '../contexts/CartContext';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -117,34 +118,50 @@ const ProductDetailPage = () => {
     }
   };
   
+  // Check authentication status
+  const isLoggedIn = () => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  };
+
   const handleAddToCart = () => {
-    if (product) {
-      // Create a modified product object with the calculated final price
-      const itemToAdd = {
-        ...product,
-        id: product.id,
-        // Add the final price INCLUDING customization fee if applicable
-        finalPrice: calculateFinalPrice()
-      };
-      
-      // Pass customization only if customizing is enabled
-      const customizationText = isCustomizing ? customization : undefined;
-      
-      console.log("Adding to cart with customization:", {
-        product: product.name,
-        isCustomizing,
-        customizationText,
-        basePrice: product.price,
-        customizationFee: isCustomizing ? product.customizationFee : 0,
-        finalPrice: calculateFinalPrice(),
-        quantity,
-        maxAvailable: getMaxAvailableQuantity()
+    if (!product) return;
+    
+    // Check if user is logged in before adding to cart
+    if (!isLoggedIn()) {
+      navigate('/login', { 
+        state: { 
+          from: `/products/${id}`, 
+          message: 'Please login to add items to cart' 
+        } 
       });
-      
-      // Only allow adding to cart if there's inventory available
-      if (getMaxAvailableQuantity() > 0) {
-        addItem(itemToAdd, quantity, customizationText);
-      }
+      return;
+    }
+    
+    // Create a modified product object with the calculated final price
+    const itemToAdd = {
+      ...product,
+      id: product.id,
+      // Add the final price INCLUDING customization fee if applicable
+      finalPrice: calculateFinalPrice()
+    };
+    
+    // Pass customization only if customizing is enabled
+    const customizationText = isCustomizing ? customization : undefined;
+    
+    console.log("Adding to cart with customization:", {
+      product: product.name,
+      isCustomizing,
+      customizationText,
+      basePrice: product.price,
+      customizationFee: isCustomizing ? product.customizationFee : 0,
+      finalPrice: calculateFinalPrice(),
+      quantity,
+      maxAvailable: getMaxAvailableQuantity()
+    });
+    
+    // Only allow adding to cart if there's inventory available
+    if (getMaxAvailableQuantity() > 0) {
+      addItem(itemToAdd, quantity, customizationText);
     }
   };
   

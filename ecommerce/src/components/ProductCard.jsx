@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Heart, Star, ShoppingCart, X } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useFavorites } from '../contexts/FavoriteContext';
@@ -7,6 +7,7 @@ import { useFavorites } from '../contexts/FavoriteContext';
 const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
   const { addItem } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const navigate = useNavigate();
   
   // Debug the product object
   console.log('ProductCard received:', {
@@ -22,15 +23,41 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
     return null;
   }
   
+  // Check authentication status
+  const isLoggedIn = () => {
+    return localStorage.getItem('isAuthenticated') === 'true';
+  };
+  
   const handleToggleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is logged in
+    if (!isLoggedIn()) {
+      navigate('/login', { 
+        state: { from: window.location.pathname, message: 'Please login to add items to favorites' } 
+      });
+      return;
+    }
+    
     toggleFavorite(product);
   };
   
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is logged in
+    if (!isLoggedIn()) {
+      // Store current URL and redirect to login
+      navigate('/login', { 
+        state: { 
+          from: window.location.pathname,
+          message: 'Please login to add items to cart' 
+        } 
+      });
+      return;
+    }
     
     // Create a cart-ready product with required properties
     const cartReadyProduct = {
@@ -45,7 +72,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
     };
     
     // Log the prepared product for debugging
-    console.log('Adding to cart from favorites:', cartReadyProduct);
+    console.log('Adding to cart from ProductCard:', cartReadyProduct);
     
     // Add to cart
     addItem(cartReadyProduct, 1);
