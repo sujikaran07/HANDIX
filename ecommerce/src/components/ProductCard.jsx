@@ -1,120 +1,125 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Star, Heart } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Heart, Star, ShoppingCart, X } from 'lucide-react';
+import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoriteContext';
 
-const ProductCard = ({ product }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-  const { toast } = useToast();
+const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
+  const { addItem } = useCart();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  
+  // Debug the product object
+  console.log('ProductCard received:', {
+    id: product?.id, 
+    name: product?.name,
+    price: product?.price,
+    priceType: typeof product?.price
+  });
 
-  useEffect(() => {
-    // Check if product is in favorites
-    const savedFavorites = localStorage.getItem('handixFavorites');
-    if (savedFavorites) {
-      const favorites = JSON.parse(savedFavorites);
-      const isInFavorites = favorites.some((fav) => fav.id === product.id);
-      setIsFavorite(isInFavorites);
-    }
-  }, [product.id]);
-
-  const toggleFavorite = (e) => {
+  // Check if product is valid
+  if (!product || !product.id) {
+    console.error('Invalid product passed to ProductCard:', product);
+    return null;
+  }
+  
+  const handleToggleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(product);
+  };
+  
+  const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    let favorites = [];
-    const savedFavorites = localStorage.getItem('handixFavorites');
+    // Create a cart-ready product with required properties
+    const cartReadyProduct = {
+      id: product.id,
+      name: product.name,
+      price: Number(product.price),
+      images: Array.isArray(product.images) && product.images.length > 0 
+        ? product.images 
+        : ['/images/placeholder.png'],
+      quantity: product.quantity || 10,
+      inStock: product.inStock !== false
+    };
     
-    if (savedFavorites) {
-      favorites = JSON.parse(savedFavorites);
-    }
+    // Log the prepared product for debugging
+    console.log('Adding to cart from favorites:', cartReadyProduct);
     
-    if (isFavorite) {
-      // Remove from favorites
-      favorites = favorites.filter((fav) => fav.id !== product.id);
-      toast({
-        title: "Removed from favorites",
-        description: `${product.name} has been removed from your favorites`,
-      });
-    } else {
-      // Add to favorites
-      favorites.push(product);
-      toast({
-        title: "Added to favorites",
-        description: `${product.name} has been added to your favorites`,
-      });
-    }
-    
-    localStorage.setItem('handixFavorites', JSON.stringify(favorites));
-    setIsFavorite(!isFavorite);
+    // Add to cart
+    addItem(cartReadyProduct, 1);
+  };
+  
+  const handleRemove = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onRemove) onRemove(product.id);
   };
 
+  // Make sure price is a number for display
+  const displayPrice = Number(product.price || 0).toLocaleString();
+
   return (
-    <div className="product-card group w-full h-full transition-all">
-      <Link to={`/products/${product.id}`} className="relative block w-full">
-        <div className="relative h-52 sm:h-56 md:h-60 overflow-hidden rounded-t-md">
-          <img 
-            src={product.images[0]} 
-            alt={product.name} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+    <Link to={`/products/${product.id}`} className="group">
+      <div className="bg-white overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow relative">
+        {/* Favorite Button */}
+        <button
+          onClick={handleToggleFavorite}
+          className={`absolute top-2 right-2 z-10 p-1.5 rounded-full 
+            ${isFavorite && isFavorite(product.id) ? 'bg-primary text-white' : 'bg-white/80 text-gray-500 hover:text-primary'}`}
+        >
+          <Heart size={18} fill={isFavorite && isFavorite(product.id) ? "currentColor" : "none"} />
+        </button>
+        
+        {/* Remove Button (for favorites page) */}
+        {showRemoveButton && (
+          <button
+            onClick={handleRemove}
+            className="absolute top-2 left-2 z-10 bg-white/80 p-1.5 rounded-full text-gray-500 hover:text-red-500"
+            aria-label="Remove from favorites"
+          >
+            <X size={18} />
+          </button>
+        )}
+        
+        {/* Product Image */}
+        <div className="aspect-square overflow-hidden">
+          <img
+            src={product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.png'}
+            alt={product.name || 'Product'}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
+        </div>
+        
+        {/* Product Info */}
+        <div className="p-3">
+          <h3 className="font-medium line-clamp-1 mb-1">{product.name || 'Unnamed Product'}</h3>
           
-          {/* Stock status badge (top right) */}
-          <div className={`absolute top-2 right-2 px-2 py-1 text-xs rounded-md text-white font-medium bg-opacity-80 ${
-            product.inStock ? 'bg-green-600' : 'bg-red-600'
-          }`}>
-            {product.inStock ? 'In Stock' : 'Out of Stock'}
+          <div className="flex items-center mb-1.5">
+            <div className="flex items-center">
+              <Star size={14} fill="#FBBF24" stroke="none" />
+              <span className="ml-1 text-xs">{(product.rating || 0).toFixed(1)}</span>
+            </div>
+            <span className="mx-1.5 text-gray-300">|</span>
+            <span className="text-xs text-gray-500">{product.reviewCount || 0} reviews</span>
           </div>
           
-          {/* Favorite button (top left) */}
-          <button 
-            onClick={toggleFavorite}
-            className="absolute top-2 left-2 p-1.5 bg-white rounded-full shadow-md hover:shadow-lg transition-all"
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-          >
-            <Heart 
-              size={18} 
-              className={`${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'} transition-colors`} 
-            />
-          </button>
-          
-          {/* Customizable badge (bottom left) */}
-          {product.isCustomizable && (
-            <div className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-md font-medium shadow-sm">
-              Customizable
-            </div>
-          )}
-        </div>
-      </Link>
-
-      <div className="p-3 sm:p-4 border-x border-b rounded-b-md">
-        <div className="flex items-center justify-between mb-2">
-          <Link to={`/products?category=${product.category.toLowerCase()}`} className="text-xs sm:text-sm text-gray-500 category-badge">
-            {product.category}
-          </Link>
-          {product.rating !== undefined && product.rating !== null && (
-            <div className="product-rating flex items-center">
-              <Star size={16} className="text-yellow-500 fill-yellow-500" />
-              <span className="text-xs sm:text-sm ml-1">{product.rating.toFixed(1)}</span>
-            </div>
-          )}
-        </div>
-        
-        <Link to={`/products/${product.id}`}>
-          <h3 className="text-sm sm:text-base md:text-lg font-medium text-gray-900 mb-1 hover:text-primary transition-colors line-clamp-2">
-            {product.name}
-          </h3>
-        </Link>
-        
-        <p className="price-tag text-sm sm:text-base font-semibold text-gray-900">
-          LKR {product.price.toLocaleString()}
-          {product.isCustomizable && (
-            <span className="text-xs text-gray-500 ml-2 block sm:inline">
-              +Customization available
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-primary">
+              LKR {displayPrice}
             </span>
-          )}
-        </p>
+            
+            <button
+              onClick={handleAddToCart}
+              className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white"
+            >
+              <ShoppingCart size={16} />
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

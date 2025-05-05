@@ -26,9 +26,11 @@ const orderRoutes = require('./routes/orders/orderRoutes');
 const authRoutes = require('./routes/auth/authRoutes'); 
 const categoryRoutes = require('./routes/category/categoryRoutes'); 
 const cartRoutes = require('./routes/cart/cartRoutes');
+const favoriteRoutes = require('./routes/favorites/favoriteRoutes'); // Add this line
 // Import cart models for sequelize sync
 const Cart = require('./models/cartModel');
 const CartItem = require('./models/cartItemModel');
+const Favorite = require('./models/favoriteModel'); // Add this line
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
@@ -95,6 +97,7 @@ app.use('/api/login', employeeLoginRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/favorites', favoriteRoutes); // This path stays the same
 
 const PORT = process.env.PORT || 5000;
 

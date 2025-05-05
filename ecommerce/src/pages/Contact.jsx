@@ -1,0 +1,229 @@
+import React, { useState } from 'react';
+import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
+import { Mail, Phone, MapPin, CheckCircle } from 'lucide-react';
+
+const ContactPage = () => {
+  const [formState, setFormState] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    
+    // Simulate API request
+    try {
+      // In a real app, you would send the form data to your API here
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setSubmitted(true);
+      setFormState({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+    } catch (err) {
+      setError('Failed to send message. Please try again later.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <NavBar />
+      
+      <main className="flex-grow py-16">
+        <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-4xl font-bold mb-6">Contact Us</h1>
+            <p className="text-gray-600 mb-12">
+              Have questions, feedback, or inquiries about our handcrafted products? 
+              We'd love to hear from you! Fill out the form below or reach out through our contact information.
+            </p>
+            
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+              {/* Contact Form */}
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h2 className="text-2xl font-bold mb-4">Send us a message</h2>
+                  
+                  {submitted ? (
+                    <div className="bg-green-50 p-6 rounded-md flex flex-col items-center text-center">
+                      <CheckCircle className="text-green-500 mb-3" size={48} />
+                      <h3 className="text-xl font-medium mb-2">Message Sent!</h3>
+                      <p className="text-gray-600 mb-4">
+                        Thank you for reaching out. We'll get back to you within 1-2 business days.
+                      </p>
+                      <button 
+                        onClick={() => setSubmitted(false)}
+                        className="bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-hover"
+                      >
+                        Send Another Message
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSubmit}>
+                      <div className="mb-4">
+                        <label htmlFor="name" className="block text-gray-700 mb-1">Your Name</label>
+                        <input
+                          type="text"
+                          id="name"
+                          name="name"
+                          value={formState.name}
+                          onChange={handleChange}
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="mb-4">
+                        <label htmlFor="email" className="block text-gray-700 mb-1">Email Address</label>
+                        <input
+                          type="email"
+                          id="email"
+                          name="email"
+                          value={formState.email}
+                          onChange={handleChange}
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="mb-4">
+                        <label htmlFor="subject" className="block text-gray-700 mb-1">Subject</label>
+                        <input
+                          type="text"
+                          id="subject"
+                          name="subject"
+                          value={formState.subject}
+                          onChange={handleChange}
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="mb-6">
+                        <label htmlFor="message" className="block text-gray-700 mb-1">Your Message</label>
+                        <textarea
+                          id="message"
+                          name="message"
+                          value={formState.message}
+                          onChange={handleChange}
+                          rows={5}
+                          className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          required
+                        />
+                      </div>
+                      
+                      {error && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
+                          {error}
+                        </div>
+                      )}
+                      
+                      <button
+                        type="submit"
+                        disabled={submitting}
+                        className={`w-full py-3 px-6 rounded-md bg-primary text-white 
+                          ${submitting ? 'opacity-70 cursor-not-allowed' : 'hover:bg-primary-hover'}`}
+                      >
+                        {submitting ? 'Sending...' : 'Send Message'}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
+              
+              {/* Contact Information */}
+              <div>
+                <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+                  <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
+                  <div className="space-y-4">
+                    <div className="flex items-start">
+                      <MapPin className="text-primary mt-1 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">Our Shop Address</p>
+                        <p className="text-gray-600">123 Craft Lane, Colombo 07</p>
+                        <p className="text-gray-600">Sri Lanka</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Phone className="text-primary mt-1 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">Phone</p>
+                        <p className="text-gray-600">+94 77 123 4567</p>
+                        <p className="text-gray-600">Monday - Friday: 9am to 6pm</p>
+                        <p className="text-gray-600">Saturday: 10am to 4pm</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <Mail className="text-primary mt-1 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">Email</p>
+                        <p className="text-gray-600">info@handix.lk</p>
+                        <p className="text-gray-600">support@handix.lk</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Business Hours */}
+                <div className="bg-white p-6 rounded-lg shadow-sm">
+                  <h3 className="text-xl font-bold mb-3">Business Hours</h3>
+                  <table className="w-full">
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="py-2">Monday - Friday</td>
+                        <td className="py-2 text-right">9:00 AM - 6:00 PM</td>
+                      </tr>
+                      <tr className="border-b">
+                        <td className="py-2">Saturday</td>
+                        <td className="py-2 text-right">10:00 AM - 4:00 PM</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2">Sunday</td>
+                        <td className="py-2 text-right">Closed</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            {/* Map */}
+            <div className="mt-12">
+              <h2 className="text-2xl font-bold mb-4">Find Us</h2>
+              <div className="h-96 bg-gray-200 rounded-lg overflow-hidden">
+                {/* Replace with actual map implementation */}
+                <div className="h-full w-full flex items-center justify-center">
+                  <p className="text-gray-500">Google Maps would be embedded here</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  );
+};
+
+export default ContactPage;
