@@ -16,6 +16,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
+            placeholder="Enter your first name"
             className={`w-full p-2 border ${
               errors.firstName ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
@@ -33,6 +34,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
+            placeholder="Enter your last name"
             className={`w-full p-2 border ${
               errors.lastName ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
@@ -50,6 +52,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="email"
             value={formData.email}
             onChange={handleChange}
+            placeholder="your.email@example.com"
             className={`w-full p-2 border ${
               errors.email ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
@@ -85,6 +88,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="address"
             value={formData.address}
             onChange={handleChange}
+            placeholder="e.g. 123 Main Street, Apartment 4B"
             className={`w-full p-2 border ${
               errors.address ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
@@ -122,12 +126,13 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
         
         {/* City */}
         <div>
-          <label className="block text-gray-700 mb-1">City *</label>
+          <label className="block text-gray-700 mb-1">City / Town *</label>
           <input
             type="text"
             name="city"
             value={formData.city}
             onChange={handleChange}
+            placeholder="Enter your city or town"
             className={`w-full p-2 border ${
               errors.city ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
@@ -145,6 +150,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="postalCode"
             value={formData.postalCode}
             onChange={handleChange}
+            placeholder="e.g. 10100"
             className={`w-full p-2 border ${
               errors.postalCode ? 'border-red-500' : 'border-gray-300'
             } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
