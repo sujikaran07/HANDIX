@@ -31,24 +31,70 @@ const HomePage = () => {
     }
   };
   
+  // Add this new function to get correct product counts
+  const getCorrectCategoryProductCounts = (productsList, categoriesList) => {
+    // Create a map to count distinct products by category
+    const categoryProductMap = {};
+    
+    // Initialize counts for all categories to 0
+    categoriesList.forEach(cat => {
+      categoryProductMap[cat.category_id] = {
+        count: 0,
+        distinctProductIds: new Set()
+      };
+    });
+    
+    // Count distinct products per category
+    productsList.forEach(product => {
+      const categoryId = categoriesList.find(
+        cat => cat.category_name === product.category
+      )?.category_id;
+      
+      if (categoryId && product.id) {
+        categoryProductMap[categoryId].distinctProductIds.add(product.id);
+      }
+    });
+    
+    // Convert distinct product sets to counts
+    Object.keys(categoryProductMap).forEach(catId => {
+      categoryProductMap[catId].count = categoryProductMap[catId].distinctProductIds.size;
+    });
+    
+    // Return updated categories with correct counts
+    return categoriesList.map(cat => ({
+      ...cat,
+      product_count: categoryProductMap[cat.category_id]?.count || 0
+    }));
+  };
+  
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoading(true);
         const data = await fetchProducts();
         setProducts(data);
+        return data; // Return products data for use below
       } catch (err) {
         console.error("Error loading products:", err);
         setError("Failed to load products");
+        return [];
       } finally {
         setLoading(false);
       }
     };
     
-    const loadCategories = async () => {
+    const loadCategories = async (productsList) => {
       try {
         setCategoriesLoading(true);
-        const data = await fetchCategories();
+        let data = await fetchCategories();
+        
+        // If we have products, recalculate the category product counts
+        if (productsList.length > 0) {
+          data = getCorrectCategoryProductCounts(productsList, data);
+          console.log("Corrected category counts:", data.map(c => 
+            `${c.category_name}: ${c.product_count} products`).join(', '));
+        }
+        
         setCategories(data);
       } catch (err) {
         console.error("Error loading categories:", err);
@@ -57,8 +103,10 @@ const HomePage = () => {
       }
     };
     
-    loadProducts();
-    loadCategories();
+    // Load products first, then use that data to correct category counts
+    loadProducts().then(productsList => {
+      loadCategories(productsList);
+    });
   }, []);
   
   // Get featured products (first 4)
