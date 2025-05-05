@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, User, Heart, Package, MessageSquare, HelpCircle, Settings, LogOut } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useFavorites } from '../contexts/FavoriteContext'; // Import useFavorites
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,9 +13,11 @@ import {
 import { categories } from '../data/products';
 
 const NavBar = () => {
+  const navigate = useNavigate(); // Add this for navigation after logout
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { productCount } = useCart(); // Change from itemCount to productCount
+  const { productCount, clearCart } = useCart(); // Get clearCart from useCart
+  const { clearFavorites } = useFavorites(); // Get clearFavorites from useFavorites
   // Check localStorage for authentication status on component mount
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   // Add state for user data
@@ -42,7 +45,7 @@ const NavBar = () => {
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleSearch = () => setSearchOpen(!searchOpen);
   
-  // For demo purposes - toggle auth state and update localStorage
+  // Update toggleAuth function to clear cart and favorites
   const toggleAuth = () => {
     const newAuthState = !isAuthenticated;
     setIsAuthenticated(newAuthState);
@@ -50,10 +53,18 @@ const NavBar = () => {
     if (newAuthState) {
       localStorage.setItem('isAuthenticated', 'true');
     } else {
+      // Clear user data
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       setUserData(null);
+      
+      // Clear cart and favorites
+      if (typeof clearCart === 'function') clearCart();
+      if (typeof clearFavorites === 'function') clearFavorites();
+      
+      // Navigate to home page
+      navigate('/');
     }
   };
 

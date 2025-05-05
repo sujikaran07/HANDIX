@@ -197,6 +197,12 @@ export const FavoriteProvider = ({ children }) => {
     }
   };
 
+  // Add a clearFavorites function
+  const clearFavorites = () => {
+    setFavorites([]);
+    localStorage.removeItem('handixFavorites');
+  };
+
   return (
     <FavoriteContext.Provider value={{
       favorites,
@@ -204,6 +210,7 @@ export const FavoriteProvider = ({ children }) => {
       addToFavorites,
       removeFromFavorites,
       toggleFavorite,
+      clearFavorites, // Add this to the context value
       loading,
       error
     }}>
@@ -222,6 +229,7 @@ export const useFavorites = () => {
       addToFavorites: () => console.warn('FavoriteContext not available'),
       removeFromFavorites: () => console.warn('FavoriteContext not available'),
       toggleFavorite: () => console.warn('FavoriteContext not available'),
+      clearFavorites: () => console.warn('FavoriteContext not available'), // Add this to the default implementation
       loading: false,
       error: null
     };
