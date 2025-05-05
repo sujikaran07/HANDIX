@@ -23,22 +23,21 @@ const Address = sequelize.define('Address', {
     type: DataTypes.STRING,
     allowNull: false,
     field: 'address_type',
+    validate: {
+      isIn: [['shipping', 'billing']]
+    }
   },
-  addressLine1: {
+  street_address: {
     type: DataTypes.TEXT,
-    field: 'address_line_1',
-  },
-  addressLine2: {
-    type: DataTypes.TEXT,
-    field: 'address_line_2',
+    field: 'street_address',
   },
   city: {
     type: DataTypes.STRING,
     field: 'city',
   },
-  state: {
+  district: {
     type: DataTypes.STRING,
-    field: 'state',
+    field: 'district',
   },
   postalCode: {
     type: DataTypes.STRING,
@@ -47,18 +46,21 @@ const Address = sequelize.define('Address', {
   country: {
     type: DataTypes.STRING,
     field: 'country',
+    defaultValue: 'Sri Lanka'
   },
   createdAt: {
     type: DataTypes.DATE,
     field: 'created_at',
+    defaultValue: Sequelize.fn('now')
   },
   updatedAt: {
     type: DataTypes.DATE,
     field: 'updated_at',
+    defaultValue: Sequelize.fn('now')
   },
 }, {
   tableName: 'Addresses',
-  timestamps: false,
+  timestamps: true,
   underscored: true,
 });
 
