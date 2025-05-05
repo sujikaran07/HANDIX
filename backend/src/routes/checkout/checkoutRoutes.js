@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const checkoutController = require('../../controllers/checkoutController');
+const checkoutController = require('../../controllers/checkout/checkoutController');
 
 // Route to save shipping address
 router.post('/shipping-address', checkoutController.saveShippingAddress);

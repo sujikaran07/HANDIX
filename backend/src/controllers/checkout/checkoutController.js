@@ -1,10 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
-const { sequelize } = require('../config/db');
-const { Customer } = require('../models/customerModel');
-const { Address } = require('../models/addressModel');
-const { Order } = require('../models/orderModel');
-const { OrderDetail } = require('../models/orderDetailModel');
-const Inventory = require('../models/inventoryModel');
+const { sequelize } = require('../../config/db');
+const { Customer } = require('../../models/customerModel');
+const { Address } = require('../../models/addressModel');
+const { Order } = require('../../models/orderModel');
+const { OrderDetail } = require('../../models/orderDetailModel');
+const Inventory = require('../../models/inventoryModel');
 const jwt = require('jsonwebtoken');
 
 // Helper function to verify JWT token
