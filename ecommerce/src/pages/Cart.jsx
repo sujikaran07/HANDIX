@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Minus, X, ShoppingCart } from 'lucide-react';
+import { Plus, Minus, X, ShoppingCart, Loader2 } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { useCart } from '../contexts/CartContext';
@@ -13,19 +13,71 @@ const CartPage = () => {
     subtotal, 
     customizationTotal, 
     total,
-    itemCount
+    itemCount,
+    loading,
+    error
   } = useCart();
   const navigate = useNavigate();
   
-  const handleQuantityChange = (productId, newQuantity) => {
-    if (newQuantity >= 1 && newQuantity <= 10) {
-      updateQuantity(productId, newQuantity);
+  const handleQuantityChange = (itemId, newQuantity) => {
+    // Find the item to check its max available quantity
+    const item = items.find(i => (i.itemId || i.product.id) === itemId);
+    if (!item) return;
+    
+    // Get max available quantity from the product
+    const maxAvailable = item.product.quantity || 999; // Changed from 10 to 999
+    
+    // Ensure quantity is within bounds (1 to maxAvailable)
+    if (newQuantity >= 1 && newQuantity <= maxAvailable) {
+      updateQuantity(itemId, newQuantity);
+    } else if (newQuantity > maxAvailable) {
+      // If user tries to add more than available, set to max available
+      updateQuantity(itemId, maxAvailable);
     }
   };
   
   const proceedToCheckout = () => {
     navigate('/checkout');
   };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-grow py-16">
+          <div className="container-custom flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <p>Loading your cart...</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <NavBar />
+        <main className="flex-grow py-16">
+          <div className="container-custom">
+            <div className="bg-red-50 p-6 rounded-lg text-center">
+              <p className="text-red-600 mb-4">{error}</p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-hover"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">
@@ -48,7 +100,7 @@ const CartPage = () => {
                   </div>
                   
                   {items.map(item => (
-                    <div key={`${item.product.id}-${item.customization || ''}`} className="border-b last:border-b-0 p-4">
+                    <div key={item.itemId || `${item.product.id}-${item.customization || ''}`} className="border-b last:border-b-0 p-4">
                       <div className="md:grid md:grid-cols-[2fr,1fr,1fr,1fr] md:items-center">
                         {/* Product */}
                         <div className="flex items-center mb-4 md:mb-0">
@@ -67,7 +119,7 @@ const CartPage = () => {
                               </p>
                             )}
                             <button
-                              onClick={() => removeItem(item.product.id)}
+                              onClick={() => removeItem(item.itemId || item.product.id)}
                               className="text-red-500 text-sm mt-1 flex items-center hover:underline"
                             >
                               <X size={14} className="mr-1" />
@@ -79,10 +131,10 @@ const CartPage = () => {
                         {/* Price */}
                         <div className="md:text-center mb-2 md:mb-0">
                           <div className="md:hidden text-sm text-gray-500 mb-1">Price:</div>
-                          <div>{item.product.currency} {item.product.price.toLocaleString()}</div>
-                          {item.customization && item.product.customizationFee && (
-                            <div className="text-sm text-gray-500">
-                              +{item.product.currency} {item.product.customizationFee.toLocaleString()}
+                          <div>LKR {(item.product.basePrice || item.product.price).toLocaleString()}</div>
+                          {item.customization && item.product.customizationFee > 0 && (
+                            <div className="text-sm font-medium text-blue-600">
+                              +LKR {item.product.customizationFee.toLocaleString()}
                             </div>
                           )}
                         </div>
@@ -92,7 +144,7 @@ const CartPage = () => {
                           <div className="md:hidden text-sm text-gray-500 mb-1">Quantity:</div>
                           <div className="flex items-center md:justify-center">
                             <button
-                              onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}
+                              onClick={() => handleQuantityChange(item.itemId || item.product.id, item.quantity - 1)}
                               className="border border-gray-300 rounded-l-md p-1 hover:bg-gray-50"
                               disabled={item.quantity <= 1}
                             >
@@ -101,32 +153,39 @@ const CartPage = () => {
                             <input
                               type="number"
                               min="1"
-                              max="10"
+                              max={item.product.quantity || 999} // Changed from 10 to 999
                               value={item.quantity}
-                              onChange={(e) => handleQuantityChange(item.product.id, parseInt(e.target.value) || 1)}
+                              onChange={(e) => handleQuantityChange(item.itemId || item.product.id, parseInt(e.target.value) || 1)}
                               className="border-t border-b border-gray-300 p-1 w-10 text-center focus:outline-none"
                             />
                             <button
-                              onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
+                              onClick={() => handleQuantityChange(item.itemId || item.product.id, item.quantity + 1)}
                               className="border border-gray-300 rounded-r-md p-1 hover:bg-gray-50"
-                              disabled={item.quantity >= 10}
+                              disabled={item.quantity >= (item.product.quantity || 999)} // Changed from 10 to 999
                             >
                               <Plus size={14} />
                             </button>
                           </div>
+                          {item.product.quantity <= 5 && (
+                            <p className="text-xs text-amber-600 mt-1">
+                              Only {item.product.quantity} left
+                            </p>
+                          )}
                         </div>
                         
                         {/* Total */}
                         <div className="md:text-right">
                           <div className="md:hidden text-sm text-gray-500 mb-1">Total:</div>
                           <div className="font-medium">
-                            {item.product.currency} {(
-                              item.product.price * item.quantity + 
-                              (item.customization && item.product.customizationFee 
-                                ? item.product.customizationFee * item.quantity 
-                                : 0)
+                            LKR {(
+                              item.product.price * item.quantity
                             ).toLocaleString()}
                           </div>
+                          {item.customization && item.product.customizationFee > 0 && (
+                            <div className="text-xs text-blue-600">
+                              Includes customization fee
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

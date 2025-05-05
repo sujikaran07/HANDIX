@@ -25,6 +25,10 @@ const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
 const authRoutes = require('./routes/auth/authRoutes'); 
 const categoryRoutes = require('./routes/category/categoryRoutes'); 
+const cartRoutes = require('./routes/cart/cartRoutes');
+// Import cart models for sequelize sync
+const Cart = require('./models/cartModel');
+const CartItem = require('./models/cartItemModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
@@ -66,6 +70,9 @@ Customer.hasMany(Order, {
   onUpdate: 'CASCADE',
 });
 
+// Note: Cart associations are defined in the cartModel.js and cartItemModel.js files
+// We don't need to redefine them here to avoid duplicate association errors
+
 dotenv.config();
 
 const app = express();
@@ -87,6 +94,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/login', employeeLoginRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/categories', categoryRoutes);
+app.use('/api/cart', cartRoutes);
 
 const PORT = process.env.PORT || 5000;
 

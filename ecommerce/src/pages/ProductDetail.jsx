@@ -119,14 +119,32 @@ const ProductDetailPage = () => {
   
   const handleAddToCart = () => {
     if (product) {
+      // Create a modified product object with the calculated final price
       const itemToAdd = {
         ...product,
-        selectedSize: selectedSize,
-        selectedVariation: selectedVariation,
-        customization: isCustomizing ? customization : undefined
+        id: product.id,
+        // Add the final price INCLUDING customization fee if applicable
+        finalPrice: calculateFinalPrice()
       };
       
-      addItem(itemToAdd, quantity);
+      // Pass customization only if customizing is enabled
+      const customizationText = isCustomizing ? customization : undefined;
+      
+      console.log("Adding to cart with customization:", {
+        product: product.name,
+        isCustomizing,
+        customizationText,
+        basePrice: product.price,
+        customizationFee: isCustomizing ? product.customizationFee : 0,
+        finalPrice: calculateFinalPrice(),
+        quantity,
+        maxAvailable: getMaxAvailableQuantity()
+      });
+      
+      // Only allow adding to cart if there's inventory available
+      if (getMaxAvailableQuantity() > 0) {
+        addItem(itemToAdd, quantity, customizationText);
+      }
     }
   };
   
