@@ -1,35 +1,124 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ChevronRight, Check, CreditCard, Truck } from 'lucide-react';
+import { ChevronRight, Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
+import { getShippingFeeByDistrict } from '../data/shippingZones';
+
+// Step components
+import ShippingAddressStep from '../components/checkout/ShippingAddressStep';
+import ShippingMethodStep from '../components/checkout/ShippingMethodStep';
+import BillingAddressStep from '../components/checkout/BillingAddressStep';
+import PaymentStep from '../components/checkout/PaymentStep';
+import ReviewStep from '../components/checkout/ReviewStep';
+import ConfirmationStep from '../components/checkout/ConfirmationStep';
 
 const CheckoutPage = () => {
   const { items, subtotal, customizationTotal, total, clearCart } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Current step in checkout process
+  const [currentStep, setCurrentStep] = useState(1);
+  
+  // State to track if order is completed
+  const [orderCompleted, setOrderCompleted] = useState(false);
+  const [orderId, setOrderId] = useState(null);
+  
   const [formData, setFormData] = useState({
+    // Shipping address
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     address: '',
     city: '',
+    district: '',
     postalCode: '',
-    paymentMethod: 'card'
+    
+    // Shipping method
+    shippingMethod: 'delivery', // 'delivery' or 'pickup'
+    pickupLocation: '', // for pickup option
+    
+    // Billing address
+    sameAsShipping: true,
+    billingFirstName: '',
+    billingLastName: '',
+    billingAddress: '',
+    billingCity: '',
+    billingDistrict: '',
+    billingPostalCode: '',
+    
+    // Payment
+    paymentMethod: 'card', // 'card', 'cod', 'paypal', 'gpay'
+    
+    // For card payments (simplified, in production would use a payment processor)
+    cardNumber: '',
+    cardExpiry: '',
+    cardCvc: '',
   });
+  
+  // Define shipping rates
+  const shippingRates = {
+    standard: 350,
+    express: 500
+  };
+
+  // Calculate shipping cost based on method and district
+  const calculateShippingCost = () => {
+    if (formData.shippingMethod === 'pickup') {
+      return 0;
+    } else if (formData.district) {
+      // Get shipping fee based on selected district
+      return getShippingFeeByDistrict(formData.district);
+    } else {
+      // Default shipping rate if no district selected
+      return shippingRates.standard;
+    }
+  };
+
+  // Calculate final total with shipping
+  const finalTotal = total + calculateShippingCost();
   
   const [errors, setErrors] = useState({});
   
+  // Set billing address fields when sameAsShipping changes
+  useEffect(() => {
+    if (formData.sameAsShipping) {
+      setFormData(prev => ({
+        ...prev,
+        billingFirstName: prev.firstName,
+        billingLastName: prev.lastName,
+        billingAddress: prev.address,
+        billingCity: prev.city,
+        billingDistrict: prev.district,
+        billingPostalCode: prev.postalCode
+      }));
+    }
+  }, [
+    formData.sameAsShipping, 
+    formData.firstName, 
+    formData.lastName, 
+    formData.address, 
+    formData.city, 
+    formData.district,
+    formData.postalCode
+  ]);
+  
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
     
-    // Clear error when field is edited
+    // Handle checkbox inputs
+    if (type === 'checkbox') {
+      setFormData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
+    // Clear error for the field being edited
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -39,65 +128,132 @@ const CheckoutPage = () => {
     }
   };
   
-  const handlePaymentMethodChange = (method) => {
-    setFormData(prev => ({ ...prev, paymentMethod: method }));
+  // Validate current step and move to the next if valid
+  const handleNextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(curr => curr + 1);
+      window.scrollTo(0, 0);
+    }
   };
   
-  const validateForm = () => {
+  // Move to previous step
+  const handlePrevStep = () => {
+    setCurrentStep(curr => curr - 1);
+    window.scrollTo(0, 0);
+  };
+  
+  // Validate the current step's fields
+  const validateCurrentStep = () => {
     const newErrors = {};
     
-    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+    switch (currentStep) {
+      case 1: // Shipping Address
+        if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+        if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+        if (!formData.email.trim()) {
+          newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+          newErrors.email = 'Email is invalid';
+        }
+        if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+        if (!formData.address.trim()) newErrors.address = 'Address is required';
+        if (!formData.city.trim()) newErrors.city = 'City is required';
+        if (!formData.district) newErrors.district = 'District is required';
+        if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
+        break;
+        
+      case 2: // Shipping Method
+        if (formData.shippingMethod === 'pickup' && !formData.pickupLocation) {
+          newErrors.pickupLocation = 'Please select a pickup location';
+        }
+        break;
+        
+      case 3: // Billing Address
+        if (!formData.sameAsShipping) {
+          if (!formData.billingFirstName.trim()) newErrors.billingFirstName = 'First name is required';
+          if (!formData.billingLastName.trim()) newErrors.billingLastName = 'Last name is required';
+          if (!formData.billingAddress.trim()) newErrors.billingAddress = 'Address is required';
+          if (!formData.billingCity.trim()) newErrors.billingCity = 'City is required';
+          if (!formData.billingDistrict) newErrors.billingDistrict = 'District is required';
+          if (!formData.billingPostalCode.trim()) newErrors.billingPostalCode = 'Postal code is required';
+        }
+        break;
+        
+      case 4: // Payment
+        if (formData.paymentMethod === 'card') {
+          if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required';
+          if (!formData.cardExpiry) newErrors.cardExpiry = 'Expiry date is required';
+          if (!formData.cardCvc) newErrors.cardCvc = 'CVC is required';
+        }
+        break;
+        
+      default:
+        break;
     }
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.address.trim()) newErrors.address = 'Address is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Place order when finalizing on the review step
+  const handlePlaceOrder = () => {
+    // Generate a random order ID (in a real app, this would come from your backend)
+    const generatedOrderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    setOrderId(generatedOrderId);
     
-    if (validateForm()) {
-      // Process the order
-      toast({
-        title: "Order Placed Successfully!",
-        description: "Your order has been placed and will be processed shortly.",
-      });
-      
-      clearCart();
-      
-      // Redirect based on payment method
-      switch (formData.paymentMethod) {
-        case 'card':
-          // In a real app this would redirect to a payment processor
-          navigate('/');
-          break;
-        case 'cod':
-          navigate('/');
-          break;
-        case 'paypal':
-          window.location.href = "https://www.paypal.com"; // Demo redirect
-          break;
-        case 'gpay':
-          window.location.href = "https://pay.google.com"; // Demo redirect
-          break;
-        default:
-          navigate('/');
-          break;
-      }
+    // Show success message
+    toast({
+      title: "Order Placed Successfully!",
+      description: `Your order #${generatedOrderId} has been placed and will be processed shortly.`,
+    });
+    
+    // Handle payment redirects or confirmation based on payment method
+    switch (formData.paymentMethod) {
+      case 'paypal':
+        // Save order details first
+        localStorage.setItem('pendingOrder', JSON.stringify({
+          orderId: generatedOrderId,
+          email: formData.email
+        }));
+        
+        clearCart(); // Clear cart before redirecting
+        
+        // Force navigation to PayPal using direct browser redirection
+        // Add a slight delay so the toast message can be seen
+        setTimeout(() => {
+          // For real PayPal integration, you would use their SDK to generate a proper checkout URL
+          window.location.href = "https://www.paypal.com/checkout";
+        }, 1500);
+        return; // Important: exit function here to prevent further code execution
+        
+      case 'gpay':
+        // Save order details first
+        localStorage.setItem('pendingOrder', JSON.stringify({
+          orderId: generatedOrderId,
+          email: formData.email
+        }));
+        
+        clearCart(); // Clear cart before redirecting
+        
+        // Force navigation to Google Pay
+        // Add a slight delay so the toast message can be seen
+        setTimeout(() => {
+          // For real Google Pay integration, you would use their API to generate a proper payment request
+          window.location.href = "https://pay.google.com";
+        }, 1500);
+        return; // Important: exit function here to prevent further code execution
+        
+      default:
+        // For card and COD payments, proceed directly to confirmation
+        setOrderCompleted(true);
+        setCurrentStep(6);
+        clearCart();
+        break;
     }
   };
   
-  // If cart is empty, redirect to cart page
-  if (items.length === 0) {
+  // If cart is empty and order not completed, redirect to cart
+  if (items.length === 0 && !orderCompleted) {
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -118,6 +274,158 @@ const CheckoutPage = () => {
     );
   }
   
+  // Render the step indicator
+  const renderStepIndicator = () => {
+    const steps = [
+      { number: 1, name: 'Shipping Address' },
+      { number: 2, name: 'Shipping Method' },
+      { number: 3, name: 'Billing Address' },
+      { number: 4, name: 'Payment' },
+      { number: 5, name: 'Review' },
+    ];
+    
+    return (
+      <div className="mb-8">
+        <div className="hidden md:flex justify-between relative">
+          {steps.map(step => (
+            <div 
+              key={step.number}
+              className={`flex flex-col items-center z-10 ${
+                currentStep >= step.number ? 'text-primary' : 'text-gray-400'
+              }`}
+            >
+              <div 
+                className={`w-8 h-8 flex items-center justify-center rounded-full mb-2 ${
+                  currentStep > step.number 
+                    ? 'bg-primary text-white' 
+                    : currentStep === step.number 
+                      ? 'border-2 border-primary text-primary' 
+                      : 'border-2 border-gray-300 text-gray-400'
+                }`}
+              >
+                {currentStep > step.number ? <Check size={16} /> : step.number}
+              </div>
+              <div className="text-xs text-center">{step.name}</div>
+            </div>
+          ))}
+          
+          {/* Connection lines */}
+          <div className="absolute top-4 h-0.5 bg-gray-200 w-full -z-0"></div>
+          <div 
+            className="absolute top-4 h-0.5 bg-primary w-0 -z-0 transition-all duration-500"
+            style={{ width: `${(Math.min(currentStep - 1, 4) / 4) * 100}%` }}
+          ></div>
+        </div>
+        
+        {/* Mobile step indicator */}
+        <div className="md:hidden flex items-center justify-between">
+          <span className="text-sm font-medium">
+            Step {currentStep} of 5: {steps.find(s => s.number === currentStep)?.name}
+          </span>
+          <div className="h-2 w-full max-w-[120px] bg-gray-200 rounded-full ml-4">
+            <div 
+              className="h-2 bg-primary rounded-full"
+              style={{ width: `${(Math.min(currentStep, 5) / 5) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Render current step content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <ShippingAddressStep 
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 2:
+        return (
+          <ShippingMethodStep
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 3:
+        return (
+          <BillingAddressStep
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 4:
+        return (
+          <PaymentStep
+            formData={formData}
+            errors={errors}
+            handleChange={handleChange}
+          />
+        );
+      case 5:
+        return (
+          <ReviewStep 
+            formData={formData}
+            items={items}
+            subtotal={subtotal}
+            customizationTotal={customizationTotal}
+            total={total}
+          />
+        );
+      case 6:
+        return (
+          <ConfirmationStep 
+            orderId={orderId}
+            email={formData.email}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+  
+  // Navigation buttons for each step
+  const renderNavButtons = () => {
+    if (currentStep === 6) return null; // No navigation on confirmation
+
+    return (
+      <div className="flex mt-8 pt-6 border-t justify-between">
+        {currentStep > 1 && (
+          <button 
+            onClick={handlePrevStep}
+            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={16} className="mr-2" />
+            Back
+          </button>
+        )}
+        
+        {currentStep < 5 ? (
+          <button
+            onClick={handleNextStep}
+            className="ml-auto flex items-center bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover"
+          >
+            Continue
+            <ArrowRight size={16} className="ml-2" />
+          </button>
+        ) : currentStep === 5 ? (
+          <button
+            onClick={handlePlaceOrder}
+            className="ml-auto bg-primary text-white px-8 py-3 rounded-md hover:bg-primary-hover font-medium"
+          >
+            Place Order
+          </button>
+        ) : null}
+      </div>
+    );
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
@@ -135,217 +443,94 @@ const CheckoutPage = () => {
           
           <h1 className="text-3xl font-bold mb-8">Checkout</h1>
           
+          {/* Only show step indicator for steps 1-5 */}
+          {currentStep <= 5 && renderStepIndicator()}
+          
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-            {/* Checkout Form */}
-            <div className="lg:col-span-2 mb-8 lg:mb-0">
-              <form onSubmit={handleSubmit} className="bg-white shadow-sm rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4">Delivery Information</h2>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  {/* First Name */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">First Name *</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.firstName ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
-                    )}
-                  </div>
-                  
-                  {/* Last Name */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">Last Name *</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.lastName ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
-                    )}
-                  </div>
-                  
-                  {/* Email */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">Email Address *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.email ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                    )}
-                  </div>
-                  
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">Phone Number *</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.phone ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.phone && (
-                      <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
-                    )}
-                  </div>
-                  
-                  {/* Address */}
-                  <div className="md:col-span-2">
-                    <label className="block text-gray-700 mb-1">Street Address *</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.address ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.address && (
-                      <p className="text-red-500 text-sm mt-1">{errors.address}</p>
-                    )}
-                  </div>
-                  
-                  {/* City */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">City *</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.city ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.city && (
-                      <p className="text-red-500 text-sm mt-1">{errors.city}</p>
-                    )}
-                  </div>
-                  
-                  {/* Postal Code */}
-                  <div>
-                    <label className="block text-gray-700 mb-1">Postal Code *</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={formData.postalCode}
-                      onChange={handleChange}
-                      className={`w-full p-2 border ${
-                        errors.postalCode ? 'border-red-500' : 'border-gray-300'
-                      } rounded-md focus:outline-none focus:ring-2 focus:ring-primary`}
-                    />
-                    {errors.postalCode && (
-                      <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
-                    )}
-                  </div>
-                </div>
-                
-                <h2 className="text-xl font-bold mb-4">Payment Method</h2>
-                
-                <PaymentMethodSelector 
-                  selectedMethod={formData.paymentMethod} 
-                  onMethodChange={handlePaymentMethodChange}
-                />
-                
-                <button 
-                  type="submit" 
-                  className="w-full py-3 px-6 rounded-md bg-primary text-white hover:bg-primary-hover mt-6"
-                >
-                  Place Order
-                </button>
-              </form>
+            {/* Main Content */}
+            <div className={currentStep === 6 ? "lg:col-span-3" : "lg:col-span-2"}>
+              <div className="bg-white shadow-sm rounded-lg p-6">
+                {renderStepContent()}
+                {renderNavButtons()}
+              </div>
             </div>
             
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <div className="bg-white shadow-sm rounded-lg p-6 sticky top-24">
-                <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-                
-                <div className="space-y-4 mb-6">
-                  {items.map(item => (
-                    <div key={`${item.product.id}-${item.customization || ''}`} className="flex">
-                      <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
-                        <img 
-                          src={item.product.images[0]} 
-                          alt={item.product.name} 
-                          className="w-full h-full object-cover"
-                        />
+            {/* Order Summary (not shown on confirmation) */}
+            {currentStep < 6 && (
+              <div className="lg:col-span-1 mt-8 lg:mt-0">
+                <div className="bg-white shadow-sm rounded-lg p-6 sticky top-24">
+                  <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                  
+                  <div className="space-y-4 mb-6">
+                    {items.map(item => (
+                      <div key={`${item.product.id}-${item.customization || ''}`} className="flex">
+                        <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
+                          <img 
+                            src={item.product.images[0]} 
+                            alt={item.product.name} 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="ml-4 flex-grow">
+                          <p className="font-medium">{item.product.name}</p>
+                          <p className="text-sm text-gray-500">
+                            Qty: {item.quantity}
+                            {item.customization && ' (Customized)'}
+                          </p>
+                          <p className="text-primary">
+                            {item.product.currency} {(
+                              item.product.price * item.quantity + 
+                              (item.customization && item.product.customizationFee 
+                                ? item.product.customizationFee * item.quantity 
+                                : 0)
+                            ).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div className="ml-4 flex-grow">
-                        <p className="font-medium">{item.product.name}</p>
-                        <p className="text-sm text-gray-500">
-                          Qty: {item.quantity}
-                          {item.customization && ' (Customized)'}
-                        </p>
-                        <p className="text-primary">
-                          {item.product.currency} {(
-                            item.product.price * item.quantity + 
-                            (item.customization && item.product.customizationFee 
-                              ? item.product.customizationFee * item.quantity 
-                              : 0)
-                          ).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="border-t pt-4">
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span>LKR {subtotal.toLocaleString()}</span>
-                    </div>
-                    {customizationTotal > 0 && (
+                    ))}
+                  </div>
+                  
+                  <div className="border-t pt-4">
+                    <div className="space-y-2 mb-4">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Customization Fee</span>
-                        <span>LKR {customizationTotal.toLocaleString()}</span>
+                        <span className="text-gray-600">Subtotal</span>
+                        <span>LKR {subtotal.toLocaleString()}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span>Free</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>LKR {total.toLocaleString()}</span>
+                      {customizationTotal > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Customization Fee</span>
+                          <span>LKR {customizationTotal.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Shipping</span>
+                        {formData.shippingMethod === 'pickup' ? (
+                          <span className="text-green-600">Free (Pickup)</span>
+                        ) : formData.district ? (
+                          <span>LKR {calculateShippingCost().toLocaleString()}</span>
+                        ) : (
+                          <span>LKR {shippingRates.standard.toLocaleString()}</span>
+                        )}
+                      </div>
+                      <div className="border-t pt-2 flex justify-between font-bold">
+                        <span>Total</span>
+                        <span>LKR {finalTotal.toLocaleString()}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="border-t pt-4">
-                  <div className="flex items-start">
-                    <Check size={16} className="text-green-500 mt-1 mr-2" />
-                    <p className="text-sm text-gray-600">
-                      Your personal data will be used to process your order, support your experience, 
-                      and for other purposes described in our privacy policy.
-                    </p>
+                  
+                  <div className="border-t pt-4">
+                    <div className="flex items-start">
+                      <Check size={16} className="text-green-500 mt-1 mr-2" />
+                      <p className="text-sm text-gray-600">
+                        Your personal data will be used to process your order, support your experience, 
+                        and for other purposes described in our privacy policy.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
