@@ -8,6 +8,7 @@ const API_BASE_URL = 'http://localhost:5000/api';
 export const CartProvider = ({ children }) => {
   const [items, setItems] = useState([]);
   const [itemCount, setItemCount] = useState(0);
+  const [productCount, setProductCount] = useState(0); // Unique product count
   const [subtotal, setSubtotal] = useState(0);
   const [customizationTotal, setCustomizationTotal] = useState(0);
   const [total, setTotal] = useState(0);
@@ -48,6 +49,8 @@ export const CartProvider = ({ children }) => {
           if (response.data) {
             setItems(response.data.items || []);
             setItemCount(response.data.itemCount || 0);
+            // Make sure to set productCount to the number of unique items
+            setProductCount(response.data.items ? response.data.items.length : 0);
             setSubtotal(response.data.subtotal || 0);
             setCustomizationTotal(response.data.customizationTotal || 0);
             setTotal(response.data.total || 0);
@@ -68,6 +71,7 @@ export const CartProvider = ({ children }) => {
                   item.product.customizationFee * item.quantity : 0), 0);
               
               setItemCount(count);
+              setProductCount(parsedCart.length); // Number of unique products
               setSubtotal(sub);
               setCustomizationTotal(customTotal);
               setTotal(sub + customTotal);
@@ -143,6 +147,7 @@ export const CartProvider = ({ children }) => {
         if (cartResponse.data) {
           setItems(cartResponse.data.items || []);
           setItemCount(cartResponse.data.itemCount || 0);
+          setProductCount(cartResponse.data.items ? cartResponse.data.items.length : 0); // Update unique product count
           setSubtotal(cartResponse.data.subtotal || 0);
           setCustomizationTotal(cartResponse.data.customizationTotal || 0);
           setTotal(cartResponse.data.total || 0);
@@ -189,6 +194,7 @@ export const CartProvider = ({ children }) => {
               item.product.customizationFee * item.quantity : 0), 0);
           
           setItemCount(count);
+          setProductCount(newItems.length); // Number of unique products
           setSubtotal(sub);
           setCustomizationTotal(customTotal);
           setTotal(sub); // The total now includes customization fees
@@ -224,6 +230,7 @@ export const CartProvider = ({ children }) => {
         if (response.data) {
           setItems(response.data.items || []);
           setItemCount(response.data.itemCount || 0);
+          setProductCount(response.data.items ? response.data.items.length : 0); // Update unique product count
           setSubtotal(response.data.subtotal || 0);
           setCustomizationTotal(response.data.customizationTotal || 0);
           setTotal(response.data.total || 0);
@@ -243,6 +250,7 @@ export const CartProvider = ({ children }) => {
               item.product.customizationFee * item.quantity : 0), 0);
           
           setItemCount(count);
+          setProductCount(newItems.length); // Number of unique products
           setSubtotal(sub);
           setCustomizationTotal(customTotal);
           setTotal(sub + customTotal);
@@ -288,6 +296,7 @@ export const CartProvider = ({ children }) => {
         if (response.data) {
           setItems(response.data.items || []);
           setItemCount(response.data.itemCount || 0);
+          setProductCount(response.data.items ? response.data.items.length : 0); // Update unique product count
           setSubtotal(response.data.subtotal || 0);
           setCustomizationTotal(response.data.customizationTotal || 0);
           setTotal(response.data.total || 0);
@@ -308,6 +317,7 @@ export const CartProvider = ({ children }) => {
               item.product.customizationFee * item.quantity : 0), 0);
           
           setItemCount(count);
+          setProductCount(newItems.length); // Number of unique products
           setSubtotal(sub);
           setCustomizationTotal(customTotal);
           setTotal(sub + customTotal);
@@ -345,6 +355,7 @@ export const CartProvider = ({ children }) => {
       // Clear local state regardless
       setItems([]);
       setItemCount(0);
+      setProductCount(0); // Number of unique products
       setSubtotal(0);
       setCustomizationTotal(0);
       setTotal(0);
@@ -374,6 +385,7 @@ export const CartProvider = ({ children }) => {
       updateQuantity,
       clearCart,
       itemCount,
+      productCount, // Number of unique products
       subtotal,
       customizationTotal,
       total,

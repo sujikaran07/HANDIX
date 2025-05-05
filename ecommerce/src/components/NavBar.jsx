@@ -14,7 +14,7 @@ import { categories } from '../data/products';
 const NavBar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { itemCount } = useCart();
+  const { productCount } = useCart(); // Change from itemCount to productCount
   // Check localStorage for authentication status on component mount
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
   // Add state for user data
@@ -192,9 +192,9 @@ const NavBar = () => {
             
             <Link to="/cart" className="text-gray-600 hover:text-primary transition-colors relative">
               <ShoppingCart size={20} />
-              {itemCount > 0 && (
+              {productCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {itemCount}
+                  {productCount}
                 </span>
               )}
             </Link>
@@ -213,9 +213,9 @@ const NavBar = () => {
             </Link>
             <Link to="/cart" className="text-gray-600 hover:text-primary transition-colors relative">
               <ShoppingCart size={20} />
-              {itemCount > 0 && (
+              {productCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {itemCount}
+                  {productCount}
                 </span>
               )}
             </Link>
