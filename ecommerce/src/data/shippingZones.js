@@ -47,11 +47,147 @@ export const sriLankaZones = {
 // Flatten districts for easy selection
 export const allDistricts = Object.values(sriLankaZones).flat();
 
-// Helper function to get shipping fee by district
-export const getShippingFeeByDistrict = (district) => {
-    const districtInfo = allDistricts.find(d => d.district === district);
-    return districtInfo ? districtInfo.shippingFee : 350; // Default fee if district not found
-};
-
 // Get all district names as an array
 export const districtNames = allDistricts.map(d => d.district);
+
+// Export the list of Sri Lanka districts
+export const sriLankaDistricts = [
+  'Ampara',
+  'Anuradhapura',
+  'Badulla',
+  'Batticaloa',
+  'Colombo',
+  'Galle',
+  'Gampaha',
+  'Hambantota',
+  'Jaffna',
+  'Kalutara',
+  'Kandy',
+  'Kegalle',
+  'Kilinochchi',
+  'Kurunegala',
+  'Mannar',
+  'Matale',
+  'Matara',
+  'Monaragala',
+  'Mullaitivu',
+  'Nuwara Eliya',
+  'Polonnaruwa',
+  'Puttalam',
+  'Ratnapura',
+  'Trincomalee',
+  'Vavuniya'
+];
+
+// Define shipping fees for each district
+const districtShippingFees = {
+  'Colombo': 250,
+  'Gampaha': 300,
+  'Kalutara': 350,
+  'Kandy': 400,
+  'Matale': 450,
+  'Nuwara Eliya': 450,
+  'Galle': 400,
+  'Matara': 450,
+  'Hambantota': 500,
+  'Jaffna': 600,
+  'Kilinochchi': 650,
+  'Mannar': 650,
+  'Vavuniya': 600,
+  'Mullaitivu': 650,
+  'Batticaloa': 550,
+  'Ampara': 550,
+  'Trincomalee': 550,
+  'Kurunegala': 400,
+  'Puttalam': 450,
+  'Anuradhapura': 500,
+  'Polonnaruwa': 500,
+  'Badulla': 500,
+  'Monaragala': 550,
+  'Ratnapura': 450,
+  'Kegalle': 400
+};
+
+// Function to get shipping fee by district - KEPT only this declaration
+export const getShippingFeeByDistrict = (district) => {
+  return districtShippingFees[district] || 350; // Default to 350 if district not found
+};
+
+// Export the shipping fees object as well
+export const shippingFees = districtShippingFees;
+
+// Define shipping zones based on regions
+export const shippingZones = {
+  'Western': ['Colombo', 'Gampaha', 'Kalutara'],
+  'Central': ['Kandy', 'Matale', 'Nuwara Eliya'],
+  'Southern': ['Galle', 'Matara', 'Hambantota'],
+  'Northern': ['Jaffna', 'Kilinochchi', 'Mannar', 'Vavuniya', 'Mullaitivu'],
+  'Eastern': ['Batticaloa', 'Ampara', 'Trincomalee'],
+  'North Western': ['Kurunegala', 'Puttalam'],
+  'North Central': ['Anuradhapura', 'Polonnaruwa'],
+  'Uva': ['Badulla', 'Monaragala'],
+  'Sabaragamuwa': ['Ratnapura', 'Kegalle']
+};
+
+// Shipping costs by zone (for reference)
+export const zoneShippingCosts = {
+  'Western': 300,
+  'Central': 400,
+  'Southern': 450,
+  'Northern': 650,
+  'Eastern': 550,
+  'North Western': 450,
+  'North Central': 500,
+  'Uva': 550,
+  'Sabaragamuwa': 450
+};
+
+// Function to get zone by district
+export const getZoneByDistrict = (district) => {
+  for (const [zone, districts] of Object.entries(shippingZones)) {
+    if (districts.includes(district)) {
+      return zone;
+    }
+  }
+  return null;
+};
+
+// Export standard shipping rates
+export const shippingRates = {
+  standard: 350,
+  express: 500
+};
+
+// Export delivery time estimates by district
+export const deliveryTimeEstimates = {
+  'Colombo': '1-2 days',
+  'Gampaha': '1-2 days',
+  'Kalutara': '2-3 days',
+  'Kandy': '2-3 days',
+  'Matale': '2-3 days',
+  'Nuwara Eliya': '2-3 days',
+  'Galle': '2-3 days',
+  'Matara': '2-3 days',
+  'Hambantota': '2-3 days',
+  'Jaffna': '3-5 days',
+  'Kilinochchi': '3-5 days',
+  'Mannar': '3-5 days',
+  'Vavuniya': '3-5 days',
+  'Mullaitivu': '3-5 days',
+  'Batticaloa': '3-4 days',
+  'Ampara': '3-4 days',
+  'Trincomalee': '3-4 days',
+  'Kurunegala': '2-3 days',
+  'Puttalam': '2-3 days',
+  'Anuradhapura': '2-3 days',
+  'Polonnaruwa': '2-3 days',
+  'Badulla': '2-3 days',
+  'Monaragala': '2-3 days',
+  'Ratnapura': '2-3 days',
+  'Kegalle': '2-3 days'
+};
+
+// Function to get delivery time estimate for a district
+export const getDeliveryTimeEstimate = (district) => {
+  return deliveryTimeEstimates[district] || '3-5 days'; // Default estimate
+};

@@ -7,6 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
 import { getShippingFeeByDistrict } from '../data/shippingZones';
+import axios from 'axios'; // Import axios for API requests
 
 // Step components
 import ShippingAddressStep from '../components/checkout/ShippingAddressStep';
@@ -28,11 +29,84 @@ const CheckoutPage = () => {
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [orderId, setOrderId] = useState(null);
   
+  // State for loading indicator
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Get user information from localStorage
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      try {
+        const userData = JSON.parse(userJson);
+        setUser(userData);
+        
+        // Pre-fill email if user is logged in
+        if (userData.email) {
+          setFormData(prev => ({
+            ...prev,
+            phone: userData.phone || '',
+          }));
+          
+          // If user is logged in, try to fetch their saved addresses
+          fetchCustomerAddresses(userData.c_id);
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
+
+  // Function to fetch customer's saved addresses
+  const fetchCustomerAddresses = async (customerId) => {
+    if (!customerId) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const config = token ? {
+        headers: { Authorization: `Bearer ${token}` }
+      } : {};
+      
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.get(
+        `${baseURL}/api/checkout/customer/${customerId}/addresses`,
+        config
+      );
+      
+      if (response.data.success && response.data.addresses.length > 0) {
+        // Find shipping address
+        const shippingAddress = response.data.addresses.find(
+          addr => addr.addressType === 'shipping'
+        );
+        
+        // If shipping address exists, pre-fill the form
+        if (shippingAddress) {
+          setFormData(prev => ({
+            ...prev,
+            address: shippingAddress.street_address || '',
+            city: shippingAddress.city || '',
+            district: shippingAddress.district || '',
+            postalCode: shippingAddress.postalCode || ''
+          }));
+        }
+        
+        // If customer has a phone number, use it
+        if (response.data.customer && response.data.customer.phone) {
+          setFormData(prev => ({
+            ...prev,
+            phone: response.data.customer.phone
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching customer addresses:', error);
+      // Continue with checkout even if we couldn't fetch addresses
+    }
+  };
+
   const [formData, setFormData] = useState({
     // Shipping address
-    firstName: '',
-    lastName: '',
-    email: '',
     phone: '',
     address: '',
     city: '',
@@ -90,8 +164,6 @@ const CheckoutPage = () => {
     if (formData.sameAsShipping) {
       setFormData(prev => ({
         ...prev,
-        billingFirstName: prev.firstName,
-        billingLastName: prev.lastName,
         billingAddress: prev.address,
         billingCity: prev.city,
         billingDistrict: prev.district,
@@ -100,8 +172,6 @@ const CheckoutPage = () => {
     }
   }, [
     formData.sameAsShipping, 
-    formData.firstName, 
-    formData.lastName, 
     formData.address, 
     formData.city, 
     formData.district,
@@ -129,8 +199,139 @@ const CheckoutPage = () => {
   };
   
   // Validate current step and move to the next if valid
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     if (validateCurrentStep()) {
+      // If moving from shipping address step, save address to backend
+      if (currentStep === 1) {
+        try {
+          // Get authentication token if available
+          const token = localStorage.getItem('token');
+          const config = token ? {
+            headers: { Authorization: `Bearer ${token}` }
+          } : {};
+          
+          if (!token) {
+            // Redirect to login if not authenticated
+            toast({
+              title: "Authentication Required",
+              description: "Please log in to proceed with checkout.",
+              variant: "destructive",
+            });
+            
+            navigate('/login?redirect=checkout');
+            return;
+          }
+          
+          // Prepare address data
+          const addressData = {
+            customerInfo: {
+              customerId: user?.c_id,
+              // Use user data instead of form fields
+              firstName: user?.firstName,
+              lastName: user?.lastName,
+              email: user?.email,
+              phone: formData.phone
+            },
+            shippingAddress: {
+              street: formData.address,
+              city: formData.city,
+              district: formData.district,
+              postalCode: formData.postalCode,
+              country: 'Sri Lanka'
+            }
+          };
+          
+          // Submit shipping address to backend
+          const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          const response = await axios.post(
+            `${baseURL}/api/checkout/shipping-address`, 
+            addressData, 
+            config
+          );
+          
+          // If successful, store the customer ID in case it was newly created
+          if (response.data.customerId && !user?.c_id) {
+            setUser(prev => ({
+              ...prev,
+              c_id: response.data.customerId
+            }));
+          }
+          
+          // If customer data returned, update the local user data
+          if (response.data.customerData) {
+            // Update user information in localStorage
+            const updatedUserData = {
+              ...user,
+              ...response.data.customerData
+            };
+            
+            localStorage.setItem('user', JSON.stringify(updatedUserData));
+            setUser(updatedUserData);
+            
+            // Update form data with the returned phone if it exists
+            if (response.data.customerData.phone && response.data.customerData.phone !== formData.phone) {
+              setFormData(prev => ({
+                ...prev,
+                phone: response.data.customerData.phone
+              }));
+              
+              toast({
+                title: "Phone number updated",
+                description: "Using your existing phone number from your account.",
+              });
+            }
+          }
+          
+          toast({
+            title: "Address saved",
+            description: "Your shipping address has been saved for this checkout.",
+          });
+        } catch (error) {
+          console.error("Error saving shipping address:", error);
+          // We can continue even if saving fails
+          toast({
+            variant: "destructive",
+            title: "Warning",
+            description: "Address couldn't be saved, but you can still continue.",
+          });
+        }
+      }
+      
+      // If moving from billing address step, save billing address to backend
+      else if (currentStep === 3 && !formData.sameAsShipping) {
+        try {
+          const token = localStorage.getItem('token');
+          const config = token ? {
+            headers: { Authorization: `Bearer ${token}` }
+          } : {};
+          
+          // Prepare billing address data
+          const billingData = {
+            customerId: user?.c_id,
+            sameAsShipping: formData.sameAsShipping,
+            billingAddress: {
+              street: formData.billingAddress,
+              city: formData.billingCity,
+              district: formData.billingDistrict,
+              postalCode: formData.billingPostalCode,
+              country: 'Sri Lanka'
+            }
+          };
+          
+          // Submit billing address to backend
+          const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          await axios.post(
+            `${baseURL}/api/checkout/billing-address`, 
+            billingData, 
+            config
+          );
+        } catch (error) {
+          console.error("Error saving billing address:", error);
+          // Continue even if saving fails
+        }
+      }
+      
+      // Move to next step
       setCurrentStep(curr => curr + 1);
       window.scrollTo(0, 0);
     }
@@ -148,13 +349,7 @@ const CheckoutPage = () => {
     
     switch (currentStep) {
       case 1: // Shipping Address
-        if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-        if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
-        if (!formData.email.trim()) {
-          newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-          newErrors.email = 'Email is invalid';
-        }
+        // Remove validation for firstName, lastName, email
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
         if (!formData.address.trim()) newErrors.address = 'Address is required';
         if (!formData.city.trim()) newErrors.city = 'City is required';
@@ -170,8 +365,6 @@ const CheckoutPage = () => {
         
       case 3: // Billing Address
         if (!formData.sameAsShipping) {
-          if (!formData.billingFirstName.trim()) newErrors.billingFirstName = 'First name is required';
-          if (!formData.billingLastName.trim()) newErrors.billingLastName = 'Last name is required';
           if (!formData.billingAddress.trim()) newErrors.billingAddress = 'Address is required';
           if (!formData.billingCity.trim()) newErrors.billingCity = 'City is required';
           if (!formData.billingDistrict) newErrors.billingDistrict = 'District is required';
@@ -196,59 +389,147 @@ const CheckoutPage = () => {
   };
   
   // Place order when finalizing on the review step
-  const handlePlaceOrder = () => {
-    // Generate a random order ID (in a real app, this would come from your backend)
-    const generatedOrderId = 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-    setOrderId(generatedOrderId);
-    
-    // Show success message
-    toast({
-      title: "Order Placed Successfully!",
-      description: `Your order #${generatedOrderId} has been placed and will be processed shortly.`,
-    });
-    
-    // Handle payment redirects or confirmation based on payment method
-    switch (formData.paymentMethod) {
-      case 'paypal':
-        // Save order details first
-        localStorage.setItem('pendingOrder', JSON.stringify({
-          orderId: generatedOrderId,
-          email: formData.email
-        }));
+  const handlePlaceOrder = async () => {
+    setIsSubmitting(true);
+    try {
+      // Get authentication token from localStorage
+      const token = localStorage.getItem('token');
+      const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+      
+      if (!isAuthenticated) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to complete your order.",
+          variant: "destructive",
+        });
         
-        clearCart(); // Clear cart before redirecting
-        
-        // Force navigation to PayPal using direct browser redirection
-        // Add a slight delay so the toast message can be seen
-        setTimeout(() => {
-          // For real PayPal integration, you would use their SDK to generate a proper checkout URL
-          window.location.href = "https://www.paypal.com/checkout";
-        }, 1500);
-        return; // Important: exit function here to prevent further code execution
-        
-      case 'gpay':
-        // Save order details first
-        localStorage.setItem('pendingOrder', JSON.stringify({
-          orderId: generatedOrderId,
-          email: formData.email
-        }));
-        
-        clearCart(); // Clear cart before redirecting
-        
-        // Force navigation to Google Pay
-        // Add a slight delay so the toast message can be seen
-        setTimeout(() => {
-          // For real Google Pay integration, you would use their API to generate a proper payment request
-          window.location.href = "https://pay.google.com";
-        }, 1500);
-        return; // Important: exit function here to prevent further code execution
-        
-      default:
-        // For card and COD payments, proceed directly to confirmation
-        setOrderCompleted(true);
-        setCurrentStep(6);
-        clearCart();
-        break;
+        // Save cart to localStorage and redirect to login
+        navigate('/login?redirect=checkout');
+        return;
+      }
+      
+      // Prepare order data - use user data from the logged-in user
+      const orderData = {
+        customerInfo: {
+          customerId: user?.c_id,
+          // Use stored user data instead of form fields
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          email: user?.email,
+          phone: formData.phone,
+          isGuest: false,
+        },
+        shippingAddress: {
+          street: formData.address,
+          city: formData.city,
+          district: formData.district,
+          postalCode: formData.postalCode,
+          country: 'Sri Lanka'
+        },
+        billingAddress: formData.sameAsShipping ? null : {
+          street: formData.billingAddress,
+          city: formData.billingCity,
+          district: formData.billingDistrict,
+          postalCode: formData.billingPostalCode,
+          country: 'Sri Lanka'
+        },
+        orderItems: items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price,
+          customization: item.customization || null,
+          customizationFee: item.product.customizationFee || 0
+        })),
+        paymentInfo: {
+          method: formData.paymentMethod,
+          cardDetails: formData.paymentMethod === 'card' ? {
+            cardNumber: formData.cardNumber,
+            expiry: formData.cardExpiry,
+            cvc: formData.cardCvc
+          } : null
+        },
+        orderSummary: {
+          subtotal,
+          customizationTotal,
+          shippingFee: calculateShippingCost(),
+          total: finalTotal
+        },
+        shippingMethod: formData.shippingMethod,
+        pickupLocation: formData.pickupLocation || null
+      };
+      
+      // Setup request headers
+      const config = token ? {
+        headers: { Authorization: `Bearer ${token}` }
+      } : {};
+      
+      // Submit order to backend API
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.post(
+        `${baseURL}/api/checkout/place-order`, 
+        orderData, 
+        config
+      );
+      
+      // Handle successful order creation
+      const generatedOrderId = response.data.orderId || 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+      setOrderId(generatedOrderId);
+      
+      // Show success message
+      toast({
+        title: "Order Placed Successfully!",
+        description: `Your order #${generatedOrderId} has been placed and will be processed shortly.`,
+      });
+      
+      // Handle payment redirects based on payment method
+      switch (formData.paymentMethod) {
+        case 'paypal':
+          // Save order details first
+          localStorage.setItem('pendingOrder', JSON.stringify({
+            orderId: generatedOrderId,
+            email: formData.email
+          }));
+          
+          clearCart(); // Clear cart before redirecting
+          
+          // Force navigation to PayPal using direct browser redirection
+          setTimeout(() => {
+            window.location.href = response.data.paymentUrl || "https://www.paypal.com/checkout";
+          }, 1500);
+          return;
+          
+        case 'gpay':
+          // Save order details first
+          localStorage.setItem('pendingOrder', JSON.stringify({
+            orderId: generatedOrderId,
+            email: formData.email
+          }));
+          
+          clearCart(); // Clear cart before redirecting
+          
+          // Force navigation to Google Pay
+          setTimeout(() => {
+            window.location.href = response.data.paymentUrl || "https://pay.google.com";
+          }, 1500);
+          return;
+          
+        default:
+          // For card and COD payments, proceed directly to confirmation
+          setOrderCompleted(true);
+          setCurrentStep(6);
+          clearCart();
+          break;
+      }
+      
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Error Placing Order",
+        description: error.response?.data?.message || "There was an error processing your order. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -399,7 +680,8 @@ const CheckoutPage = () => {
         {currentStep > 1 && (
           <button 
             onClick={handlePrevStep}
-            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900"
+            disabled={isSubmitting}
+            className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-900 disabled:opacity-50"
           >
             <ArrowLeft size={16} className="mr-2" />
             Back
@@ -409,7 +691,8 @@ const CheckoutPage = () => {
         {currentStep < 5 ? (
           <button
             onClick={handleNextStep}
-            className="ml-auto flex items-center bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover"
+            disabled={isSubmitting}
+            className="ml-auto flex items-center bg-primary text-white px-6 py-2 rounded-md hover:bg-primary-hover disabled:opacity-50"
           >
             Continue
             <ArrowRight size={16} className="ml-2" />
@@ -417,9 +700,16 @@ const CheckoutPage = () => {
         ) : currentStep === 5 ? (
           <button
             onClick={handlePlaceOrder}
-            className="ml-auto bg-primary text-white px-8 py-3 rounded-md hover:bg-primary-hover font-medium"
+            disabled={isSubmitting}
+            className="ml-auto bg-primary text-white px-8 py-3 rounded-md hover:bg-primary-hover font-medium disabled:opacity-50 flex items-center"
           >
-            Place Order
+            {isSubmitting ? 'Processing...' : 'Place Order'}
+            {isSubmitting && (
+              <svg className="animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
           </button>
         ) : null}
       </div>

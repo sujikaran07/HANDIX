@@ -12,14 +12,17 @@ const Customer = sequelize.define('Customer', {
   firstName: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'first_name'
   },
   lastName: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'last_name'
   },
   email: {
     type: DataTypes.STRING,
     allowNull: false,
+    unique: true
   },
   phone: {
     type: DataTypes.STRING,
@@ -32,9 +35,10 @@ const Customer = sequelize.define('Customer', {
   accountType: {
     type: DataTypes.ENUM({
       values: ['Retail', 'Wholesale'],
-      name: 'account_type_enum'
+      name: 'enum_Customers_account_type'
     }),
     defaultValue: 'Retail',
+    field: 'account_type'
   },
   accountStatus: {
     type: DataTypes.ENUM({
@@ -42,51 +46,38 @@ const Customer = sequelize.define('Customer', {
       name: 'enum_Customers_account_status'
     }),
     defaultValue: 'Pending',
+    field: 'account_status'
   },
   registrationDate: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
+    field: 'registration_date'
   },
   totalOrders: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
+    field: 'total_orders'
   },
   totalSpent: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0.00,
+    field: 'total_spent'
   },
   lastOrderDate: {
     type: DataTypes.DATE,
     allowNull: true,
+    field: 'last_order_date'
   },
-  country: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  billingAddress: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  shippingAddress: {
-    type: DataTypes.TEXT,
-    allowNull: true,
-  },
-  city: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  state: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
-  postalCode: {
-    type: DataTypes.STRING,
-    allowNull: true,
-  },
+  // Note: Removed fields that don't exist in database schema:
+  // - billingAddress
+  // - shippingAddress
+  // - city
+  // - state
+  // - postalCode
+  // These fields are in the Address model instead
   isEmailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
-    allowNull: true, 
     field: 'is_email_verified'
   },
   verificationToken: {
@@ -110,21 +101,21 @@ const Customer = sequelize.define('Customer', {
     allowNull: true
   },
   addedByAdmin: {
-    type: DataTypes.VIRTUAL, // Changed from BOOLEAN to VIRTUAL
+    type: DataTypes.VIRTUAL,
     defaultValue: false,
     get() {
-      // Return based on other fields in the model
-      // For example, assume admin-added if already verified without token
       return this.isEmailVerified && !this.verificationToken;
     }
   },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
+    field: 'created_at'
   },
   updatedAt: {
     type: DataTypes.DATE,
     defaultValue: Sequelize.NOW,
+    field: 'updated_at'
   },
 }, {
   tableName: 'Customers',

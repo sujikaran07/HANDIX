@@ -60,133 +60,148 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
     }
   };
 
+  // Get user information from localStorage to display in summary
+  const getUserInfo = () => {
+    try {
+      const userJson = localStorage.getItem('user');
+      if (userJson) {
+        return JSON.parse(userJson);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  };
+  
+  const user = getUserInfo();
+  
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">Review Your Order</h2>
-      <p className="text-gray-600 mb-6">Please review your order details before placing your order.</p>
+      <h2 className="text-xl font-semibold mb-4">Review your order</h2>
       
-      {/* Shipping Details */}
-      <div className="mb-6">
-        <h3 className="font-bold text-lg mb-2">Shipping Information</h3>
-        <div className="bg-gray-50 p-4 rounded-md">
-          <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
-          <p><strong>Email:</strong> {formData.email}</p>
-          <p><strong>Phone:</strong> {formData.phone}</p>
-          <p><strong>Method:</strong> {formData.shippingMethod === 'pickup' ? 'Store Pickup' : 'Home Delivery'}</p>
-          
-          {formData.shippingMethod === 'pickup' ? (
-            <p><strong>Pickup Location:</strong> {
-              formData.pickupLocation === 'mullaitivu-store' ? 'Mullaitivu Branch' : 
-              formData.pickupLocation === 'kilinochchi-store' ? 'Kilinochchi Branch' : ''
-            }</p>
-          ) : (
-            <>
-              <p><strong>Address:</strong> {formData.address}</p>
-              <p><strong>City:</strong> {formData.city}</p>
-              <p><strong>District:</strong> {formData.district}</p>
-              <p><strong>Postal Code:</strong> {formData.postalCode}</p>
-            </>
-          )}
+      <div className="space-y-6">
+        {/* Contact Information */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Contact Information</h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <div className="flex flex-col space-y-1">
+              {/* Display user info from localStorage instead of form data */}
+              <p><span className="font-medium">Name:</span> {user?.firstName} {user?.lastName}</p>
+              <p><span className="font-medium">Email:</span> {user?.email}</p>
+              <p><span className="font-medium">Phone:</span> {formData.phone}</p>
+            </div>
+          </div>
         </div>
-      </div>
-      
-      {/* Billing Details */}
-      <div className="mb-6">
-        <h3 className="font-bold text-lg mb-2">Billing Information</h3>
-        <div className="bg-gray-50 p-4 rounded-md">
-          {formData.sameAsShipping ? (
-            <p className="italic">Same as shipping address</p>
-          ) : (
-            <>
-              <p><strong>Name:</strong> {formData.billingFirstName} {formData.billingLastName}</p>
-              <p><strong>Address:</strong> {formData.billingAddress}</p>
-              <p><strong>City:</strong> {formData.billingCity}</p>
-              <p><strong>District:</strong> {formData.billingDistrict}</p>
-              <p><strong>Postal Code:</strong> {formData.billingPostalCode}</p>
-            </>
-          )}
+        
+        {/* Shipping Address */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Shipping Address</h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <p>{formData.address}</p>
+            <p>{formData.city}, {formData.district}</p>
+            <p>{formData.postalCode}</p>
+            <p>Sri Lanka</p>
+          </div>
         </div>
-      </div>
-      
-      {/* Payment Method */}
-      <div className="mb-6">
-        <h3 className="font-bold text-lg mb-2">Payment Method</h3>
-        <div className="bg-gray-50 p-4 rounded-md">
-          <p>
-            {formData.paymentMethod === 'card' && 'Credit/Debit Card'}
-            {formData.paymentMethod === 'cod' && 'Cash on Delivery'}
-            {formData.paymentMethod === 'paypal' && 'PayPal'}
-            {formData.paymentMethod === 'gpay' && 'Google Pay'}
-          </p>
-          {formData.paymentMethod === 'card' && (
-            <p className="text-sm text-gray-600 mt-1">
-              Card ending in {formData.cardNumber.slice(-4)}
+        
+        {/* Billing Address */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Billing Address</h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            {formData.sameAsShipping ? (
+              <>
+                <p><em>Same as shipping address</em></p>
+              </>
+            ) : (
+              <>
+                <p>{user?.firstName} {user?.lastName}</p>
+                <p>{formData.billingAddress}</p>
+                <p>{formData.billingCity}, {formData.billingDistrict}</p>
+                <p>{formData.billingPostalCode}</p>
+                <p>Sri Lanka</p>
+              </>
+            )}
+          </div>
+        </div>
+        
+        {/* Shipping Method */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Shipping Method</h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <p>
+              {formData.shippingMethod === 'pickup' 
+                ? `Pickup from ${formData.pickupLocation}` 
+                : 'Standard Delivery (3-5 business days)'}
             </p>
-          )}
+          </div>
         </div>
-      </div>
-      
-      {/* Order Summary */}
-      <div className="mb-6">
-        <h3 className="font-bold text-lg mb-2">Order Summary</h3>
-        <div className="border rounded-md overflow-hidden">
-          {/* Items */}
-          <div className="divide-y">
+        
+        {/* Payment Method */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Payment Method</h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            {formData.paymentMethod === 'card' && (
+              <p>Credit Card (ending in {formData.cardNumber.slice(-4)})</p>
+            )}
+            {formData.paymentMethod === 'cod' && <p>Cash on Delivery</p>}
+            {formData.paymentMethod === 'paypal' && <p>PayPal</p>}
+            {formData.paymentMethod === 'gpay' && <p>Google Pay</p>}
+          </div>
+        </div>
+        
+        {/* Order Summary */}
+        <div>
+          <h3 className="font-medium text-lg mb-2">Order Summary</h3>
+          <div className="border-t border-b py-2">
             {items.map(item => (
-              <div key={`${item.product.id}-${item.customization || ''}`} className="p-4 flex">
-                <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0">
-                  <img 
-                    src={item.product.images[0]} 
-                    alt={item.product.name} 
-                    className="w-full h-full object-cover"
-                  />
+              <div key={`${item.product.id}-${item.customization || ''}`} className="flex justify-between items-center mb-2">
+                <div className="flex items-center">
+                  <span className="font-medium">{item.quantity} × </span>
+                  <span className="ml-2">{item.product.name}</span>
+                  {item.customization && <span className="ml-2 text-gray-500 text-sm">(Customized)</span>}
                 </div>
-                <div className="ml-4 flex-grow">
-                  <p className="font-medium">{item.product.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Qty: {item.quantity}
-                    {item.customization && ` | Customization: ${item.customization}`}
-                  </p>
-                  <p className="text-primary">
-                    LKR {(
-                      item.product.price * item.quantity + 
-                      (item.customization && item.product.customizationFee 
-                        ? item.product.customizationFee * item.quantity 
-                        : 0)
-                    ).toLocaleString()}
-                  </p>
-                </div>
+                <span>{item.product.currency} {(
+                  item.product.price * item.quantity + 
+                  (item.customization && item.product.customizationFee 
+                    ? item.product.customizationFee * item.quantity 
+                    : 0)
+                ).toLocaleString()}</span>
               </div>
             ))}
           </div>
-          
-          {/* Totals */}
-          <div className="bg-gray-50 p-4">
-            <div className="space-y-2">
+          <div className="mt-2 space-y-1">
+            <div className="flex justify-between">
+              <span>Subtotal:</span>
+              <span>LKR {subtotal.toLocaleString()}</span>
+            </div>
+            {customizationTotal > 0 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span>LKR {subtotal.toLocaleString()}</span>
+                <span>Customization Fee:</span>
+                <span>LKR {customizationTotal.toLocaleString()}</span>
               </div>
-              {customizationTotal > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Customization Fee</span>
-                  <span>LKR {customizationTotal.toLocaleString()}</span>
-                </div>
+            )}
+            <div className="flex justify-between">
+              <span>Shipping:</span>
+              {formData.shippingMethod === 'pickup' ? (
+                <span className="text-green-600">Free (Pickup)</span>
+              ) : (
+                <span>LKR {formData.district ? '350' : '350'}</span>
               )}
-              <div className="flex justify-between">
-                <span className="text-gray-600">Shipping</span>
-                {formData.shippingMethod === 'pickup' ? (
-                  <span className="text-green-600">Free (Pickup)</span>
-                ) : (
-                  <span>LKR {shippingFee.toLocaleString()}</span>
-                )}
-              </div>
-              <div className="pt-2 flex justify-between font-bold border-t">
-                <span>Total</span>
-                <span>LKR {finalTotal.toLocaleString()}</span>
-              </div>
+            </div>
+            <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
+              <span>Total:</span>
+              <span>LKR {(total + (formData.shippingMethod === 'pickup' ? 0 : 350)).toLocaleString()}</span>
             </div>
           </div>
+        </div>
+        
+        <div className="pt-4">
+          <p className="text-sm text-gray-600">
+            By placing your order, you agree to our terms of service and privacy policy.
+            You also acknowledge that cancellations and returns are subject to our cancellation
+            and return policies.
+          </p>
         </div>
       </div>
     </div>

@@ -26,7 +26,8 @@ const orderRoutes = require('./routes/orders/orderRoutes');
 const authRoutes = require('./routes/auth/authRoutes'); 
 const categoryRoutes = require('./routes/category/categoryRoutes'); 
 const cartRoutes = require('./routes/cart/cartRoutes');
-const favoriteRoutes = require('./routes/favorites/favoriteRoutes'); // Add this line
+const favoriteRoutes = require('./routes/favorites/favoriteRoutes'); 
+const checkoutRoutes = require('./routes/checkout/checkoutRoutes'); // Add new checkout routes
 // Import cart models for sequelize sync
 const Cart = require('./models/cartModel');
 const CartItem = require('./models/cartItemModel');
@@ -98,6 +99,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/favorites', favoriteRoutes); // This path stays the same
+app.use('/api/checkout', checkoutRoutes); // Add checkout routes
 
 const PORT = process.env.PORT || 5000;
 
