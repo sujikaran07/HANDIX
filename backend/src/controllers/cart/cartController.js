@@ -122,18 +122,27 @@ exports.addItemToCart = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     const { userId } = req.params;
-    const { productId, quantity, customization, size, price } = req.body;
+    const { productId, quantity, customization, price } = req.body;
 
     if (!productId || !quantity || !price) {
       await transaction.rollback();
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Validate that the product exists
+    // Validate that the product exists and check available inventory
     const product = await Inventory.findByPk(productId);
     if (!product) {
       await transaction.rollback();
       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Check if requested quantity exceeds available quantity
+    const availableQuantity = product.quantity || 0;
+    const safeQuantity = Math.min(quantity, availableQuantity);
+
+    if (safeQuantity <= 0) {
+      await transaction.rollback();
+      return res.status(400).json({ message: 'Product is out of stock' });
     }
 
     // Find or create user's active cart
@@ -149,31 +158,32 @@ exports.addItemToCart = async (req, res) => {
       transaction
     });
 
-    // Check if this product already exists in the cart
+    // Check if this product already exists in the cart with the same customization
     let cartItem = await CartItem.findOne({
       where: {
         cart_id: cart.cart_id,
         product_id: productId,
-        customization: customization || null,
-        size: size || null
+        customization: customization || null
       },
       transaction
     });
 
     if (cartItem) {
-      // Update existing item
-      cartItem.quantity += quantity;
+      // Update existing item, respecting inventory limits
+      const newQuantity = Math.min(cartItem.quantity + safeQuantity, availableQuantity);
+      cartItem.quantity = newQuantity;
       await cartItem.save({ transaction });
     } else {
       // Create new cart item
       cartItem = await CartItem.create({
         cart_id: cart.cart_id,
         product_id: productId,
-        quantity,
+        quantity: safeQuantity,
         unit_price: price,
-        customization: customization || null,
-        size: size || null
+        customization: customization || null
       }, { transaction });
+      
+      console.log(`Cart item created with customization: ${customization || 'None'}, quantity: ${safeQuantity}/${availableQuantity}`);
     }
 
     // Update cart timestamp
@@ -186,7 +196,10 @@ exports.addItemToCart = async (req, res) => {
 
     return res.status(200).json({
       message: 'Item added to cart successfully',
-      cartItemId: cartItem.cart_item_id
+      cartItemId: cartItem.cart_item_id,
+      customization: cartItem.customization,
+      quantity: cartItem.quantity,
+      availableQuantity
     });
   } catch (error) {
     await transaction.rollback();
@@ -217,19 +230,35 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    // Find and update the cart item
+    // Find the cart item
     const cartItem = await CartItem.findOne({
       where: {
         cart_item_id: itemId,
         cart_id: cart.cart_id
-      }
+      },
+      include: [{
+        model: Inventory,
+        as: 'product'
+      }]
     });
 
     if (!cartItem) {
       return res.status(404).json({ message: 'Cart item not found' });
     }
 
-    cartItem.quantity = quantity;
+    // Check inventory limits
+    const availableQuantity = cartItem.product.quantity || 0;
+    const safeQuantity = Math.min(quantity, availableQuantity);
+    
+    if (safeQuantity <= 0) {
+      return res.status(400).json({ 
+        message: 'Product is out of stock',
+        availableQuantity
+      });
+    }
+
+    // Update the quantity
+    cartItem.quantity = safeQuantity;
     await cartItem.save();
 
     // Update cart timestamp
@@ -241,7 +270,8 @@ exports.updateCartItem = async (req, res) => {
     return res.status(200).json({
       message: 'Cart item updated successfully',
       itemId: cartItem.cart_item_id,
-      quantity: cartItem.quantity
+      quantity: cartItem.quantity,
+      availableQuantity
     });
   } catch (error) {
     console.error('Error updating cart item:', error);
