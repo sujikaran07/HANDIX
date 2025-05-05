@@ -96,7 +96,7 @@ const BillingAddressStep = ({ formData, errors, handleChange }) => {
           
           {/* City */}
           <div>
-            <label className="block text-gray-700 mb-1">City *</label>
+            <label className="block text-gray-700 mb-1">City / Town *</label>
             <input
               type="text"
               name="billingCity"
