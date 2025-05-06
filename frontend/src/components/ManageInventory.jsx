@@ -83,10 +83,20 @@ const ManageInventory = ({ onViewInventory }) => {
     );
   };
 
+  // Utility function to determine stock status based on quantity
+  const getStockStatus = (quantity) => {
+    if (quantity === 0) return "Out of Stock";
+    if (quantity < 10) return "Low Stock";
+    return "In Stock";
+  };
+
   const filteredInventory = inventory.filter(item => {
+    // Calculate the actual status based on quantity
+    const actualStatus = getStockStatus(item.quantity);
+    
     return (
       (selectedCategories.includes(item.category?.category_name)) &&
-      (filterStatus === 'All' || item.product_status === filterStatus) &&
+      (filterStatus === 'All' || actualStatus === filterStatus) &&
       (item.product_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
        item.category?.category_name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -246,40 +256,45 @@ const ManageInventory = ({ onViewInventory }) => {
               </thead>
               <tbody>
                 {currentInventory.length > 0 ? (
-                  currentInventory.map(item => (
-                    <tr key={item.product_id}>
-                      <td>{item.product_id}</td>
-                      <td>{item.product_name}</td>
-                      <td>{item.category?.category_name || 'N/A'}</td>
-                      <td>{item.quantity}</td>
-                      <td>{new Date(item.date_added).toLocaleString('en-US', { 
-                        year: '2-digit', 
-                        month: 'numeric', 
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                        hour12: true
-                      })}</td>
-                      <td className={`stock-status ${(item.product_status || '').toLowerCase().replace(/\s+/g, '-')}`}>
-                        {item.product_status || 'Unknown'}
-                      </td>
-                      <td className="action-buttons">
-                        <div className="dropdown">
-                          <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            Actions
-                          </button>
-                          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <li>
-                              <button className="dropdown-item">Update</button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item">Restock</button>
-                            </li>
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  currentInventory.map(item => {
+                    // Determine stock status based on quantity
+                    const stockStatus = getStockStatus(item.quantity);
+                    
+                    return (
+                      <tr key={item.product_id}>
+                        <td>{item.product_id}</td>
+                        <td>{item.product_name}</td>
+                        <td>{item.category?.category_name || 'N/A'}</td>
+                        <td>{item.quantity}</td>
+                        <td>{new Date(item.date_added).toLocaleString('en-US', { 
+                          year: '2-digit', 
+                          month: 'numeric', 
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true
+                        })}</td>
+                        <td className={`stock-status ${stockStatus.toLowerCase().replace(/\s+/g, '-')}`}>
+                          {stockStatus}
+                        </td>
+                        <td className="action-buttons">
+                          <div className="dropdown">
+                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                              Actions
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              <li>
+                                <button className="dropdown-item">Update</button>
+                              </li>
+                              <li>
+                                <button className="dropdown-item">Restock</button>
+                              </li>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="7" className="text-center">No inventory items available</td>
