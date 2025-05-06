@@ -96,7 +96,8 @@ exports.saveShippingAddress = async (req, res) => {
     let addressData = null; // Declare addressData here so it's in scope
     
     if (customerId) {
-      existingAddress = await Address.findOne({
+      // Find ALL shipping addresses for this customer, sorted by most recent first
+      const allCustomerAddresses = await Address.findAll({
         where: {
           c_id: customerId,
           addressType: 'shipping'
@@ -104,16 +105,30 @@ exports.saveShippingAddress = async (req, res) => {
         order: [['createdAt', 'DESC']]
       });
       
-      // Check if the address is the same as the existing one
-      if (existingAddress && 
-          existingAddress.street_address === shippingAddress.street &&
-          existingAddress.city === shippingAddress.city &&
-          existingAddress.district === shippingAddress.district &&
-          existingAddress.postalCode === shippingAddress.postalCode) {
-        // Address hasn't changed, don't create a new one
+      // Check if ANY existing address matches the new one exactly
+      const matchingAddress = allCustomerAddresses.find(addr => 
+        addr.street_address === shippingAddress.street &&
+        addr.city === shippingAddress.city &&
+        addr.district === shippingAddress.district &&
+        addr.postalCode === shippingAddress.postalCode
+      );
+      
+      if (matchingAddress) {
+        // Use the existing address instead of creating a new one
         shouldCreateNewAddress = false;
-        addressData = existingAddress; // This is fine now since addressData is declared above
-        console.log(`Using existing shipping address for customer ${customerId} - no changes detected`);
+        addressData = matchingAddress;
+        console.log(`Using existing shipping address for customer ${customerId} - exact match found`);
+      } else {
+        console.log(`No matching address found for customer ${customerId} - will create new address`);
+        // Log the differences for debugging
+        if (allCustomerAddresses.length > 0) {
+          const mostRecent = allCustomerAddresses[0];
+          console.log('Most recent address vs new address:');
+          console.log(`Street: "${mostRecent.street_address}" vs "${shippingAddress.street}"`);
+          console.log(`City: "${mostRecent.city}" vs "${shippingAddress.city}"`);
+          console.log(`District: "${mostRecent.district}" vs "${shippingAddress.district}"`);
+          console.log(`Postal Code: "${mostRecent.postalCode}" vs "${shippingAddress.postalCode}"`);
+        }
       }
     }
     
@@ -406,22 +421,29 @@ exports.placeOrder = async (req, res) => {
     // First check if shipping address already exists for this customer
     let shippingAddressId = null;
     
-    const existingShippingAddress = await Address.findOne({
+    // Find ALL shipping addresses for this customer
+    const allShippingAddresses = await Address.findAll({
       where: {
         c_id: customerId,
         addressType: 'shipping'
-      }
+      },
+      order: [['createdAt', 'DESC']]
     });
     
-    if (existingShippingAddress && 
-        existingShippingAddress.street_address === shippingAddress.street &&
-        existingShippingAddress.city === shippingAddress.city &&
-        existingShippingAddress.district === shippingAddress.district &&
-        existingShippingAddress.postalCode === shippingAddress.postalCode) {
-      // Use existing address if unchanged
-      shippingAddressId = existingShippingAddress.address_id;
+    // Check if ANY existing address matches exactly
+    const matchingShippingAddress = allShippingAddresses.find(addr => 
+      addr.street_address === shippingAddress.street &&
+      addr.city === shippingAddress.city &&
+      addr.district === shippingAddress.district &&
+      addr.postalCode === shippingAddress.postalCode
+    );
+    
+    if (matchingShippingAddress) {
+      // Use existing address if found
+      shippingAddressId = matchingShippingAddress.address_id;
+      console.log(`Using existing shipping address ID ${shippingAddressId} for order`);
     } else {
-      // Create new shipping address if changed
+      // Create new shipping address only if no match was found
       const newShippingAddress = await Address.create({
         c_id: customerId,
         addressType: 'shipping',
@@ -433,6 +455,7 @@ exports.placeOrder = async (req, res) => {
       }, { transaction });
       
       shippingAddressId = newShippingAddress.address_id;
+      console.log(`Created new shipping address ID ${shippingAddressId} for order - no match found`);
     }
     
     // Create billing address if different
@@ -442,61 +465,61 @@ exports.placeOrder = async (req, res) => {
     const sameAsShipping = !billingAddress;
     
     if (sameAsShipping) {
-      // Copy shipping address data to create a billing address record
-      if (existingShippingAddress) {
-        // Check if billing address exists
-        const existingBillingAddress = await Address.findOne({
-          where: {
-            c_id: customerId,
-            addressType: 'billing'
-          }
-        });
-        
-        if (existingBillingAddress) {
-          // Update existing billing address
-          await existingBillingAddress.update({
-            street_address: existingShippingAddress.street_address,
-            city: existingShippingAddress.city,
-            district: existingShippingAddress.district,
-            postalCode: existingShippingAddress.postalCode,
-            country: existingShippingAddress.country || 'Sri Lanka',
-            updatedAt: new Date()
-          }, { transaction });
-          
-          billingAddressId = existingBillingAddress.address_id;
-        } else {
-          // Create new billing address as copy of shipping
-          const newBillingAddress = await Address.create({
-            c_id: customerId,
-            addressType: 'billing',
-            street_address: existingShippingAddress.street_address,
-            city: existingShippingAddress.city,
-            district: existingShippingAddress.district,
-            postalCode: existingShippingAddress.postalCode,
-            country: existingShippingAddress.country || 'Sri Lanka'
-          }, { transaction });
-          
-          billingAddressId = newBillingAddress.address_id;
-        }
-      }
-    } else {
-      // Check if billing address already exists
-      const existingBillingAddress = await Address.findOne({
+      // Try to find existing billing address that matches shipping address
+      const matchingBillingAddress = await Address.findOne({
         where: {
           c_id: customerId,
-          addressType: 'billing'
+          addressType: 'billing',
+          street_address: matchingShippingAddress?.street_address || shippingAddress.street,
+          city: matchingShippingAddress?.city || shippingAddress.city,
+          district: matchingShippingAddress?.district || shippingAddress.district,
+          postalCode: matchingShippingAddress?.postalCode || shippingAddress.postalCode
         }
       });
       
-      if (existingBillingAddress &&
-          existingBillingAddress.street_address === billingAddress.street &&
-          existingBillingAddress.city === billingAddress.city &&
-          existingBillingAddress.district === billingAddress.district &&
-          existingBillingAddress.postalCode === billingAddress.postalCode) {
-        // Use existing billing address if unchanged
-        billingAddressId = existingBillingAddress.address_id;
+      if (matchingBillingAddress) {
+        // Use existing billing address that matches shipping address
+        billingAddressId = matchingBillingAddress.address_id;
+        console.log(`Using existing billing address ID ${billingAddressId} that matches shipping address`);
       } else {
-        // Create new billing address
+        // Create new billing address as copy of shipping
+        const newBillingAddress = await Address.create({
+          c_id: customerId,
+          addressType: 'billing',
+          street_address: matchingShippingAddress?.street_address || shippingAddress.street,
+          city: matchingShippingAddress?.city || shippingAddress.city,
+          district: matchingShippingAddress?.district || shippingAddress.district,
+          postalCode: matchingShippingAddress?.postalCode || shippingAddress.postalCode,
+          country: shippingAddress.country || 'Sri Lanka'
+        }, { transaction });
+        
+        billingAddressId = newBillingAddress.address_id;
+        console.log(`Created new billing address ID ${billingAddressId} copied from shipping address`);
+      }
+    } else {
+      // Handle custom billing address - check all existing billing addresses for match
+      const allBillingAddresses = await Address.findAll({
+        where: {
+          c_id: customerId,
+          addressType: 'billing'
+        },
+        order: [['createdAt', 'DESC']]
+      });
+      
+      // Check if ANY existing billing address matches exactly
+      const matchingBillingAddress = allBillingAddresses.find(addr => 
+        addr.street_address === billingAddress.street &&
+        addr.city === billingAddress.city &&
+        addr.district === billingAddress.district &&
+        addr.postalCode === billingAddress.postalCode
+      );
+      
+      if (matchingBillingAddress) {
+        // Use existing billing address if found
+        billingAddressId = matchingBillingAddress.address_id;
+        console.log(`Using existing billing address ID ${billingAddressId}`);
+      } else {
+        // Create new billing address only if no match was found
         const newBillingAddress = await Address.create({
           c_id: customerId,
           addressType: 'billing',
@@ -508,6 +531,7 @@ exports.placeOrder = async (req, res) => {
         }, { transaction });
         
         billingAddressId = newBillingAddress.address_id;
+        console.log(`Created new billing address ID ${billingAddressId} - no match found`);
       }
     }
     
