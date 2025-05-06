@@ -28,20 +28,43 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
       const response = await axios.get('http://localhost:5000/api/orders');
       console.log("API Response:", response.data);
       
-      const formattedOrders = response.data.map(order => {
-        let customerName = 'Unknown';
-        if (order.customer && order.customer.first_name && order.customer.last_name) {
-          customerName = `${order.customer.first_name} ${order.customer.last_name}`;
+      // Fix: Check if response.data is an object with orders property or if it's directly an array
+      const ordersData = response.data.orders || response.data || [];
+      
+      // Make sure we're working with an array before mapping
+      const ordersArray = Array.isArray(ordersData) ? ordersData : [];
+      
+      const formattedOrders = ordersArray.map(order => {
+        // Extract only first name for display
+        let firstName = 'Unknown';
+        if (order.customer && order.customer.first_name) {
+          firstName = order.customer.first_name;
+        } else if (order.customerName && order.customerName.includes(' ')) {
+          // Extract first name from full name
+          firstName = order.customerName.split(' ')[0];
+        } else if (order.customer && order.customer.firstName) {
+          firstName = order.customer.firstName;
+        } else if (order.firstName) {
+          firstName = order.firstName;
         } else if (order.customerName) {
-          customerName = order.customerName;
+          // If customerName exists but doesn't have spaces, use it as is
+          firstName = order.customerName;
         }
         
+        // Format date in MM/DD/YY, h:mm AM/PM format
         let orderDate = 'N/A';
         if (order.orderDate || order.order_date) {
           const dateValue = order.orderDate || order.order_date;
           const parsedDate = new Date(dateValue);
           if (!isNaN(parsedDate.getTime())) {
-            orderDate = parsedDate.toLocaleDateString();
+            orderDate = parsedDate.toLocaleString('en-US', {
+              month: 'numeric',
+              day: 'numeric',
+              year: '2-digit',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            });
           }
         }
         
@@ -50,14 +73,20 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         const customizedValue = order.customized || 'No';
         const customized = customizedValue.charAt(0).toUpperCase() + customizedValue.slice(1);
         
+        // Show "Awaiting Payment" as "To Pay" 
+        let status = order.orderStatus || order.order_status || 'Processing';
+        if (status === 'Awaiting Payment') {
+          status = 'To Pay';
+        }
+        
         return {
           id: order.order_id || order.id,
-          customerName,
+          customerName: firstName, // Only use first name here
           orderDate,
           totalAmount: `${totalAmount}`,  
           customized,
           assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
-          status: order.orderStatus || order.order_status || 'Processing'
+          status
         };
       });
       

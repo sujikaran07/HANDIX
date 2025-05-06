@@ -16,17 +16,23 @@ const OrderDetails = ({ order, onBack }) => {
     });
   };
 
+  // Format status text
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    return status.toLowerCase() === 'awaiting payment' ? 'To Pay' : status;
+  };
+
   // Get appropriate badge color based on status
   const getStatusBadgeClass = (status) => {
     if (!status) return 'bg-secondary';
     
     const statusLower = status.toLowerCase();
+    if (statusLower === 'awaiting payment' || statusLower === 'to pay') return 'bg-danger';
     if (statusLower.includes('pending')) return 'bg-warning';
     if (statusLower.includes('processing')) return 'bg-info';
     if (statusLower.includes('shipped')) return 'bg-primary';
     if (statusLower.includes('delivered')) return 'bg-success';
     if (statusLower.includes('cancel')) return 'bg-danger';
-    if (statusLower.includes('await')) return 'bg-secondary';
     
     return 'bg-secondary';
   };
@@ -57,7 +63,7 @@ const OrderDetails = ({ order, onBack }) => {
                 </div>
                 <div className="mb-2">
                   <strong>Status:</strong> <span className={`badge ${getStatusBadgeClass(order.orderStatus || order.status)}`}>
-                    {order.orderStatus || order.status}
+                    {formatStatus(order.orderStatus || order.status)}
                   </span>
                 </div>
                 <div className="mb-2">
