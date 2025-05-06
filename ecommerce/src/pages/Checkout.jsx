@@ -712,7 +712,7 @@ const CheckoutPage = () => {
         return (
           <ConfirmationStep 
             orderId={orderId}
-            email={formData.email}
+            email={user?.email || 'your email address'}
           />
         );
       default:
