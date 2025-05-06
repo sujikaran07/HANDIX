@@ -137,6 +137,17 @@ export const fetchProductById = async (productId) => {
   try {
     console.log(`Fetching product details for ID: ${productId}`);
     
+    let customizationFee = null;
+    try {
+      const feeResponse = await axios.get(`http://localhost:5000/api/variations/${productId}/customization-fee`);
+      if (feeResponse.data && feeResponse.data.fee !== undefined) {
+        customizationFee = parseFloat(feeResponse.data.fee);
+        console.log(`Successfully fetched customization fee for ${productId}: ${customizationFee}`);
+      }
+    } catch (feeError) {
+      console.error(`Error fetching customization fee for ${productId}:`, feeError);
+    }
+    
     const response = await axios.get('http://localhost:5000/api/inventory/public');
     
     if (!response.data || !response.data.inventory || !Array.isArray(response.data.inventory)) {
@@ -175,6 +186,18 @@ export const fetchProductById = async (productId) => {
     if (item.variations && Array.isArray(item.variations)) {
       console.log(`DEBUG: Raw variations for ${productId}:`, JSON.stringify(item.variations));
       
+      if (customizationFee === null && item.category?.category_name === 'Artistry') {
+        let highestAddPrice = 0;
+        item.variations.forEach(variation => {
+          const addPrice = parseFloat(variation.additional_price || 0);
+          if (addPrice > highestAddPrice) {
+            highestAddPrice = addPrice;
+          }
+        });
+        customizationFee = highestAddPrice;
+        console.log(`Extracted customization fee from variations: ${customizationFee}`);
+      }
+      
       product.allVariations = item.variations.map(variation => {
         const stockLevel = parseInt(variation.stock_level || 0);
         return {
@@ -199,7 +222,10 @@ export const fetchProductById = async (productId) => {
     }
     
     if (product.category === 'Artistry') {
-      product.customizationFee = 500;
+      if (customizationFee !== null) {
+        product.customizationFee = customizationFee;
+        console.log(`Setting customization fee for ${productId} to ${customizationFee}`);
+      }
       
       if (product.variations && product.variations.length > 0) {
         product.hasAdditionalPriceOptions = true;
@@ -210,6 +236,7 @@ export const fetchProductById = async (productId) => {
       id: product.id,
       name: product.name,
       category: product.category,
+      customizationFee: product.customizationFee,
       hasVariations: product.variations && product.variations.length > 0,
       variationsCount: product.variations ? product.variations.length : 0
     });

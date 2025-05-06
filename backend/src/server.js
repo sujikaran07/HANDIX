@@ -27,17 +27,14 @@ const authRoutes = require('./routes/auth/authRoutes');
 const categoryRoutes = require('./routes/category/categoryRoutes'); 
 const cartRoutes = require('./routes/cart/cartRoutes');
 const favoriteRoutes = require('./routes/favorites/favoriteRoutes'); 
-const checkoutRoutes = require('./routes/checkout/checkoutRoutes'); // Add new checkout routes
-// Import cart models for sequelize sync
+const checkoutRoutes = require('./routes/checkout/checkoutRoutes'); 
 const Cart = require('./models/cartModel');
 const CartItem = require('./models/cartItemModel');
-const Favorite = require('./models/favoriteModel'); // Add this line
-// Import the ShippingMethod model and initialization function
+const Favorite = require('./models/favoriteModel'); 
 const { ShippingMethod } = require('./models/shippingMethodModel');
+const variationRoutes = require('./routes/variations/variationRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
-// Remove this line since it's causing a conflict with the association defined in orderDetailModel.js
-// OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
 Inventory.hasMany(ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' });
 ProductEntry.belongsTo(Inventory, { foreignKey: 'product_id', as: 'inventory' });
@@ -76,9 +73,6 @@ Customer.hasMany(Order, {
   onUpdate: 'CASCADE',
 });
 
-// Note: Cart associations are defined in the cartModel.js and cartItemModel.js files
-// We don't need to redefine them here to avoid duplicate association errors
-
 dotenv.config();
 
 const app = express();
@@ -101,12 +95,12 @@ app.use('/api/login', employeeLoginRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/cart', cartRoutes);
-app.use('/api/favorites', favoriteRoutes); // This path stays the same
-app.use('/api/checkout', checkoutRoutes); // Add checkout routes
+app.use('/api/favorites', favoriteRoutes); 
+app.use('/api/checkout', checkoutRoutes); 
+app.use('/api/variations', variationRoutes);
 
 const PORT = process.env.PORT || 5000;
 
-// Import and run logo setup at server start
 try {
   require('./setup/copyLogo');
   console.log('Logo setup complete');
@@ -136,11 +130,9 @@ checkPort(PORT)
   .then(() => {
     app.listen(PORT, async () => {
       try {
-        // Fix the error by checking if connectToDatabase is a function before calling it
         if (typeof connectToDatabase === 'function') {
           await connectToDatabase();
         } else {
-          // If it's not a function, assume the connection is already established
           console.log('PostgreSQL connected');
         }
         console.log(`Server is running on port ${PORT}`);
