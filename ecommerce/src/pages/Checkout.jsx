@@ -433,13 +433,22 @@ const CheckoutPage = () => {
           postalCode: formData.billingPostalCode,
           country: 'Sri Lanka'
         },
-        orderItems: items.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity,
-          price: item.product.price,
-          customization: item.customization || null,
-          customizationFee: item.product.customizationFee || 0
-        })),
+        orderItems: items.map(item => {
+          // Calculate the exact customization fee
+          let customizationFee = 0;
+          if (item.customization && item.product.customizationFee) {
+            customizationFee = parseFloat(item.product.customizationFee);
+            console.log(`Adding customization fee ${customizationFee} for product ${item.product.id}`);
+          }
+          
+          return {
+            productId: item.product.id,
+            quantity: item.quantity,
+            price: item.product.price,
+            customization: item.customization || null,
+            customizationFee: customizationFee 
+          };
+        }),
         paymentInfo: {
           method: formData.paymentMethod,
           cardDetails: formData.paymentMethod === 'card' ? {

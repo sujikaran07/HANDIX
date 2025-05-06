@@ -93,17 +93,14 @@ const OrderDetails = ({ order, onBack }) => {
                             )}
                           </div>
                           <div className="text-end">
-                            <div>Price: LKR {parseFloat(item.priceAtPurchase || item.price_at_purchase).toLocaleString()}</div>
+                            <div>Price: LKR {parseFloat(item.priceAtPurchase || item.price_at_purchase).toFixed(2)}</div>
                             
-                            {(() => {
-                              // Get the customization fee however it's stored
-                              const fee = item.customization_fee || item.customizationFee || 0;
-                              return parseFloat(fee) > 0 ? (
-                                <div className="text-primary">
-                                  +LKR {parseFloat(fee).toLocaleString()} (Customization Fee)
-                                </div>
-                              ) : null;
-                            })()}
+                            {/* Simplified check for customization fee */}
+                            {parseFloat(item.customization_fee || 0) > 0 && (
+                              <div className="text-primary">
+                                +LKR {parseFloat(item.customization_fee).toFixed(2)} (Custom Fee)
+                              </div>
+                            )}
                           </div>
                         </div>
                       </li>

@@ -8,7 +8,6 @@ const Order = sequelize.define('Order', {
     primaryKey: true,
     allowNull: false,
     field: 'order_id',
-    defaultValue: Sequelize.literal(`'O' || LPAD(nextval('order_id_seq')::text, 3, '0')`),
   },
   c_id: {
     type: DataTypes.STRING,
@@ -75,5 +74,20 @@ const Order = sequelize.define('Order', {
   timestamps: false,
   underscored: true,
 });
+
+// Change 'customer' to 'customerInfo' to avoid any conflict
+Order.belongsTo(Customer, { 
+  foreignKey: 'c_id', 
+  as: 'customerInfo'
+});
+
+// REMOVE this problematic association - we'll define it differently
+// Order.belongsTo(sequelize.models.ShippingMethod, {
+//   foreignKey: 'shippingMethodId',
+//   as: 'shippingMethod'
+// });
+
+// We'll set up the association with ShippingMethod in a separate file
+// after all models are loaded to avoid circular dependencies
 
 module.exports = { Order };

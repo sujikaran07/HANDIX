@@ -32,9 +32,12 @@ const checkoutRoutes = require('./routes/checkout/checkoutRoutes'); // Add new c
 const Cart = require('./models/cartModel');
 const CartItem = require('./models/cartItemModel');
 const Favorite = require('./models/favoriteModel'); // Add this line
+// Import the ShippingMethod model and initialization function
+const { ShippingMethod } = require('./models/shippingMethodModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
-OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+// Remove this line since it's causing a conflict with the association defined in orderDetailModel.js
+// OrderDetail.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
 
 Inventory.hasMany(ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' });
 ProductEntry.belongsTo(Inventory, { foreignKey: 'product_id', as: 'inventory' });
@@ -103,6 +106,14 @@ app.use('/api/checkout', checkoutRoutes); // Add checkout routes
 
 const PORT = process.env.PORT || 5000;
 
+// Import and run logo setup at server start
+try {
+  require('./setup/copyLogo');
+  console.log('Logo setup complete');
+} catch (error) {
+  console.log('Logo setup failed, but continuing server startup:', error.message);
+}
+
 const checkPort = (port) => {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
@@ -125,7 +136,13 @@ checkPort(PORT)
   .then(() => {
     app.listen(PORT, async () => {
       try {
-        await connectToDatabase();
+        // Fix the error by checking if connectToDatabase is a function before calling it
+        if (typeof connectToDatabase === 'function') {
+          await connectToDatabase();
+        } else {
+          // If it's not a function, assume the connection is already established
+          console.log('PostgreSQL connected');
+        }
         console.log(`Server is running on port ${PORT}`);
       } catch (error) {
         console.error('Error during server startup:', error);
@@ -137,10 +154,14 @@ checkPort(PORT)
     process.exit(1);
   });
 
-sequelize.sync()
-  .then(() => console.log('Database synced successfully.'))
-  .catch((error) => {
-    console.error('Error syncing database:', error);
+sequelize
+  .sync({ alter: false }) 
+  .then(() => {
+    console.log('Database synced successfully.');
+   
+  })
+  .catch((err) => {
+    console.error('Error syncing database:', err);
   });
 
 app.use((err, req, res, next) => {

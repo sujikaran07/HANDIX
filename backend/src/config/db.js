@@ -14,10 +14,15 @@ const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('PostgreSQL connected');
+    return sequelize;
   } catch (error) {
-    console.error('Error connecting to PostgreSQL:', error);
-    process.exit(1); 
+    console.error('Unable to connect to the database:', error);
+    throw error;
   }
 };
 
-module.exports = { sequelize, connectToDatabase };
+module.exports = { 
+  sequelize, 
+  Sequelize,
+  connectToDatabase 
+};
