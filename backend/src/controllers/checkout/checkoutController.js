@@ -80,8 +80,9 @@ exports.saveShippingAddress = async (req, res) => {
       }
     }
     
-    // If customer exists but doesn't have a phone number, update it
-    if (isExistingCustomer && !existingCustomerData.phone && customerInfo.phone) {
+    // If customer exists, always update their phone number if provided in the request
+    // This ensures we have the most current contact information for delivery
+    if (isExistingCustomer && customerInfo.phone) {
       await Customer.update(
         { phone: customerInfo.phone },
         { where: { c_id: customerId }, transaction }
@@ -89,35 +90,35 @@ exports.saveShippingAddress = async (req, res) => {
       console.log(`Updated phone number for customer ${customerId}: ${customerInfo.phone}`);
     }
     
-    // Create or update shipping address
+    // Get the most recent shipping address if any exists
     let existingAddress = null;
+    let shouldCreateNewAddress = true;
+    let addressData = null; // Declare addressData here so it's in scope
     
     if (customerId) {
-      // Check if customer already has a shipping address
       existingAddress = await Address.findOne({
         where: {
           c_id: customerId,
           addressType: 'shipping'
-        }
+        },
+        order: [['createdAt', 'DESC']]
       });
+      
+      // Check if the address is the same as the existing one
+      if (existingAddress && 
+          existingAddress.street_address === shippingAddress.street &&
+          existingAddress.city === shippingAddress.city &&
+          existingAddress.district === shippingAddress.district &&
+          existingAddress.postalCode === shippingAddress.postalCode) {
+        // Address hasn't changed, don't create a new one
+        shouldCreateNewAddress = false;
+        addressData = existingAddress; // This is fine now since addressData is declared above
+        console.log(`Using existing shipping address for customer ${customerId} - no changes detected`);
+      }
     }
     
-    let addressData;
-    
-    if (existingAddress) {
-      // Update existing address
-      await existingAddress.update({
-        street_address: shippingAddress.street,
-        city: shippingAddress.city,
-        district: shippingAddress.district,
-        postalCode: shippingAddress.postalCode,
-        country: shippingAddress.country || 'Sri Lanka',
-        updatedAt: new Date()
-      }, { transaction });
-      
-      addressData = existingAddress;
-    } else {
-      // Create new address
+    if (shouldCreateNewAddress) {
+      // Always create a new address record if fields differ from the most recent one
       addressData = await Address.create({
         c_id: customerId,
         addressType: 'shipping',
@@ -127,6 +128,21 @@ exports.saveShippingAddress = async (req, res) => {
         postalCode: shippingAddress.postalCode,
         country: shippingAddress.country || 'Sri Lanka'
       }, { transaction });
+      
+      console.log(`Created new shipping address for customer ${customerId} - field values changed`);
+    }
+    
+    // Make sure to update the phone number regardless of whether a new address is created
+    if (isExistingCustomer && customerInfo.phone) {
+      console.log(`Updating phone number for customer ${customerId} from ${existingCustomerData.phone || 'empty'} to ${customerInfo.phone}`);
+      
+      await Customer.update(
+        { phone: customerInfo.phone },
+        { where: { c_id: customerId }, transaction }
+      );
+      
+      // Refresh the customer data to get the updated phone
+      existingCustomerData = await Customer.findByPk(customerId, { transaction });
     }
     
     // Commit transaction
@@ -141,9 +157,12 @@ exports.saveShippingAddress = async (req, res) => {
         firstName: existingCustomerData.firstName,
         lastName: existingCustomerData.lastName,
         email: existingCustomerData.email,
-        phone: existingCustomerData.phone || customerInfo.phone
+        // Always return the latest phone number (from request or database)
+        phone: customerInfo.phone || existingCustomerData.phone || ''
       } : null,
-      message: 'Shipping address saved successfully'
+      message: shouldCreateNewAddress ? 
+        'New shipping address saved successfully' : 
+        'Existing shipping address used'
     });
     
   } catch (error) {
@@ -168,78 +187,66 @@ exports.saveBillingAddress = async (req, res) => {
     const { customerId, billingAddress, sameAsShipping } = req.body;
     
     if (sameAsShipping) {
-      // If same as shipping, copy the shipping address to billing
+      // If same as shipping, get the most recent shipping address
       const shippingAddress = await Address.findOne({
         where: {
           c_id: customerId,
           addressType: 'shipping'
-        }
+        },
+        order: [['createdAt', 'DESC']]
       });
       
       if (shippingAddress) {
-        // Check if a billing address already exists
-        const existingBillingAddress = await Address.findOne({
-          where: {
-            c_id: customerId,
-            addressType: 'billing'
-          }
-        });
+        // Always create a new billing address as a copy of shipping address
+        // This preserves history of addresses used
+        const newBillingAddress = await Address.create({
+          c_id: customerId,
+          addressType: 'billing',
+          street_address: shippingAddress.street_address,
+          city: shippingAddress.city,
+          district: shippingAddress.district,
+          postalCode: shippingAddress.postalCode,
+          country: shippingAddress.country || 'Sri Lanka'
+        }, { transaction });
         
-        if (existingBillingAddress) {
-          // Update existing billing address with shipping address data
-          await existingBillingAddress.update({
-            street_address: shippingAddress.street_address,
-            city: shippingAddress.city,
-            district: shippingAddress.district,
-            postalCode: shippingAddress.postalCode,
-            country: shippingAddress.country || 'Sri Lanka',
-            updatedAt: new Date()
-          }, { transaction });
-        } else {
-          // Create new billing address as a copy of shipping address
-          await Address.create({
-            c_id: customerId,
-            addressType: 'billing',
-            street_address: shippingAddress.street_address,
-            city: shippingAddress.city,
-            district: shippingAddress.district,
-            postalCode: shippingAddress.postalCode,
-            country: shippingAddress.country || 'Sri Lanka'
-          }, { transaction });
-        }
+        console.log(`Created new billing address (copied from shipping) for customer ${customerId}`);
+        
+        await transaction.commit();
+        return res.status(200).json({
+          success: true,
+          addressId: newBillingAddress.address_id,
+          message: 'New billing address created from shipping address'
+        });
       }
-      
-      await transaction.commit();
-      return res.status(200).json({
-        success: true,
-        message: 'Shipping address copied as billing address'
-      });
     }
     
-    // Check if customer already has a billing address
-    const existingAddress = await Address.findOne({
+    // Check if customer already has a billing address with the same values
+    let shouldCreateNewAddress = true;
+    let existingAddress = null;
+    
+    existingAddress = await Address.findOne({
       where: {
         c_id: customerId,
         addressType: 'billing'
-      }
+      },
+      order: [['createdAt', 'DESC']]
     });
+    
+    if (existingAddress && 
+        existingAddress.street_address === billingAddress.street &&
+        existingAddress.city === billingAddress.city &&
+        existingAddress.district === billingAddress.district &&
+        existingAddress.postalCode === billingAddress.postalCode) {
+      // Address hasn't changed, don't create a new one
+      shouldCreateNewAddress = false;
+      addressData = existingAddress;
+      console.log(`Using existing billing address for customer ${customerId} - no changes detected`);
+    }
     
     let addressData;
     
-    if (existingAddress) {
-      // Update existing address
-      await existingAddress.update({
-        street_address: billingAddress.street,
-        city: billingAddress.city,
-        district: billingAddress.district,
-        postalCode: billingAddress.postalCode,
-        country: billingAddress.country || 'Sri Lanka',
-        updatedAt: new Date()
-      }, { transaction });
-      
-      addressData = existingAddress;
-    } else {
-      // Create new address
+    if (shouldCreateNewAddress) {
+      // Create new billing address if values are different
       addressData = await Address.create({
         c_id: customerId,
         addressType: 'billing',
@@ -249,6 +256,8 @@ exports.saveBillingAddress = async (req, res) => {
         postalCode: billingAddress.postalCode,
         country: billingAddress.country || 'Sri Lanka'
       }, { transaction });
+      
+      console.log(`Created new billing address for customer ${customerId} - field values changed`);
     }
     
     // Commit transaction
@@ -258,7 +267,9 @@ exports.saveBillingAddress = async (req, res) => {
     return res.status(200).json({
       success: true,
       addressId: addressData.address_id,
-      message: 'Billing address saved successfully'
+      message: shouldCreateNewAddress ? 
+        'New billing address saved successfully' : 
+        'Existing billing address used'
     });
     
   } catch (error) {
@@ -287,15 +298,8 @@ exports.getCustomerAddresses = async (req, res) => {
       });
     }
     
-    // Fetch customer details and addresses
-    const customer = await Customer.findByPk(customerId, {
-      include: [
-        {
-          model: Address,
-          as: 'addresses'
-        }
-      ]
-    });
+    // Fetch customer details and addresses with proper ordering
+    const customer = await Customer.findByPk(customerId);
     
     if (!customer) {
       return res.status(404).json({
@@ -303,6 +307,12 @@ exports.getCustomerAddresses = async (req, res) => {
         message: 'Customer not found'
       });
     }
+    
+    // Fetch addresses separately with proper ordering
+    const addresses = await Address.findAll({
+      where: { c_id: customerId },
+      order: [['createdAt', 'DESC']] // Order by most recent first
+    });
     
     // Return customer data and addresses
     return res.status(200).json({
@@ -314,7 +324,7 @@ exports.getCustomerAddresses = async (req, res) => {
         email: customer.email,
         phone: customer.phone
       },
-      addresses: customer.addresses || []
+      addresses: addresses || []
     });
     
   } catch (error) {

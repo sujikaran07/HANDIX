@@ -2,106 +2,126 @@ import React from 'react';
 import { sriLankaDistricts } from '../../data/shippingZones';
 
 const ShippingAddressStep = ({ formData, errors, handleChange }) => {
+  // If shipping address is already loaded, show a helpful message
+  const hasExistingAddress = formData.address && formData.city && formData.district && formData.postalCode;
+  
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-6">Enter your shipping address</h2>
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-1">Shipping Address</h2>
+        <p className="text-gray-600">Enter your shipping information</p>
+        
+        {hasExistingAddress && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-md">
+            <p className="text-blue-700 text-sm">
+              <span className="font-medium">Note:</span> We've pre-filled your shipping details with your most recent address. 
+              You can update it if needed.
+            </p>
+          </div>
+        )}
+      </div>
       
-      <div className="space-y-6">
-        {/* Phone */}
-        <div className="form-group">
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone number <span className="text-red-500">*</span>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
           </label>
           <input
-            id="phone"
+            type="text"
             name="phone"
-            type="tel"
             value={formData.phone}
             onChange={handleChange}
-            placeholder="+94 XX XXX XXXX"
-            className={`w-full px-4 py-2.5 rounded-md border ${errors.phone ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
+            placeholder="Enter your phone number"
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            }`}
           />
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
+          {errors.phone && (
+            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+          )}
         </div>
         
-        {/* Address */}
-        <div className="form-group">
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-            Street Address <span className="text-red-500">*</span>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Street Address
           </label>
           <input
-            id="address"
-            name="address"
             type="text"
+            name="address"
             value={formData.address}
             onChange={handleChange}
-            placeholder="123 Main St, Apartment 4B"
-            className={`w-full px-4 py-2.5 rounded-md border ${errors.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.address ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="123 Main St"
           />
-          {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+          {errors.address && (
+            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
+          )}
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* City */}
-          <div className="form-group md:col-span-1">
-            <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
-              City <span className="text-red-500">*</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              City
             </label>
             <input
-              id="city"
-              name="city"
               type="text"
+              name="city"
               value={formData.city}
               onChange={handleChange}
-              placeholder="City name"
-              className={`w-full px-4 py-2.5 rounded-md border ${errors.city ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
+              className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.city ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="City"
             />
-            {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
+            {errors.city && (
+              <p className="text-red-500 text-sm mt-1">{errors.city}</p>
+            )}
           </div>
           
-          {/* District */}
-          <div className="form-group md:col-span-1">
-            <label htmlFor="district" className="block text-sm font-medium text-gray-700 mb-1">
-              District <span className="text-red-500">*</span>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              District
             </label>
             <select
-              id="district"
               name="district"
               value={formData.district}
               onChange={handleChange}
-              className={`w-full px-4 py-2.5 rounded-md border bg-white ${errors.district ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
+              className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+                errors.district ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              <option value="">Select district</option>
+              <option value="">Select a district</option>
               {sriLankaDistricts.map((district) => (
-                <option key={district} value={district}>{district}</option>
+                <option key={district} value={district}>
+                  {district}
+                </option>
               ))}
             </select>
-            {errors.district && <p className="text-red-500 text-sm mt-1">{errors.district}</p>}
-          </div>
-          
-          {/* Postal Code */}
-          <div className="form-group md:col-span-1">
-            <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
-              Postal Code <span className="text-red-500">*</span>
-            </label>
-            <input
-              id="postalCode"
-              name="postalCode"
-              type="text"
-              value={formData.postalCode}
-              onChange={handleChange}
-              placeholder="10100"
-              className={`w-full px-4 py-2.5 rounded-md border ${errors.postalCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
-            />
-            {errors.postalCode && <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>}
+            {errors.district && (
+              <p className="text-red-500 text-sm mt-1">{errors.district}</p>
+            )}
           </div>
         </div>
-
-        <div className="mt-2">
-          <p className="text-sm text-gray-500">
-            Please ensure your shipping address is accurate to avoid delivery issues.
-            All fields marked with <span className="text-red-500">*</span> are required.
-          </p>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Postal Code
+          </label>
+          <input
+            type="text"
+            name="postalCode"
+            value={formData.postalCode}
+            onChange={handleChange}
+            className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
+              errors.postalCode ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Postal Code"
+          />
+          {errors.postalCode && (
+            <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>
+          )}
         </div>
       </div>
     </div>

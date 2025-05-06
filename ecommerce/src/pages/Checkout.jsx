@@ -75,19 +75,27 @@ const CheckoutPage = () => {
       );
       
       if (response.data.success && response.data.addresses.length > 0) {
-        // Find shipping address
-        const shippingAddress = response.data.addresses.find(
+        // Get all shipping addresses
+        const shippingAddresses = response.data.addresses.filter(
           addr => addr.addressType === 'shipping'
         );
         
-        // If shipping address exists, pre-fill the form
-        if (shippingAddress) {
+        // Sort addresses by createdAt in descending order to get the most recent one
+        shippingAddresses.sort((a, b) => 
+          new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
+        );
+        
+        // Use the most recent shipping address
+        const mostRecentAddress = shippingAddresses[0];
+        
+        if (mostRecentAddress) {
+          console.log('Using most recent shipping address:', mostRecentAddress);
           setFormData(prev => ({
             ...prev,
-            address: shippingAddress.street_address || '',
-            city: shippingAddress.city || '',
-            district: shippingAddress.district || '',
-            postalCode: shippingAddress.postalCode || ''
+            address: mostRecentAddress.street_address || '',
+            city: mostRecentAddress.city || '',
+            district: mostRecentAddress.district || '',
+            postalCode: mostRecentAddress.postalCode || ''
           }));
         }
         
