@@ -334,7 +334,16 @@ exports.placeOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
-    const { customerInfo, shippingAddress, billingAddress, orderItems, orderSummary, paymentInfo, shippingMethod, pickupLocation } = req.body;
+    const { 
+      customerInfo, 
+      shippingAddress, 
+      billingAddress, 
+      orderItems, 
+      orderSummary, 
+      paymentInfo, 
+      shippingMethod, 
+      pickupLocation 
+    } = req.body;
     
     // Check COD limit - reject orders over 5000 LKR if payment method is COD
     if (paymentInfo.method === 'cod' && parseFloat(orderSummary.total) > 5000) {
@@ -536,30 +545,41 @@ exports.placeOrder = async (req, res) => {
       user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
       'Guest Customer';
     
+    // Check if customer is wholesale type to apply discount
+    const isWholesaleCustomer = customerInfo?.accountType === 'Wholesale';
+    
+    // Apply wholesale discount to order if applicable
+    let finalTotal = parseFloat(orderSummary.total);
+    if (isWholesaleCustomer) {
+      console.log('Processing wholesale customer order - applying 5% discount');
+    }
+    
     // Create new order with the custom generated ID
     const newOrder = await Order.create({
       order_id: orderId,
       c_id: customerId,
       orderStatus: paymentInfo.method === 'cod' ? 'Pending' : 'Awaiting Payment',
-      totalAmount: orderSummary.total,
+      totalAmount: finalTotal, // Use potentially discounted amount
       paymentStatus: paymentInfo.method === 'cod' ? 'Pending' : 'Awaiting',
       shippingMethodId: null, // This will be updated later with the correct shipping method ID
       orderDate: new Date(),
       customerName: customerName,
       customized: orderItems.some(item => item.customization) ? 'yes' : 'no',
-      paymentMethod: paymentInfo.method
+      paymentMethod: paymentInfo.method,
+      wholesaleDiscount: isWholesaleCustomer ? 'yes' : 'no' // Track if wholesale discount was applied
     }, { transaction });
     
     // Create order details for each item and update inventory
     for (const item of orderItems) {
-      // Create order detail with customization field
+      // Create order detail with customization field and potentially discounted price
       await OrderDetail.create({
         order_id: orderId,
         product_id: item.productId,
         quantity: item.quantity,
-        priceAtPurchase: item.price,
-        customization: item.customization || null, // Explicitly set customization text
-        customization_fee: item.customizationFee || 0 // Set customization fee
+        priceAtPurchase: item.price, // This is now potentially already discounted from frontend
+        customization: item.customization || null,
+        customization_fee: item.customizationFee || 0,
+        original_price: item.originalPrice || item.price // Store original price for reference
       }, { transaction });
       
       // Update inventory quantities across multiple tables
@@ -908,7 +928,8 @@ exports.placeOrder = async (req, res) => {
       success: true,
       orderId,
       paymentUrl, // If defined above
-      message: 'Order placed successfully'
+      message: 'Order placed successfully',
+      wholesaleDiscount: isWholesaleCustomer
     });
     
   } catch (error) {

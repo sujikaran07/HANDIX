@@ -144,19 +144,36 @@ const CheckoutPage = () => {
   // Calculate shipping cost based on method and district
   const calculateShippingCost = () => {
     if (formData.shippingMethod === 'pickup') {
-      return 0;
+      return 0; // Free for pickup
     } else if (formData.district) {
-      // Get shipping fee based on selected district
+      // Use the shipping fee function from shippingZones
       return getShippingFeeByDistrict(formData.district);
     } else {
       // Default shipping rate if no district selected
-      return shippingRates.standard;
+      return 350;
     }
   };
 
-  // Calculate final total with shipping
-  const finalTotal = total + calculateShippingCost();
+  // Calculate final total with shipping and wholesale discount if applicable
+  const getFinalTotal = () => {
+    // First calculate shipping cost
+    const shippingCost = calculateShippingCost();
+    
+    // Base amount
+    let finalAmount = subtotal + customizationTotal + shippingCost;
+    
+    // Apply wholesale discount if applicable
+    if (user && user.accountType === 'Wholesale') {
+      // Apply 5% discount to subtotal + customization (not shipping)
+      const discountAmount = (subtotal + customizationTotal) * 0.05;
+      finalAmount = finalAmount - discountAmount;
+    }
+    
+    return finalAmount;
+  };
   
+  const finalTotal = getFinalTotal();
+
   const [errors, setErrors] = useState({});
   
   // Set billing address fields when sameAsShipping changes
@@ -408,6 +425,16 @@ const CheckoutPage = () => {
         return;
       }
       
+      // Apply wholesale discount if applicable
+      const isWholesaleCustomer = user && user.accountType === 'Wholesale';
+      
+      // Calculate shipping fee
+      const shippingFee = calculateShippingCost();
+      
+      // Calculate the final amounts with wholesale discount if applicable
+      const discountAmount = isWholesaleCustomer ? (subtotal + customizationTotal) * 0.05 : 0;
+      const calcTotal = subtotal + customizationTotal + shippingFee - discountAmount;
+      
       // Prepare order data - use user data from the logged-in user
       const orderData = {
         customerInfo: {
@@ -418,6 +445,7 @@ const CheckoutPage = () => {
           email: user?.email,
           phone: formData.phone,
           isGuest: false,
+          accountType: user?.accountType || 'Retail' // Include account type
         },
         shippingAddress: {
           street: formData.address,
@@ -438,15 +466,21 @@ const CheckoutPage = () => {
           let customizationFee = 0;
           if (item.customization && item.product.customizationFee) {
             customizationFee = parseFloat(item.product.customizationFee);
-            console.log(`Adding customization fee ${customizationFee} for product ${item.product.id}`);
           }
+          
+          // Apply wholesale discount to product price if applicable
+          const productPrice = isWholesaleCustomer ? 
+            item.product.price * 0.95 : 
+            item.product.price;
           
           return {
             productId: item.product.id,
             quantity: item.quantity,
-            price: item.product.price,
+            price: productPrice,
+            originalPrice: item.product.price,
             customization: item.customization || null,
-            customizationFee: customizationFee 
+            customizationFee: customizationFee,
+            wholesaleDiscount: isWholesaleCustomer
           };
         }),
         paymentInfo: {
@@ -458,14 +492,18 @@ const CheckoutPage = () => {
           } : null
         },
         orderSummary: {
-          subtotal,
+          subtotal: subtotal,
           customizationTotal,
-          shippingFee: calculateShippingCost(),
-          total: finalTotal
+          shippingFee: shippingFee,
+          wholesaleDiscount: discountAmount,
+          isWholesaleCustomer,
+          total: calcTotal
         },
         shippingMethod: formData.shippingMethod,
         pickupLocation: formData.pickupLocation || null
       };
+      
+      console.log('Sending order data:', JSON.stringify(orderData));
       
       // Setup request headers
       const config = token ? {
@@ -532,6 +570,7 @@ const CheckoutPage = () => {
       
     } catch (error) {
       console.error('Error placing order:', error);
+      console.error('Error response:', error.response?.data);
       toast({
         title: "Error Placing Order",
         description: error.response?.data?.message || "There was an error processing your order. Please try again.",
@@ -666,6 +705,7 @@ const CheckoutPage = () => {
             subtotal={subtotal}
             customizationTotal={customizationTotal}
             total={total}
+            shippingFee={calculateShippingCost()}
           />
         );
       case 6:
@@ -805,12 +845,16 @@ const CheckoutPage = () => {
                         <span className="text-gray-600">Shipping</span>
                         {formData.shippingMethod === 'pickup' ? (
                           <span className="text-green-600">Free (Pickup)</span>
-                        ) : formData.district ? (
-                          <span>LKR {calculateShippingCost().toLocaleString()}</span>
                         ) : (
-                          <span>LKR {shippingRates.standard.toLocaleString()}</span>
+                          <span>LKR {calculateShippingCost().toLocaleString()}</span>
                         )}
                       </div>
+                      {user && user.accountType === 'Wholesale' && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Wholesale Discount (5%)</span>
+                          <span>-LKR {((subtotal + customizationTotal) * 0.05).toLocaleString()}</span>
+                        </div>
+                      )}
                       <div className="border-t pt-2 flex justify-between font-bold">
                         <span>Total</span>
                         <span>LKR {finalTotal.toLocaleString()}</span>

@@ -1,13 +1,53 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Check, MapPin, Truck, CreditCard, Banknote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getShippingFeeByDistrict } from '../../data/shippingZones';
 
 const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) => {
-  const shippingFee = formData.shippingMethod === 'pickup' ? 0 : 
-    formData.district ? getShippingFeeByDistrict(formData.district) : 350;
-  
-  const finalTotal = total + shippingFee;
+  const [wholesaleDiscount, setWholesaleDiscount] = useState(null);
+  const [discountedTotal, setDiscountedTotal] = useState(total);
+  const [shippingFee, setShippingFee] = useState(0);
+
+  useEffect(() => {
+    // Calculate shipping fee based on shipping method and district from formData
+    const calculateShippingFee = () => {
+      if (formData.shippingMethod === 'pickup') {
+        return 0; // No shipping fee for pickup
+      } else {
+        // Get district-specific shipping fee
+        return formData.district ? getShippingFeeByDistrict(formData.district) : 350;
+      }
+    };
+    
+    const fee = calculateShippingFee();
+    setShippingFee(fee);
+    
+    // Check if user is logged in and is a wholesale customer
+    const userJson = localStorage.getItem('user');
+    if (userJson) {
+      try {
+        const userData = JSON.parse(userJson);
+        if (userData.accountType === 'Wholesale') {
+          // Calculate 5% discount on subtotal + customization (not shipping)
+          const baseAmount = subtotal + customizationTotal;
+          const discount = Math.round((baseAmount * 0.05) * 100) / 100;
+          setWholesaleDiscount(discount);
+          
+          // Calculate new total with discount
+          const newTotal = subtotal + customizationTotal + fee - discount;
+          setDiscountedTotal(newTotal);
+        } else {
+          // Regular customer - total is just subtotal + customization + shipping
+          setDiscountedTotal(subtotal + customizationTotal + fee);
+        }
+      } catch (error) {
+        console.error('Error checking wholesale status:', error);
+        setDiscountedTotal(subtotal + customizationTotal + fee);
+      }
+    } else {
+      setDiscountedTotal(subtotal + customizationTotal + fee);
+    }
+  }, [formData.shippingMethod, formData.district, subtotal, customizationTotal, total]);
 
   // Function to render the payment method icon and name
   const renderPaymentMethod = () => {
@@ -186,12 +226,18 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
               {formData.shippingMethod === 'pickup' ? (
                 <span className="text-green-600">Free (Pickup)</span>
               ) : (
-                <span>LKR {formData.district ? '350' : '350'}</span>
+                <span>LKR {shippingFee.toLocaleString()}</span>
               )}
             </div>
+            {wholesaleDiscount > 0 && (
+              <div className="flex justify-between text-green-600">
+                <span>Wholesale Discount (5%)</span>
+                <span>-LKR {wholesaleDiscount.toLocaleString()}</span>
+              </div>
+            )}
             <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
               <span>Total:</span>
-              <span>LKR {(total + (formData.shippingMethod === 'pickup' ? 0 : 350)).toLocaleString()}</span>
+              <span>LKR {discountedTotal.toLocaleString()}</span>
             </div>
           </div>
         </div>
