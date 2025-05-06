@@ -24,6 +24,33 @@ const CustomerViewForm = ({ c_id, onBack }) => {
   }, [c_id]);
 
   const getFieldValue = (value) => (value ? value : 'N/A');
+  
+  // Format currency values
+  const formatCurrency = (amount) => {
+    if (!amount) return 'LKR 0.00';
+    return `LKR ${parseFloat(amount).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  };
+  
+  // Format dates
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === 'N/A') return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (e) {
+      return 'N/A';
+    }
+  };
 
   if (loading) {
     return <p>Loading...</p>;
@@ -57,7 +84,11 @@ const CustomerViewForm = ({ c_id, onBack }) => {
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Country</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.country || 'N/A')}</p>
+          <p className="form-control-plaintext bg-light p-2">
+            {getFieldValue(customer.addresses && customer.addresses.length > 0 
+              ? customer.addresses[0].country 
+              : customer.country || 'Sri Lanka')}
+          </p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Type</label>
@@ -67,11 +98,11 @@ const CustomerViewForm = ({ c_id, onBack }) => {
       <div className="row mb-3 form-group">
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Registration Date</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.createdAt)}</p>
+          <p className="form-control-plaintext bg-light p-2">{formatDate(customer.registration_date || customer.registrationDate)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Total Orders</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.totalOrders)}</p>
+          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.total_orders || customer.totalOrders)}</p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Account Status</label>
@@ -81,11 +112,15 @@ const CustomerViewForm = ({ c_id, onBack }) => {
       <div className="row mb-3 form-group">
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Total Spent</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.totalSpent)}</p>
+          <p className="form-control-plaintext bg-light p-2">
+            {formatCurrency(customer.total_spent || customer.totalSpent || 0)}
+          </p>
         </div>
         <div className="col-md-4">
           <label className="form-label font-weight-bold">Last Order Date</label>
-          <p className="form-control-plaintext bg-light p-2">{getFieldValue(customer.lastOrderDate)}</p>
+          <p className="form-control-plaintext bg-light p-2">
+            {formatDate(customer.last_order_date || customer.lastOrderDate || 'N/A')}
+          </p>
         </div>
       </div>
       <div className="d-flex justify-content-end">

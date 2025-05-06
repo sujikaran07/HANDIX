@@ -45,12 +45,39 @@ const getCustomerById = async (req, res) => {
       const totalOrders = orders.length; 
       const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
-      customer.totalOrders = totalOrders || 0;
+      // Ensure total_spent is properly formatted as a string with 2 decimal places
+      // Add explicit type conversion and use direct assignment
+      customer.dataValues.total_spent = totalSpent.toFixed(2);
+      customer.dataValues.totalSpent = totalSpent.toFixed(2);
+      
+      // For backward compatibility, also set the instance properties
+      customer.total_spent = totalSpent.toFixed(2);
       customer.totalSpent = totalSpent.toFixed(2);
+      
+      customer.total_orders = totalOrders || 0;
+      customer.totalOrders = totalOrders || 0;
 
-      customer.lastOrderDate = customer.customerOrders?.[0]?.order_date || 'N/A';
+      // Last order date is already working correctly, no changes needed
+      if (orders.length > 0) {
+        // Get the last order date
+        const lastOrder = await Order.findOne({
+          where: { c_id: req.params.c_id },
+          order: [['order_date', 'DESC']]
+        });
+        
+        if (lastOrder) {
+          customer.last_order_date = lastOrder.orderDate;
+          customer.lastOrderDate = lastOrder.orderDate;
+        }
+      }
 
-      console.log('Customer data being sent:', JSON.stringify(customer, null, 2)); 
+      // Debug logging before sending response
+      console.log('Customer data being sent:', JSON.stringify({
+        ...customer.toJSON(),
+        total_spent: customer.total_spent,
+        totalSpent: customer.totalSpent
+      }, null, 2)); 
+      
       res.json(customer);
     } else {
       res.status(404).json({ message: 'Customer not found' });

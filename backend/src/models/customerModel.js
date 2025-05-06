@@ -68,13 +68,7 @@ const Customer = sequelize.define('Customer', {
     allowNull: true,
     field: 'last_order_date'
   },
-  // Note: Removed fields that don't exist in database schema:
-  // - billingAddress
-  // - shippingAddress
-  // - city
-  // - state
-  // - postalCode
-  // These fields are in the Address model instead
+
   isEmailVerified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false,
