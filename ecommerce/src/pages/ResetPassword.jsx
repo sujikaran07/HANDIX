@@ -69,9 +69,19 @@ const ResetPasswordPage = () => {
     setIsSubmitting(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/reset-password', {
+      // Determine API URL with more reliable method
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const apiUrl = `${baseUrl}/api/auth/reset-password`;
+      
+      console.log('Resetting password with:', { 
+        resetToken, 
+        newPassword: '******' // Log masked password for security
+      });
+      console.log('Using API endpoint:', apiUrl);
+      
+      const response = await axios.post(apiUrl, {
         resetToken,
-        newPassword: password
+        newPassword: password // Send password exactly as entered
       });
       
       console.log('Password reset response:', response.data);
@@ -84,8 +94,15 @@ const ResetPasswordPage = () => {
       
       toast({
         title: "Password Reset Complete",
-        description: "Your password has been updated successfully",
+        description: "Your password has been updated successfully. You can now log in.",
       });
+      
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        navigate('/login', { 
+          state: { passwordChanged: true } 
+        });
+      }, 2000);
       
     } catch (error) {
       console.error('Password reset error:', error);

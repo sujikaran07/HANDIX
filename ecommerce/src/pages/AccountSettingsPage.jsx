@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
-import { User, Lock, CreditCard, Bell, Shield, Mail, Home } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { User, Lock, CreditCard, Bell, Shield, Home } from 'lucide-react';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const AccountSettingsPage = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('profile');
+  
+  // Parse the URL query parameters to set the initial active tab
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && ['profile', 'security', 'payment', 'address', 'notifications', 'privacy'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [location]);
   
   // Mock user data
   const userData = {
@@ -169,6 +180,7 @@ const AccountSettingsPage = () => {
                     className="w-full p-2 border rounded-md"
                     value={passwordForm.currentPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    required
                   />
                 </div>
                 
@@ -182,6 +194,7 @@ const AccountSettingsPage = () => {
                     className="w-full p-2 border rounded-md"
                     value={passwordForm.newPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                    required
                   />
                 </div>
                 
@@ -195,6 +208,7 @@ const AccountSettingsPage = () => {
                     className="w-full p-2 border rounded-md"
                     value={passwordForm.confirmPassword}
                     onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                    required
                   />
                 </div>
                 
@@ -208,16 +222,6 @@ const AccountSettingsPage = () => {
                 </div>
               </div>
             </form>
-            
-            <div className="mt-10 border-t pt-6">
-              <h3 className="text-lg font-medium mb-4">Two-Factor Authentication</h3>
-              <p className="text-gray-600 mb-4">
-                Add an extra layer of security to your account by enabling two-factor authentication.
-              </p>
-              <button className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors">
-                Enable 2FA
-              </button>
-            </div>
           </div>
         );
         

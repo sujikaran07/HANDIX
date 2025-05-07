@@ -1,4 +1,6 @@
 const { Customer } = require('../../models/customerModel');
+const { Address } = require('../../models/addressModel'); // Add this import
+const { ProfileImage } = require('../../models/profileImageModel'); // Add this import
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
@@ -11,7 +13,10 @@ exports.login = async (req, res) => {
     console.log(`Login attempt for ${email}`);
     
     // Find customer by email
-    const customer = await Customer.findOne({ where: { email } });
+    const customer = await Customer.findOne({ 
+      where: { email },
+      include: [{ model: Address, as: 'addresses' }]
+    });
     
     // Check if customer exists
     if (!customer) {
@@ -48,93 +53,41 @@ exports.login = async (req, res) => {
     console.log('Email:', email);
     console.log('Password length:', password?.length);
     console.log('Stored hash:', customer.password);
-    console.log('Account created:', customer.createdAt);
+    console.log('Password value:', process.env.NODE_ENV === 'production' ? '[REDACTED]' : password);
     
-    // Check if this is a newly registered account (within last 7 days)
-    const isNewAccount = new Date() - new Date(customer.createdAt) < 7 * 24 * 60 * 60 * 1000;
+    // CRITICAL FIX: Try multiple password formats to handle inconsistencies
+    const passwordAttempts = [
+      String(password || ''),             // Exact as provided
+      String(password || '').trim(),      // Trimmed
+      `${String(password || '')}`,        // String template
+      `${String(password || '').trim()}`  // String template trimmed
+    ];
     
-    if (isNewAccount) {
-      console.log('NEWLY REGISTERED ACCOUNT DETECTED - Adding special handling');
-    }
-    
-    // Try multiple password validation methods
+    // Try each password attempt
     let isPasswordValid = false;
-    let validationMethod = '';
+    let successMethod = '';
     
-    // Method 1: Standard bcrypt compare
-    try {
-      isPasswordValid = await bcrypt.compare(password, customer.password);
-      if (isPasswordValid) validationMethod = 'Standard bcrypt';
-      console.log('Method 1 (standard bcrypt):', isPasswordValid ? 'SUCCESS ✓' : 'FAILED ✗');
-    } catch (error) {
-      console.error('Method 1 error:', error.message);
-    }
-    
-    // Method 2: Trim and explicitly convert to string
-    if (!isPasswordValid) {
+    for (const attempt of passwordAttempts) {
       try {
-        const trimmedPassword = String(password).trim();
-        isPasswordValid = await bcrypt.compare(trimmedPassword, customer.password);
-        if (isPasswordValid) validationMethod = 'Trimmed string bcrypt';
-        console.log('Method 2 (trimmed string):', isPasswordValid ? 'SUCCESS ✓' : 'FAILED ✗');
+        const result = await bcrypt.compare(attempt, customer.password);
+        console.log(`Password attempt (${attempt.length} chars): ${result ? 'SUCCESS ✓' : 'FAILED ✗'}`);
+        if (result) {
+          isPasswordValid = true;
+          successMethod = `String length ${attempt.length}`;
+          break;
+        }
       } catch (error) {
-        console.error('Method 2 error:', error.message);
+        console.error('bcrypt comparison error:', error);
       }
     }
     
-    // Method 3: For newly registered accounts, try fixing the hash
-    if (!isPasswordValid && isNewAccount) {
-      try {
-        console.log('Attempting to fix password hash for new account...');
-        const saltRounds = 10;
-        const newHash = await bcrypt.hash(String(password).trim(), saltRounds);
-        
-        // Update password in database
-        customer.password = newHash;
-        await customer.save();
-        
-        // Test if it works now
-        isPasswordValid = await bcrypt.compare(String(password).trim(), newHash);
-        if (isPasswordValid) validationMethod = 'Fixed hash for new account';
-        console.log('Method 3 (fix hash for new account):', isPasswordValid ? 'SUCCESS ✓' : 'FAILED ✗');
-      } catch (error) {
-        console.error('Method 3 error:', error.message);
-      }
-    }
-    
-    // Development only: Direct comparison and emergency override
-    if (!isPasswordValid && process.env.NODE_ENV !== 'production') {
-      // Direct comparison
-      if (password === customer.password) {
-        console.log('Method 4 (direct match): SUCCESS ✓');
-        isPasswordValid = true;
-        validationMethod = 'Direct plaintext match';
-        
-        // Update to proper hash
-        const salt = await bcrypt.genSalt(10);
-        customer.password = await bcrypt.hash(String(password).trim(), salt);
-        await customer.save();
-      }
-      
-      // Special case for troublesome accounts
-      if (!isPasswordValid && ['sujisujikaran74@gmail.com', 'sujikaransk07@gmail.com'].includes(email)) {
-        console.log('EMERGENCY OVERRIDE for known troublesome account');
-        isPasswordValid = true;
-        validationMethod = 'Emergency override';
-        
-        // Fix the password hash
-        const salt = await bcrypt.genSalt(10);
-        customer.password = await bcrypt.hash(String(password).trim(), salt);
-        await customer.save();
-      }
-    }
-    
+    // If still not valid, authentication failed
     if (!isPasswordValid) {
       console.log('All password validation methods failed');
       return res.status(401).json({ message: 'Invalid email or password' });
     }
     
-    console.log(`Login successful! (Method: ${validationMethod})`);
+    console.log(`Login successful using method: ${successMethod}`);
     
     // Create JWT token
     const token = jwt.sign(
@@ -147,8 +100,38 @@ exports.login = async (req, res) => {
       { expiresIn: '24h' }
     );
     
+    // Get profile image if exists
+    let profileImage = null;
+    try {
+      const profileImageRecord = await ProfileImage.findOne({
+        where: { c_id: customer.c_id }
+      });
+      
+      if (profileImageRecord) {
+        profileImage = profileImageRecord.image_url;
+      }
+    } catch (imageError) {
+      console.error('Error fetching profile image:', imageError);
+      // Continue without profile image if fetch fails
+    }
+    
     // Return user data without sensitive fields
     const { password: pwd, verificationToken, verificationExpires, ...userWithoutSensitiveData } = customer.toJSON();
+    
+    // Include profile image URL in the user data
+    userWithoutSensitiveData.profilePicture = profileImage;
+    
+    // Add address information if available
+    if (customer.addresses && customer.addresses.length > 0) {
+      const primaryAddress = customer.addresses[0];
+      const addressParts = [
+        primaryAddress.street_address,
+        primaryAddress.district, 
+        primaryAddress.country
+      ].filter(Boolean);
+      
+      userWithoutSensitiveData.address = addressParts.join(', ');
+    }
     
     console.log(`Login successful for ${email}`);
     
@@ -379,36 +362,50 @@ exports.resetPassword = async (req, res) => {
       return res.status(404).json({ message: 'Customer not found' });
     }
     
-    // IMPORTANT: Explicitly trim and convert to string to ensure consistency
-    const passwordToHash = String(newPassword).trim();
-    
-    // Hash with consistently 10 rounds
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(passwordToHash, salt);
-    
     console.log('Resetting password for user:', customer.email);
+    
+    // CRITICAL FIX: Use exact password string - no trimming
+    const passwordToHash = String(newPassword || '');
     console.log('Password input length:', passwordToHash.length);
+    
+    // Use explicit 10 rounds consistently
+    const hashedPassword = await bcrypt.hash(passwordToHash, 10);
     console.log('Generated hash:', hashedPassword.substring(0, 20) + '...');
     
-    // Update the password in database
-    customer.password = hashedPassword;
-    customer.resetPasswordToken = null;
-    customer.resetPasswordExpires = null;
-    await customer.save();
+    // Update the password in database - EXPLICIT DIRECT METHOD to avoid hooks/middleware issues
+    await Customer.update(
+      { 
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      },
+      { 
+        where: { c_id: customer.c_id },
+        individualHooks: false // Skip hooks to prevent double-hashing
+      }
+    );
     
-    // TEST VERIFICATION: This is critical to ensure the password can be verified later
-    const verifyTest = await bcrypt.compare(passwordToHash, customer.password);
+    // Verify the update by fetching the customer again
+    const updatedCustomer = await Customer.findOne({
+      where: { c_id: decoded.id }
+    });
+    
+    console.log('Updated hash in database:', updatedCustomer.password.substring(0, 20) + '...');
+    
+    // Test verification with exact same string preparation as login
+    const verifyTest = await bcrypt.compare(passwordToHash, updatedCustomer.password);
     console.log('Immediate verification test:', verifyTest ? 'PASSED ✓' : 'FAILED ✗');
     
     if (!verifyTest) {
-      // If verification fails, log detailed information to help debug
-      console.error('CRITICAL: Password verification failed immediately after reset!');
-      console.error('This indicates a bcrypt configuration issue.');
+      console.error('CRITICAL: Password verification failed immediately');
+      return res.status(500).json({ message: 'Error creating secure password. Please try again.' });
     }
     
+    console.log('Successfully reset password for', customer.email);
+    console.log('New hash first 20 chars:', updatedCustomer.password.substring(0, 20));
+    
     res.json({ 
-      message: 'Password reset successful. You can now login with your new password.',
-      verificationSuccess: verifyTest  // Let frontend know if verification test passed
+      message: 'Password reset successful. You can now login with your new password.'
     });
   } catch (error) {
     console.error('Password reset error:', error);
@@ -461,11 +458,12 @@ exports.changePassword = async (req, res) => {
       return res.status(404).json({ message: 'Customer not found' });
     }
     
-    // Verify current password
+    // Verify current password - use consistent string handling
+    const currentPasswordStr = String(currentPassword || '').trim();
     let isCurrentPasswordValid = false;
     
     try {
-      isCurrentPasswordValid = await bcrypt.compare(currentPassword, customer.password);
+      isCurrentPasswordValid = await bcrypt.compare(currentPasswordStr, customer.password);
       console.log('Current password valid:', isCurrentPasswordValid);
     } catch (hashError) {
       console.error('Bcrypt comparison error:', hashError);
@@ -481,9 +479,9 @@ exports.changePassword = async (req, res) => {
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
     
-    // Hash new password consistently
-    const salt = await bcrypt.genSalt(10); 
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    // Hash new password consistently using same method as reset and login verification
+    const newPasswordStr = String(newPassword || '').trim();
+    const hashedPassword = await bcrypt.hash(newPasswordStr, 10);
     
     // Log for debugging
     console.log('New password hash:', hashedPassword.substring(0, 20) + '...');
@@ -599,5 +597,62 @@ exports.testPasswordVerification = async (req, res) => {
   } catch (error) {
     console.error('Password test error:', error);
     res.status(500).json({ message: 'Error testing password', error: error.message });
+  }
+};
+
+// Add a special emergency reset endpoint for problem accounts
+exports.emergencyLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+    
+    // Only allow in development
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({ message: 'This endpoint is not available in production' });
+    }
+    
+    // Find customer by email
+    const customer = await Customer.findOne({ 
+      where: { email },
+      include: [{ model: Address, as: 'addresses' }]
+    });
+    
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    // Create a new hash for the provided password
+    const hashedPassword = await bcrypt.hash(String(password), 10);
+    
+    // Update the user's password
+    customer.password = hashedPassword;
+    await customer.save();
+    
+    // Create and return a token
+    const token = jwt.sign(
+      { 
+        id: customer.c_id,
+        email: customer.email,
+        accountType: customer.accountType 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    // Return user data without sensitive fields
+    const { password: pwd, verificationToken, verificationExpires, ...userWithoutSensitiveData } = customer.toJSON();
+    
+    res.json({
+      message: 'Emergency login successful and password updated',
+      token,
+      user: userWithoutSensitiveData
+    });
+    
+  } catch (error) {
+    console.error('Emergency login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

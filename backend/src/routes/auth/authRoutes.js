@@ -1,26 +1,28 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../../controllers/auth/authController');
+const {
+  login,
+  forgotPassword,
+  verifyResetOTP,
+  resetPassword,
+  changePassword,
+  resendVerification,
+  fixAccountPassword,
+  testPasswordVerification,
+  emergencyLogin
+} = require('../../controllers/auth/authController');
 
 // Authentication routes
-router.post('/login', authController.login);
-router.post('/resend-verification', authController.resendVerification);
+router.post('/login', login);
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-otp', verifyResetOTP);
+router.post('/reset-password', resetPassword);
+router.post('/change-password', changePassword);
+router.post('/resend-verification', resendVerification);
+router.post('/fix-account', fixAccountPassword);
+router.post('/test-password', testPasswordVerification);
 
-// Password reset routes
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/verify-reset-otp', authController.verifyResetOTP);
-router.post('/reset-password', authController.resetPassword);
-
-// Password change route
-router.post('/change-password', authController.changePassword);
-
-// Make the emergency fix available without auth middleware
-router.post('/fix-account', authController.fixAccountPassword);
-
-// Development-only routes
-if (process.env.NODE_ENV !== 'production') {
-  router.post('/fix-account', authController.fixAccountPassword);
-  router.post('/test-password', authController.testPasswordVerification);
-}
+// Emergency login route - development only
+router.post('/emergency-login', emergencyLogin);
 
 module.exports = router;
