@@ -35,6 +35,7 @@ import ChangePasswordPage from './pages/ChangePassword';
 import AboutPage from './pages/About';
 import ContactPage from './pages/Contact';
 import OrderSuccessPage from './pages/OrderSuccess';
+import EditProfilePage from './pages/EditProfilePage';
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
                 <Route path="/chat" element={<ChatPage />} />
                 <Route path="/favorites" element={<FavoritesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/edit-profile" element={<EditProfilePage />} />
                 <Route path="/purchases" element={<PurchasesPage />} />
                 <Route path="/messages" element={<MessagesPage />} />
                 <Route path="/help" element={<HelpCenterPage />} />

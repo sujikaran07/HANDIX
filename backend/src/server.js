@@ -33,6 +33,7 @@ const CartItem = require('./models/cartItemModel');
 const Favorite = require('./models/favoriteModel'); 
 const { ShippingMethod } = require('./models/shippingMethodModel');
 const variationRoutes = require('./routes/variations/variationRoutes');
+const addressRoutes = require('./routes/addresses/addressRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -98,6 +99,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/favorites', favoriteRoutes); 
 app.use('/api/checkout', checkoutRoutes); 
 app.use('/api/variations', variationRoutes);
+app.use('/api/addresses', addressRoutes); 
 
 const PORT = process.env.PORT || 5000;
 
