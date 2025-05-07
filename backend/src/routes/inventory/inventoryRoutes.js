@@ -134,4 +134,39 @@ router.get('/suggestions', authMiddleware, async (req, res) => {
   }
 });
 
+// Add a new route to get inventory item by product ID
+router.get('/product/:id', async (req, res) => {
+  try {
+    const productId = req.params.id;
+    
+    // Use Inventory model directly without invalid associations
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId }
+    });
+
+    if (!inventoryItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    // Return the product info directly from inventory
+    res.status(200).json({
+      success: true,
+      product_id: productId,
+      product_name: inventoryItem.product_name,
+      product_price: inventoryItem.price,
+      stock_quantity: inventoryItem.stock_quantity || inventoryItem.quantity
+    });
+  } catch (error) {
+    console.error('Error fetching inventory item:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching inventory item',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

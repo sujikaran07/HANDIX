@@ -1,56 +1,148 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Calendar, ChevronRight, Truck, Clock, X, Search, Star } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
+import orderService from '../services/orderService';
 
 const PurchasesPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   
-  // Enhanced sample orders data with product images - using static data to avoid API calls
-  const orders = [
-    {
-      id: 'HX-1234567',
-      date: '2023-04-15',
-      status: 'delivered',
-      total: 9500,
-      items: 3,
-      trackingId: 'TRK123456789',
-      estimatedDelivery: '2023-04-20',
-      products: [
-        { name: 'Handcrafted Ceramic Vase', image: 'https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg' },
-        { name: 'Wooden Kitchenware Set', image: 'https://images.pexels.com/photos/6270663/pexels-photo-6270663.jpeg' },
-        { name: 'Handwoven Wall Hanging', image: 'https://images.pexels.com/photos/6048185/pexels-photo-6048185.jpeg' }
-      ]
-    },
-    {
-      id: 'HX-7654321',
-      date: '2023-03-22',
-      status: 'shipped',
-      total: 6200,
-      items: 2,
-      trackingId: 'TRK987654321',
-      estimatedDelivery: '2023-03-29',
-      products: [
-        { name: 'Leather Journal Cover', image: 'https://images.pexels.com/photos/6044266/pexels-photo-6044266.jpeg' },
-        { name: 'Silver Earrings', image: 'https://images.pexels.com/photos/4937441/pexels-photo-4937441.jpeg' }
-      ]
-    },
-    {
-      id: 'HX-9876543',
-      date: '2023-02-10',
-      status: 'processing',
-      total: 3500,
-      items: 1,
-      products: [
-        { name: 'Ceramic Tea Set', image: 'https://images.pexels.com/photos/6270188/pexels-photo-6270188.jpeg' }
-      ]
-    }
-  ];
+  // Fetch orders when component mounts
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        
+        // Check if user is logged in
+        const userData = localStorage.getItem('user');
+        if (!userData) {
+          setError("Please log in to view your orders");
+          setLoading(false);
+          return;
+        }
+        
+        // Get customer orders from API
+        const data = await orderService.getCustomerOrders();
+        console.log('API response:', data);
+        
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to fetch orders');
+        }
+        
+        // Process orders for display
+        const processedOrders = await Promise.all(data.orders.map(async order => {
+          // Get shipping address from order if available
+          const getShippingAddress = () => {
+            const customerInfo = order.customerInfo || {};
+            const addresses = customerInfo.addresses || [];
+            const address = addresses.find(addr => addr.is_default) || addresses[0] || {};
+            
+            return {
+              name: order.customerName || `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim(),
+              street: address.street_address || address.streetAddress || 'N/A',
+              city: address.city || 'N/A',
+              state: address.district || address.state || 'N/A',
+              zip: address.postal_code || address.postalCode || 'N/A',
+              country: address.country || 'Sri Lanka'
+            };
+          };
+          
+          // For each order's products, fetch the actual product images
+          const productsWithImages = await Promise.all((order.orderDetails || []).map(async detail => {
+            // Try to use image from API response first
+            let productImage = detail.product_image || null;
+            
+            // Get product name from inventory if available
+            let productName = detail.product_name || '';
+            
+            if (!productName) {
+              try {
+                const inventoryItem = await orderService.getInventoryItem(detail.product_id);
+                if (inventoryItem?.success && inventoryItem?.product_name) {
+                  productName = inventoryItem.product_name;
+                }
+              } catch (err) {
+                console.log(`Failed to fetch name for product ${detail.product_id}`);
+              }
+            }
+            
+            // If no image in response, try to fetch it
+            if (!productImage) {
+              try {
+                productImage = await orderService.getProductImage(detail.product_id);
+              } catch (err) {
+                console.log(`Failed to fetch image for product ${detail.product_id}`);
+              }
+            }
+            
+            return {
+              id: detail.product_id,
+              name: productName || 'Handix Product', // Use actual name with good fallback
+              // Use fetched image or default to a placeholder
+              image: productImage || `${baseURL}/uploads/products/${detail.product_id}.jpg` || 'https://via.placeholder.com/300',
+              price: parseFloat(detail.priceAtPurchase || detail.price || 0),
+              quantity: detail.quantity || 1,
+              customization: detail.customization || null
+            };
+          }));
+          
+          // Calculate subtotal from order details
+          const subtotal = (order.orderDetails || []).reduce((sum, item) => {
+            const price = parseFloat(item.priceAtPurchase || item.price || 0);
+            const quantity = parseInt(item.quantity || 1);
+            return sum + (price * quantity);
+          }, 0);
+          
+          // Calculate shipping fee as total - subtotal
+          const totalAmount = parseFloat(order.totalAmount || 0);
+          const shippingFee = Math.max(0, totalAmount - subtotal);
+          
+          return {
+            id: order.order_id,
+            date: order.orderDate,
+            status: order.orderStatus?.toLowerCase() || 'processing',
+            total: parseFloat(order.totalAmount || 0),
+            items: order.orderDetails?.length || 0,
+            estimatedDelivery: calculateEstimatedDelivery(order.orderDate),
+            shippingAddress: getShippingAddress(),
+            subtotal: subtotal,
+            shippingFee: shippingFee,
+            products: productsWithImages
+          };
+        }));
+        
+        console.log('Processed orders with actual images:', processedOrders);
+        setOrders(processedOrders);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        setError("Failed to load your orders. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOrders();
+  }, []);
   
+  // Helper function to calculate estimated delivery (10-15 days from order date)
+  const calculateEstimatedDelivery = (orderDate) => {
+    if (!orderDate) return null;
+    
+    const date = new Date(orderDate);
+    const estimatedDate = new Date(date);
+    estimatedDate.setDate(date.getDate() + 10);
+    
+    return estimatedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'processing':
@@ -196,7 +288,12 @@ const PurchasesPage = () => {
           <div className="bg-white shadow-sm rounded-lg p-6">
             <h2 className="text-xl font-bold mb-6 pb-3 border-b">My Orders</h2>
             
-            {filteredOrders.length === 0 ? (
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="inline-block w-12 h-12 border-4 border-gray-300 border-t-primary rounded-full animate-spin mb-4"></div>
+                <p className="text-lg text-gray-600">Loading your orders...</p>
+              </div>
+            ) : filteredOrders.length === 0 ? (
               <div className="text-center py-8">
                 <Package size={48} className="mx-auto text-gray-300 mb-4" />
                 <h3 className="text-lg font-medium mb-2">No orders found</h3>
@@ -313,6 +410,10 @@ const PurchasesPage = () => {
                           <div className="mb-4">
                             <h3 className="font-medium mb-2">Shipping Information</h3>
                             <div className="bg-blue-50 p-3 rounded-md flex flex-col space-y-1">
+                              <div className="flex items-center text-sm">
+                                <span className="font-medium mr-2 w-32">Shipping Method:</span>
+                                <span>{order.shippingFee <= 0 ? 'Store Pickup' : 'Standard Shipping'}</span>
+                              </div>
                               {order.estimatedDelivery && (
                                 <div className="flex items-center text-sm">
                                   <span className="font-medium mr-2 w-32">Estimated Delivery:</span>
@@ -323,17 +424,32 @@ const PurchasesPage = () => {
                           </div>
                         )}
 
+                        {/* Shipping Address */}
+                        {order.shippingAddress && (
+                          <div className="mb-4">
+                            <h3 className="font-medium mb-2">Shipping Address</h3>
+                            <div className="bg-gray-50 p-3 rounded-md">
+                              <p className="font-medium">{order.shippingAddress.name}</p>
+                              <p>{order.shippingAddress.street}</p>
+                              <p>
+                                {order.shippingAddress.city}, {order.shippingAddress.state}
+                              </p>
+                              <p>{order.shippingAddress.country}</p>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Order Summary */}
                         <div className="mb-4">
                           <h3 className="font-medium mb-2">Order Summary</h3>
                           <div className="bg-gray-50 p-3 rounded-md">
                             <div className="flex justify-between mb-1 text-sm">
                               <span>Subtotal</span>
-                              <span>LKR {order.total.toLocaleString()}</span>
+                              <span>LKR {order.subtotal.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between mb-1 text-sm">
                               <span>Shipping</span>
-                              <span>Free</span>
+                              <span>{order.shippingFee <= 0 ? 'Free' : `LKR ${order.shippingFee.toLocaleString()}`}</span>
                             </div>
                             <div className="border-t mt-2 pt-2">
                               <div className="flex justify-between font-medium">

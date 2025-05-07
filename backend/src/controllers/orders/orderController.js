@@ -5,6 +5,8 @@ const { Employee } = require('../../models/employeeModel');
 const { Sequelize, Op } = require('sequelize');
 const Inventory = require('../../models/inventoryModel');
 const { sequelize } = require('../../config/db');
+const { Address } = require('../../models/addressModel');
+const ProductImage = require('../../models/productImageModel');
 
 const getAllOrders = async (req, res) => {
   try {
@@ -44,14 +46,46 @@ const getOrderById = async (req, res) => {
     const { id } = req.params;
     const order = await Order.findByPk(id, {
       include: [
-        { model: Customer, as: 'customerInfo' },
+        { 
+          model: Customer, 
+          as: 'customerInfo',
+          include: [{ model: Address, as: 'addresses' }]  // Include customer addresses
+        },
         { model: OrderDetail, as: 'orderDetails' }
       ],
     });
+    
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
-    res.status(200).json(order);
+    
+    // Process the order data to include shipping fee and product images
+    const orderData = order.toJSON();
+    
+    // Add default shipping fee if not present
+    if (!orderData.shippingFee) {
+      orderData.shippingFee = 350;
+    }
+    
+    // Fetch product images for order details
+    if (orderData.orderDetails && orderData.orderDetails.length > 0) {
+      for (const detail of orderData.orderDetails) {
+        try {
+          // Get product image
+          const productImage = await ProductImage.findOne({
+            where: { product_id: detail.product_id }
+          });
+          
+          if (productImage) {
+            detail.product_image = productImage.image_url;
+          }
+        } catch (err) {
+          console.error(`Failed to fetch image for product ${detail.product_id}`);
+        }
+      }
+    }
+    
+    res.status(200).json(orderData);
   } catch (error) {
     console.error('Error fetching order:', error);
     res.status(500).json({ message: 'Error fetching order', error: error.message });
@@ -286,11 +320,90 @@ const getArtisansWithOrderInfo = async (req, res) => {
   }
 };
 
+const getCustomerOrders = async (req, res) => {
+  try {
+    // Get customer ID from query parameter or auth token
+    const customerId = req.query.customerId || (req.user && req.user.id);
+    
+    if (!customerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Customer ID is required'
+      });
+    }
+    
+    console.log(`Fetching orders for customer ID: ${customerId}`);
+    
+    const orders = await Order.findAll({
+      where: { c_id: customerId },
+      include: [
+        {
+          model: Customer,
+          as: 'customerInfo',
+          include: [{ model: Address, as: 'addresses' }]  // Include customer addresses
+        },
+        {
+          model: OrderDetail,
+          as: 'orderDetails',
+          attributes: ['order_detail_id', 'order_id', 'product_id', 'quantity', 'priceAtPurchase']
+        }
+      ],
+      order: [['orderDate', 'DESC']]
+    });
+    
+    // Process orders to include product images
+    const processedOrders = [];
+    
+    for (const order of orders) {
+      const orderData = order.toJSON();
+      
+      // Add shipping fee if not set
+      if (!orderData.shippingFee) {
+        orderData.shippingFee = 350;
+      }
+      
+      // Fetch product images for each order item
+      if (orderData.orderDetails && orderData.orderDetails.length > 0) {
+        for (const detail of orderData.orderDetails) {
+          try {
+            // Get product image
+            const productImage = await ProductImage.findOne({
+              where: { product_id: detail.product_id }
+            });
+            
+            if (productImage) {
+              detail.product_image = productImage.image_url;
+            }
+          } catch (err) {
+            console.error(`Failed to fetch image for product ${detail.product_id}`);
+          }
+        }
+      }
+      
+      processedOrders.push(orderData);
+    }
+
+    res.status(200).json({
+      success: true,
+      count: processedOrders.length,
+      orders: processedOrders
+    });
+  } catch (error) {
+    console.error('Error fetching customer orders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching customer orders',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
   createOrder,
   updateOrder,
   deleteOrder,
-  getArtisansWithOrderInfo
+  getArtisansWithOrderInfo,
+  getCustomerOrders // Add this to exports
 };

@@ -14,11 +14,7 @@ const ShippingMethod = sequelize.define('ShippingMethod', {
     allowNull: false,
     field: 'method_name' // Match the actual column name in the database
   },
-  price: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false,
-    field: 'price'
-  }
+  
 }, {
   tableName: 'ShippingMethods',
   timestamps: false, // No timestamp fields in the schema
@@ -44,24 +40,7 @@ const initializeShippingMethods = async () => {
     
     const count = await ShippingMethod.count();
     
-    // Only insert default methods if table is empty
-    if (count === 0) {
-      await ShippingMethod.bulkCreate([
-        {
-          method_name: 'Standard Delivery',
-          price: 350.00
-        },
-        {
-          method_name: 'Express Delivery',
-          price: 500.00
-        },
-        {
-          method_name: 'Store Pickup',
-          price: 0.00
-        }
-      ]);
-      console.log('Default shipping methods created');
-    }
+
   } catch (error) {
     console.error('Error initializing shipping methods:', error);
   }

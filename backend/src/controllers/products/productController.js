@@ -20,7 +20,7 @@ const getAllProducts = async (req, res) => {
         { model: Category, as: 'category', attributes: ['category_name'] },
         { model: Inventory, as: 'inventory', attributes: ['product_name', 'description', 'unit_price'] },
         { model: ProductImage, as: 'entryImages', attributes: ['image_url'] }, 
-        { model: ProductVariation, as: 'variations', attributes: ['size', 'additional_price', 'stock_level'] },
+        { model: ProductVariation, as: 'variations', attributes: ['additional_price', 'stock_level'] },
       ],
       attributes: ['product_id', 'product_name', 'unit_price', 'quantity', 'product_status', 'status', 'date_added'],
     });
@@ -57,7 +57,7 @@ const getProductById = async (req, res) => {
     try {
       variations = await ProductVariation.findAll({
         where: { product_id: product.product_id },
-        attributes: ['size', 'additional_price', 'stock_level']
+        attributes: [ 'additional_price', 'stock_level']
       });
     } catch (variationError) {
       console.error('Error fetching variations:', variationError);
@@ -84,7 +84,7 @@ const createProduct = async (req, res) => {
       category,
       price,
       quantity,
-      size,
+
       additional_price,
       customization_available,
       product_status,
@@ -128,10 +128,10 @@ const createProduct = async (req, res) => {
     }
     
     console.log('Creating product variation');
-    const normalizedSize = size || 'N/A';
+    const normalizedVariation = variation_name || 'Standard'; // Changed from 'size'
     const variationRecord = await ProductVariation.create({
       product_id,
-      size: normalizedSize,
+      variation_name: normalizedVariation, // Changed from 'size'
       additional_price: Number(additional_price || 0),
       stock_level: Number(quantity)
     });
@@ -185,34 +185,34 @@ const updateProduct = async (req, res) => {
     }
 
   
-    const originalSize = productEntry.size || 'N/A';
-    const newSize = updatedData.size || 'N/A';
+    const originalVariation = productEntry.variation_name || 'Standard'; // Changed from 'size'
+    const newVariation = updatedData.variation_name || 'Standard'; // Changed from 'size'
 
-    let newVariation = null;
-    if (originalSize !== newSize) {
-      console.log(`Size is changing from ${originalSize} to ${newSize}`);
+    let newVariationRecord = null;
+    if (originalVariation !== newVariation) {
+      console.log(`Variation is changing from ${originalVariation} to ${newVariation}`);
       
-      newVariation = await ProductVariation.findOne({
+      newVariationRecord = await ProductVariation.findOne({
         where: { 
           product_id: productEntry.product_id,
-          size: newSize
+          variation_name: newVariation // Changed from 'size'
         }
       });
       
-      if (!newVariation) {
-        newVariation = await ProductVariation.create({
+      if (!newVariationRecord) {
+        newVariationRecord = await ProductVariation.create({
           product_id: productEntry.product_id,
-          size: newSize,
+          variation_name: newVariation, // Changed from 'size'
           additional_price: updatedData.additional_price || 0,
           stock_level: updatedData.quantity
         });
-        console.log(`Created new variation with ID ${newVariation.variation_id} for size ${newSize}`);
+        console.log(`Created new variation with ID ${newVariationRecord.variation_id} for variation ${newVariation}`);
       } else {
-        await newVariation.update({
-          additional_price: updatedData.additional_price || newVariation.additional_price,
-          stock_level: newVariation.stock_level + updatedData.quantity
+        await newVariationRecord.update({
+          additional_price: updatedData.additional_price || newVariationRecord.additional_price,
+          stock_level: newVariationRecord.stock_level + updatedData.quantity
         });
-        console.log(`Updated existing variation (${newVariation.variation_id}) for size ${newSize}`);
+        console.log(`Updated existing variation (${newVariationRecord.variation_id}) for variation ${newVariation}`);
       }
     }
     
@@ -224,7 +224,7 @@ const updateProduct = async (req, res) => {
       product_status: updatedData.product_status,
       customization_available: updatedData.customization_available,
       
-      variation_id: newVariation ? newVariation.variation_id : productEntry.variation_id
+      variation_id: newVariationRecord ? newVariationRecord.variation_id : productEntry.variation_id
     });
     
     console.log(`Updated product entry with variation_id: ${productEntry.variation_id}`);
@@ -245,19 +245,19 @@ const updateProduct = async (req, res) => {
     }
     
 
-    if (originalSize !== newSize) {
-      const oldVariation = await ProductVariation.findOne({
+    if (originalVariation !== newVariation) {
+      const oldVariationRecord = await ProductVariation.findOne({
         where: { 
           product_id: productEntry.product_id,
-          size: originalSize
+          variation_name: originalVariation // Changed from 'size'
         }
       });
       
-      if (oldVariation) {
+      if (oldVariationRecord) {
 
-        const newStockLevel = Math.max(0, oldVariation.stock_level - productEntry.quantity);
-        await oldVariation.update({ stock_level: newStockLevel });
-        console.log(`Reduced stock for original size ${originalSize} variation to ${newStockLevel}`);
+        const newStockLevel = Math.max(0, oldVariationRecord.stock_level - productEntry.quantity);
+        await oldVariationRecord.update({ stock_level: newStockLevel });
+        console.log(`Reduced stock for original variation ${originalVariation} to ${newStockLevel}`);
       }
     }
     
@@ -331,7 +331,7 @@ const deleteProduct = async (req, res) => {
       for (const variation of variations) {
         const newStockLevel = Math.max(0, variation.stock_level - quantityToRemove); 
         await variation.update({ stock_level: newStockLevel });
-        console.log(`Updated variation (${variation.size}) stock level: ${newStockLevel}`);
+        console.log(`Updated variation (${variation.variation_name}) stock level: ${newStockLevel}`);
       }
     }
 
@@ -540,7 +540,7 @@ const getProductByName = async (req, res) => {
     try {
       variations = await ProductVariation.findAll({
         where: { product_id: product.product_id },
-        attributes: ['size', 'additional_price', 'stock_level']
+        attributes: ['variation_name', 'additional_price', 'stock_level']
       });
     } catch (variationError) {
       console.error('Error fetching variations:', variationError);
