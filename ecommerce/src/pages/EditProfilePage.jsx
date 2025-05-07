@@ -181,83 +181,119 @@ const EditProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prepare updated user data
-    const updatedUser = {
-      ...user,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      email: formData.email,
-      phone: formData.phone,
-      profilePicture: previewUrl
-    };
-    
     try {
       console.log('Submitting form data:', formData);
       
-      if (user.c_id) {
-        const token = localStorage.getItem('token');
-        // Use import.meta.env instead of process.env for Vite
-        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-        
-        // 1. Update user profile
-        const userApiUrl = `${baseUrl}/api/customers/${user.c_id}`;
-        console.log('Updating user data at:', userApiUrl);
-        
-        const userResponse = await axios.put(userApiUrl, {
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phone: formData.phone,
-        }, {
+      if (!user.c_id) {
+        alert('Customer ID is missing. Please log in again.');
+        return;
+      }
+      
+      const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      
+      // 1. If profile picture was changed, upload it first
+      let profileImageUrl = previewUrl;
+      if (profilePicture && previewUrl) {
+        console.log('Uploading profile image to server');
+        try {
+          const profileImageResponse = await axios.post(
+            `${baseUrl}/api/profileImages/${user.c_id}`,
+            { image: previewUrl },
+            {
+              headers: {
+                'Authorization': token ? `Bearer ${token}` : undefined,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+          
+          console.log('Profile image upload response:', profileImageResponse.data);
+          profileImageUrl = profileImageResponse.data.image_url;
+        } catch (imageError) {
+          console.error('Error uploading profile image:', imageError);
+          // Continue with other updates even if image upload fails
+        }
+      }
+      
+      // 2. Update user profile (name and phone)
+      const userApiUrl = `${baseUrl}/api/customers/${user.c_id}`;
+      console.log('Updating user data at:', userApiUrl);
+      
+      const userResponse = await axios.put(userApiUrl, {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        // Don't include email as it can't be changed here
+      }, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : undefined
+        }
+      });
+      
+      console.log('User update response:', userResponse.data);
+      
+      // 3. Update or create address
+      const addressData = {
+        street_address: formData.address,
+        city: formData.city,
+        district: formData.district,
+        country: formData.country || 'Sri Lanka',
+        c_id: user.c_id,
+        addressType: 'shipping'
+      };
+      
+      console.log('Sending address data to API:', addressData);
+      
+      // Use the appropriate endpoint
+      const addressUrl = addressLoaded 
+        ? `${baseUrl}/api/addresses/customer/${user.c_id}`
+        : `${baseUrl}/api/addresses`;
+      
+      console.log('Using address endpoint:', addressUrl);
+      
+      if (addressLoaded) {
+        // Update existing address
+        const addressResponse = await axios.put(addressUrl, addressData, {
           headers: {
             'Authorization': token ? `Bearer ${token}` : undefined
           }
         });
-        
-        console.log('User update response:', userResponse.data);
-        
-        // 2. Update or create address
-        const addressData = {
-          street_address: formData.address,
-          city: formData.city,
-          district: formData.district,
-          country: formData.country || 'Sri Lanka',
-          c_id: user.c_id,
-          addressType: 'shipping', // Must match the field name in the database (addressType not address_type)
-          is_default: true
-        };
-        
-        console.log('Sending address data to API:', addressData);
-        
-        // Use the appropriate endpoint
-        const addressUrl = addressLoaded 
-          ? `${baseUrl}/api/addresses/customer/${user.c_id}`
-          : `${baseUrl}/api/addresses`;
-        
-        console.log('Using address endpoint:', addressUrl);
-        
-        if (addressLoaded) {
-          // Update existing address
-          const addressResponse = await axios.put(addressUrl, addressData, {
-            headers: {
-              'Authorization': token ? `Bearer ${token}` : undefined
-            }
-          });
-          console.log('Address update response:', addressResponse.data);
-        } else {
-          // Create new address
-          const addressResponse = await axios.post(addressUrl, addressData, {
-            headers: {
-              'Authorization': token ? `Bearer ${token}` : undefined
-            }
-          });
-          console.log('Address create response:', addressResponse.data);
-        }
-        
-        console.log('Profile and address updated successfully');
+        console.log('Address update response:', addressResponse.data);
+      } else {
+        // Create new address
+        const addressResponse = await axios.post(addressUrl, addressData, {
+          headers: {
+            'Authorization': token ? `Bearer ${token}` : undefined
+          }
+        });
+        console.log('Address create response:', addressResponse.data);
       }
       
-      // Save to localStorage for UI persistence
+      // 4. Format address for local storage and display
+      const addressParts = [
+        formData.address,
+        formData.district,
+        formData.country
+      ].filter(Boolean);
+      
+      const formattedAddress = addressParts.join(', ');
+      
+      // 5. Update localStorage with latest data
+      const updatedUser = {
+        ...user,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        profilePicture: profileImageUrl, // Use the URL from Cloudinary
+        address: formattedAddress
+      };
+      
+      console.log('Updating localStorage with:', updatedUser);
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      console.log('Profile and address updated successfully');
       
       // Show success message
       alert('Profile updated successfully!');
@@ -266,7 +302,7 @@ const EditProfilePage = () => {
       navigate('/profile');
     } catch (error) {
       console.error('Error updating profile:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('Error details:', error.response?.data || 'No response data');
       alert('An error occurred while updating your profile. Please try again.');
     }
   };

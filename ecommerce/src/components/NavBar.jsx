@@ -136,15 +136,31 @@ const NavBar = () => {
             ) : (
               <DropdownMenu>
                 <DropdownMenuTrigger className="text-gray-600 hover:text-primary transition-colors flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center mr-1.5">
-                    <User size={16} />
+                  <div className="h-8 w-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center mr-1.5">
+                    {userData?.profilePicture ? (
+                      <img 
+                        src={userData.profilePicture} 
+                        alt={userData.firstName || "Profile"} 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <User size={16} />
+                    )}
                   </div>
                   <span className="max-w-[80px] lg:max-w-[120px] truncate">{userData?.firstName || "Account"}</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 bg-white p-0 shadow-lg rounded-lg border border-gray-200 mt-1">
                   <div className="bg-blue-50 p-4 flex items-start gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <User size={20} />
+                    <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
+                      {userData?.profilePicture ? (
+                        <img 
+                          src={userData.profilePicture} 
+                          alt={userData.firstName || "Profile"} 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User size={20} />
+                      )}
                     </div>
                     <div>
                       <p className="font-semibold">{getUserFullName()}</p>
@@ -290,8 +306,16 @@ const NavBar = () => {
               ) : (
                 <>
                   <div className="px-4 py-2 flex items-center space-x-3">
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <User size={20} />
+                    <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                      {userData?.profilePicture ? (
+                        <img 
+                          src={userData.profilePicture} 
+                          alt={userData.firstName || "Profile"} 
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <User size={20} />
+                      )}
                     </div>
                     <div>
                       <p className="font-medium">{getUserFullName()}</p>

@@ -7,12 +7,14 @@ const ProfileImage = sequelize.define('ProfileImage', {
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
+    field: 'profile_image_id',
   },
   c_id: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'c_id',
     references: {
-      model: 'Customers', 
+      model: 'Customers',
       key: 'c_id',
     },
     onDelete: 'CASCADE',
@@ -20,18 +22,21 @@ const ProfileImage = sequelize.define('ProfileImage', {
   image_url: {
     type: DataTypes.TEXT,
     allowNull: false,
+    field: 'image_url',
   },
-  created_at: {
+  createdAt: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
+    field: 'created_at',
+    defaultValue: Sequelize.fn('now')
   },
-  updated_at: {
+  updatedAt: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
-  },
+    field: 'updated_at',
+    defaultValue: Sequelize.fn('now')
+  }
 }, {
   tableName: 'ProfileImages',
-  timestamps: false,
+  timestamps: true,
   underscored: true,
 });
 

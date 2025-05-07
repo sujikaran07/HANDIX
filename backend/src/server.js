@@ -34,6 +34,7 @@ const Favorite = require('./models/favoriteModel');
 const { ShippingMethod } = require('./models/shippingMethodModel');
 const variationRoutes = require('./routes/variations/variationRoutes');
 const addressRoutes = require('./routes/addresses/addressRoutes');
+const profileImageRoutes = require('./routes/profileImages/profileImageRoutes'); // Add this line
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -100,6 +101,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/checkout', checkoutRoutes); 
 app.use('/api/variations', variationRoutes);
 app.use('/api/addresses', addressRoutes); 
+app.use('/api/profileImages', profileImageRoutes); // Add this line
 
 const PORT = process.env.PORT || 5000;
 
