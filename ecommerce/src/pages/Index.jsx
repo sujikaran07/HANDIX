@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, Star, ArrowRight, ShoppingBag } from 'lucide-react';
+import { ChevronRight, Star, ArrowRight, ShoppingBag, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
@@ -19,15 +19,45 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [usingFallbackCategories, setUsingFallbackCategories] = useState(false);
+  
+  // Fallback categories for when API fails
+  const fallbackCategories = [
+    { category_id: 1, category_name: "Carry Goods", product_count: 0 },
+    { category_id: 2, category_name: "Clothing", product_count: 0 },
+    { category_id: 3, category_name: "Artistry", product_count: 0 },
+    { category_id: 4, category_name: "Crafts", product_count: 0 },
+    { category_id: 5, category_name: "Accessories", product_count: 0 }
+  ];
   
   // Fetch categories directly in component
   const fetchCategories = async () => {
+    console.log(`Attempting to fetch categories from: ${API_URL}/categories`);
     try {
-      const response = await axios.get(`${API_URL}/categories`);
+      const response = await axios.get(`${API_URL}/categories`, {
+        timeout: 5000 // Add timeout to prevent long waits
+      });
+      console.log("Categories API response:", response);
+      setUsingFallbackCategories(false);
       return response.data.data;
     } catch (error) {
-      console.error("Error fetching categories:", error);
-      throw error;
+      console.error("Error fetching categories:", error.message);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Request error:", error.message);
+      }
+      setUsingFallbackCategories(true);
+      console.log("Using fallback categories due to API error");
+      return fallbackCategories;
     }
   };
   
@@ -98,6 +128,9 @@ const HomePage = () => {
         setCategories(data);
       } catch (err) {
         console.error("Error loading categories:", err);
+        // If there's a catastrophic error, set fallback categories
+        setCategories(getCorrectCategoryProductCounts(productsList, fallbackCategories));
+        setUsingFallbackCategories(true);
       } finally {
         setCategoriesLoading(false);
       }
@@ -148,6 +181,7 @@ const HomePage = () => {
         <section className="py-16 bg-white">
           <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
             <h2 className="text-3xl font-bold mb-12 text-center">Shop by Category</h2>
+           
             {categoriesLoading ? (
               <div className="flex justify-center items-center h-40">
                 <div className="text-center">
