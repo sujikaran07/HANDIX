@@ -19,6 +19,11 @@ const Address = sequelize.define('Address', {
     },
     onDelete: 'CASCADE',
   },
+  name: {
+    type: DataTypes.STRING(100),
+    field: 'address_name',
+    allowNull: true,
+  },
   addressType: {
     type: DataTypes.STRING,
     allowNull: false,

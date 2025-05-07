@@ -226,15 +226,11 @@ const ProfilePage = () => {
                   <h3 className="text-lg font-semibold mb-4">Account Security</h3>
                   
                   <button 
-                    className="mb-3 py-2 px-4 border border-primary text-primary rounded-md hover:bg-blue-50 transition-colors"
+                    className="py-2 px-4 border border-primary text-primary rounded-md hover:bg-blue-50 transition-colors"
                     onClick={handleChangePassword}
                   >
                     Change Password
                   </button>
-                  
-                  <p className="text-sm text-gray-500">
-                    Last password change: 3 months ago
-                  </p>
                 </div>
               </div>
             </div>
