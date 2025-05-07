@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Package, Calendar, ChevronRight, Truck, Clock, X, Search, Filter, Star, RefreshCcw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Package, Calendar, ChevronRight, Truck, Clock, X, Search, Star } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
@@ -8,6 +8,7 @@ const PurchasesPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
   
   // Enhanced sample orders data with product images - using static data to avoid API calls
   const orders = [
@@ -103,6 +104,18 @@ const PurchasesPage = () => {
   const formatDate = (dateStr) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  };
+
+  // Navigate to review page with product details
+  const handleWriteReview = (e, order, product) => {
+    e.stopPropagation(); // Prevent order expansion when clicking review button
+    navigate(`/reviews/write/${order.id}`, { 
+      state: { 
+        orderId: order.id,
+        orderDate: order.date,
+        product: product 
+      }
+    });
   };
   
   return (
@@ -255,7 +268,10 @@ const PurchasesPage = () => {
                                 <div>
                                   <div className="font-medium">{product.name}</div>
                                   {order.status === 'delivered' && (
-                                    <button className="mt-2 flex items-center text-sm text-primary hover:underline">
+                                    <button 
+                                      onClick={(e) => handleWriteReview(e, order, product)} 
+                                      className="mt-2 flex items-center text-sm text-primary hover:underline"
+                                    >
                                       <Star size={14} className="mr-1" />
                                       Write a review
                                     </button>
@@ -297,12 +313,6 @@ const PurchasesPage = () => {
                           <div className="mb-4">
                             <h3 className="font-medium mb-2">Shipping Information</h3>
                             <div className="bg-blue-50 p-3 rounded-md flex flex-col space-y-1">
-                              {order.trackingId && (
-                                <div className="flex items-center text-sm">
-                                  <span className="font-medium mr-2 w-32">Tracking ID:</span>
-                                  <span>{order.trackingId}</span>
-                                </div>
-                              )}
                               {order.estimatedDelivery && (
                                 <div className="flex items-center text-sm">
                                   <span className="font-medium mr-2 w-32">Estimated Delivery:</span>
@@ -334,20 +344,11 @@ const PurchasesPage = () => {
                           </div>
                         </div>
                         
-                        {/* Actions */}
+                        {/* Actions - Removed Track Package and Buy Again buttons */}
                         <div className="flex flex-wrap gap-2 mt-5">
-                          {order.trackingId && order.status !== 'delivered' && (
-                            <Link to={`/track-order/${order.id}`} className="py-2 px-4 bg-primary text-white rounded-md hover:bg-blue-700 transition-colors">
-                              Track Package
-                            </Link>
-                          )}
-                          <Link to={`/order/${order.id}`} className="py-2 px-4 border border-primary text-primary rounded-md hover:bg-blue-50 transition-colors">
+                          <Link to={`/orders/${order.id}`} className="py-2 px-4 border border-primary text-primary rounded-md hover:bg-blue-50 transition-colors">
                             View Details
                           </Link>
-                          <button className="py-2 px-4 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 transition-colors flex items-center">
-                            <RefreshCcw size={16} className="mr-2" />
-                            Buy Again
-                          </button>
                         </div>
                       </div>
                     )}
