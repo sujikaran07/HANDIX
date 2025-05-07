@@ -84,6 +84,21 @@ const AccountSettingsPage = () => {
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
+  // Add state for password visibility
+  const [showPasswords, setShowPasswords] = useState({
+    currentPassword: false,
+    newPassword: false,
+    confirmPassword: false
+  });
+  
+  // Toggle password visibility function
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+  
   // Initialize notification preferences state - FIXING DUPLICATE DECLARATION
   const [notificationPrefs, setNotificationPrefs] = useState({
     orders: true,
@@ -869,17 +884,38 @@ const AccountSettingsPage = () => {
                   <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     Current Password
                   </label>
-                  <input
-                    id="currentPassword"
-                    name="currentPassword"
-                    type="password"
-                    className={`w-full p-2 border ${
-                      passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md`}
-                    value={passwordForm.currentPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isChangingPassword}
-                  />
+                  <div className="relative">
+                    <input
+                      id="currentPassword"
+                      name="currentPassword"
+                      type={showPasswords.currentPassword ? 'text' : 'password'}
+                      className={`w-full p-2 border ${
+                        passwordErrors.currentPassword ? 'border-red-500' : 'border-gray-300'
+                      } rounded-md`}
+                      value={passwordForm.currentPassword}
+                      onChange={handlePasswordChange}
+                      disabled={isChangingPassword}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('currentPassword')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showPasswords.currentPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off">
+                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                          <line x1="2" x2="22" y1="2" y2="22"></line>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.currentPassword && (
                     <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword}</p>
                   )}
@@ -889,17 +925,38 @@ const AccountSettingsPage = () => {
                   <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     New Password
                   </label>
-                  <input
-                    id="newPassword"
-                    name="newPassword"
-                    type="password"
-                    className={`w-full p-2 border ${
-                      passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md`}
-                    value={passwordForm.newPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isChangingPassword}
-                  />
+                  <div className="relative">
+                    <input
+                      id="newPassword"
+                      name="newPassword"
+                      type={showPasswords.newPassword ? 'text' : 'password'}
+                      className={`w-full p-2 border ${
+                        passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
+                      } rounded-md`}
+                      value={passwordForm.newPassword}
+                      onChange={handlePasswordChange}
+                      disabled={isChangingPassword}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('newPassword')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showPasswords.newPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off">
+                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                          <line x1="2" x2="22" y1="2" y2="22"></line>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.newPassword && (
                     <p className="mt-1 text-sm text-red-600">{passwordErrors.newPassword}</p>
                   )}
@@ -909,17 +966,38 @@ const AccountSettingsPage = () => {
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                     Confirm New Password
                   </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    className={`w-full p-2 border ${
-                      passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-                    } rounded-md`}
-                    value={passwordForm.confirmPassword}
-                    onChange={handlePasswordChange}
-                    disabled={isChangingPassword}
-                  />
+                  <div className="relative">
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showPasswords.confirmPassword ? 'text' : 'password'}
+                      className={`w-full p-2 border ${
+                        passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                      } rounded-md`}
+                      value={passwordForm.confirmPassword}
+                      onChange={handlePasswordChange}
+                      disabled={isChangingPassword}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => togglePasswordVisibility('confirmPassword')}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    >
+                      {showPasswords.confirmPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye-off">
+                          <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                          <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                          <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                          <line x1="2" x2="22" y1="2" y2="22"></line>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-eye">
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                   {passwordErrors.confirmPassword && (
                     <p className="mt-1 text-sm text-red-600">{passwordErrors.confirmPassword}</p>
                   )}
