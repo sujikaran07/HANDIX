@@ -34,6 +34,7 @@ import ResetPasswordPage from './pages/ResetPassword';
 import ChangePasswordPage from './pages/ChangePassword';
 import AboutPage from './pages/About';
 import ContactPage from './pages/Contact';
+import FAQPage from './pages/FAQ';
 import OrderSuccessPage from './pages/OrderSuccess';
 import EditProfilePage from './pages/EditProfilePage';
 import OrderDetailsPage from './pages/OrderDetailsPage';
@@ -76,6 +77,7 @@ const App = () => (
                 <Route path="/change-password" element={<ChangePasswordPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/faq" element={<FAQPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
                 
                 {/* Add these new routes for the redirection to work */}

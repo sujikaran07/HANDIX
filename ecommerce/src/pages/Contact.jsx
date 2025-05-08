@@ -153,13 +153,22 @@ const ContactPage = () => {
               <div>
                 <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
                   <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex items-start">
                       <MapPin className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Our Shop Address</p>
-                        <p className="text-gray-600">123 Craft Lane, Colombo 07</p>
-                        <p className="text-gray-600">Sri Lanka</p>
+                        <p className="font-medium">Mullaitivu Branch</p>
+                        <p className="text-gray-600">15 Main Street</p>
+                        <p className="text-gray-600">Mullaitivu, Sri Lanka</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <MapPin className="text-primary mt-1 mr-3 flex-shrink-0" />
+                      <div>
+                        <p className="font-medium">Kilinochchi Branch</p>
+                        <p className="text-gray-600">27 KKS Road</p>
+                        <p className="text-gray-600">Kilinochchi, Sri Lanka</p>
                       </div>
                     </div>
                     
@@ -167,7 +176,8 @@ const ContactPage = () => {
                       <Phone className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
                         <p className="font-medium">Phone</p>
-                        <p className="text-gray-600">+94 77 123 4567</p>
+                        <p className="text-gray-600">+94 77 636 0319</p>
+                        <p className="text-gray-600">024 2223344</p>
                         <p className="text-gray-600">Monday - Friday: 9am to 6pm</p>
                         <p className="text-gray-600">Saturday: 10am to 4pm</p>
                       </div>
@@ -177,8 +187,7 @@ const ContactPage = () => {
                       <Mail className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
                         <p className="font-medium">Email</p>
-                        <p className="text-gray-600">info@handix.lk</p>
-                        <p className="text-gray-600">support@handix.lk</p>
+                        <p className="text-gray-600">handixecommerce@gmail.com</p>
                       </div>
                     </div>
                   </div>
@@ -210,11 +219,52 @@ const ContactPage = () => {
             {/* Map */}
             <div className="mt-12">
               <h2 className="text-2xl font-bold mb-4">Find Us</h2>
-              <div className="h-96 bg-gray-200 rounded-lg overflow-hidden">
-                {/* Replace with actual map implementation */}
-                <div className="h-full w-full flex items-center justify-center">
-                  <p className="text-gray-500">Google Maps would be embedded here</p>
+              
+              <div className="grid md:grid-cols-2 gap-6 mb-6">
+                {/* Mullaitivu Branch Map */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Mullaitivu Branch</h3>
+                  <div className="h-80 rounded-lg overflow-hidden">
+                    <iframe 
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d245.94169374844828!2d80.61957771157746!3d9.35177424057748!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3afeb9c76e7c0ccb%3A0xf2688182a924b229!2sStyle%20Tailor!5e0!3m2!1sen!2slk!4v1683557689012!5m2!1sen!2slk" 
+                      width="100%" 
+                      height="100%" 
+                      style={{border:0}}
+                      allowFullScreen="" 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Mullaitivu Branch Location"
+                      aria-label="Map showing location of our Mullaitivu branch"
+                    ></iframe>
+                  </div>
+                  <p className="mt-2 text-gray-600">15 Main Street, Mullaitivu</p>
                 </div>
+                
+                {/* Kilinochchi Branch Map */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Kilinochchi Branch</h3>
+                  <div className="h-80 rounded-lg overflow-hidden">
+                    <iframe 
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3934.744731181923!2d80.40613431479272!3d9.400763193258407!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3afe956330d21fe3%3A0xa2062b08ec710ffe!2sSingha%20Suppliers%20%26%20Tailors!5e0!3m2!1sen!2slk!4v1683557777038!5m2!1sen!2slk"
+                      width="100%" 
+                      height="100%" 
+                      style={{border:0}}
+                      allowFullScreen="" 
+                      loading="lazy" 
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Kilinochchi Branch Location"
+                      aria-label="Map showing location of our Kilinochchi branch"
+                    ></iframe>
+                  </div>
+                  <p className="mt-2 text-gray-600">27 KKS Road, Kilinochchi</p>
+                </div>
+              </div>
+              
+              {/* Directions Info */}
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
+                <p className="text-gray-600">
+                  Need directions? <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Open Google Maps</a> or give us a call at +94 77 636 0319.
+                </p>
               </div>
             </div>
           </div>

@@ -262,8 +262,8 @@ const HelpCenterPage = () => {
                   <p className="text-gray-600 mb-3">
                     Send us an email and we'll get back to you within 24 hours.
                   </p>
-                  <a href="mailto:support@handix.com" className="text-primary hover:underline">
-                    support@handix.com
+                  <a href="mailto:handixecommerce@gmail.com" className="text-primary hover:underline">
+                    handixecommerce@gmail.com
                   </a>
                 </div>
               </div>
@@ -274,11 +274,16 @@ const HelpCenterPage = () => {
                 <div>
                   <h3 className="font-medium mb-2">Phone Support</h3>
                   <p className="text-gray-600 mb-3">
-                    Available Monday to Friday, 9AM - 5PM (Sri Lanka time).
+                    Available Monday to Friday, 9AM - 6PM (Sri Lanka time).
                   </p>
-                  <a href="tel:+94112345678" className="text-primary hover:underline">
-                    +94 11 234 5678
-                  </a>
+                  <div>
+                    <a href="tel:+94776360319" className="text-primary hover:underline block">
+                      +94 77 636 0319
+                    </a>
+                    <a href="tel:0242223344" className="text-primary hover:underline block">
+                      024 2223344
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>

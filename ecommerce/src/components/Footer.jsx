@@ -51,12 +51,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/track-order" className="text-gray-600 hover:text-primary">
-                  Track Your Order
-                </Link>
-              </li>
-              <li>
-                <Link to="/about-us" className="text-gray-600 hover:text-primary">
+                <Link to="/about" className="text-gray-600 hover:text-primary">
                   About Us
                 </Link>
               </li>
@@ -108,40 +103,35 @@ const Footer = () => {
           {/* Contact Info */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-4">
               <li className="flex items-start">
                 <MapPin size={20} className="mr-2 text-primary flex-shrink-0 mt-1" />
-                <span className="text-gray-600">
-                  123 Crafters Lane, Colombo 05, Sri Lanka
-                </span>
+                <div>
+                  <p className="font-semibold text-gray-700">Mullaitivu Branch</p>
+                  <p className="text-gray-600">15 Main Street, Mullaitivu</p>
+                </div>
               </li>
+              
               <li className="flex items-center">
                 <Phone size={20} className="mr-2 text-primary flex-shrink-0" />
-                <span className="text-gray-600">+94 11 234 5678</span>
+                <div>
+                  <p className="text-gray-600">+94 77 636 0319</p>
+                </div>
               </li>
               <li className="flex items-center">
                 <Mail size={20} className="mr-2 text-primary flex-shrink-0" />
-                <span className="text-gray-600">contact@handix.lk</span>
+                <span className="text-gray-600">handixecommerce@gmail.com</span>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Language Selector */}
+        {/* Copyright */}
         <div className="mt-8 pt-5 border-t border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-500">
-                &copy; {new Date().getFullYear()} Handix. All rights reserved.
-              </p>
-            </div>
-            <div className="flex items-center">
-              <span className="text-sm text-gray-500 mr-3">Language:</span>
-              <select className="text-sm border rounded py-1 px-2 focus:outline-none focus:ring-2 focus:ring-primary">
-                <option value="en">English</option>
-                <option value="ta">Tamil</option>
-              </select>
-            </div>
+          <div className="flex justify-center">
+            <p className="text-sm text-gray-500">
+              &copy; {new Date().getFullYear()} Handix. All rights reserved.
+            </p>
           </div>
         </div>
       </div>

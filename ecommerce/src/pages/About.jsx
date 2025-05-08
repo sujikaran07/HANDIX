@@ -14,20 +14,25 @@ const AboutPage = () => {
             
             <div className="mb-12">
               <img 
-                src="/images/about-banner.jpg" 
+                src="https://lh5.googleusercontent.com/p/AF1QipPf3iJQmgboismhHLYX1KueZUqxZfuiMkrpfxvU=w1440-h810-k-no" 
                 alt="Handix artisans at work" 
                 className="w-full h-64 sm:h-80 md:h-96 object-cover rounded-lg mb-6"
               />
               
               <h2 className="text-2xl font-bold mb-4">Our Story</h2>
               <p className="text-gray-700 mb-4">
-                Handix was born from a passion to preserve and promote the rich heritage of Sri Lankan craftsmanship. 
-                Founded in 2018, our journey began with a simple mission: to connect skilled artisans from rural 
-                Sri Lanka with consumers who appreciate authentic, handcrafted items.
+                In the vibrant community of skilled artisans across Sri Lanka, Handix was born from a vision to preserve and 
+                promote our rich heritage of craftsmanship. Founded in 2018, our journey began with a simple mission: 
+                to connect skilled artisans from rural Sri Lanka with consumers who appreciate authentic, handcrafted items.
+              </p>
+              <p className="text-gray-700 mb-4">
+                Before Handix, everything was done the old-fashioned way. Orders were taken in person, inventory was managed through memory, 
+                and payments were cumbersome. Our platform changed everything, turning a chaotic process into a smooth, 
+                efficient system where artisans could focus on what they do best—creating beautiful handmade goods.
               </p>
               <p className="text-gray-700 mb-4">
                 What started as a small community project has now grown into a thriving marketplace that supports 
-                over 200 artisan families across the island. We believe in the power of traditional craftsmanship 
+                over 100 artisan families across the island. We believe in the power of traditional craftsmanship 
                 and sustainable practices to create products that are not only beautiful but also tell a story.
               </p>
             </div>
@@ -38,19 +43,19 @@ const AboutPage = () => {
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="font-bold text-primary mb-2">Support Artisans</h3>
                   <p className="text-gray-600">
-                    We provide a sustainable income for skilled craftspeople and help preserve traditional techniques.
+                    We provide a sustainable income for skilled craftspeople, helping them focus on their art while our platform handles the business side.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <h3 className="font-bold text-primary mb-2">Promote Culture</h3>
+                  <h3 className="font-bold text-primary mb-2">Connect Traditions</h3>
                   <p className="text-gray-600">
-                    Each product carries the rich cultural heritage and story of Sri Lanka's diverse traditions.
+                    Each product carries the rich cultural heritage of Sri Lanka, bringing traditional craftsmanship to modern customers worldwide.
                   </p>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm">
-                  <h3 className="font-bold text-primary mb-2">Protect Environment</h3>
+                  <h3 className="font-bold text-primary mb-2">Innovate & Sustain</h3>
                   <p className="text-gray-600">
-                    We prioritize eco-friendly materials and sustainable production methods in all our products.
+                    We blend traditional crafting methods with modern technology and sustainable practices to create a platform that honors both heritage and innovation.
                   </p>
                 </div>
               </div>
@@ -59,30 +64,30 @@ const AboutPage = () => {
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Our Crafts</h2>
               <p className="text-gray-700 mb-6">
-                At Handix, we showcase a diverse range of traditional Sri Lankan crafts, each with its own unique 
-                history and significance. Our products include:
+                At Handix, we showcase a diverse range of handcrafted treasures, each with its own unique 
+                story and craftsmanship. Our product collection includes:
               </p>
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Traditional Masks</h3>
+                  <h3 className="font-semibold text-lg mb-2">Apparel & Accessories</h3>
                   <p className="text-gray-600 mb-4">
-                    Hand-carved wooden masks representing characters from folklore and traditional dance.
+                    Cozy wool baby clothes, warm socks, stylish hats, and intricate handmade necklaces crafted with care.
                   </p>
                   
-                  <h3 className="font-semibold text-lg mb-2">Batik & Handloom Textiles</h3>
+                  <h3 className="font-semibold text-lg mb-2">Bags & Carry Goods</h3>
                   <p className="text-gray-600 mb-4">
-                    Colorful fabrics created using ancient dyeing and weaving techniques passed down through generations.
+                    Sturdy tote bags, felt pencil pouches, and other carry goods designed for both style and function.
                   </p>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">Brass & Copper Crafts</h3>
+                  <h3 className="font-semibold text-lg mb-2">Home Décor</h3>
                   <p className="text-gray-600 mb-4">
-                    Intricately designed metalwork pieces including ornaments, decorative items, and utensils.
+                    Fabric-covered pots, pillow covers, rope bowls, and hot handle holders to add warmth to any home.
                   </p>
                   
-                  <h3 className="font-semibold text-lg mb-2">Pottery & Ceramics</h3>
+                  <h3 className="font-semibold text-lg mb-2">Artistic Creations</h3>
                   <p className="text-gray-600 mb-4">
-                    Earth-toned ceramics and clay products made using traditional firing techniques.
+                    Yarn ball bookmarks, DIY headbands, and custom pieces that showcase the unique creativity of our artisans.
                   </p>
                 </div>
               </div>
@@ -93,17 +98,17 @@ const AboutPage = () => {
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="h-32 w-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-                  <h3 className="font-bold">Amara Perera</h3>
+                  <h3 className="font-bold">Puspasiny Mahenthiran</h3>
                   <p className="text-gray-600">Founder & CEO</p>
                 </div>
                 <div className="text-center">
                   <div className="h-32 w-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-                  <h3 className="font-bold">Nimal Gunawardena</h3>
+                  <h3 className="font-bold">Vinoja Piraksh</h3>
                   <p className="text-gray-600">Head of Artisan Relations</p>
                 </div>
                 <div className="text-center">
                   <div className="h-32 w-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-                  <h3 className="font-bold">Chamari Silva</h3>
+                  <h3 className="font-bold">Mahenthiran Sujikaran</h3>
                   <p className="text-gray-600">Creative Director</p>
                 </div>
               </div>
@@ -113,7 +118,8 @@ const AboutPage = () => {
               <h2 className="text-2xl font-bold mb-4">Join Our Journey</h2>
               <p className="text-gray-700 mb-4">
                 When you purchase from Handix, you're not just buying a product – you're supporting a sustainable 
-                ecosystem of traditional craftsmanship and helping preserve cultural heritage for generations to come.
+                ecosystem of traditional craftsmanship. Our platform bridges the rich tradition of handmade crafts 
+                with the needs of the modern world, ensuring the art of craftsmanship thrives for generations to come.
               </p>
               <div className="flex justify-center">
                 <a href="/products" className="bg-primary text-white py-3 px-6 rounded-md hover:bg-primary-hover transition-colors">
