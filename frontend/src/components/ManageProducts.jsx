@@ -108,8 +108,13 @@ const ManageProducts = ({ onViewProduct }) => {
         return;
       }
       
-      if (action === 'approve' || action === 'reject') {
-        const newStatus = action === 'approve' ? 'Approved' : 'Rejected';
+      if (action === 'approve' || action === 'reject' || action === 'enable' || action === 'disable' || action === 'restore') {
+        const newStatus = 
+          action === 'approve' ? 'Approved' : 
+          action === 'reject' ? 'Rejected' : 
+          action === 'disable' ? 'Disabled' : 
+          action === 'enable' ? 'Approved' :
+          action === 'restore' ? 'Pending' : 'Unknown';
         
 
         const response = await fetch(`http://localhost:5000/api/products/${productId}/status`, {
@@ -134,7 +139,7 @@ const ManageProducts = ({ onViewProduct }) => {
             )
           );
       
-          alert(`Product ${action === 'approve' ? 'approved' : 'rejected'} successfully!`);
+          alert(`Product ${action} successfully!`);
         } else if (response.status === 401) {
           console.warn('Token expired. Attempting to refresh token...');
           const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
@@ -154,7 +159,7 @@ const ManageProducts = ({ onViewProduct }) => {
             console.error('Failed to refresh token:', refreshResponse.statusText);
           }
         } else {
-          console.error('Failed to update product status:', response.statusText);
+          console.error(`Failed to ${action} product:`, response.statusText);
           alert(`Failed to ${action} product. Please try again.`);
         }
       } else if (action === 'delete') {
@@ -292,6 +297,7 @@ const ManageProducts = ({ onViewProduct }) => {
                 <option value="Approved">Approved</option>
                 <option value="Pending">Pending</option>
                 <option value="Rejected">Rejected</option>
+                <option value="Disabled">Disabled</option>
               </select>
             </div>
           </div>
@@ -341,36 +347,22 @@ const ManageProducts = ({ onViewProduct }) => {
                               <li>
                                 <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'reject')}>Reject</button>
                               </li>
-                              <li>
-                                <button className="dropdown-item">Edit</button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'delete')}>Delete</button>
-                              </li>
                             </>
                           )}
                           {product.status.toLowerCase() === 'approved' && (
-                            <>
-                              <li>
-                                <button className="dropdown-item">Edit</button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item">Disable</button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item">Delete</button>
-                              </li>
-                            </>
+                            <li>
+                              <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'disable')}>Disable</button>
+                            </li>
                           )}
                           {product.status.toLowerCase() === 'rejected' && (
-                            <>
-                              <li>
-                                <button className="dropdown-item">Restore</button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item">Delete</button>
-                              </li>
-                            </>
+                            <li>
+                              <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'restore')}>Restore</button>
+                            </li>
+                          )}
+                          {product.status.toLowerCase() === 'disabled' && (
+                            <li>
+                              <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'enable')}>Enable</button>
+                            </li>
                           )}
                         </ul>
                       </div>
