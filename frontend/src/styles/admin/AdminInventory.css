@@ -71,6 +71,7 @@ body {
 
 .admin-inventory-page .filter-dropdown .form-select {
     height: 30px; 
+    width: 130px;
     padding: 0 10px; 
 }
 

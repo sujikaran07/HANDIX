@@ -60,6 +60,7 @@ body {
 
 .artisan-products-page .filter-dropdown .form-select {
     height: 30px; 
+    width: 110px;
     padding: 0 10px; 
 }
 

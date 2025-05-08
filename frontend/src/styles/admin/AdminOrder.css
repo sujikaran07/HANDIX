@@ -53,6 +53,7 @@ body {
 
 .admin-order-page .filter-dropdown .form-select {
     height: 30px; 
+    width: 120px;
     padding: 0 10px; 
 }
 
