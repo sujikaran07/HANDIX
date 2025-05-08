@@ -48,6 +48,18 @@ export const fetchProducts = async () => {
     const products = response.data.inventory.map(item => {
       try {
         const quantity = parseInt(item.quantity || 0);
+        
+        // Check if product is disabled, and if so, treat as "Out of Stock"
+        const isDisabled = item.product_status === 'Disabled';
+        const effectiveQuantity = isDisabled ? 0 : quantity;
+        const effectiveInStock = !isDisabled && effectiveQuantity > 0;
+        const effectiveStatus = isDisabled ? 'Out of Stock' : (effectiveQuantity > 0 ? 'In Stock' : 'Out of Stock');
+        
+        // Log disabled products for debugging
+        if (isDisabled) {
+          console.log(`Product ${item.product_id} is disabled, showing as Out of Stock`);
+        }
+        
         const product = {
           id: item.product_id,
           name: item.product_name || 'Unnamed Product',
@@ -58,10 +70,10 @@ export const fetchProducts = async () => {
             item.images : 
             (item.default_image_url ? [item.default_image_url] : ['https://placehold.co/600x400?text=No+Image']),
           category: item.category?.category_name || 'Uncategorized',
-          inStock: quantity > 0,
-          stockStatus: quantity > 0 ? 'In Stock' : 'Out of Stock',
+          inStock: effectiveInStock,
+          stockStatus: effectiveStatus,
           isCustomizable: Boolean(item.customization_available),
-          quantity: quantity
+          quantity: effectiveQuantity
         };
         
         if (item.variations && Array.isArray(item.variations) && item.variations.length > 0) {
@@ -87,9 +99,18 @@ export const fetchProducts = async () => {
           } else {
             product.inStock = true;
           }
+
+          // If product is disabled, also mark all variations as out of stock
+          if (isDisabled) {
+            product.variations = product.variations.map(v => ({
+              ...v,
+              inStock: false
+            }));
+            product.inStock = false;
+          }
         } else {
           product.variations = [];
-          product.inStock = quantity > 0;
+          product.inStock = effectiveInStock;
         }
 
         if (product.category === 'Artistry') {
@@ -165,6 +186,13 @@ export const fetchProductById = async (productId) => {
     console.log(`Found product data:`, item);
     
     const quantity = parseInt(item.quantity || 0);
+    
+    // Check if product is disabled, and if so, treat as "Out of Stock"
+    const isDisabled = item.product_status === 'Disabled';
+    const effectiveQuantity = isDisabled ? 0 : quantity;
+    const effectiveInStock = !isDisabled && effectiveQuantity > 0;
+    const effectiveStatus = isDisabled ? 'Out of Stock' : (effectiveQuantity > 0 ? 'In Stock' : 'Out of Stock');
+    
     const product = {
       id: item.product_id,
       name: item.product_name || 'Unnamed Product',
@@ -175,10 +203,10 @@ export const fetchProductById = async (productId) => {
         item.images : 
         (item.default_image_url ? [item.default_image_url] : ['https://placehold.co/600x400?text=No+Image']),
       category: item.category?.category_name || 'Uncategorized',
-      inStock: quantity > 0,
-      stockStatus: quantity > 0 ? 'In Stock' : 'Out of Stock',
+      inStock: effectiveInStock,
+      stockStatus: effectiveStatus,
       isCustomizable: Boolean(item.customization_available),
-      quantity: quantity,
+      quantity: effectiveQuantity,
       rating: parseFloat(item.rating || 0),
       reviewCount: parseInt(item.review_count || 0)
     };
@@ -213,6 +241,20 @@ export const fetchProductById = async (productId) => {
       
       const anyVariationInStock = product.variations.some(v => v.stockLevel > 0);
       if (!anyVariationInStock) {
+        product.inStock = false;
+        product.stockStatus = 'Out of Stock';
+      }
+
+      // If product is disabled, also mark all variations as out of stock
+      if (isDisabled) {
+        product.allVariations = product.allVariations.map(v => ({
+          ...v,
+          inStock: false
+        }));
+        product.variations = product.variations.map(v => ({
+          ...v, 
+          inStock: false
+        }));
         product.inStock = false;
         product.stockStatus = 'Out of Stock';
       }

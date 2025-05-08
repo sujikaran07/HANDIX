@@ -5,6 +5,8 @@ const { Op } = require('sequelize');
 const Inventory = require('../../models/inventoryModel');
 const ProductEntry = require('../../models/productEntryModel');
 const Category = require('../../models/categoryModel');
+const RestockOrder = require('../../models/restockOrderModel');
+const ProductImage = require('../../models/productImageModel');
 
 // Get all inventory items (filter to only show approved products)
 router.get('/', authMiddleware, async (req, res) => {
@@ -164,6 +166,338 @@ router.get('/product/:id', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Error fetching inventory item',
+      error: error.message
+    });
+  }
+});
+
+// Get detailed inventory information by id
+router.get('/:productId', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId },
+      include: [
+        { 
+          model: Category, 
+          as: 'category',
+          attributes: ['category_id', 'category_name']
+        }
+      ]
+    });
+
+    if (!inventoryItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    // Get all product images
+    const productImages = await ProductImage.findAll({
+      where: { product_id: productId }
+    });
+
+    // Format the response
+    const formattedInventory = {
+      ...inventoryItem.toJSON(),
+      images: productImages.map(img => img.image_url)
+    };
+
+    res.status(200).json({
+      success: true,
+      inventory: formattedInventory
+    });
+  } catch (error) {
+    console.error('Error fetching inventory details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching inventory details',
+      error: error.message
+    });
+  }
+});
+
+// Add endpoint for fetching product images
+router.get('/:productId/images', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Fetch images for the product
+    const ProductImage = require('../../models/productImageModel');
+    const images = await ProductImage.findAll({
+      where: { product_id: productId }
+    });
+    
+    res.status(200).json({
+      success: true,
+      images
+    });
+  } catch (error) {
+    console.error('Error fetching product images:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching product images',
+      error: error.message
+    });
+  }
+});
+
+// Add endpoint for fetching product variations (for additional fees)
+router.get('/:productId/variations', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Fetch variations for the product
+    const ProductVariation = require('../../models/productVariationModel');
+    const variations = await ProductVariation.findAll({
+      where: { product_id: productId }
+    });
+    
+    res.status(200).json({
+      success: true,
+      variations
+    });
+  } catch (error) {
+    console.error('Error fetching product variations:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching product variations',
+      error: error.message
+    });
+  }
+});
+
+// Disable a product
+router.put('/:productId/disable', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`Attempting to disable product: ${productId}`);
+    
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId }
+    });
+
+    if (!inventoryItem) {
+      console.log(`Product ${productId} not found`);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    console.log(`Found product ${productId}, current status: ${inventoryItem.product_status}`);
+
+    // Update the product status to 'Disabled' without changing the actual quantity
+    await inventoryItem.update({
+      product_status: 'Disabled'
+    });
+
+    console.log(`Successfully disabled product ${productId}`);
+    res.status(200).json({
+      success: true,
+      message: 'Product disabled successfully',
+      product_id: productId,
+      product_status: 'Disabled'
+    });
+  } catch (error) {
+    console.error(`Error disabling product ${req.params.productId}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error disabling product: ' + (error.message || 'Unknown error'),
+      error: error.message
+    });
+  }
+});
+
+// Add new route to enable a product
+router.put('/:productId/enable', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    console.log(`Attempting to enable product: ${productId}`);
+    
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId }
+    });
+
+    if (!inventoryItem) {
+      console.log(`Product ${productId} not found`);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    console.log(`Found product ${productId}, current status: ${inventoryItem.product_status}, quantity: ${inventoryItem.quantity}`);
+
+    // Determine the appropriate product_status based on quantity
+    let newStatus = 'In Stock';
+    if (inventoryItem.quantity === 0) {
+      newStatus = 'Out of Stock';
+    } else if (inventoryItem.quantity < 10) {
+      newStatus = 'Low Stock';
+    }
+
+    // Update the product status accordingly
+    await inventoryItem.update({
+      product_status: newStatus
+    });
+
+    console.log(`Successfully enabled product ${productId} with status: ${newStatus}`);
+    res.status(200).json({
+      success: true,
+      message: 'Product enabled successfully',
+      product_id: productId,
+      product_status: newStatus
+    });
+  } catch (error) {
+    console.error(`Error enabling product ${req.params.productId}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error enabling product: ' + (error.message || 'Unknown error'),
+      error: error.message
+    });
+  }
+});
+
+// Restock a product
+router.put('/:productId/restock', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { quantity, artisan_id, due_date, notes } = req.body;
+
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid quantity provided'
+      });
+    }
+
+    if (!artisan_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Artisan assignment is required'
+      });
+    }
+
+    if (!due_date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Due date is required'
+      });
+    }
+
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId }
+    });
+
+    if (!inventoryItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    const newQuantity = inventoryItem.quantity + parseInt(quantity);
+    const newStatus = newQuantity > 0 ? 'In Stock' : 'Out of Stock';
+
+    // Update inventory quantity
+    await inventoryItem.update({
+      quantity: newQuantity,
+      product_status: newStatus
+    });
+
+    // Create a restock order record
+    const restockOrder = await RestockOrder.create({
+      product_id: productId,
+      quantity: parseInt(quantity),
+      artisan_id: artisan_id,
+      due_date: new Date(due_date),
+      notes: notes,
+      status: 'Assigned',
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Product restocked successfully',
+      newQuantity,
+      newStatus,
+      restockOrder: restockOrder.id
+    });
+  } catch (error) {
+    console.error('Error restocking product:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error restocking product',
+      error: error.message
+    });
+  }
+});
+
+// Create a restock request (does not immediately update inventory)
+router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { quantity, artisan_id, due_date, notes } = req.body;
+
+    if (!quantity || quantity <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid quantity provided'
+      });
+    }
+
+    if (!artisan_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Artisan assignment is required'
+      });
+    }
+
+    if (!due_date) {
+      return res.status(400).json({
+        success: false,
+        message: 'Due date is required'
+      });
+    }
+
+    const inventoryItem = await Inventory.findOne({
+      where: { product_id: productId }
+    });
+
+    if (!inventoryItem) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Product not found in inventory' 
+      });
+    }
+
+    // Create a restock order record without updating the inventory
+    // Use 'Assigned' instead of 'Pending' since that's what's in the enum
+    const restockOrder = await RestockOrder.create({
+      product_id: productId,
+      quantity: parseInt(quantity),
+      artisan_id: artisan_id,
+      due_date: new Date(due_date),
+      notes: notes,
+      status: 'Assigned', // Changed back to 'Assigned' to match the enum values
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Restock request submitted successfully',
+      requestId: restockOrder.id
+    });
+  } catch (error) {
+    console.error('Error creating restock request:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error creating restock request',
       error: error.message
     });
   }

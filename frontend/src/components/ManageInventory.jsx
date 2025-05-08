@@ -7,7 +7,7 @@ import { FaWarehouse } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
 
-const ManageInventory = ({ onViewInventory }) => {
+const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,6 +17,7 @@ const ManageInventory = ({ onViewInventory }) => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const inventoryPerPage = 4;
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key state
 
   useEffect(() => {
     const fetchInventory = async () => {
@@ -73,7 +74,7 @@ const ManageInventory = ({ onViewInventory }) => {
     };
 
     fetchInventory();
-  }, []);
+  }, [refreshKey]); // Add refreshKey to dependencies
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
@@ -83,16 +84,86 @@ const ManageInventory = ({ onViewInventory }) => {
     );
   };
 
-  // Utility function to determine stock status based on quantity
-  const getStockStatus = (quantity) => {
-    if (quantity === 0) return "Out of Stock";
-    if (quantity < 10) return "Low Stock";
+  // Update function to handle product disabling/enabling
+  const handleToggleProductStatus = async (item) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No token found in localStorage');
+        setError('Authentication required. Please login again.');
+        return;
+      }
+
+      const currentStatus = item.product_status;
+      const action = currentStatus === 'Disabled' ? 'enable' : 'disable';
+      
+      console.log(`Attempting to ${action} product ${item.product_id}`);
+      const endpoint = `http://localhost:5000/api/inventory/${item.product_id}/${action}`;
+
+      const response = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Product ${action} response:`, data);
+        
+        if (data.success) {
+          // Create a copy of inventory and update the product status
+          const updatedInventory = inventory.map(product => {
+            if (product.product_id === item.product_id) {
+              return { 
+                ...product, 
+                product_status: data.product_status || (action === 'disable' ? 'Disabled' : 'In Stock')
+              };
+            }
+            return product;
+          });
+          
+          setInventory(updatedInventory);
+          alert(`Product ${action === 'disable' ? 'disabled' : 'enabled'} successfully.`);
+          // Force refresh the inventory data to get updated statuses
+          setRefreshKey(prev => prev + 1);
+        } else {
+          console.error(`Failed to ${action} product:`, data.message);
+          alert(`Failed to ${action} product: ${data.message || 'Unknown error'}`);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error(`Failed to ${action} product:`, response.statusText, errorData);
+        alert(`Failed to ${action} product. Server returned: ${errorData.message || response.statusText}`);
+      }
+    } catch (error) {
+      console.error(`Error ${item.product_status === 'Disabled' ? 'enabling' : 'disabling'} product:`, error);
+      alert('An error occurred while updating product status. Please try again.');
+    }
+  };
+
+  // Utility function to determine stock status based on quantity and product_status
+  const getStockStatus = (item) => {
+    // If product is disabled, show as "Disabled" regardless of quantity
+    if (item.product_status === 'Disabled') {
+      return "Disabled";
+    }
+    
+    // Otherwise, determine status based on quantity
+    if (item.quantity === 0) return "Out of Stock";
+    if (item.quantity < 10) return "Low Stock";
     return "In Stock";
   };
 
+  // Function to get the effective quantity to display
+  const getDisplayQuantity = (item) => {
+    return item.product_status === 'Disabled' ? 0 : item.quantity;
+  };
+
   const filteredInventory = inventory.filter(item => {
-    // Calculate the actual status based on quantity
-    const actualStatus = getStockStatus(item.quantity);
+    // Calculate the actual status based on quantity and product_status
+    const actualStatus = getStockStatus(item);
     
     return (
       (selectedCategories.includes(item.category?.category_name)) &&
@@ -110,6 +181,45 @@ const ManageInventory = ({ onViewInventory }) => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
+  };
+
+  // Render dropdown actions based on stock status
+  const renderActionMenu = (item) => {
+    const stockStatus = getStockStatus(item);
+    
+    return (
+      <div className="dropdown">
+        <button className="btn dropdown-toggle" type="button" id={`dropdownMenu-${item.product_id}`} data-bs-toggle="dropdown" aria-expanded="false">
+          Actions
+        </button>
+        <ul className="dropdown-menu" aria-labelledby={`dropdownMenu-${item.product_id}`}>
+          <li>
+            <button className="dropdown-item" onClick={() => onViewInventory(item)}>
+              View
+            </button>
+          </li>
+          
+          {/* Toggle disable/enable based on current status */}
+          <li>
+            <button 
+              className="dropdown-item" 
+              onClick={() => handleToggleProductStatus(item)}
+            >
+              {item.product_status === 'Disabled' ? 'Enable' : 'Disable'}
+            </button>
+          </li>
+          
+          {/* Only show restock option if product is not disabled */}
+          {item.product_status !== 'Disabled' && (stockStatus === "Low Stock" || stockStatus === "Out of Stock") && (
+            <li>
+              <button className="dropdown-item" onClick={() => onRestockProduct(item)}>
+                Restock
+              </button>
+            </li>
+          )}
+        </ul>
+      </div>
+    );
   };
 
   return (
@@ -257,15 +367,16 @@ const ManageInventory = ({ onViewInventory }) => {
               <tbody>
                 {currentInventory.length > 0 ? (
                   currentInventory.map(item => {
-                    // Determine stock status based on quantity
-                    const stockStatus = getStockStatus(item.quantity);
+                    // Determine stock status based on quantity and product_status
+                    const stockStatus = getStockStatus(item);
+                    const displayQuantity = getDisplayQuantity(item);
                     
                     return (
                       <tr key={item.product_id}>
                         <td>{item.product_id}</td>
                         <td>{item.product_name}</td>
                         <td>{item.category?.category_name || 'N/A'}</td>
-                        <td>{item.quantity}</td>
+                        <td>{displayQuantity}</td>
                         <td>{new Date(item.date_added).toLocaleString('en-US', { 
                           year: '2-digit', 
                           month: 'numeric', 
@@ -278,19 +389,7 @@ const ManageInventory = ({ onViewInventory }) => {
                           {stockStatus}
                         </td>
                         <td className="action-buttons">
-                          <div className="dropdown">
-                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                              Actions
-                            </button>
-                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              <li>
-                                <button className="dropdown-item">Update</button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item">Restock</button>
-                              </li>
-                            </ul>
-                          </div>
+                          {renderActionMenu(item)}
                         </td>
                       </tr>
                     );
