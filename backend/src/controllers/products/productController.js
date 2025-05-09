@@ -128,10 +128,10 @@ const createProduct = async (req, res) => {
     }
     
     console.log('Creating product variation');
-    const normalizedVariation = variation_name || 'Standard'; 
+    const variation_name = req.body.variation_name || `${req.body.product_name} - Default`; 
     const variationRecord = await ProductVariation.create({
       product_id,
-      variation_name: normalizedVariation, 
+      variation_name: variation_name, 
       additional_price: Number(additional_price || 0),
       stock_level: Number(quantity)
     });
