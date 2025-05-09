@@ -12,6 +12,8 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
   const [artisans, setArtisans] = useState([]);
   const [productImages, setProductImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isAssigned, setIsAssigned] = useState(false);
+  const [assignedArtisan, setAssignedArtisan] = useState(null);
   
   // Minimum date for the due date picker (tomorrow)
   const tomorrow = new Date();
@@ -98,8 +100,47 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
       }
     };
     
+    // Check if this product already has a pending restock assignment
+    const checkExistingAssignments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/restock-orders`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.orders && data.orders.length > 0) {
+            // Find the most recent pending or assigned order
+            const pendingOrder = data.orders.find(order => 
+              order.status === 'Assigned' || order.status === 'Pending'
+            );
+            
+            if (pendingOrder) {
+              setIsAssigned(true);
+              setAssignedArtisan({
+                id: pendingOrder.artisan_id,
+                name: pendingOrder.artisan_name || 'Unknown Artisan'
+              });
+              setQuantity(pendingOrder.quantity);
+              setDueDate(new Date(pendingOrder.due_date).toISOString().split('T')[0]);
+              setNotes(pendingOrder.notes || '');
+              setArtisan(pendingOrder.artisan_id);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking existing restock orders:', error);
+      }
+    };
+    
     fetchArtisans();
     fetchProductImages();
+    checkExistingAssignments();
   }, [product]);
 
   // Handle image navigation
@@ -163,7 +204,11 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
       const data = await response.json();
       
       if (response.ok) {
-        console.log('Restock request created:', data);
+        console.log('Restock response:', data);
+        setIsAssigned(true);
+        setAssignedArtisan(artisans.find(a => a.id === artisan));
+        
+        // Call onRestock with the restock data
         onRestock({
           product_id: product.product_id,
           quantity: quantity,
@@ -173,15 +218,40 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           requestId: data.requestId
         });
       } else {
-        console.error('Failed to create restock request:', data);
-        alert(`Failed to submit restock request: ${data.message || 'Server error'}`);
+        console.error('Restock failed:', data);
+        alert(`Failed to restock: ${data.message || 'Server error'}`);
       }
       
       setLoading(false);
     } catch (error) {
-      console.error('Error creating restock request:', error);
+      console.error('Error restocking product:', error);
       setLoading(false);
-      alert('Failed to submit restock request. Please try again.');
+      alert('Failed to restock product. Please try again.');
+    }
+  };
+
+  const handleCancelAssignment = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/cancel-restock`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        setIsAssigned(false);
+        setAssignedArtisan(null);
+        alert('Restock assignment has been canceled.');
+      } else {
+        const data = await response.json();
+        alert(`Failed to cancel assignment: ${data.message || 'Server error'}`);
+      }
+    } catch (error) {
+      console.error('Error canceling restock:', error);
+      alert('Failed to cancel restock assignment. Please try again.');
     }
   };
 
@@ -293,132 +363,150 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           <div className="col-lg-8">
             <div className="card h-100">
               <div className="card-header bg-light">
-                <h6 className="mb-0">Restock Details</h6>
+                <h6 className="mb-0">Restock Request</h6>
               </div>
               <div className="card-body">
-                <form onSubmit={handleSubmit}>
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <label htmlFor="quantity" className="form-label">
-                        <FontAwesomeIcon icon={faBoxOpen} className="me-1 text-secondary" />
-                        Restock Quantity <span className="text-danger">*</span>
-                      </label>
-                      <div className="input-group">
+                {isAssigned && (
+                  <div className="alert alert-info mb-2 py-1 small">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div>
+                        <strong>Currently assigned to:</strong> {assignedArtisan ? assignedArtisan.name : 'Unknown Artisan'}
+                        <br/>
+                        <small>This product already has a pending restock request.</small>
+                      </div>
+                      <button 
+                        className="btn btn-sm btn-outline-danger py-1 px-2" 
+                        onClick={handleCancelAssignment}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+                <form onSubmit={handleSubmit} className="compact-form">
+                  <div className="row mb-1">
+                    <div className="col">
+                      <label className="form-label small mb-1">Quantity</label>
+                      <div className="input-group input-group-sm">
                         <button 
+                          className="btn btn-outline-secondary" 
                           type="button" 
-                          className="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
                           onClick={decrementQuantity}
-                          style={{ height: '28px', width: '28px', padding: '0' }}
-                        >
-                          <FontAwesomeIcon icon={faMinusCircle} />
-                        </button>
-                        <input
-                          type="number"
-                          className="form-control text-center"
-                          id="quantity"
-                          value={quantity}
+                          disabled={isAssigned}
+                        >-</button>
+                        <input 
+                          type="number" 
+                          className="form-control text-center" 
+                          value={quantity} 
                           onChange={handleQuantityChange}
                           min="1"
-                          required
-                          style={{ height: '28px' }}
+                          disabled={isAssigned}
+                          style={{height: "32px"}}
+                          onFocus={(e) => e.target.select()}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                         />
                         <button 
+                          className="btn btn-outline-secondary" 
                           type="button" 
-                          className="btn btn-outline-secondary d-flex align-items-center justify-content-center" 
                           onClick={incrementQuantity}
-                          style={{ height: '28px', width: '28px', padding: '0' }}
-                        >
-                          <FontAwesomeIcon icon={faPlusCircle} />
-                        </button>
+                          disabled={isAssigned}
+                        >+</button>
                       </div>
                     </div>
-
-                    <div className="col-md-6">
-                      <label htmlFor="dueDate" className="form-label">
-                        <FontAwesomeIcon icon={faCalendarAlt} className="me-1 text-secondary" />
-                        Due Date <span className="text-danger">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        id="dueDate"
-                        min={minDate}
-                        value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
+                  </div>
+                  <div className="row mb-1">
+                    <div className="col">
+                      <label className="form-label small mb-1">Assign to Artisan</label>
+                      <select 
+                        className="form-select form-select-sm" 
+                        value={artisan} 
+                        onChange={(e) => setArtisan(e.target.value)}
+                        disabled={isAssigned}
                         required
-                        style={{ height: '38px', cursor: 'pointer' }}
-                        onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                        style={{height: "32px"}}
+                      >
+                        <option value="">Select an artisan</option>
+                        {artisans.map((a) => (
+                          <option key={a.id} value={a.id}>{a.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="row mb-1">
+                    <div className="col">
+                      <label className="form-label small mb-1">Due Date</label>
+                      <input 
+                        type="date" 
+                        className="form-control form-control-sm" 
+                        value={dueDate} 
+                        onChange={(e) => setDueDate(e.target.value)}
+                        min={minDate}
+                        disabled={isAssigned}
+                        required
+                        style={{height: "32px"}}
+                        // Add calendar-specific attributes to improve calendar UX
+                        onFocus={(e) => e.target.showPicker()}
                       />
                     </div>
                   </div>
-
-                  <div className="mb-3 mt-3">
-                    <label htmlFor="artisan" className="form-label">
-                      <FontAwesomeIcon icon={faUserTag} className="me-1 text-secondary" />
-                      Assign Artisan <span className="text-danger">*</span>
-                    </label>
-                    <select
-                      className="form-select"
-                      id="artisan"
-                      value={artisan}
-                      onChange={(e) => setArtisan(e.target.value)}
-                      required
-                      style={{ height: '38px' }}
-                    >
-                      <option value="">Select an artisan</option>
-                      {artisans.map(a => (
-                        <option key={a.id} value={a.id}>{a.name}</option>
-                      ))}
-                    </select>
+                  <div className="row mb-1">
+                    <div className="col">
+                      <label className="form-label small mb-1">Notes</label>
+                      <textarea 
+                        className="form-control form-control-sm" 
+                        rows="1" 
+                        placeholder="Special instructions..."
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        disabled={isAssigned}
+                        style={{fontSize: "14px", height: "28px"}}
+                      ></textarea>
+                    </div>
                   </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="notes" className="form-label">
-                      <FontAwesomeIcon icon={faStickyNote} className="me-1 text-secondary" />
-                      Notes / Instructions
-                    </label>
-                    <textarea
-                      className="form-control"
-                      id="notes"
-                      rows="3"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      placeholder="Enter any special instructions or notes for the artisan"
-                    ></textarea>
-                  </div>
-
-                  <div className="mt-4 d-flex justify-content-between">
+                  <div className="d-flex justify-content-between mt-2">
                     <button 
                       type="button" 
-                      className="btn btn-light" 
+                      className="btn btn-sm btn-outline-secondary" 
                       onClick={onBack}
                     >
                       Back
                     </button>
                     
-                    <button 
-                      type="submit" 
-                      className="btn btn-secondary" 
-                      style={{ 
-                        minWidth: '180px',
-                        transition: 'background-color 0.3s'
-                      }}
-                      onMouseOver={(e) => e.target.style.backgroundColor = '#3e87c3'}
-                      onMouseOut={(e) => e.target.style.backgroundColor = ''}
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                          Processing...
-                        </>
-                      ) : 'Submit Request'}
-                    </button>
+                    {!isAssigned ? (
+                      <button 
+                        type="submit" 
+                        className="btn btn-sm btn-secondary" 
+                        style={{ 
+                          minWidth: '120px',
+                          transition: 'background-color 0.3s'
+                        }}
+                        onMouseOver={(e) => e.target.style.backgroundColor = '#3e87c3'}
+                        onMouseOut={(e) => e.target.style.backgroundColor = ''}
+                        disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Processing...
+                          </>
+                        ) : 'Submit Request'}
+                      </button>
+                    ) : (
+                      <button 
+                        type="button" 
+                        className="btn btn-sm btn-outline-secondary"
+                        disabled
+                      >
+                        Already Assigned
+                      </button>
+                    )}
                   </div>
                 </form>
               </div>
             </div>
           </div>
+        
         </div>
       </div>
     </div>

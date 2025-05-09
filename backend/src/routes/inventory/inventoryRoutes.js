@@ -503,4 +503,89 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
   }
 });
 
+// Get restock orders for a product
+router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Get restock orders for this product
+    const restockOrders = await RestockOrder.findAll({
+      where: { product_id: productId },
+      order: [['created_at', 'DESC']]
+    });
+
+    // Fetch artisan names
+    const { Employee } = require('../../models/employeeModel');
+    const artisanIds = [...new Set(restockOrders.map(order => order.artisan_id))];
+    
+    const artisans = await Employee.findAll({
+      where: { eId: artisanIds },
+      attributes: ['eId', 'firstName', 'lastName']
+    });
+    
+    // Map artisan names to orders
+    const ordersWithArtisanNames = restockOrders.map(order => {
+      const artisan = artisans.find(a => a.eId === order.artisan_id);
+      return {
+        ...order.dataValues,
+        artisan_name: artisan ? `${artisan.firstName} ${artisan.lastName}` : 'Unknown'
+      };
+    });
+    
+    res.status(200).json({
+      success: true,
+      orders: ordersWithArtisanNames
+    });
+  } catch (error) {
+    console.error('Error fetching restock orders:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error fetching restock orders',
+      error: error.message
+    });
+  }
+});
+
+// Cancel a restock order
+router.put('/:productId/cancel-restock', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Find the most recent active restock order for this product
+    const restockOrder = await RestockOrder.findOne({
+      where: { 
+        product_id: productId,
+        status: { [Op.in]: ['Assigned', 'Pending'] }
+      },
+      order: [['created_at', 'DESC']]
+    });
+
+    if (!restockOrder) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'No active restock order found for this product' 
+      });
+    }
+
+    // Update the status to canceled
+    await restockOrder.update({
+      status: 'Cancelled',
+      updated_at: new Date()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Restock order canceled successfully',
+      order_id: restockOrder.id
+    });
+  } catch (error) {
+    console.error('Error canceling restock order:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error canceling restock order',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
