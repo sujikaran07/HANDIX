@@ -86,7 +86,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
       
       if (!token) {
         console.error('No token found in localStorage');

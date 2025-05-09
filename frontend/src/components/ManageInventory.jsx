@@ -17,13 +17,13 @@ const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const inventoryPerPage = 4;
-  const [refreshKey, setRefreshKey] = useState(0); // Add refresh key state
+  const [refreshKey, setRefreshKey] = useState(0); 
 
   useEffect(() => {
     const fetchInventory = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         
         if (!token) {
           console.error('No token found in localStorage');
@@ -87,7 +87,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
   // Update function to handle product disabling/enabling
   const handleToggleProductStatus = async (item) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
       if (!token) {
         console.error('No token found in localStorage');
         setError('Authentication required. Please login again.');

@@ -19,7 +19,7 @@ const ManageProducts = ({ onViewProduct }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        let token = localStorage.getItem('token');
+        let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         console.log('Token being sent:', token);
 
         if (!token) {
@@ -101,7 +101,7 @@ const ManageProducts = ({ onViewProduct }) => {
 
   const handleProductAction = async (productId, action) => {
     try {
-      let token = localStorage.getItem('token');
+      let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
       
       if (!token) {
         console.error('No token found in localStorage');
