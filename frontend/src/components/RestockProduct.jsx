@@ -186,7 +186,6 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     
     try {
       const token = localStorage.getItem('token');
-      // Changed endpoint to create a restock request rather than updating inventory directly
       const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/restock-request`, {
         method: 'POST',
         headers: {
@@ -197,7 +196,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           quantity: parseInt(quantity),
           artisan_id: artisan,
           due_date: dueDate,
-          notes: notes
+          notes: notes || ''  // Ensure notes is never undefined
         })
       });
       
@@ -226,7 +225,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     } catch (error) {
       console.error('Error restocking product:', error);
       setLoading(false);
-      alert('Failed to restock product. Please try again.');
+      alert(`Failed to restock product: ${error.message || 'Unknown error'}`);
     }
   };
 

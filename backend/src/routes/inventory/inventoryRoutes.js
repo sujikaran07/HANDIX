@@ -476,14 +476,13 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
     }
 
     // Create a restock order record without updating the inventory
-    // Use 'Assigned' instead of 'Pending' since that's what's in the enum
     const restockOrder = await RestockOrder.create({
       product_id: productId,
       quantity: parseInt(quantity),
       artisan_id: artisan_id,
       due_date: new Date(due_date),
-      notes: notes,
-      status: 'Assigned', // Changed back to 'Assigned' to match the enum values
+      notes: notes || '', // Ensure notes is never null
+      status: 'Assigned', 
       created_at: new Date(),
       updated_at: new Date()
     });
@@ -497,7 +496,7 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
     console.error('Error creating restock request:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Error creating restock request',
+      message: 'Error creating restock request: ' + error.message,
       error: error.message
     });
   }

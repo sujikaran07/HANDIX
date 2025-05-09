@@ -36,7 +36,7 @@ const RestockOrder = sequelize.define('RestockOrder', {
     allowNull: true
   },
   status: {
-    type: DataTypes.ENUM('Assigned', 'In Progress', 'Completed', 'Cancelled', 'Pending'),
+    type: DataTypes.ENUM('Assigned', 'Pending', 'Completed', 'Cancelled'),
     defaultValue: 'Assigned'
   },
   created_at: {
@@ -48,16 +48,25 @@ const RestockOrder = sequelize.define('RestockOrder', {
     defaultValue: Sequelize.NOW
   }
 }, {
-  tableName: 'restock_orders',
-  timestamps: false
+  tableName: 'Restock_orders', // Changed from restock_orders to Restock_orders
+  timestamps: false,
+  underscored: true
 });
 
 RestockOrder.associate = (models) => {
   if (models.Inventory) {
-    RestockOrder.belongsTo(models.Inventory, { foreignKey: 'product_id' });
+    RestockOrder.belongsTo(models.Inventory, {
+      foreignKey: 'product_id',
+      as: 'inventory'
+    });
   }
+  
   if (models.Employee) {
-    RestockOrder.belongsTo(models.Employee, { foreignKey: 'artisan_id', as: 'artisan' });
+    RestockOrder.belongsTo(models.Employee, {
+      foreignKey: 'artisan_id',
+      targetKey: 'eId', 
+      as: 'artisan'
+    });
   }
 };
 
