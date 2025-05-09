@@ -54,7 +54,6 @@ const sendInvoiceEmail = async (orderData) => {
       console.log("Logo file not found, using text-only header");
     }
 
-    // Send email
     const info = await transporter.sendMail({
       from: `"${process.env.EMAIL_SENDER_NAME}" <${process.env.EMAIL_USER}>`,
       to: orderData.customerEmail,
@@ -71,29 +70,23 @@ const sendInvoiceEmail = async (orderData) => {
   }
 };
 
-// Generate HTML invoice with professional design similar to AliExpress
 function generateInvoiceHTML(orderData) {
   const currentYear = new Date().getFullYear();
   
-  // Format date
   const orderDate = new Date(orderData.orderDate).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
   
-  // Format currency values
   const formatCurrency = (value) => {
     return parseFloat(value || 0).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     });
   };
-  
-  // Calculate totals
   const subtotal = parseFloat(orderData.totalAmount || 0) - parseFloat(orderData.shippingFee || 0);
   const shippingFee = parseFloat(orderData.shippingFee || 0);
   const totalAmount = parseFloat(orderData.totalAmount || 0);
   
-  // Generate items HTML
   let itemsHTML = '';
   if (Array.isArray(orderData.orderDetails)) {
     orderData.orderDetails.forEach(item => {
@@ -126,7 +119,6 @@ function generateInvoiceHTML(orderData) {
     });
   }
   
-  // Generate full HTML with clean design matching the reference image
   return `
     <!DOCTYPE html>
     <html>
@@ -361,7 +353,6 @@ function generateInvoiceHTML(orderData) {
   `;
 }
 
-// Add this function to make the invoice template responsive for all screen sizes
 function generateMobileResponsiveStyles() {
   return `
     @media screen and (max-width: 600px) {

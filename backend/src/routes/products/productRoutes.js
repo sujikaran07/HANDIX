@@ -11,7 +11,7 @@ const {
   getProductSuggestions,
   getInventorySuggestions,
   uploadProductImages,
-  updateProductStatus // Add the new function
+  updateProductStatus 
 } = require('../../controllers/products/productController'); 
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers'); 
 const { upload } = require('../../utils/cloudinaryConfig');
@@ -25,7 +25,6 @@ const injectEId = (req, res, next) => {
   next();
 };
 
-// Update the image upload route to use Cloudinary
 router.post('/images', authMiddleware, upload.array('productImages', 5), uploadProductImages);
 
 router.get('/new-id', authMiddleware, generateNewProductId);
@@ -61,7 +60,6 @@ router.post('/', authMiddleware, injectEId, createProduct);
 router.put('/:id', authMiddleware, updateProduct);
 router.delete('/:id', authMiddleware, deleteProduct); 
 
-// Add route to get product entry by entry_id
 router.get('/entry/:entryId', authMiddleware, async (req, res) => {
   try {
     const { entryId } = req.params;
@@ -76,7 +74,6 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
     const ProductImage = require('../../models/productImageModel');
     const ProductVariation = require('../../models/productVariationModel');
     
-    // Get the entry without trying to associate with variation
     const entry = await ProductEntry.findByPk(entryId, {
       include: [
         { model: Category, as: 'category', attributes: ['category_name'] },
@@ -89,7 +86,6 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Product entry not found' });
     }
     
-    // Fetch the specific variation for this entry
     let entryVariation = null;
     if (entry.variation_id) {
       try {
@@ -100,7 +96,6 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
       }
     }
     
-    // Also get all variations for this product
     let variations = [];
     try {
       variations = await ProductVariation.findAll({
@@ -112,8 +107,8 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
     }
     
     const entryWithVariations = entry.toJSON();
-    entryWithVariations.entryVariation = entryVariation; // Add the specific variation
-    entryWithVariations.variations = variations;         // Keep all variations
+    entryWithVariations.entryVariation = entryVariation; 
+    entryWithVariations.variations = variations;         
     
     res.status(200).json(entryWithVariations);
   } catch (error) {
@@ -122,7 +117,6 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
   }
 });
 
-// Add new route for updating product status
 router.put('/:id/status', authMiddleware, updateProductStatus);
 
 module.exports = router;

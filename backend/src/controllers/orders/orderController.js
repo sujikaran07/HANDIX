@@ -49,7 +49,7 @@ const getOrderById = async (req, res) => {
         { 
           model: Customer, 
           as: 'customerInfo',
-          include: [{ model: Address, as: 'addresses' }]  // Include customer addresses
+          include: [{ model: Address, as: 'addresses' }]  
         },
         { model: OrderDetail, as: 'orderDetails' }
       ],
@@ -59,19 +59,15 @@ const getOrderById = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
     
-    // Process the order data to include shipping fee and product images
     const orderData = order.toJSON();
     
-    // Add default shipping fee if not present
     if (!orderData.shippingFee) {
       orderData.shippingFee = 350;
     }
     
-    // Fetch product images for order details
     if (orderData.orderDetails && orderData.orderDetails.length > 0) {
       for (const detail of orderData.orderDetails) {
         try {
-          // Get product image
           const productImage = await ProductImage.findOne({
             where: { product_id: detail.product_id }
           });
@@ -322,7 +318,6 @@ const getArtisansWithOrderInfo = async (req, res) => {
 
 const getCustomerOrders = async (req, res) => {
   try {
-    // Get customer ID from query parameter or auth token
     const customerId = req.query.customerId || (req.user && req.user.id);
     
     if (!customerId) {
@@ -340,7 +335,7 @@ const getCustomerOrders = async (req, res) => {
         {
           model: Customer,
           as: 'customerInfo',
-          include: [{ model: Address, as: 'addresses' }]  // Include customer addresses
+          include: [{ model: Address, as: 'addresses' }]  
         },
         {
           model: OrderDetail,
@@ -350,23 +345,18 @@ const getCustomerOrders = async (req, res) => {
       ],
       order: [['orderDate', 'DESC']]
     });
-    
-    // Process orders to include product images
     const processedOrders = [];
     
     for (const order of orders) {
       const orderData = order.toJSON();
       
-      // Add shipping fee if not set
       if (!orderData.shippingFee) {
         orderData.shippingFee = 350;
       }
-      
-      // Fetch product images for each order item
       if (orderData.orderDetails && orderData.orderDetails.length > 0) {
         for (const detail of orderData.orderDetails) {
           try {
-            // Get product image
+
             const productImage = await ProductImage.findOne({
               where: { product_id: detail.product_id }
             });
@@ -405,5 +395,5 @@ module.exports = {
   updateOrder,
   deleteOrder,
   getArtisansWithOrderInfo,
-  getCustomerOrders // Add this to exports
+  getCustomerOrders 
 };

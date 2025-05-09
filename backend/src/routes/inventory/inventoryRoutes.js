@@ -8,10 +8,8 @@ const Category = require('../../models/categoryModel');
 const RestockOrder = require('../../models/restockOrderModel');
 const ProductImage = require('../../models/productImageModel');
 
-// Get all inventory items (filter to only show approved products)
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    // First, get IDs of approved products
     const approvedProducts = await ProductEntry.findAll({
       where: { status: 'Approved' },
       attributes: ['product_id']
@@ -19,7 +17,6 @@ router.get('/', authMiddleware, async (req, res) => {
     
     const approvedProductIds = approvedProducts.map(p => p.product_id);
     
-    // Now get inventory records for only approved products with quantity > 0
     const inventory = await Inventory.findAll({
       where: {
         product_id: { [Op.in]: approvedProductIds },
@@ -36,9 +33,7 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
-// Public endpoint - no authentication required and with CORS headers
 router.get('/public', async (req, res) => {
-  // Add CORS headers
   res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
   res.header('Access-Control-Allow-Methods', 'GET');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -46,10 +41,8 @@ router.get('/public', async (req, res) => {
   try {
     console.log("Public inventory route accessed");
     
-    // Use the getInventory controller which is working for admin
     const inventoryController = require('../../controllers/inventory/inventoryController');
     
-    // Create a mock request and capture the response
     const mockRes = {
       status: function(code) {
         this.statusCode = code;
@@ -61,15 +54,11 @@ router.get('/public', async (req, res) => {
       }
     };
     
-    // Call the controller function directly
     await inventoryController.getInventory({}, mockRes);
     
-    // If the controller was successful
     if (mockRes.statusCode === 200 && mockRes.responseData.inventory) {
-      // Include all items, regardless of quantity
       const publicInventory = mockRes.responseData.inventory;
       
-      // Log what we get back from the controller
       console.log(`Retrieved ${publicInventory.length} items from controller`);
       if (publicInventory.length > 0) {
         const firstItem = publicInventory[0];
@@ -95,7 +84,6 @@ router.get('/public', async (req, res) => {
   }
 });
 
-// Get inventory suggestions (only for approved products)
 router.get('/suggestions', authMiddleware, async (req, res) => {
   try {
     const { search } = req.query;
@@ -104,7 +92,6 @@ router.get('/suggestions', authMiddleware, async (req, res) => {
       return res.status(200).json({ products: [] });
     }
     
-    // Get only approved products for suggestions
     const approvedProducts = await ProductEntry.findAll({
       where: { 
         status: 'Approved',
@@ -119,7 +106,6 @@ router.get('/suggestions', authMiddleware, async (req, res) => {
       return res.status(200).json({ products: [] });
     }
     
-    // Fetch inventory suggestions for these approved products
     const products = await Inventory.findAll({
       where: {
         product_id: { [Op.in]: approvedProductIds },
@@ -136,12 +122,10 @@ router.get('/suggestions', authMiddleware, async (req, res) => {
   }
 });
 
-// Add a new route to get inventory item by product ID
 router.get('/product/:id', async (req, res) => {
   try {
     const productId = req.params.id;
     
-    // Use Inventory model directly without invalid associations
     const inventoryItem = await Inventory.findOne({
       where: { product_id: productId }
     });
@@ -153,7 +137,6 @@ router.get('/product/:id', async (req, res) => {
       });
     }
 
-    // Return the product info directly from inventory
     res.status(200).json({
       success: true,
       product_id: productId,
@@ -171,7 +154,6 @@ router.get('/product/:id', async (req, res) => {
   }
 });
 
-// Get detailed inventory information by id
 router.get('/:productId', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -194,12 +176,10 @@ router.get('/:productId', authMiddleware, async (req, res) => {
       });
     }
 
-    // Get all product images
     const productImages = await ProductImage.findAll({
       where: { product_id: productId }
     });
 
-    // Format the response
     const formattedInventory = {
       ...inventoryItem.toJSON(),
       images: productImages.map(img => img.image_url)
@@ -219,12 +199,10 @@ router.get('/:productId', authMiddleware, async (req, res) => {
   }
 });
 
-// Add endpoint for fetching product images
 router.get('/:productId/images', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
     
-    // Fetch images for the product
     const ProductImage = require('../../models/productImageModel');
     const images = await ProductImage.findAll({
       where: { product_id: productId }
@@ -244,12 +222,10 @@ router.get('/:productId/images', authMiddleware, async (req, res) => {
   }
 });
 
-// Add endpoint for fetching product variations (for additional fees)
 router.get('/:productId/variations', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
     
-    // Fetch variations for the product
     const ProductVariation = require('../../models/productVariationModel');
     const variations = await ProductVariation.findAll({
       where: { product_id: productId }
@@ -269,7 +245,6 @@ router.get('/:productId/variations', authMiddleware, async (req, res) => {
   }
 });
 
-// Disable a product
 router.put('/:productId/disable', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -289,7 +264,6 @@ router.put('/:productId/disable', authMiddleware, async (req, res) => {
 
     console.log(`Found product ${productId}, current status: ${inventoryItem.product_status}`);
 
-    // Update the product status to 'Disabled' without changing the actual quantity
     await inventoryItem.update({
       product_status: 'Disabled'
     });
@@ -311,7 +285,6 @@ router.put('/:productId/disable', authMiddleware, async (req, res) => {
   }
 });
 
-// Add new route to enable a product
 router.put('/:productId/enable', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -331,7 +304,6 @@ router.put('/:productId/enable', authMiddleware, async (req, res) => {
 
     console.log(`Found product ${productId}, current status: ${inventoryItem.product_status}, quantity: ${inventoryItem.quantity}`);
 
-    // Determine the appropriate product_status based on quantity
     let newStatus = 'In Stock';
     if (inventoryItem.quantity === 0) {
       newStatus = 'Out of Stock';
@@ -339,7 +311,6 @@ router.put('/:productId/enable', authMiddleware, async (req, res) => {
       newStatus = 'Low Stock';
     }
 
-    // Update the product status accordingly
     await inventoryItem.update({
       product_status: newStatus
     });
@@ -361,7 +332,6 @@ router.put('/:productId/enable', authMiddleware, async (req, res) => {
   }
 });
 
-// Restock a product
 router.put('/:productId/restock', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -402,13 +372,11 @@ router.put('/:productId/restock', authMiddleware, async (req, res) => {
     const newQuantity = inventoryItem.quantity + parseInt(quantity);
     const newStatus = newQuantity > 0 ? 'In Stock' : 'Out of Stock';
 
-    // Update inventory quantity
     await inventoryItem.update({
       quantity: newQuantity,
       product_status: newStatus
     });
 
-    // Create a restock order record
     const restockOrder = await RestockOrder.create({
       product_id: productId,
       quantity: parseInt(quantity),
@@ -437,7 +405,6 @@ router.put('/:productId/restock', authMiddleware, async (req, res) => {
   }
 });
 
-// Create a restock request (does not immediately update inventory)
 router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -475,13 +442,12 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
       });
     }
 
-    // Create a restock order record without updating the inventory
     const restockOrder = await RestockOrder.create({
       product_id: productId,
       quantity: parseInt(quantity),
       artisan_id: artisan_id,
       due_date: new Date(due_date),
-      notes: notes || '', // Ensure notes is never null
+      notes: notes || '',
       status: 'Assigned', 
       created_at: new Date(),
       updated_at: new Date()
@@ -502,18 +468,15 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
   }
 });
 
-// Get restock orders for a product
 router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
     
-    // Get restock orders for this product
     const restockOrders = await RestockOrder.findAll({
       where: { product_id: productId },
       order: [['created_at', 'DESC']]
     });
 
-    // Fetch artisan names
     const { Employee } = require('../../models/employeeModel');
     const artisanIds = [...new Set(restockOrders.map(order => order.artisan_id))];
     
@@ -522,7 +485,6 @@ router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
       attributes: ['eId', 'firstName', 'lastName']
     });
     
-    // Map artisan names to orders
     const ordersWithArtisanNames = restockOrders.map(order => {
       const artisan = artisans.find(a => a.eId === order.artisan_id);
       return {
@@ -545,12 +507,10 @@ router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
   }
 });
 
-// Cancel a restock order
 router.put('/:productId/cancel-restock', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
     
-    // Find the most recent active restock order for this product
     const restockOrder = await RestockOrder.findOne({
       where: { 
         product_id: productId,
@@ -566,7 +526,6 @@ router.put('/:productId/cancel-restock', authMiddleware, async (req, res) => {
       });
     }
 
-    // Update the status to canceled
     await restockOrder.update({
       status: 'Cancelled',
       updated_at: new Date()

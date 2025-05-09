@@ -3,14 +3,12 @@ const Inventory = require('../../models/inventoryModel');
 const ProductImage = require('../../models/productImageModel');
 const { sequelize } = require('../../config/db');
 
-// Get all favorites for a customer
 exports.getFavorites = async (req, res) => {
   try {
     const { customerId } = req.params;
 
     console.log("Fetching favorites for customer:", customerId);
 
-    // Get favorites with product details
     const favorites = await Favorite.findAll({
       where: { c_id: customerId },
       include: [
@@ -32,12 +30,10 @@ exports.getFavorites = async (req, res) => {
       price: f.product?.price
     })));
 
-    // Format response
     const formattedFavorites = favorites.map(favorite => {
       const product = favorite.product;
       const images = product.productImages.map(img => img.image_url);
       
-      // Use unit_price from the inventory table as the price field
       const productPrice = Number(product.unit_price || product.price || 0);
       
       return {
@@ -55,7 +51,6 @@ exports.getFavorites = async (req, res) => {
       };
     });
 
-    // Debug the first product to see price values
     if (formattedFavorites.length > 0) {
       console.log('First favorite formatted data:', {
         id: formattedFavorites[0].id,
@@ -72,17 +67,12 @@ exports.getFavorites = async (req, res) => {
   }
 };
 
-// Add a product to favorites
 exports.addFavorite = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
     const { customerId } = req.params;
     const { productId } = req.body;
 
-    // No middleware check anymore - just use customerId from URL params
-    // Skip the authorization check since we're not using middleware
-
-    // Check if the favorite already exists
     const existingFavorite = await Favorite.findOne({
       where: {
         c_id: customerId,
@@ -96,7 +86,6 @@ exports.addFavorite = async (req, res) => {
       return res.status(409).json({ message: 'Product is already in favorites' });
     }
 
-    // Create new favorite
     const favorite = await Favorite.create({
       c_id: customerId,
       product_id: productId
@@ -114,14 +103,10 @@ exports.addFavorite = async (req, res) => {
     res.status(500).json({ message: 'Failed to add product to favorites', error: error.message });
   }
 };
-
-// Remove a product from favorites
 exports.removeFavorite = async (req, res) => {
   try {
     const { customerId, productId } = req.params;
     
-    // No middleware check - use customerId from URL params
-
     const result = await Favorite.destroy({
       where: {
         c_id: customerId,
@@ -140,13 +125,10 @@ exports.removeFavorite = async (req, res) => {
   }
 };
 
-// Check if a product is in favorites
 exports.checkFavorite = async (req, res) => {
   try {
     const { customerId, productId } = req.params;
     
-    // No middleware check - use customerId from URL params
-
     const favorite = await Favorite.findOne({
       where: {
         c_id: customerId,

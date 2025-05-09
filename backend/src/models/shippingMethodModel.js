@@ -7,24 +7,21 @@ const ShippingMethod = sequelize.define('ShippingMethod', {
     primaryKey: true,
     autoIncrement: true,
     allowNull: false,
-    field: 'shipping_method_id' // Match the actual column name in the database
+    field: 'shipping_method_id' 
   },
   method_name: {
     type: DataTypes.STRING(100),
     allowNull: false,
-    field: 'method_name' // Match the actual column name in the database
+    field: 'method_name' 
   },
   
 }, {
   tableName: 'ShippingMethods',
-  timestamps: false, // No timestamp fields in the schema
+  timestamps: false, 
   underscored: true
 });
-
-// Function to initialize default shipping methods
 const initializeShippingMethods = async () => {
   try {
-    // First check if the table exists
     const tableExists = await sequelize.query(
       `SELECT EXISTS (
         SELECT FROM information_schema.tables 

@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { sequelize, Sequelize } = require('../../config/db'); // Import Sequelize module
+const { sequelize, Sequelize } = require('../../config/db');
 const { Customer } = require('../../models/customerModel');
 const { Address } = require('../../models/addressModel');
 const { Order } = require('../../models/orderModel');
@@ -8,11 +8,10 @@ const Inventory = require('../../models/inventoryModel');
 const { Transaction } = require('../../models/transactionModel');
 const { PaymentMethod } = require('../../models/paymentMethodModel');
 const { ShippingMethod } = require('../../models/shippingMethodModel');
-const ProductEntry = require('../../models/productEntryModel'); // Import ProductEntry
-const ProductVariation = require('../../models/productVariationModel'); // Import ProductVariation
+const ProductEntry = require('../../models/productEntryModel');
+const ProductVariation = require('../../models/productVariationModel');
 const jwt = require('jsonwebtoken');
 
-// Helper function to verify JWT token
 function verifyToken(token) {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
@@ -21,17 +20,12 @@ function verifyToken(token) {
   }
 }
 
-/**
- * Save shipping address without creating an order
- * This happens when user clicks "Continue" after entering shipping info
- */
 exports.saveShippingAddress = async (req, res) => {
   const transaction = await sequelize.transaction();
   
   try {
     const { customerInfo, shippingAddress } = req.body;
     
-    // Check for authentication
     let customerId = null;
     let existingCustomerData = null;
     let isExistingCustomer = false;
@@ -43,7 +37,6 @@ exports.saveShippingAddress = async (req, res) => {
       if (user) {
         customerId = user.c_id;
         
-        // Fetch existing customer data to check phone
         existingCustomerData = await Customer.findByPk(customerId);
         if (existingCustomerData) {
           isExistingCustomer = true;
@@ -51,9 +44,7 @@ exports.saveShippingAddress = async (req, res) => {
       }
     }
     
-    // If not authenticated or authentication failed, handle as guest or find by email
     if (!customerId && customerInfo) {
-      // Try to find customer by email
       let customer = await Customer.findOne({ 
         where: { email: customerInfo.email }
       });
@@ -63,7 +54,6 @@ exports.saveShippingAddress = async (req, res) => {
         existingCustomerData = customer;
         isExistingCustomer = true;
       } else {
-        // Create a temporary guest customer
         const guestId = `G-${Date.now().toString().slice(-8)}`;
         customer = await Customer.create({
           c_id: guestId,
@@ -71,7 +61,7 @@ exports.saveShippingAddress = async (req, res) => {
           lastName: customerInfo.lastName,
           email: customerInfo.email,
           phone: customerInfo.phone || '',
-          password: uuidv4(), // Generate a random password for guest accounts
+          password: uuidv4(),
           accountType: 'Retail',
           accountStatus: 'Pending'
         }, { transaction });
@@ -80,8 +70,6 @@ exports.saveShippingAddress = async (req, res) => {
       }
     }
     
-    // If customer exists, always update their phone number if provided in the request
-    // This ensures we have the most current contact information for delivery
     if (isExistingCustomer && customerInfo.phone) {
       await Customer.update(
         { phone: customerInfo.phone },
@@ -90,13 +78,11 @@ exports.saveShippingAddress = async (req, res) => {
       console.log(`Updated phone number for customer ${customerId}: ${customerInfo.phone}`);
     }
     
-    // Get the most recent shipping address if any exists
     let existingAddress = null;
     let shouldCreateNewAddress = true;
-    let addressData = null; // Declare addressData here so it's in scope
+    let addressData = null;
     
     if (customerId) {
-      // Find ALL shipping addresses for this customer, sorted by most recent first
       const allCustomerAddresses = await Address.findAll({
         where: {
           c_id: customerId,
@@ -105,7 +91,6 @@ exports.saveShippingAddress = async (req, res) => {
         order: [['createdAt', 'DESC']]
       });
       
-      // Check if ANY existing address matches the new one exactly
       const matchingAddress = allCustomerAddresses.find(addr => 
         addr.street_address === shippingAddress.street &&
         addr.city === shippingAddress.city &&
@@ -114,13 +99,11 @@ exports.saveShippingAddress = async (req, res) => {
       );
       
       if (matchingAddress) {
-        // Use the existing address instead of creating a new one
         shouldCreateNewAddress = false;
         addressData = matchingAddress;
         console.log(`Using existing shipping address for customer ${customerId} - exact match found`);
       } else {
         console.log(`No matching address found for customer ${customerId} - will create new address`);
-        // Log the differences for debugging
         if (allCustomerAddresses.length > 0) {
           const mostRecent = allCustomerAddresses[0];
           console.log('Most recent address vs new address:');
@@ -133,7 +116,6 @@ exports.saveShippingAddress = async (req, res) => {
     }
     
     if (shouldCreateNewAddress) {
-      // Always create a new address record if fields differ from the most recent one
       addressData = await Address.create({
         c_id: customerId,
         addressType: 'shipping',
@@ -147,7 +129,6 @@ exports.saveShippingAddress = async (req, res) => {
       console.log(`Created new shipping address for customer ${customerId} - field values changed`);
     }
     
-    // Make sure to update the phone number regardless of whether a new address is created
     if (isExistingCustomer && customerInfo.phone) {
       console.log(`Updating phone number for customer ${customerId} from ${existingCustomerData.phone || 'empty'} to ${customerInfo.phone}`);
       
@@ -156,14 +137,11 @@ exports.saveShippingAddress = async (req, res) => {
         { where: { c_id: customerId }, transaction }
       );
       
-      // Refresh the customer data to get the updated phone
       existingCustomerData = await Customer.findByPk(customerId, { transaction });
     }
     
-    // Commit transaction
     await transaction.commit();
     
-    // Return success response with customer details
     return res.status(200).json({
       success: true,
       customerId,
@@ -172,7 +150,6 @@ exports.saveShippingAddress = async (req, res) => {
         firstName: existingCustomerData.firstName,
         lastName: existingCustomerData.lastName,
         email: existingCustomerData.email,
-        // Always return the latest phone number (from request or database)
         phone: customerInfo.phone || existingCustomerData.phone || ''
       } : null,
       message: shouldCreateNewAddress ? 
@@ -191,10 +168,6 @@ exports.saveShippingAddress = async (req, res) => {
   }
 };
 
-/**
- * Save billing address without creating an order
- * This happens when user clicks "Continue" after entering billing info
- */
 exports.saveBillingAddress = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -202,7 +175,6 @@ exports.saveBillingAddress = async (req, res) => {
     const { customerId, billingAddress, sameAsShipping } = req.body;
     
     if (sameAsShipping) {
-      // If same as shipping, get the most recent shipping address
       const shippingAddress = await Address.findOne({
         where: {
           c_id: customerId,
@@ -212,8 +184,6 @@ exports.saveBillingAddress = async (req, res) => {
       });
       
       if (shippingAddress) {
-        // Always create a new billing address as a copy of shipping address
-        // This preserves history of addresses used
         const newBillingAddress = await Address.create({
           c_id: customerId,
           addressType: 'billing',
@@ -235,7 +205,6 @@ exports.saveBillingAddress = async (req, res) => {
       }
     }
     
-    // Check if customer already has a billing address with the same values
     let shouldCreateNewAddress = true;
     let existingAddress = null;
     
@@ -252,7 +221,6 @@ exports.saveBillingAddress = async (req, res) => {
         existingAddress.city === billingAddress.city &&
         existingAddress.district === billingAddress.district &&
         existingAddress.postalCode === billingAddress.postalCode) {
-      // Address hasn't changed, don't create a new one
       shouldCreateNewAddress = false;
       addressData = existingAddress;
       console.log(`Using existing billing address for customer ${customerId} - no changes detected`);
@@ -261,7 +229,6 @@ exports.saveBillingAddress = async (req, res) => {
     let addressData;
     
     if (shouldCreateNewAddress) {
-      // Create new billing address if values are different
       addressData = await Address.create({
         c_id: customerId,
         addressType: 'billing',
@@ -275,10 +242,8 @@ exports.saveBillingAddress = async (req, res) => {
       console.log(`Created new billing address for customer ${customerId} - field values changed`);
     }
     
-    // Commit transaction
     await transaction.commit();
     
-    // Return success response
     return res.status(200).json({
       success: true,
       addressId: addressData.address_id,
@@ -298,14 +263,10 @@ exports.saveBillingAddress = async (req, res) => {
   }
 };
 
-/**
- * Fetch customer's saved addresses
- */
 exports.getCustomerAddresses = async (req, res) => {
   try {
     const { customerId } = req.params;
     
-    // Validate customer ID
     if (!customerId) {
       return res.status(400).json({
         success: false,
@@ -313,7 +274,6 @@ exports.getCustomerAddresses = async (req, res) => {
       });
     }
     
-    // Fetch customer details and addresses with proper ordering
     const customer = await Customer.findByPk(customerId);
     
     if (!customer) {
@@ -323,13 +283,11 @@ exports.getCustomerAddresses = async (req, res) => {
       });
     }
     
-    // Fetch addresses separately with proper ordering
     const addresses = await Address.findAll({
       where: { c_id: customerId },
-      order: [['createdAt', 'DESC']] // Order by most recent first
+      order: [['createdAt', 'DESC']]
     });
     
-    // Return customer data and addresses
     return res.status(200).json({
       success: true,
       customer: {
@@ -352,9 +310,6 @@ exports.getCustomerAddresses = async (req, res) => {
   }
 };
 
-/**
- * Place a new order
- */
 exports.placeOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -370,7 +325,6 @@ exports.placeOrder = async (req, res) => {
       pickupLocation 
     } = req.body;
     
-    // Check COD limit - reject orders over 5000 LKR if payment method is COD
     if (paymentInfo.method === 'cod' && parseFloat(orderSummary.total) > 5000) {
       return res.status(400).json({ 
         success: false, 
@@ -378,7 +332,6 @@ exports.placeOrder = async (req, res) => {
       });
     }
     
-    // Check for authentication
     let customerId = null;
     let user = null;
     
@@ -391,9 +344,7 @@ exports.placeOrder = async (req, res) => {
       }
     }
     
-    // If not authenticated or authentication failed, handle as guest
     if (!customerId && customerInfo) {
-      // Try to find customer by email
       let customer = await Customer.findOne({ 
         where: { email: customerInfo.email }
       });
@@ -401,7 +352,6 @@ exports.placeOrder = async (req, res) => {
       if (customer) {
         customerId = customer.c_id;
       } else {
-        // Create a new guest customer
         const guestId = `G-${Date.now().toString().slice(-8)}`;
         customer = await Customer.create({
           c_id: guestId,
@@ -409,7 +359,7 @@ exports.placeOrder = async (req, res) => {
           lastName: customerInfo.lastName,
           email: customerInfo.email,
           phone: customerInfo.phone || '',
-          password: uuidv4(), // Generate a random password for guest accounts
+          password: uuidv4(),
           accountType: 'Retail',
           accountStatus: 'Pending'
         }, { transaction });
@@ -418,10 +368,8 @@ exports.placeOrder = async (req, res) => {
       }
     }
     
-    // First check if shipping address already exists for this customer
     let shippingAddressId = null;
     
-    // Find ALL shipping addresses for this customer
     const allShippingAddresses = await Address.findAll({
       where: {
         c_id: customerId,
@@ -430,7 +378,6 @@ exports.placeOrder = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
     
-    // Check if ANY existing address matches exactly
     const matchingShippingAddress = allShippingAddresses.find(addr => 
       addr.street_address === shippingAddress.street &&
       addr.city === shippingAddress.city &&
@@ -439,11 +386,9 @@ exports.placeOrder = async (req, res) => {
     );
     
     if (matchingShippingAddress) {
-      // Use existing address if found
       shippingAddressId = matchingShippingAddress.address_id;
       console.log(`Using existing shipping address ID ${shippingAddressId} for order`);
     } else {
-      // Create new shipping address only if no match was found
       const newShippingAddress = await Address.create({
         c_id: customerId,
         addressType: 'shipping',
@@ -458,14 +403,11 @@ exports.placeOrder = async (req, res) => {
       console.log(`Created new shipping address ID ${shippingAddressId} for order - no match found`);
     }
     
-    // Create billing address if different
     let billingAddressId = null;
     
-    // Check if billing is same as shipping
     const sameAsShipping = !billingAddress;
     
     if (sameAsShipping) {
-      // Try to find existing billing address that matches shipping address
       const matchingBillingAddress = await Address.findOne({
         where: {
           c_id: customerId,
@@ -478,11 +420,9 @@ exports.placeOrder = async (req, res) => {
       });
       
       if (matchingBillingAddress) {
-        // Use existing billing address that matches shipping address
         billingAddressId = matchingBillingAddress.address_id;
         console.log(`Using existing billing address ID ${billingAddressId} that matches shipping address`);
       } else {
-        // Create new billing address as copy of shipping
         const newBillingAddress = await Address.create({
           c_id: customerId,
           addressType: 'billing',
@@ -497,7 +437,6 @@ exports.placeOrder = async (req, res) => {
         console.log(`Created new billing address ID ${billingAddressId} copied from shipping address`);
       }
     } else {
-      // Handle custom billing address - check all existing billing addresses for match
       const allBillingAddresses = await Address.findAll({
         where: {
           c_id: customerId,
@@ -506,7 +445,6 @@ exports.placeOrder = async (req, res) => {
         order: [['createdAt', 'DESC']]
       });
       
-      // Check if ANY existing billing address matches exactly
       const matchingBillingAddress = allBillingAddresses.find(addr => 
         addr.street_address === billingAddress.street &&
         addr.city === billingAddress.city &&
@@ -515,11 +453,9 @@ exports.placeOrder = async (req, res) => {
       );
       
       if (matchingBillingAddress) {
-        // Use existing billing address if found
         billingAddressId = matchingBillingAddress.address_id;
         console.log(`Using existing billing address ID ${billingAddressId}`);
       } else {
-        // Create new billing address only if no match was found
         const newBillingAddress = await Address.create({
           c_id: customerId,
           addressType: 'billing',
@@ -535,8 +471,6 @@ exports.placeOrder = async (req, res) => {
       }
     }
     
-    // Generate order ID in O001 format with sequential numbering
-    // Get the latest order ID from the database
     let orderId;
     
     try {
@@ -550,82 +484,67 @@ exports.placeOrder = async (req, res) => {
       });
       
       if (latestOrder) {
-        // Extract the numeric part
         const numericPart = parseInt(latestOrder.order_id.substring(1), 10);
-        // Increment by 1 and pad with zeros
         orderId = `O${(numericPart + 1).toString().padStart(3, '0')}`;
       } else {
-        // If no orders exist, start with O001
         orderId = 'O001';
       }
     } catch (error) {
       console.error('Error generating sequential order ID:', error);
-      // Fallback to random order ID if there's an error
       const num = Math.floor(Math.random() * 999) + 1;
       orderId = `O${num.toString().padStart(3, '0')}`;
     }
     
-    // Check if this ID already exists (just to be sure)
     const existingOrder = await Order.findByPk(orderId);
     if (existingOrder) {
-      // In the rare case of collision, use the current timestamp
       const timestamp = new Date().getTime().toString().slice(-3);
       orderId = `O${timestamp}`;
     }
     
-    // Construct customer name
     const customerName = customerInfo ? 
       `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim() : 
       user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
       'Guest Customer';
     
-    // Check if customer is wholesale type to apply discount
     const isWholesaleCustomer = customerInfo?.accountType === 'Wholesale';
     
-    // Apply wholesale discount to order if applicable
     let finalTotal = parseFloat(orderSummary.total);
     if (isWholesaleCustomer) {
       console.log('Processing wholesale customer order - applying 5% discount');
     }
     
-    // Create new order with the custom generated ID
     const newOrder = await Order.create({
       order_id: orderId,
       c_id: customerId,
       orderStatus: paymentInfo.method === 'cod' ? 'Pending' : 'Awaiting Payment',
-      totalAmount: finalTotal, // Use potentially discounted amount
+      totalAmount: finalTotal,
       paymentStatus: paymentInfo.method === 'cod' ? 'Pending' : 'Awaiting',
-      shippingMethodId: null, // This will be updated later with the correct shipping method ID
+      shippingMethodId: null,
       orderDate: new Date(),
       customerName: customerName,
       customized: orderItems.some(item => item.customization) ? 'yes' : 'no',
       paymentMethod: paymentInfo.method,
-      wholesaleDiscount: isWholesaleCustomer ? 'yes' : 'no' // Track if wholesale discount was applied
+      wholesaleDiscount: isWholesaleCustomer ? 'yes' : 'no'
     }, { transaction });
     
-    // Create order details for each item and update inventory
     for (const item of orderItems) {
-      // Create order detail with customization field and potentially discounted price
       await OrderDetail.create({
         order_id: orderId,
         product_id: item.productId,
         quantity: item.quantity,
-        priceAtPurchase: item.price, // This is now potentially already discounted from frontend
+        priceAtPurchase: item.price,
         customization: item.customization || null,
         customization_fee: item.customizationFee || 0,
-        original_price: item.originalPrice || item.price // Store original price for reference
+        original_price: item.originalPrice || item.price
       }, { transaction });
       
-      // Update inventory quantities across multiple tables
       try {
-        // 1. Update main Inventory table
         const inventory = await Inventory.findOne({ 
           where: { product_id: item.productId } 
         });
         
         if (inventory) {
-          if (inventory.quantity < item.quantity) {  // Changed from stock_quantity to quantity
-            // If not enough inventory, roll back and return error
+          if (inventory.quantity < item.quantity) {
             await transaction.rollback();
             return res.status(400).json({
               success: false,
@@ -633,19 +552,16 @@ exports.placeOrder = async (req, res) => {
             });
           }
           
-          // Update the correct column name: quantity in Inventory table (not stock_quantity)
           await inventory.update({
-            quantity: inventory.quantity - item.quantity,  // Changed from stock_quantity to quantity
+            quantity: inventory.quantity - item.quantity,
             last_updated: new Date()
           }, { transaction });
         }
         
-        // 2. Update ProductVariation quantity if this is a variant
         if (item.variationId) {
           const variation = await ProductVariation.findByPk(item.variationId);
           if (variation) {
-            if (variation.stock_level < item.quantity) { // Use correct column name: stock_level
-              // If not enough in this variation, roll back
+            if (variation.stock_level < item.quantity) {
               await transaction.rollback();
               return res.status(400).json({
                 success: false, 
@@ -653,58 +569,28 @@ exports.placeOrder = async (req, res) => {
               });
             }
             
-            // Update the correct column name: stock_level in ProductVariation
             await variation.update({
-              stock_level: variation.stock_level - item.quantity // Updated from stock to stock_level
+              stock_level: variation.stock_level - item.quantity
             }, { transaction });
           }
         }
         
-        // 3. Don't update ProductEntry table - we just fetch product entry for category info
         const productEntry = await ProductEntry.findOne({
           where: { product_id: item.productId }
         });
-        
-        // 4. REMOVED: Category statistics update with items_sold field
-        // The "items_sold" column does not exist in Categories table
-        // We'll comment this out rather than trying to update a non-existent column
-        
-        /*
-        if (productEntry && productEntry.category_id) {
-          // This was causing the error - the column doesn't exist
-          await sequelize.query(
-            `UPDATE "Categories" 
-             SET items_sold = items_sold + :quantity
-             WHERE category_id = :categoryId`,
-            { 
-              replacements: { 
-                quantity: item.quantity,
-                categoryId: productEntry.category_id
-              },
-              type: sequelize.QueryTypes.UPDATE,
-              transaction
-            }
-          );
-        }
-        */
       } catch (inventoryError) {
         console.error('Error updating inventory:', inventoryError);
-        // Don't throw here - we'll continue and try to complete the order
-        // but log the error for investigation
       }
     }
     
-    // Create shipping method record for the order
     try {
       let shippingMethodRecord;
       
-      // First look up the shipping methods instead of creating them
       if (shippingMethod === 'pickup') {
         shippingMethodRecord = await ShippingMethod.findOne({ 
           where: { method_name: 'Store Pickup' }
         });
         
-        // Only create if it absolutely doesn't exist
         if (!shippingMethodRecord) {
           try {
             shippingMethodRecord = await ShippingMethod.create({
@@ -713,7 +599,6 @@ exports.placeOrder = async (req, res) => {
             }, { transaction });
           } catch (createError) {
             console.error('Error creating pickup shipping method:', createError);
-            // Attempt to find again in case creation failed but method exists
             shippingMethodRecord = await ShippingMethod.findOne({ 
               where: { method_name: 'Store Pickup' }
             });
@@ -724,7 +609,6 @@ exports.placeOrder = async (req, res) => {
           where: { method_name: 'Standard Delivery' }
         });
         
-        // Only create if it absolutely doesn't exist
         if (!shippingMethodRecord) {
           try {
             shippingMethodRecord = await ShippingMethod.create({
@@ -733,7 +617,6 @@ exports.placeOrder = async (req, res) => {
             }, { transaction });
           } catch (createError) {
             console.error('Error creating standard shipping method:', createError);
-            // Attempt to find again in case creation failed but method exists
             shippingMethodRecord = await ShippingMethod.findOne({ 
               where: { method_name: 'Standard Delivery' }
             });
@@ -741,7 +624,6 @@ exports.placeOrder = async (req, res) => {
         }
       }
       
-      // Only try to update if we have a valid shipping method record
       if (shippingMethodRecord && shippingMethodRecord.shipping_method_id) {
         await Order.update(
           { shippingMethodId: shippingMethodRecord.shipping_method_id },
@@ -757,11 +639,9 @@ exports.placeOrder = async (req, res) => {
       }
     } catch (error) {
       console.error('Error handling shipping method:', error);
-      // Continue with the order even if shipping method fails
     }
     
     try {
-      // Create transaction record
       const transactionRecord = await Transaction.create({
         order_id: orderId,
         c_id: customerId,
@@ -781,13 +661,10 @@ exports.placeOrder = async (req, res) => {
       console.log(`Transaction created with ID: ${transactionRecord.transaction_id}`);
     } catch (error) {
       console.error('Error creating transaction record:', error);
-      // Continue with the order even if transaction record creation fails
     }
     
-    // Create payment method record
     try {
       if (paymentInfo.method !== 'cod') {
-        // Check if this payment method already exists
         let existingPaymentMethod = null;
         
         if (customerId) {
@@ -798,10 +675,8 @@ exports.placeOrder = async (req, res) => {
             }
           });
           
-          // Build payment details object
           const paymentDetails = {};
           if (paymentInfo.method === 'card' && paymentInfo.cardDetails) {
-            // Store only last 4 digits of card number for security
             paymentDetails.lastFour = paymentInfo.cardDetails.cardNumber.slice(-4);
             paymentDetails.brand = detectCardBrand(paymentInfo.cardDetails.cardNumber);
             
@@ -812,9 +687,7 @@ exports.placeOrder = async (req, res) => {
             }
           }
           
-          // Create or update payment method
           if (!existingPaymentMethod) {
-            // Create new payment method
             await PaymentMethod.create({
               c_id: customerId,
               methodType: paymentInfo.method,
@@ -822,7 +695,6 @@ exports.placeOrder = async (req, res) => {
               details: paymentDetails
             }, { transaction });
             
-            // Set all other payment methods as non-default using standard update format instead of raw query
             await PaymentMethod.update(
               { isDefault: false },
               { 
@@ -834,13 +706,11 @@ exports.placeOrder = async (req, res) => {
               }
             );
           } else {
-            // Update existing payment method
             await existingPaymentMethod.update({
               isDefault: true,
               details: { ...existingPaymentMethod.details, ...paymentDetails }
             }, { transaction });
             
-            // Set all other payment methods as non-default using standard update format
             await PaymentMethod.update(
               { isDefault: false },
               { 
@@ -856,20 +726,16 @@ exports.placeOrder = async (req, res) => {
       }
     } catch (error) {
       console.error('Error creating/updating payment method:', error);
-      // Continue with the order even if payment method update fails
     }
     
-    // Update customer statistics - track order count, spending and last order date
     try {
       if (customerId) {
         const customer = await Customer.findByPk(customerId);
         
         if (customer) {
-          // Get current values with fallback to 0
           const currentOrderCount = customer.totalOrders || 0;
           const currentSpent = parseFloat(customer.totalSpent || 0);
           
-          // Use standard update with properly defined column names
           await Customer.update(
             {
               totalOrders: parseInt(currentOrderCount) + 1,
@@ -887,25 +753,18 @@ exports.placeOrder = async (req, res) => {
       }
     } catch (statsError) {
       console.error('Error updating customer statistics:', statsError);
-      // Continue with order processing even if stats update fails
     }
     
-    // Generate payment URLs for third-party payment processors
     let paymentUrl = null;
     if (paymentInfo.method === 'paypal') {
-      // Mock PayPal checkout URL
       paymentUrl = `https://www.paypal.com/checkoutnow?token=${orderId}`;
     } else if (paymentInfo.method === 'gpay') {
-      // Mock Google Pay checkout URL
       paymentUrl = `https://pay.google.com/checkout?orderid=${orderId}`;
     }
     
-    // Commit transaction
     await transaction.commit();
     
-    // Send invoice email to the customer after successful order placement
     try {
-      // Fetch complete order with details
       const orderWithDetails = await Order.findOne({
         where: { order_id: orderId },
         include: [{ 
@@ -915,25 +774,21 @@ exports.placeOrder = async (req, res) => {
       });
       
       if (orderWithDetails) {
-        // Get customer email address
         const customerEmail = customerInfo?.email || 
           (user?.email) || 
           (await Customer.findByPk(customerId))?.email;
         
         if (customerEmail) {
-          // Prepare order data for email
           const emailOrderData = {
             ...orderWithDetails.toJSON(),
             customerEmail,
             shippingFee: orderSummary.shippingFee
           };
           
-          // Import email service dynamically to avoid circular dependencies
           const { sendInvoiceEmail } = require('../../utils/emailService');
           
           console.log(`Attempting to send invoice email to ${customerEmail}`);
           
-          // Send invoice email (don't wait for this to complete)
           sendInvoiceEmail(emailOrderData)
             .then(sent => {
               if (sent) {
@@ -944,7 +799,6 @@ exports.placeOrder = async (req, res) => {
             })
             .catch(err => {
               console.error('Error in email sending process:', err);
-              // On error, still return success since order is completed
             });
         } else {
           console.log(`No customer email found to send invoice for order ${orderId}`);
@@ -954,14 +808,12 @@ exports.placeOrder = async (req, res) => {
       }
     } catch (emailError) {
       console.error('Error preparing invoice email:', emailError);
-      // Continue with order completion even if email fails
     }
     
-    // Return success response
     return res.status(201).json({
       success: true,
       orderId,
-      paymentUrl, // If defined above
+      paymentUrl,
       message: 'Order placed successfully',
       wholesaleDiscount: isWholesaleCustomer
     });
@@ -977,7 +829,6 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-// Helper function to detect card brand based on the first few digits
 function detectCardBrand(cardNumber) {
   const cleanedNumber = cardNumber.replace(/\D/g, '');
   
@@ -989,7 +840,6 @@ function detectCardBrand(cardNumber) {
   return 'Unknown';
 }
 
-// Helper function to calculate shipping cost based on district
 function calculateShippingCost(district) {
   const standardRate = 350;
   const highRateDistricts = ['Colombo', 'Gampaha', 'Kalutara'];
@@ -999,9 +849,6 @@ function calculateShippingCost(district) {
   return highRateDistricts.includes(district) ? standardRate + 100 : standardRate;
 }
 
-/**
- * Get order details by order ID
- */
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -1035,9 +882,6 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
-/**
- * Update payment status for an order
- */
 exports.updatePaymentStatus = async (req, res) => {
   const sqlTransaction = await sequelize.transaction();
   
@@ -1054,7 +898,6 @@ exports.updatePaymentStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
     
-    // Update order status based on payment status
     await Order.update({
       paymentStatus: paymentStatus,
       orderStatus: paymentStatus === 'completed' ? 'processing' : 'awaiting_payment',
@@ -1064,23 +907,19 @@ exports.updatePaymentStatus = async (req, res) => {
       transaction: sqlTransaction
     });
     
-    // Update transaction record as well
     try {
       const existingTransaction = await Transaction.findOne({
         where: { order_id: orderId }
       });
       
       if (existingTransaction) {
-        // Update the existing transaction
         await existingTransaction.update({
           transactionStatus: paymentStatus,
           gatewayTransactionId: transactionId || existingTransaction.gatewayTransactionId,
           notes: existingTransaction.notes + ` Payment status updated to ${paymentStatus}.`
         }, { transaction: sqlTransaction });
         
-        // Also update the related payment method if applicable
         if (existingTransaction.paymentMethod && paymentStatus === 'completed') {
-          // Find the payment method used for this transaction
           const paymentMethod = await PaymentMethod.findOne({
             where: {
               c_id: existingTransaction.c_id,
@@ -1088,7 +927,6 @@ exports.updatePaymentStatus = async (req, res) => {
             }
           });
           
-          // If found, update the payment method details
           if (paymentMethod) {
             const updatedDetails = { 
               ...paymentMethod.details,
@@ -1103,7 +941,6 @@ exports.updatePaymentStatus = async (req, res) => {
           }
         }
         
-        // Create transaction status history entry - using standard create instead of raw query
         try {
           await sequelize.models.TransactionStatusHistory.create({
             transaction_id: existingTransaction.transaction_id,
@@ -1115,12 +952,10 @@ exports.updatePaymentStatus = async (req, res) => {
           }, { transaction: sqlTransaction });
         } catch (historyError) {
           console.error('Error creating transaction history:', historyError);
-          // Continue with the order even if history creation fails
         }
       }
     } catch (error) {
       console.error('Error updating transaction record:', error);
-      // Continue even if transaction update fails
     }
     
     await sqlTransaction.commit();

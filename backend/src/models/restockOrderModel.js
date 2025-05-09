@@ -48,7 +48,7 @@ const RestockOrder = sequelize.define('RestockOrder', {
     defaultValue: Sequelize.NOW
   }
 }, {
-  tableName: 'Restock_orders', // Changed from restock_orders to Restock_orders
+  tableName: 'Restock_orders', 
   timestamps: false,
   underscored: true
 });

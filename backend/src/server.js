@@ -101,7 +101,7 @@ app.use('/api/favorites', favoriteRoutes);
 app.use('/api/checkout', checkoutRoutes); 
 app.use('/api/variations', variationRoutes);
 app.use('/api/addresses', addressRoutes); 
-app.use('/api/profileImages', profileImageRoutes); // Add this line
+app.use('/api/profileImages', profileImageRoutes); 
 
 const PORT = process.env.PORT || 5000;
 

@@ -42,7 +42,7 @@ const PaymentMethod = sequelize.define('PaymentMethod', {
 }, {
   tableName: 'Payment_methods',
   timestamps: true,
-  updatedAt: false, // No updated_at column in the schema
+  updatedAt: false, 
   underscored: true,
 });
 

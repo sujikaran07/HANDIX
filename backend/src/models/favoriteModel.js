@@ -40,7 +40,6 @@ const Favorite = sequelize.define('Favorite', {
   ]
 });
 
-// Define associations
 Favorite.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
 Customer.hasMany(Favorite, { foreignKey: 'c_id', as: 'favorites', onDelete: 'CASCADE' });
 

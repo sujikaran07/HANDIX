@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Create directories if they don't exist
 const createDirIfNotExists = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -9,23 +8,16 @@ const createDirIfNotExists = (dirPath) => {
   }
 };
 
-// Copy the logo file from ecommerce to backend
 const copyLogoFile = () => {
   try {
-    // Source logo paths to check (in order of preference)
     const sourcePaths = [
       path.join(__dirname, '../../../ecommerce/public/images/handix-logo1.png'),
       path.join(__dirname, '../../../frontend/public/images/handix-logo1.png')
     ];
-    
-    // Destination path
     const destDir = path.join(__dirname, '../public/images');
     const destPath = path.join(destDir, 'handix-logo1.png');
-    
-    // Create the destination directory if it doesn't exist
     createDirIfNotExists(destDir);
     
-    // Find the first source path that exists
     let sourceFile = null;
     for (const sourcePath of sourcePaths) {
       if (fs.existsSync(sourcePath)) {

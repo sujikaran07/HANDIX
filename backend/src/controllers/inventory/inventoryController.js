@@ -31,7 +31,6 @@ const getInventory = async (req, res) => {
     
     console.log(`Found ${inventory.length} inventory items`);
     
-    // Debug: Check if first item has images
     if (inventory.length > 0) {
       const firstItem = inventory[0];
       console.log(`First item (${firstItem.product_id}) has ${firstItem.productImages ? firstItem.productImages.length : 0} images`);
@@ -42,16 +41,13 @@ const getInventory = async (req, res) => {
       const entry = item.inventoryEntries && item.inventoryEntries[0];
       const category = entry ? entry.category : null;
       
-      // Extract all image URLs
       const images = [];
       
-      // Add default image URL if it exists
       if (item.default_image_url) {
         images.push(item.default_image_url);
         console.log(`Added default image for ${item.product_id}: ${item.default_image_url}`);
       }
       
-      // Add all other product images
       if (item.productImages && item.productImages.length > 0) {
         item.productImages.forEach(img => {
           if (img.image_url && !images.includes(img.image_url)) {

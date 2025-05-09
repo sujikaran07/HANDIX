@@ -22,8 +22,7 @@ const updateAdminProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    
-    // Validate status
+ 
     const validStatuses = ['Approved', 'Pending', 'Rejected', 'Disabled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
@@ -34,17 +33,14 @@ const updateAdminProductStatus = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    // Log the status change
     console.log(`Updating product ${id} status from ${product.status} to ${status}`);
     
     product.status = status;
     await product.save();
 
-    // If the product is being approved and it was previously rejected or pending,
-    // we might want to update other fields as well
-    if (status === 'Approved') {
-      // Update any other necessary fields
-    }
+    if (status === 'Approved') {   
+      
+     }
 
     res.status(200).json({ 
       message: 'Product status updated successfully', 

@@ -33,8 +33,7 @@ const Cart = sequelize.define('Cart', {
   timestamps: false
 });
 
-// Define relationship to Customer
 Cart.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
-Customer.hasMany(Cart, { foreignKey: 'c_id', as: 'customerCarts' }); // Changed alias to avoid conflict
+Customer.hasMany(Cart, { foreignKey: 'c_id', as: 'customerCarts' }); 
 
 module.exports = Cart;

@@ -1,6 +1,5 @@
 const { Address } = require('../../models/addressModel');
 
-// Get addresses by customer ID
 const getAddressesByCustomerId = async (req, res) => {
   try {
     const customerId = req.params.c_id;
@@ -18,7 +17,6 @@ const getAddressesByCustomerId = async (req, res) => {
   }
 };
 
-// Create address
 const createAddress = async (req, res) => {
   try {
     const address = await Address.create(req.body);
@@ -29,20 +27,17 @@ const createAddress = async (req, res) => {
   }
 };
 
-// Update an address for a customer
 const updateAddress = async (req, res) => {
   try {
     const { c_id } = req.params;
     const addressData = req.body;
-    
-    // Find the default address for this customer if it exists
+
     const [existingAddress] = await Address.findAll({
       where: { c_id: c_id },
       limit: 1
     });
     
     if (existingAddress) {
-      // Update existing address
       await Address.update(addressData, {
         where: { address_id: existingAddress.address_id }
       });
@@ -50,7 +45,6 @@ const updateAddress = async (req, res) => {
       const updatedAddress = await Address.findByPk(existingAddress.address_id);
       res.json(updatedAddress);
     } else {
-      // Create new address if none exists
       const newAddress = await Address.create({
         ...addressData,
         c_id: c_id

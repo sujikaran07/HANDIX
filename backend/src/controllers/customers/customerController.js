@@ -5,14 +5,14 @@ const { sequelize } = require('../../config/db');
 const { Op } = require('sequelize');  
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
-const bcrypt = require('bcrypt'); // Add this import for bcrypt
+const bcrypt = require('bcrypt'); 
 
 const getAllCustomers = async (req, res) => {
   try {
-    // Use select to explicitly select only the columns that exist in the database
+    
     const customers = await Customer.findAll({
       attributes: { 
-        exclude: ['addedByAdmin'] // Exclude the column that doesn't exist
+        exclude: ['addedByAdmin'] 
       },
       order: [['c_id', 'ASC']] 
     });
@@ -45,21 +45,16 @@ const getCustomerById = async (req, res) => {
       const totalOrders = orders.length; 
       const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
 
-      // Ensure total_spent is properly formatted as a string with 2 decimal places
-      // Add explicit type conversion and use direct assignment
       customer.dataValues.total_spent = totalSpent.toFixed(2);
       customer.dataValues.totalSpent = totalSpent.toFixed(2);
-      
-      // For backward compatibility, also set the instance properties
+    
       customer.total_spent = totalSpent.toFixed(2);
       customer.totalSpent = totalSpent.toFixed(2);
       
       customer.total_orders = totalOrders || 0;
       customer.totalOrders = totalOrders || 0;
 
-      // Last order date is already working correctly, no changes needed
       if (orders.length > 0) {
-        // Get the last order date
         const lastOrder = await Order.findOne({
           where: { c_id: req.params.c_id },
           order: [['order_date', 'DESC']]
@@ -71,7 +66,6 @@ const getCustomerById = async (req, res) => {
         }
       }
 
-      // Debug logging before sending response
       console.log('Customer data being sent:', JSON.stringify({
         ...customer.toJSON(),
         total_spent: customer.total_spent,
@@ -87,8 +81,6 @@ const getCustomerById = async (req, res) => {
     res.status(500).json({ message: 'Error fetching customer', error: error.message });
   }
 };
-
-// Generate a 4-digit OTP
 const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
@@ -97,9 +89,9 @@ const createCustomer = async (req, res) => {
   try {
     const customerData = req.body;
     
-    // If c_id is provided in request, use it
+
     if (!customerData.c_id) {
-      // Generate sequential customer ID (C001, C002, etc.)
+
       const latestCustomer = await Customer.findOne({
         order: [['c_id', 'DESC']]
       });
@@ -107,38 +99,32 @@ const createCustomer = async (req, res) => {
       let nextId = 1;
       
       if (latestCustomer) {
-        // Extract the numeric part of the ID and increment
         const latestIdNum = parseInt(latestCustomer.c_id.replace('C', ''), 10);
         if (!isNaN(latestIdNum)) {
           nextId = latestIdNum + 1;
         }
       }
       
-      // Format with leading zeros (C001, C010, C100)
       customerData.c_id = `C${nextId.toString().padStart(3, '0')}`;
     }
 
-    // Generate 4-digit OTP instead of token
     const verificationOTP = generateOTP();
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes expiry
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000); 
     
-    customerData.verificationToken = verificationOTP; // Store OTP in the token field
+    customerData.verificationToken = verificationOTP; 
     customerData.verificationExpires = verificationExpires;
-    customerData.isEmailVerified = false; // Not verified initially
+    customerData.isEmailVerified = false; 
     
-    // All accounts start as pending until verified
     customerData.accountStatus = 'Pending';
 
     if (customerData.addresses && customerData.addresses.length > 0) {
       customerData.country = customerData.addresses[0].country; 
     }
 
-    // Store the original password before hashing for verification
     let originalPassword = null;
 
-    // Hash password if provided - ensure consistent salt rounds
     if (customerData.password) {
-      // Save the original password for testing verification
+      
       originalPassword = String(customerData.password).trim();
       
       console.log('Registration password hashing:');
@@ -146,38 +132,31 @@ const createCustomer = async (req, res) => {
       console.log('- Password type:', typeof originalPassword);
       console.log('- Password length:', originalPassword.length);
       
-      // Use the standard bcrypt hash with 10 rounds
       const salt = await bcrypt.genSalt(10);
       customerData.password = await bcrypt.hash(originalPassword, salt);
       
       console.log('- Generated hash:', customerData.password);
     }
 
-    // Create customer in database
     const customer = await Customer.create(customerData, { include: [{ model: Address, as: 'addresses' }] });
     
-    // Now test if the password can be verified
     if (originalPassword) {
       try {
         const verifyPassword = await bcrypt.compare(originalPassword, customer.password);
         console.log('VERIFICATION TEST:', verifyPassword ? 'SUCCESS' : 'FAILED');
         
-        // If verification fails, try fixing the password with a new hash
         if (!verifyPassword) {
           console.log('⚠️ Initial verification failed - attempting fix');
-          
-          // Create a new proper hash
+         
           const newSalt = await bcrypt.genSalt(10);
           const newHash = await bcrypt.hash(originalPassword, newSalt);
-          
-          // Update the customer record with the new hash
+        
           await Customer.update({ password: newHash }, {
             where: { c_id: customer.c_id }
           });
           
           console.log('💡 Password hash fixed in database');
-          
-          // Verify again with the new hash
+         
           const refreshedCustomer = await Customer.findByPk(customer.c_id);
           const secondVerify = await bcrypt.compare(originalPassword, refreshedCustomer.password);
           console.log('SECOND VERIFICATION TEST:', secondVerify ? 'SUCCESS' : 'FAILED');
@@ -186,13 +165,10 @@ const createCustomer = async (req, res) => {
         console.error('Password verification error:', verifyError);
       }
     }
-    
-    // Print OTP for development
+   
     console.log(`🔐 OTP for ${customerData.email}: ${verificationOTP} (valid for 15 minutes)`);
 
-    // Send OTP via email
     try {
-      // Configure transporter with improved settings
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || 'smtp.gmail.com',
         port: parseInt(process.env.EMAIL_PORT || '587'),
@@ -201,15 +177,13 @@ const createCustomer = async (req, res) => {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD
         },
-        // Add DKIM support if you have keys
         dkim: process.env.DKIM_PRIVATE_KEY ? {
           domainName: process.env.EMAIL_DOMAIN || 'handix.com',
           keySelector: 'default',
           privateKey: process.env.DKIM_PRIVATE_KEY
         } : undefined
       });
-      
-      // Send email with OTP
+
       await transporter.sendMail({
         from: {
           name: process.env.EMAIL_SENDER_NAME || 'Handix Store',
@@ -253,22 +227,18 @@ const createCustomer = async (req, res) => {
       console.log('✅ Use the OTP code printed above for testing');
     }
     
-    // Return success response
     const { password, verificationToken, ...safeData } = customer.toJSON();
     
     res.status(201).json({ 
       ...safeData,
       message: 'Registration successful! Check your email for verification code.',
-      // Return email for redirect to OTP verification page
       email: customerData.email,
-      // Include OTP in development mode only
       otpForTesting: process.env.NODE_ENV === 'production' ? undefined : verificationOTP
     });
     
   } catch (error) {
     console.error('Error creating customer:', error);
-    
-    // Check for duplicate email
+ 
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(409).json({ 
         message: 'A user with this email already exists',
@@ -280,12 +250,10 @@ const createCustomer = async (req, res) => {
   }
 };
 
-// Add a new function for admin to create customers
 const createCustomerByAdmin = async (req, res) => {
   try {
     const customerData = req.body;
     
-    // Generate customer ID if not provided
     if (!customerData.c_id) {
       const latestCustomer = await Customer.findOne({
         order: [['c_id', 'DESC']]
@@ -303,30 +271,27 @@ const createCustomerByAdmin = async (req, res) => {
       customerData.c_id = `C${nextId.toString().padStart(3, '0')}`;
     }
     
-    // For admin-created customers: set as verified and approved
+ 
     customerData.isEmailVerified = true;
     customerData.verificationToken = null;
     customerData.verificationExpires = null;
     
-    // Auto-approve retail customers
     if (customerData.accountType === 'Retail') {
       customerData.accountStatus = 'Approved';
     }
-    
-    // Hash password if provided
+
     if (customerData.password) {
       const salt = await bcrypt.genSalt(10);
       customerData.password = await bcrypt.hash(customerData.password, salt);
     }
     
-    // Create customer
+
     const customer = await Customer.create(customerData, { 
       include: [{ model: Address, as: 'addresses' }] 
     });
     
     console.log(`Admin created customer ${customer.c_id} (${customerData.email}) - Auto-verified`);
     
-    // Return success response
     const { password, ...safeData } = customer.toJSON();
     
     res.status(201).json({
@@ -356,12 +321,11 @@ const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: 'Email and verification code are required' });
     }
     
-    // Find customer by email and OTP
     const customer = await Customer.findOne({
       where: {
         email,
         verificationToken: otp,
-        verificationExpires: { [Op.gt]: new Date() }  // Use Op directly instead of sequelize.Op
+        verificationExpires: { [Op.gt]: new Date() } 
       }
     });
     
@@ -369,39 +333,33 @@ const verifyOTP = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or expired verification code' });
     }
     
-    // Additional check - let's make sure the password hash is working
     if (customer.password && customer.password.startsWith('$2')) {
       try {
-        // Test with a temp password in dev mode
+
         if (process.env.NODE_ENV !== 'production' && req.body.testPassword) {
           const isValid = await bcrypt.compare(req.body.testPassword, customer.password);
           console.log(`Test password verification: ${isValid ? 'VALID' : 'INVALID'}`);
           
-          // If invalid and in dev mode, we can try to fix it
           if (!isValid && process.env.NODE_ENV !== 'production') {
             console.log('Attempting to fix invalid hash during verification');
             
             const newSalt = await bcrypt.genSalt(10);
             const newHash = await bcrypt.hash(req.body.testPassword, newSalt);
             customer.password = newHash;
-            
-            // We'll save this with other changes below
+       
           }
         }
       } catch (e) {
         console.error('Password verification test error:', e);
       }
     }
-    
-    // Update customer as verified
+
     customer.isEmailVerified = true;
-    
-    // If retail account, automatically approve
+
     if (customer.accountType === 'Retail') {
       customer.accountStatus = 'Approved';
     }
-    
-    // Clear verification token
+  
     customer.verificationToken = null;
     customer.verificationExpires = null;
     
@@ -419,7 +377,6 @@ const verifyOTP = async (req, res) => {
   }
 };
 
-// Allow verification without email for development
 const verifyManually = async (req, res) => {
   try {
     const { email } = req.body;
@@ -428,22 +385,18 @@ const verifyManually = async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
     
-    // Find customer by email
     const customer = await Customer.findOne({ where: { email } });
     
     if (!customer) {
       return res.status(404).json({ message: 'Customer not found' });
     }
     
-    // Update customer as verified
     customer.isEmailVerified = true;
     
-    // If retail account, automatically approve
     if (customer.accountType === 'Retail') {
       customer.accountStatus = 'Approved';
     }
-    
-    // Clear verification token
+   
     customer.verificationToken = null;
     customer.verificationExpires = null;
     
@@ -460,7 +413,6 @@ const verifyManually = async (req, res) => {
   }
 };
 
-// Add this function to maintain backward compatibility with email link verification
 const verifyEmail = async (req, res) => {
   try {
     const { token, email } = req.query;
@@ -468,13 +420,12 @@ const verifyEmail = async (req, res) => {
     if (!token || !email) {
       return res.status(400).json({ message: 'Invalid verification request' });
     }
-    
-    // Find customer by email and token
+  
     const customer = await Customer.findOne({
       where: {
         email,
         verificationToken: token,
-        verificationExpires: { [Op.gt]: new Date() } // Use Op directly
+        verificationExpires: { [Op.gt]: new Date() } 
       }
     });
     
@@ -484,15 +435,11 @@ const verifyEmail = async (req, res) => {
       });
     }
     
-    // Update customer as verified
     customer.isEmailVerified = true;
     
-    // If retail account, automatically approve
     if (customer.accountType === 'Retail') {
       customer.accountStatus = 'Approved';
     }
-    
-    // Clear verification token
     customer.verificationToken = null;
     customer.verificationExpires = null;
     
@@ -584,7 +531,7 @@ const getAllCustomersWithDetails = async (req, res) => {
   try {
     const customers = await Customer.findAll({
       attributes: { 
-        exclude: ['addedByAdmin'] // Exclude the column that doesn't exist
+        exclude: ['addedByAdmin'] 
       },
       include: [
         { model: Address, as: 'addresses' }, 
@@ -600,7 +547,6 @@ const getAllCustomersWithDetails = async (req, res) => {
   }
 };
 
-// Resend OTP if user didn't receive it
 const resendOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -609,34 +555,26 @@ const resendOTP = async (req, res) => {
       return res.status(400).json({ message: 'Email is required' });
     }
     
-    // Find customer by email
     const customer = await Customer.findOne({ where: { email } });
     
     if (!customer) {
-      // Don't reveal if email exists
       return res.status(200).json({ message: 'If your email exists in our system, a new code has been sent' });
     }
     
-    // If already verified
     if (customer.isEmailVerified) {
       return res.status(400).json({ message: 'Email is already verified. Please log in.' });
     }
     
-    // Generate new OTP
     const newOTP = generateOTP();
-    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000); 
     
-    // Update customer with new OTP
     customer.verificationToken = newOTP;
     customer.verificationExpires = otpExpires;
     await customer.save();
     
-    // Log for development
     console.log(`🔄 New OTP for ${email}: ${newOTP}`);
     
-    // Send new OTP via email
     try {
-      // ...existing email sending code...
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
         port: parseInt(process.env.EMAIL_PORT),
@@ -678,7 +616,6 @@ const resendOTP = async (req, res) => {
     
     res.json({ 
       message: 'New verification code sent to your email',
-      // Return OTP in development for testing
       otpForTesting: process.env.NODE_ENV === 'production' ? undefined : newOTP
     });
     

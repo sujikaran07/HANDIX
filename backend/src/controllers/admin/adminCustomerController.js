@@ -2,12 +2,10 @@ const { Customer } = require('../../models/customerModel');
 const { Address } = require('../../models/addressModel');
 const bcrypt = require('bcrypt');
 
-// Create a customer from admin panel
 exports.createCustomer = async (req, res) => {
   try {
     const customerData = req.body;
-    
-    // Generate sequential customer ID if not provided
+
     if (!customerData.c_id) {
       const latestCustomer = await Customer.findOne({
         order: [['c_id', 'DESC']]
@@ -25,21 +23,17 @@ exports.createCustomer = async (req, res) => {
       customerData.c_id = `C${nextId.toString().padStart(3, '0')}`;
     }
     
-    // Mark that this customer was added by admin
     customerData.addedByAdmin = true;
     customerData.isEmailVerified = true;
     
-    // Auto-approve Retail customers
     if (customerData.accountType === 'Retail') {
       customerData.accountStatus = 'Approved';
     }
     
-    // Create customer
     const customer = await Customer.create(customerData, { 
       include: [{ model: Address, as: 'addresses' }] 
     });
-    
-    // Return success response (excluding sensitive data)
+   
     const { password, ...safeData } = customer.toJSON();
     
     res.status(201).json({
@@ -61,4 +55,3 @@ exports.createCustomer = async (req, res) => {
   }
 };
 
-// ...other admin customer management functions...

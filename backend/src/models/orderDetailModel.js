@@ -37,7 +37,7 @@ const OrderDetail = sequelize.define('OrderDetail', {
   customization: {
     type: DataTypes.TEXT,
     allowNull: true,
-    field: 'customization_text' // Match the actual database column name
+    field: 'customization_text'
   },
   customization_fee: {
     type: DataTypes.DECIMAL(10, 2),
@@ -50,7 +50,6 @@ const OrderDetail = sequelize.define('OrderDetail', {
   underscored: true
 });
 
-// Create association with Order
 OrderDetail.belongsTo(Order, { 
   foreignKey: 'order_id',
   as: 'order'

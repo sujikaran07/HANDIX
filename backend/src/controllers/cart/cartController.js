@@ -6,18 +6,15 @@ const { Customer } = require('../../models/customerModel');
 const ProductVariation = require('../../models/productVariationModel');
 const { sequelize } = require('../../config/db');
 
-// Get cart for a user
 exports.getUserCart = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Check if user exists
     const customer = await Customer.findByPk(userId);
     if (!customer) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Find or create an active cart for the user
     let [cart, created] = await Cart.findOrCreate({
       where: {
         c_id: userId,
@@ -29,7 +26,6 @@ exports.getUserCart = async (req, res) => {
       }
     });
 
-    // Get cart items with product details
     const cartItems = await CartItem.findAll({
       where: { cart_id: cart.cart_id },
       include: [
@@ -48,12 +44,10 @@ exports.getUserCart = async (req, res) => {
       order: [['added_at', 'DESC']]
     });
 
-    // Format the response
     const formattedItems = await Promise.all(cartItems.map(async (item) => {
       const product = item.product;
       const images = product.productImages.map(img => img.image_url);
       
-      // Get variation details if size is specified
       let variationDetails = null;
       if (item.size) {
         const variation = await ProductVariation.findOne({
@@ -90,7 +84,6 @@ exports.getUserCart = async (req, res) => {
       };
     }));
 
-    // Calculate cart totals
     const subtotal = formattedItems.reduce((sum, item) => 
       sum + (item.product.price * item.quantity), 0);
     
@@ -117,7 +110,6 @@ exports.getUserCart = async (req, res) => {
   }
 };
 
-// Add item to cart
 exports.addItemToCart = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
@@ -129,14 +121,12 @@ exports.addItemToCart = async (req, res) => {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-    // Validate that the product exists and check available inventory
     const product = await Inventory.findByPk(productId);
     if (!product) {
       await transaction.rollback();
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Check if requested quantity exceeds available quantity
     const availableQuantity = product.quantity || 0;
     const safeQuantity = Math.min(quantity, availableQuantity);
 
@@ -145,7 +135,6 @@ exports.addItemToCart = async (req, res) => {
       return res.status(400).json({ message: 'Product is out of stock' });
     }
 
-    // Find or create user's active cart
     const [cart, created] = await Cart.findOrCreate({
       where: {
         c_id: userId,
@@ -158,7 +147,6 @@ exports.addItemToCart = async (req, res) => {
       transaction
     });
 
-    // Check if this product already exists in the cart with the same customization
     let cartItem = await CartItem.findOne({
       where: {
         cart_id: cart.cart_id,
@@ -169,12 +157,11 @@ exports.addItemToCart = async (req, res) => {
     });
 
     if (cartItem) {
-      // Update existing item, respecting inventory limits
+
       const newQuantity = Math.min(cartItem.quantity + safeQuantity, availableQuantity);
       cartItem.quantity = newQuantity;
       await cartItem.save({ transaction });
     } else {
-      // Create new cart item
       cartItem = await CartItem.create({
         cart_id: cart.cart_id,
         product_id: productId,
@@ -186,7 +173,6 @@ exports.addItemToCart = async (req, res) => {
       console.log(`Cart item created with customization: ${customization || 'None'}, quantity: ${safeQuantity}/${availableQuantity}`);
     }
 
-    // Update cart timestamp
     await Cart.update(
       { updated_at: new Date() },
       { where: { cart_id: cart.cart_id }, transaction }
@@ -208,7 +194,6 @@ exports.addItemToCart = async (req, res) => {
   }
 };
 
-// Update cart item quantity
 exports.updateCartItem = async (req, res) => {
   try {
     const { userId, itemId } = req.params;
@@ -218,7 +203,6 @@ exports.updateCartItem = async (req, res) => {
       return res.status(400).json({ message: 'Invalid quantity' });
     }
 
-    // Find the user's active cart
     const cart = await Cart.findOne({
       where: {
         c_id: userId,
@@ -230,7 +214,6 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    // Find the cart item
     const cartItem = await CartItem.findOne({
       where: {
         cart_item_id: itemId,
@@ -246,7 +229,6 @@ exports.updateCartItem = async (req, res) => {
       return res.status(404).json({ message: 'Cart item not found' });
     }
 
-    // Check inventory limits
     const availableQuantity = cartItem.product.quantity || 0;
     const safeQuantity = Math.min(quantity, availableQuantity);
     
@@ -257,11 +239,9 @@ exports.updateCartItem = async (req, res) => {
       });
     }
 
-    // Update the quantity
     cartItem.quantity = safeQuantity;
     await cartItem.save();
 
-    // Update cart timestamp
     await Cart.update(
       { updated_at: new Date() },
       { where: { cart_id: cart.cart_id } }
@@ -279,12 +259,10 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-// Remove item from cart
 exports.removeCartItem = async (req, res) => {
   try {
     const { userId, itemId } = req.params;
 
-    // Find the user's active cart
     const cart = await Cart.findOne({
       where: {
         c_id: userId,
@@ -296,7 +274,6 @@ exports.removeCartItem = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    // Delete the cart item
     const result = await CartItem.destroy({
       where: {
         cart_item_id: itemId,
@@ -308,7 +285,6 @@ exports.removeCartItem = async (req, res) => {
       return res.status(404).json({ message: 'Cart item not found' });
     }
 
-    // Update cart timestamp
     await Cart.update(
       { updated_at: new Date() },
       { where: { cart_id: cart.cart_id } }
@@ -323,12 +299,10 @@ exports.removeCartItem = async (req, res) => {
   }
 };
 
-// Clear all items from cart
 exports.clearCart = async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Find the user's active cart
     const cart = await Cart.findOne({
       where: {
         c_id: userId,
@@ -340,14 +314,12 @@ exports.clearCart = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    // Delete all cart items
     await CartItem.destroy({
       where: {
         cart_id: cart.cart_id
       }
     });
 
-    // Update cart timestamp
     await Cart.update(
       { updated_at: new Date() },
       { where: { cart_id: cart.cart_id } }

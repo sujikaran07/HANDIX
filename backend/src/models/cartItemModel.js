@@ -48,12 +48,11 @@ const CartItem = sequelize.define('CartItem', {
   indexes: [
     {
       unique: true,
-      fields: ['cart_id', 'product_id', 'customization'] // Updated to include customization in the unique constraint
+      fields: ['cart_id', 'product_id', 'customization'] 
     }
   ]
 });
 
-// Define relationships
 CartItem.belongsTo(Cart, { foreignKey: 'cart_id', as: 'cart' });
 Cart.hasMany(CartItem, { foreignKey: 'cart_id', as: 'items', onDelete: 'CASCADE' });
 

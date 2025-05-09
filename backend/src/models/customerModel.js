@@ -123,66 +123,52 @@ const Customer = sequelize.define('Customer', {
   hooks: {
     beforeCreate: async (customer) => {
       if (customer.password) {
-        // Store original password without modifications
+       
         const originalPassword = String(customer.password);
         
         try {
-          // Skip hashing if it already looks like a bcrypt hash
           if (originalPassword.startsWith('$2b$') || originalPassword.startsWith('$2a$')) {
             console.log('Password appears to already be a hash, skipping hashing');
             return;
           }
-          
-          // Don't trim - use exact password for consistency
           const salt = await bcrypt.genSalt(10);
           customer.password = await bcrypt.hash(originalPassword, salt);
           console.log('Hashed password for new user:', customer.password.substring(0, 20) + '...');
           
-          // Verify the hash works immediately
           const verifyWorks = await bcrypt.compare(originalPassword, customer.password);
           console.log('New user password verification test:', verifyWorks ? 'PASSED ✓' : 'FAILED ✗');
           
           if (!verifyWorks) {
             console.error('CRITICAL: New user password verification failed!');
-            // Use a stronger fallback method with explicit rounds
+
             customer.password = await bcrypt.hash(originalPassword, 10);
           }
         } catch (e) {
           console.error('Password hashing error:', e);
         }
       }
-      
-      // Remove references to addedByAdmin field
       if (customer.get('isEmailVerified') && customer.get('accountType') === 'Retail') {
         customer.accountStatus = 'Approved';
       }
-      
-      // Only approve retail accounts after email verification
-      // This will be handled in the verifyEmail function
     },
     beforeUpdate: async (customer) => {
-      // Only hash if password field is being modified
       if (customer.changed('password') && customer.password) {
-        // Skip hashing if password appears to be a hash already
         if (customer.password.startsWith('$2b$') || customer.password.startsWith('$2a$')) {
           console.log('Update: password appears to already be a hash, skipping hashing');
           return;
         }
-        
-        // CRITICAL FIX: Use the password exactly as provided without trimming
         const originalPassword = String(customer.password);
         
         try {
           const salt = await bcrypt.genSalt(10);
           customer.password = await bcrypt.hash(originalPassword, salt);
           
-          // Verify the hash works immediately
           const verifyWorks = await bcrypt.compare(originalPassword, customer.password);
           console.log('Updated password verification test:', verifyWorks ? 'PASSED ✓' : 'FAILED ✗');
           
           if (!verifyWorks) {
             console.error('CRITICAL: Updated password verification failed!');
-            // Use a stronger fallback method with explicit rounds
+
             customer.password = await bcrypt.hash(originalPassword, 10);
           }
         } catch (e) {

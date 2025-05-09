@@ -12,7 +12,6 @@ router.get('/', authMiddleware, getAllAdminProducts);
 router.put('/:id/status', authMiddleware, updateAdminProductStatus);
 router.delete('/:id', authMiddleware, deleteAdminProduct); 
 
-// Optional specific status endpoints for more semantic API
 router.put('/:id/approve', authMiddleware, (req, res) => {
   req.body.status = 'Approved';
   return updateAdminProductStatus(req, res);
