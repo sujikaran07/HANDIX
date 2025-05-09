@@ -316,16 +316,15 @@ const ManageProducts = ({ onViewProduct }) => {
             </thead>
             <tbody>
               {currentProducts.length > 0 ? (
-                currentProducts.map(product => (
-                  <tr key={product.entry_id}> 
-                    <td>{product.product_id}</td> 
-                    <td>{product.product_name}</td> 
+                currentProducts.map(product => (<tr key={product.entry_id}>
+                    <td>{product.product_id}</td>
+                    <td>{product.product_name}</td>
                     <td>{product.category?.category_name || 'N/A'}</td>
-                    <td>{product.e_id || 'N/A'}</td> 
-                    <td>{product.unit_price}</td> 
-                    <td>{product.quantity}</td> 
-                    <td>{new Date(product.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td> {/* Uploaded Date */}
-                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td> {/* Status */}
+                    <td>{product.e_id || 'N/A'}</td>
+                    <td>{product.unit_price}</td>
+                    <td>{product.quantity}</td>
+                    <td>{new Date(product.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                    <td className={`status ${product.status.toLowerCase()}`}>{product.status}</td>
                     <td className="action-buttons">
                       <div className="dropdown">
                         <button className="btn dropdown-toggle" type="button" id={`dropdown-${product.entry_id}`} data-bs-toggle="dropdown" aria-expanded="false">
@@ -335,16 +334,14 @@ const ManageProducts = ({ onViewProduct }) => {
                           <li>
                             <button className="dropdown-item" onClick={() => onViewProduct(product)}>View</button>
                           </li>
-                          {product.status.toLowerCase() === 'pending' && (
-                            <>
+                          {product.status.toLowerCase() === 'pending' && (<>
                               <li>
                                 <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'approve')}>Approve</button>
                               </li>
                               <li>
                                 <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'reject')}>Reject</button>
                               </li>
-                            </>
-                          )}
+                            </>)}
                           {product.status.toLowerCase() === 'rejected' && (
                             <li>
                               <button className="dropdown-item" onClick={() => handleProductAction(product.entry_id, 'restore')}>Restore</button>
@@ -353,8 +350,7 @@ const ManageProducts = ({ onViewProduct }) => {
                         </ul>
                       </div>
                     </td>
-                  </tr>
-                ))
+                  </tr>))
               ) : (
                 <tr>
                   <td colSpan="9" className="text-center">No products available</td>
