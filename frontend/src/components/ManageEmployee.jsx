@@ -25,8 +25,16 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const token = localStorage.getItem('token');
-        console.log('Token being sent:', token);
+       // Check for token or adminToken
+       let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+        
+       // Debug: Log available keys in localStorage
+       const availableKeys = [];
+       for (let i = 0; i < localStorage.length; i++) {
+         availableKeys.push(localStorage.key(i));
+       }
+       console.log('Available localStorage keys:', availableKeys);
+       console.log('Token being sent:', token);
         
         if (!token) {
           console.error('No token found in localStorage');
