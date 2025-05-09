@@ -25,7 +25,7 @@ const ArtisanProductsPage = () => {
           return;
         }
 
-        const response = await fetch('http://localhost:5000/api/login/current-user', {
+        const response = await fetch('http://localhost:5000/api/login/me', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
