@@ -20,16 +20,86 @@ const getAllOrders = async (req, res) => {
         {
           model: OrderDetail,
           as: 'orderDetails',
-          attributes: ['order_detail_id', 'order_id', 'product_id', 'quantity', 'priceAtPurchase']
+          attributes: ['order_detail_id', 'order_id', 'product_id', 'quantity', 'priceAtPurchase', 'customization', 'customization_fee']
         }
       ],
       order: [['orderDate', 'DESC']]
     });
 
+    // Process orders to include complete details
+    const processedOrders = await Promise.all(orders.map(async (order) => {
+      const orderData = order.toJSON();
+      
+      // Default shipping fee if not set
+      if (!orderData.shippingFee) {
+        orderData.shippingFee = 350;
+      }
+
+      // Format order items with product details and images
+      if (orderData.orderDetails && orderData.orderDetails.length > 0) {
+        const itemsWithDetails = await Promise.all(orderData.orderDetails.map(async (detail) => {
+          try {
+            // Get product image
+            const productImage = await ProductImage.findOne({
+              where: { product_id: detail.product_id }
+            });
+            
+            // Get product details
+            const inventory = await Inventory.findOne({
+              where: { product_id: detail.product_id }
+            });
+            
+            return {
+              product_id: detail.product_id,
+              product_name: inventory?.product_name || 'Unknown Product',
+              quantity: detail.quantity,
+              unit_price: detail.priceAtPurchase,
+              image_url: productImage?.image_url || null,
+              customizations: detail.customization,
+              customization_fee: detail.customization_fee
+            };
+          } catch (err) {
+            console.error(`Failed to fetch details for product ${detail.product_id}:`, err);
+            return {
+              product_id: detail.product_id,
+              product_name: 'Unknown Product',
+              quantity: detail.quantity,
+              unit_price: detail.priceAtPurchase,
+              image_url: null
+            };
+          }
+        }));
+        
+        // Add items array to order
+        orderData.items = itemsWithDetails;
+        
+        // Calculate additional fields
+        orderData.subtotal = itemsWithDetails.reduce(
+          (sum, item) => sum + (parseFloat(item.unit_price) * parseInt(item.quantity)), 
+          0
+        );
+        
+        orderData.additionalFees = itemsWithDetails.reduce(
+          (sum, item) => sum + (parseFloat(item.customization_fee || 0)), 
+          0
+        );
+      }
+      
+      // Format customer information
+      if (orderData.customerInfo) {
+        orderData.customerName = `${orderData.customerInfo.firstName || ''} ${orderData.customerInfo.lastName || ''}`.trim();
+        orderData.customerEmail = orderData.customerInfo.email;
+        orderData.customerPhone = orderData.customerInfo.phone;
+        orderData.customer_id = orderData.customerInfo.c_id;
+      }
+      
+      return orderData;
+    }));
+
     res.status(200).json({
       success: true,
-      count: orders.length,
-      orders
+      count: processedOrders.length,
+      orders: processedOrders
     });
   } catch (error) {
     console.error('Error fetching orders:', error);

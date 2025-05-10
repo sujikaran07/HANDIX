@@ -79,14 +79,29 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           status = 'To Pay';
         }
         
+        // Keep the complete order object for the view form
         return {
           id: order.order_id || order.id,
-          customerName: firstName, // Only use first name here
+          customerName: firstName, // Only use first name for the table
           orderDate,
           totalAmount: `${totalAmount}`,  
           customized,
           assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
-          status
+          status,
+          // Add all the raw data needed for the view form
+          items: order.items || [],
+          customerEmail: order.customerEmail || order.customerInfo?.email,
+          customerPhone: order.customerPhone || order.customerInfo?.phone,
+          customer_id: order.customer_id || order.customerInfo?.c_id,
+          shippingAddress: order.shippingAddress,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          shippingMethod: order.shippingMethod,
+          additionalFees: order.additionalFees,
+          shippingCost: order.shippingFee,
+          subtotal: order.subtotal,
+          notes: order.notes,
+          deliveryDate: order.deliveryDate
         };
       });
       

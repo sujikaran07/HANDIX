@@ -34,7 +34,8 @@ const Favorite = require('./models/favoriteModel');
 const { ShippingMethod } = require('./models/shippingMethodModel');
 const variationRoutes = require('./routes/variations/variationRoutes');
 const addressRoutes = require('./routes/addresses/addressRoutes');
-const profileImageRoutes = require('./routes/profileImages/profileImageRoutes'); // Add this line
+const profileImageRoutes = require('./routes/profileImages/profileImageRoutes');
+const shippingMethodRoutes = require('./routes/shippingMethods/shippingMethodRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -75,6 +76,10 @@ Customer.hasMany(Order, {
   onUpdate: 'CASCADE',
 });
 
+// Associate Order with ShippingMethod
+Order.belongsTo(ShippingMethod, { foreignKey: 'shippingMethodId', as: 'shippingMethod' });
+ShippingMethod.hasMany(Order, { foreignKey: 'shippingMethodId', as: 'orders' });
+
 dotenv.config();
 
 const app = express();
@@ -102,6 +107,7 @@ app.use('/api/checkout', checkoutRoutes);
 app.use('/api/variations', variationRoutes);
 app.use('/api/addresses', addressRoutes); 
 app.use('/api/profileImages', profileImageRoutes); 
+app.use('/api/shipping-methods', shippingMethodRoutes);
 
 const PORT = process.env.PORT || 5000;
 

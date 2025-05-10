@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminTopbar from '../../components/AdminTopbar';
 import ManageOrders from '../../components/ManageOrder';
-import OrderDetails from '../../components/OrderDetails';
+import OrderViewForm from '../../components/OrderViewForm';
 import '../../styles/admin/AdminOrder.css';
 
 const AdminManageOrderPage = () => {
@@ -35,7 +35,7 @@ const AdminManageOrderPage = () => {
       <div className="main-content">
         <AdminTopbar />
         {selectedOrder ? (
-          <OrderDetails order={selectedOrder} onBack={handleBackToOrders} />
+          <OrderViewForm order={selectedOrder} onBack={handleBackToOrders} />
         ) : (
           <ManageOrders onAddOrderClick={handleAddOrderClick} onViewOrder={handleViewOrder} />
         )}
