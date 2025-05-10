@@ -6,6 +6,10 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility; 
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow: hidden;
 }
 
 .artisan-products-page {
@@ -307,11 +311,59 @@ input[type="checkbox"]:checked {
 @media (max-width: 768px) {
     body {
         font-size: var(--font-size-small); 
+        overflow-y: auto;
+    }
+
+    .artisan-products-page .artisan-main-content {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+    
+    .artisan-products-page .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
     }
 
     .artisan-products-page .product-table th,
     .artisan-products-page .product-table td {
         font-size: 0.875rem;
+    }
+    
+    .artisan-products-page .btn-primary,
+    .artisan-products-page .btn-secondary,
+    .artisan-products-page .export-btn {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 576px) {
+    .artisan-products-page .artisan-main-content {
+        padding: 10px;
+        margin-right: 0;
+    }
+    
+    .artisan-products-page .search-bar input {
+        width: 120px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .artisan-products-page .artisan-main-content {
+        margin-left: 232px;
+        margin-right: -10px;
+    }
+    
+    .artisan-products-page .btn-primary,
+    .artisan-products-page .btn-secondary {
+        font-size: 12px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .artisan-products-page .artisan-main-content {
+        margin-left: 232px;
     }
 }
 

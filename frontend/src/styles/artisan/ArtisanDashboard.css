@@ -307,6 +307,22 @@ body {
 @media (max-width: 768px) {
     body {
         font-size: var(--font-size-small); 
+        overflow-y: auto;
+    }
+
+    .artisan-dashboard-container {
+        flex-direction: column;
+    }
+
+    .artisan-sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
+
+    .artisan-main-content {
+        margin-left: 0;
+        margin-top: 20px;
     }
 
     .artisan-dashboard-cards .artisan-card h4,
@@ -321,6 +337,43 @@ body {
     .artisan-sales-trend-graph, .artisan-product-sales-chart {
         flex: none;
         width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .artisan-main-content {
+        padding: 10px;
+    }
+
+    .artisan-topbar {
+        width: calc(100% - 20px) !important;
+        left: 10px;
+    }
+
+    .search-bar input {
+        width: 120px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .artisan-topbar {
+        width: calc(100% - 270px) !important;
+        left: 260px;
+    }
+
+    .artisan-dashboard-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .artisan-topbar {
+        width: calc(100% - 270px) !important;
+        left: 260px;
+    }
+
+    .artisan-dashboard-cards {
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 

@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -18,6 +17,10 @@ html {
 
 body {
     font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow: hidden;
 }
 
 
@@ -43,9 +46,19 @@ body {
 
 
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+    }
+    
     .main-content-unique {
         margin-left: 0;
         margin-top: 20px;
+    }
+    
+    .artisan-logout-page-unique .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
     }
 
     .logout-buttons {
@@ -54,6 +67,25 @@ body {
     }
 }
 
+@media (max-width: 576px) {
+    .main-content-unique {
+        padding: 10px;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .main-content-unique {
+        margin-left: 232px;
+        margin-right: -10px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .main-content-unique {
+        margin-left: 232px;
+    }
+}
 
 @media (min-width: 1200px) {
     .main-content-unique {

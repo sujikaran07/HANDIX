@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -18,6 +17,10 @@ html {
 
 body {
     font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow: hidden;
 }
 
 .artisan-settings-page {
@@ -104,9 +107,19 @@ body {
 
 
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+    }
+    
     .artisan-settings-page .artisan-main-content {
         margin-left: 0;
         margin-top: 20px;
+    }
+    
+    .artisan-settings-page .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
     }
 
     .artisan-settings-page .btn-primary {
@@ -115,6 +128,25 @@ body {
     }
 }
 
+@media (max-width: 576px) {
+    .artisan-settings-page .artisan-main-content {
+        padding: 10px;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .artisan-settings-page .artisan-main-content {
+        margin-left: 232px;
+        margin-right: -10px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .artisan-settings-page .artisan-main-content {
+        margin-left: 232px;
+    }
+}
 
 @media (min-width: 1200px) {
     .artisan-settings-page .artisan-main-content {

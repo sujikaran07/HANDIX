@@ -1,4 +1,3 @@
-
 * {
     margin: 0;
     padding: 0;
@@ -18,6 +17,10 @@ html {
 
 body {
     font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow: hidden;
 }
 
 
@@ -650,9 +653,19 @@ body {
 
 
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+    }
+    
     .admin-customer-page .main-content {
         margin-left: 0;
         margin-top: 20px;
+    }
+    
+    .admin-customer-page .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
     }
 
     .admin-customer-page .add-customer-btn,
@@ -667,6 +680,16 @@ body {
     }
 }
 
+@media (max-width: 576px) {
+    .admin-customer-page .main-content {
+        padding: 10px;
+        margin-right: 0;
+    }
+    
+    .admin-customer-page .search-bar input {
+        width: 120px;
+    }
+}
 
 @media (min-width: 1200px) {
     .admin-customer-page .main-content {

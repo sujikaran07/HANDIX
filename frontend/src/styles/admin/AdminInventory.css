@@ -13,9 +13,12 @@ html {
     box-sizing: inherit;
 }
 
-
 body {
     font-family: "Poppins", sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+    overflow: hidden;
 }
 
 .admin-inventory-page {
@@ -185,7 +188,6 @@ body {
     color: #dc3545 !important; 
 }
 
-
 .stock-status.disabled {
   color: #8aa5bc !important; 
 }
@@ -298,15 +300,25 @@ input[type="checkbox"]:checked {
     border-color: #3e87c3;
 }
 
-
 @media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+    }
+    
     .admin-inventory-page .main-content {
         margin-left: 0;
         margin-top: 20px;
     }
+    
+    .admin-inventory-page .sidebar {
+        width: 100%;
+        position: relative;
+        height: auto;
+    }
 
     .admin-inventory-page .btn-primary,
-    .admin-inventory-page .btn-secondary {
+    .admin-inventory-page .btn-secondary,
+    .admin-inventory-page .export-btn {
         width: 100%;
         margin-bottom: 10px;
     }
@@ -317,6 +329,30 @@ input[type="checkbox"]:checked {
     }
 }
 
+@media (max-width: 576px) {
+    .admin-inventory-page .main-content {
+        padding: 10px;
+        margin-right: 0;
+    }
+    
+    .admin-inventory-page .search-bar input {
+        width: 120px;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 991px) {
+    .admin-inventory-page .btn-primary,
+    .admin-inventory-page .btn-secondary {
+        font-size: 11px;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1199px) {
+    .admin-inventory-page .main-content {
+        margin-left: 232px;
+        margin-right: -10px;
+    }
+}
 
 @media (min-width: 1200px) {
     .admin-inventory-page .main-content {
@@ -324,7 +360,6 @@ input[type="checkbox"]:checked {
         margin-top: 55px;
     }
 }
-
 
 @media (min-width: 1600px) {
     .admin-inventory-page .main-content {
