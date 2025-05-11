@@ -24,6 +24,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/orders/artisans-info');
       console.log("Available artisans:", response.data);
+      
       setArtisans(response.data || []);
       setError(null);
     } catch (error) {
@@ -169,7 +170,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
               <div className="col-md-7">
                 <div className="card border-0 shadow-sm h-100">
                   <div className="card-header bg-light py-2 d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0" style={{fontSize: "14px"}}>Available Artisans</h6>
+                    <h6 className="mb-0" style={{fontSize: "14px"}}>Artisans List</h6>
                     <span className="badge bg-primary">{artisans.length} Artisans</span>
                   </div>
                   <div className="card-body p-0 d-flex flex-column">

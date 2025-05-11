@@ -418,7 +418,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
                     <tr>
                       <th>E-ID</th>
                       <th>Artisan Name</th>
-                      <th>Ongoing Orders</th>
+                      <th>Workload</th>
                       <th>Last Order Completed</th>
                       <th>Availability</th>
                       <th>Actions</th>

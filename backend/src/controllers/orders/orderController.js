@@ -302,16 +302,19 @@ const getArtisansWithOrderInfo = async (req, res) => {
     let employees = [];
     try {
       employees = await Employee.findAll({
-        attributes: ['eId', 'firstName', 'lastName']
+        attributes: ['eId', 'firstName', 'lastName', 'roleId'],
+        where: {
+          roleId: 2  // Assuming roleId 2 is for Artisans, roleId 1 is for Admin
+        }
       });
-      console.log(`Found ${employees.length} total employees`);
+      console.log(`Found ${employees.length} total artisans`);
     } catch (err) {
       console.error('Error querying employees:', err);
       return res.status(200).json([]); 
     }
     
     if (!employees || employees.length === 0) {
-      console.log('No employees found');
+      console.log('No artisans found');
       return res.status(200).json([]);
     }
 
