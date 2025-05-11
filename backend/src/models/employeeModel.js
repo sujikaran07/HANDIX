@@ -43,10 +43,6 @@ const Employee = sequelize.define('Employee', {
     onUpdate: 'CASCADE', 
     onDelete: 'SET NULL'
   },
-  profileImage: { 
-    type: DataTypes.TEXT,
-    field: 'profile_image' 
-  },
   createdAt: { 
     type: DataTypes.DATE, 
     defaultValue: DataTypes.NOW,

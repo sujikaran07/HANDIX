@@ -15,6 +15,7 @@ const { Address } = require('./models/addressModel');
 const { Order } = require('./models/orderModel');
 const { OrderDetail } = require('./models/orderDetailModel');
 const { ProfileImage } = require('./models/profileImageModel');
+const EmployeeProfile = require('./models/employeeProfileModel');
 const Inventory = require('./models/inventoryModel'); 
 const Category = require('./models/categoryModel');
 const ProductImage = require('./models/productImageModel');
