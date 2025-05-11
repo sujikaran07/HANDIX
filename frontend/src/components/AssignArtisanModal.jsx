@@ -18,14 +18,24 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       fetchOrderDetails();
     }
   }, [show, orderId]);
-
   const fetchArtisans = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/orders/artisans-info');
+      const response = await axios.get('http://localhost:5000/api/artisans');
       console.log("Available artisans:", response.data);
       
-      setArtisans(response.data || []);
+      // Make sure we process the response correctly regardless of whether it's an array or has a data property
+      const artisanData = Array.isArray(response.data) ? response.data : [];
+      
+      // Process each artisan to normalize the data structure
+      const processedArtisans = artisanData.map(artisan => ({
+        ...artisan,
+        availability: artisan.availability || 'Available',
+        ongoingOrders: artisan.ongoingOrders || '0 Orders'
+      }));
+      
+      console.log("Processed artisans:", processedArtisans);
+      setArtisans(processedArtisans);
       setError(null);
     } catch (error) {
       console.error("Failed to fetch artisans:", error);
@@ -44,7 +54,6 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       console.error("Failed to fetch order details:", error);
     }
   };
-
   const handleAssign = async () => {
     if (!selectedArtisan) {
       setError("Please select an artisan");
@@ -56,6 +65,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       
       // Find the selected artisan object
       const artisan = artisans.find(a => a.id === selectedArtisan);
+      console.log("Selected artisan data:", artisan);
       
       if (!artisan) {
         throw new Error('Selected artisan not found');
@@ -189,17 +199,18 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                             currentArtisans.map(artisan => (
                               <tr 
                                 key={artisan.id} 
-                                className={selectedArtisan === artisan.id ? 'table-active' : ''}
-                                style={{cursor: artisan.availability === 'Busy' ? 'default' : 'pointer'}}
+                                className={selectedArtisan === artisan.id ? 'table-active' : ''}                                style={{
+                                  cursor: artisan.availability === 'Busy' ? 'default' : 'pointer',
+                                  opacity: artisan.availability === 'Busy' ? 0.7 : 1
+                                }}
                                 onClick={() => {
                                   if (artisan.availability !== 'Busy') {
                                     setSelectedArtisan(artisan.id);
                                   }
                                 }}
-                              >
-                                <td>{artisan.id}</td>
+                              >                                <td>{artisan.id}</td>
                                 <td>{artisan.name}</td>
-                                <td>{artisan.ongoingOrders}</td>
+                                <td>{typeof artisan.ongoingOrders === 'string' ? artisan.ongoingOrders : `${artisan.ongoingOrders} Orders`}</td>
                                 <td>
                                   <span className={`badge ${artisan.availability === 'Available' ? 'bg-success' : 'bg-warning text-dark'}`}>
                                     {artisan.availability}
@@ -248,14 +259,14 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                       onChange={(e) => setSelectedArtisan(e.target.value)}
                       disabled={submitting}
                     >
-                      <option value="">-- Select an Artisan --</option>
+                      <option value=""> Select an Artisan </option>
                       {artisans.map(artisan => (
                         <option 
                           key={artisan.id} 
                           value={artisan.id}
                           disabled={artisan.availability === 'Busy'}
                         >
-                          {artisan.name} - {artisan.ongoingOrders} ({artisan.availability})
+                          {artisan.name} - {typeof artisan.ongoingOrders === 'string' ? artisan.ongoingOrders : `${artisan.ongoingOrders} Orders`} ({artisan.availability})
                         </option>
                       ))}
                     </select>
