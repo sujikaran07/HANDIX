@@ -338,6 +338,9 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                       displayStatus = 'Review';
                     }
                     
+                    // Determine if we should disable the assign artisan option
+                    const artisanAlreadyAssigned = order.assignedArtisan && order.assignedArtisan !== 'Not Assigned';
+                    
                     return (
                       <tr key={order.id}>
                         <td>{order.id}</td>
@@ -359,9 +362,22 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                                 <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                               </li>
                               
-                              {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
+                              {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && !artisanAlreadyAssigned && (
                                 <li>
                                   <button className="dropdown-item" onClick={() => onViewOrder(order, 'assign')}>Assign Artisan</button>
+                                </li>
+                              )}
+                              
+                              {/* Show a disabled, informative version of the button if an artisan is already assigned */}
+                              {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && artisanAlreadyAssigned && (
+                                <li>
+                                  <button 
+                                    className="dropdown-item disabled" 
+                                    title="An artisan is already assigned to this order"
+                                    style={{ color: '#6c757d', fontStyle: 'italic' }}
+                                  >
+                                    Assigned
+                                  </button>
                                 </li>
                               )}
                               
