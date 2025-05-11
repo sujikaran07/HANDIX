@@ -99,9 +99,10 @@ const OrderViewForm = ({ order, onBack }) => {
     
     if (statusLower.includes('delivered')) return 'text-success';
     if (statusLower.includes('canceled') || statusLower.includes('cancelled')) return 'text-danger';
-    if (statusLower.includes('processing') || statusLower.includes('review')) return 'text-warning';
-    if (statusLower.includes('shipped')) return 'text-info';
-    if (statusLower.includes('to pay') || statusLower.includes('pending')) return 'text-primary';
+    if (statusLower.includes('processing')) return 'text-info';
+    if (statusLower.includes('review')) return 'text-purple';
+    if (statusLower.includes('shipped')) return 'text-primary';
+    if (statusLower.includes('to pay') || statusLower.includes('pending')) return 'text-warning';
     return 'text-secondary';
   };
 
@@ -133,6 +134,23 @@ const OrderViewForm = ({ order, onBack }) => {
   const district = addressData?.district || 
                   (order.shippingAddress && order.shippingAddress.split(',').length > 2 ? 
                    order.shippingAddress.split(',')[2].trim() : 'N/A');
+                   
+  // Function to get appropriate CSS class for status based on AdminOrder.css
+  const getStatusColorClass = (status) => {
+    if (!status) return '';
+    
+    const statusLower = status.toLowerCase();
+    
+    if (statusLower === 'pending') return 'text-warning';
+    if (statusLower === 'processing') return 'text-info';
+    if (statusLower === 'review') return 'text-purple';  // #6f42c1
+    if (statusLower === 'shipped') return 'text-primary';
+    if (statusLower === 'delivered') return 'text-success';
+    if (statusLower === 'cancelled' || statusLower === 'canceled') return 'text-danger';
+    if (statusLower === 'to pay' || statusLower === 'awaiting payment') return 'text-danger';
+    
+    return '';
+  };
 
   return (
     <div className="container mt-4" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
@@ -160,7 +178,7 @@ const OrderViewForm = ({ order, onBack }) => {
                 }}
                 onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#e9ecef'}
                 onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                title="Back to orders"
+                title="Back"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-arrow-left" viewBox="0 0 16 16">
                   <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
@@ -168,50 +186,16 @@ const OrderViewForm = ({ order, onBack }) => {
               </div>
               <h5 className="mb-0">Order Details</h5>
             </div>
-            <span className={`badge ${getStatusTextClass(order.status)}`} 
+            <span className={`badge ${getStatusColorClass(order.status)}`} 
                   style={{ fontSize: '0.9rem', padding: '5px 10px' }}>
               {order.status || 'Processing'}
             </span>
           </div>
 
-          <style>
-            {`
-              .custom-scrollbar {
-                scrollbar-width: thin;
-                scrollbar-color: transparent transparent;
-                ms-overflow-style: none;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-                background: transparent;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.1);
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-                background-color: rgba(0, 0, 0, 0.2);
-              }
-              
-              .hide-scrollbar {
-                scrollbar-width: none;
-                -ms-overflow-style: none;
-              }
-              
-              .hide-scrollbar::-webkit-scrollbar {
-                width: 0;
-                background: transparent;
-              }
-            `}
-          </style>
-
           <div className="row g-3 custom-scrollbar" style={{ 
             overflowY: 'auto', 
             maxHeight: 'calc(100vh - 160px)',
-            paddingRight: '5px'
+            paddingRight: '5px' 
           }}>
             {/* Basic Order Information */}
             <div className="col-md-6">
@@ -259,7 +243,6 @@ const OrderViewForm = ({ order, onBack }) => {
                         {shippingMethodName}
                       </div>
                     </div>
-                    
                     <div className="col-md-6">
                       <label className="text-muted small mb-1">Customized Order</label>
                       <div className="bg-light p-2 rounded" style={{height: "36px", lineHeight: "20px", fontSize: "14px"}}>
@@ -474,7 +457,7 @@ const OrderViewForm = ({ order, onBack }) => {
           </div>
           
           <div className="d-flex justify-content-end mt-3 pt-2 border-top">
-            <div 
+            <button 
               onClick={handleBack}
               className="btn btn-light d-flex align-items-center"
               style={{ cursor: 'pointer' }}
@@ -483,7 +466,7 @@ const OrderViewForm = ({ order, onBack }) => {
                 <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
               </svg>
               Back to Orders
-            </div>
+            </button>
           </div>
         </div>
       </div>

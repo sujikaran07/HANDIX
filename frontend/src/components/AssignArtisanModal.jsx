@@ -10,12 +10,14 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const artisansPerPage = 4;
+  const [isCustomized, setIsCustomized] = useState(false);
 
   useEffect(() => {
     if (show) {
       fetchArtisans();
+      fetchOrderDetails();
     }
-  }, [show]);
+  }, [show, orderId]);
 
   const fetchArtisans = async () => {
     try {
@@ -32,6 +34,16 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
     }
   };
 
+  const fetchOrderDetails = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/orders/${orderId}`);
+      setIsCustomized(response.data.customized === 'Yes');
+      console.log("Order is customized:", response.data.customized === 'Yes');
+    } catch (error) {
+      console.error("Failed to fetch order details:", error);
+    }
+  };
+
   const handleAssign = async () => {
     if (!selectedArtisan) {
       setError("Please select an artisan");
@@ -40,12 +52,38 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
 
     try {
       setSubmitting(true);
-      const response = await axios.put(`http://localhost:5000/api/orders/${orderId}`, {
-        assignedArtisan: selectedArtisan
-      });
+      
+      // Find the selected artisan object
+      const artisan = artisans.find(a => a.id === selectedArtisan);
+      
+      if (!artisan) {
+        throw new Error('Selected artisan not found');
+      }
+      
+      // For customized orders, we'll explicitly set the status to Review
+      const payload = {
+        assignedArtisan: artisan.name,
+        assignedArtisanId: artisan.id
+      };
+      
+      if (isCustomized) {
+        payload.orderStatus = 'Review';
+        console.log("Setting customized order status to Review");
+      }
+      
+      console.log("Sending update payload:", payload);
+      
+      // Make the API call to assign the artisan
+      const response = await axios.put(`http://localhost:5000/api/orders/${orderId}`, payload);
       
       console.log("Artisan assigned:", response.data);
-      alert('Artisan assigned successfully');
+      
+      if (isCustomized) {
+        alert(`Artisan "${artisan.name}" has been assigned. The order status has been updated to "Review".`);
+      } else {
+        alert(`Artisan "${artisan.name}" has been assigned successfully.`);
+      }
+      
       onAssignSuccess();
       handleClose();
     } catch (error) {
@@ -116,6 +154,14 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
               {error && !error.includes("Please select") && (
                 <div className="col-12 mb-3">
                   <div className="alert alert-danger">{error}</div>
+                </div>
+              )}
+              
+              {isCustomized && (
+                <div className="col-12 mb-3">
+                  <div className="alert alert-info">
+                    <small><strong>Note:</strong> This is a customized order. Assigning an artisan will automatically update the order status to "Review".</small>
+                  </div>
                 </div>
               )}
               

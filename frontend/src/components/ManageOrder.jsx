@@ -87,6 +87,12 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           status = 'To Pay';
         }
         
+        // For customized orders with assigned artisans, ensure they show with Review status
+        const assignedArtisan = order.assignedArtisan || order.assigned_artisan || 'Not Assigned';
+        if (customized === 'Yes' && assignedArtisan !== 'Not Assigned') {
+          status = 'Review';
+        }
+        
         // Keep the complete order object for the view form
         return {
           id: order.order_id || order.id,
@@ -94,7 +100,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           orderDate,
           totalAmount: `${totalAmount}`,  
           customized,
-          assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
+          assignedArtisan: assignedArtisan,
           status,
           items: order.items || [],
           customerEmail: order.customerEmail || order.customerInfo?.email,
@@ -325,47 +331,57 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
               </thead>
               <tbody>
                 {currentOrders.length > 0 ? (
-                  currentOrders.map(order => (
-                    <tr key={order.id}>
-                      <td>{order.id}</td>
-                      <td>{order.customerName}</td>
-                      <td>{order.orderDate}</td>
-                      <td>{order.totalAmount}</td>
-                      <td>{order.customized}</td>
-                      <td>{order.assignedArtisan || 'Not Assigned'}</td>
-                      <td className={`status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</td>
-                      <td className="action-buttons">
-                        <div className="dropdown">
-                          <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            Actions
-                          </button>
-                          <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            <li>
-                              <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
-                            </li>
-                            
-                            {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
+                  currentOrders.map(order => {
+                    // Ensure status is always up to date before rendering
+                    let displayStatus = order.status;
+                    if (order.customized === 'Yes' && order.assignedArtisan && order.assignedArtisan !== 'Not Assigned') {
+                      displayStatus = 'Review';
+                    }
+                    
+                    return (
+                      <tr key={order.id}>
+                        <td>{order.id}</td>
+                        <td>{order.customerName}</td>
+                        <td>{order.orderDate}</td>
+                        <td>{order.totalAmount}</td>
+                        <td>{order.customized}</td>
+                        <td>{order.assignedArtisan || 'Not Assigned'}</td>
+                        <td className={`status ${displayStatus.toLowerCase().replace(' ', '-')}`}>
+                          {displayStatus}
+                        </td>
+                        <td className="action-buttons">
+                          <div className="dropdown">
+                            <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                              Actions
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
                               <li>
-                                <button className="dropdown-item" onClick={() => onViewOrder(order, 'assign')}>Assign Artisan</button>
+                                <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                               </li>
-                            )}
-                            
-                            {order.customized !== 'Yes' && ['Pending', 'To Pay'].includes(order.status) && (
-                              <li>
-                                <button className="dropdown-item" onClick={() => showConfirmModal(order)}>Confirm</button>
-                              </li>
-                            )}
-                            
-                            {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
-                              <li>
-                                <button className="dropdown-item" onClick={() => showCancelModal(order)}>Cancel</button>
-                              </li>
-                            )}
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                              
+                              {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => onViewOrder(order, 'assign')}>Assign Artisan</button>
+                                </li>
+                              )}
+                              
+                              {order.customized !== 'Yes' && ['Pending', 'To Pay'].includes(order.status) && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => showConfirmModal(order)}>Confirm</button>
+                                </li>
+                              )}
+                              
+                              {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => showCancelModal(order)}>Cancel</button>
+                                </li>
+                              )}
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td colSpan="8" className="text-center">No orders available</td>

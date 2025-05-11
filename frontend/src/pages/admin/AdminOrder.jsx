@@ -12,6 +12,11 @@ const AdminManageOrderPage = () => {
   const [selectedOrderForAssign, setSelectedOrderForAssign] = useState(null);
 
   const handleViewOrder = (order, action) => {
+    // For customized orders with assigned artisans, ensure they show with Review status
+    if (order.customized === 'Yes' && order.assignedArtisan && order.assignedArtisan !== 'Not Assigned') {
+      order.status = 'Review';
+    }
+    
     setSelectedOrder(order);
     
     if (action === 'assign') {
@@ -42,6 +47,7 @@ const AdminManageOrderPage = () => {
             handleClose={handleBackToOrders}
             orderId={selectedOrderForAssign.id}
             onAssignSuccess={handleAssignSuccess}
+            orderData={selectedOrderForAssign} // Pass the full order data
           />
         ) : selectedOrder ? (
           <OrderViewForm order={selectedOrder} onBack={handleBackToOrders} />
