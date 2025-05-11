@@ -181,13 +181,13 @@ body {
     color: #28a745 !important; 
 }
 
-.status.canceled {
+.status.cancelled {
     color: #dc3545 !important; 
 }
 
 /* Update color for "To Pay" status (previously "Awaiting Payment") */
 .status.to-pay {
-  color: #dc3545 !important; /* Red color */
+  color: #ff0019 !important; /* Red color */
   
 }
 

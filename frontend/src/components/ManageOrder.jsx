@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
 import { FaGift } from 'react-icons/fa';
 import Pagination from './Pagination';
+import AssignArtisanModal from './AssignArtisanModal';
 import '../styles/admin/AdminOrder.css';
 
 const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
@@ -17,6 +18,13 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const ordersPerPage = 4;
+
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [selectedOrderAction, setSelectedOrderAction] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [actionError, setActionError] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -82,13 +90,12 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         // Keep the complete order object for the view form
         return {
           id: order.order_id || order.id,
-          customerName: firstName, // Only use first name for the table
+          customerName: firstName, 
           orderDate,
           totalAmount: `${totalAmount}`,  
           customized,
           assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
           status,
-          // Add all the raw data needed for the view form
           items: order.items || [],
           customerEmail: order.customerEmail || order.customerInfo?.email,
           customerPhone: order.customerPhone || order.customerInfo?.phone,
@@ -122,6 +129,70 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         ? prevSelected.filter((type) => type !== customized)
         : [...prevSelected, customized]
     );
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!selectedOrderAction) return;
+    
+    setConfirmLoading(true);
+    setActionError(null);
+    
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/orders/${selectedOrderAction.id}/confirm`
+      );
+      
+      console.log('Order confirmed:', response.data);
+      alert('Order has been confirmed and processing has begun. A confirmation email has been sent to the customer.');
+      setConfirmModalVisible(false);
+      fetchOrders(); // Refresh orders list
+    } catch (error) {
+      console.error('Failed to confirm order:', error);
+      setActionError(error.response?.data?.message || 'Failed to confirm order. Please try again.');
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!selectedOrderAction) return;
+    
+    if (!cancelReason.trim()) {
+      setActionError('Please provide a reason for cancellation');
+      return;
+    }
+    
+    setConfirmLoading(true);
+    setActionError(null);
+    
+    try {
+      const response = await axios.put(
+        `http://localhost:5000/api/orders/${selectedOrderAction.id}/cancel`,
+        { cancellationReason: cancelReason }
+      );
+      
+      console.log('Order cancelled:', response.data);
+      alert('Order has been cancelled successfully');
+      setCancelModalVisible(false);
+      setCancelReason('');
+      fetchOrders(); // Refresh orders list
+    } catch (error) {
+      console.error('Failed to cancel order:', error);
+      setActionError(error.response?.data?.message || 'Failed to cancel order. Please try again.');
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+
+  const showConfirmModal = (order) => {
+    setSelectedOrderAction(order);
+    setConfirmModalVisible(true);
+  };
+
+  const showCancelModal = (order) => {
+    setSelectedOrderAction(order);
+    setCancelModalVisible(true);
+    setCancelReason('');
   };
 
   const filteredOrders = orders.filter(order => {
@@ -243,7 +314,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
               <thead>
                 <tr>
                   <th>O-ID</th>
-                  <th>Customer Name</th>
+                  <th>Customer </th>
                   <th>Order Date</th>
                   <th>Total Amount</th>
                   <th>Customized</th>
@@ -261,7 +332,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                       <td>{order.orderDate}</td>
                       <td>{order.totalAmount}</td>
                       <td>{order.customized}</td>
-                      <td>{order.customized === 'No' ? 'N/A' : order.assignedArtisan}</td>
+                      <td>{order.assignedArtisan || 'Not Assigned'}</td>
                       <td className={`status ${order.status.toLowerCase().replace(' ', '-')}`}>{order.status}</td>
                       <td className="action-buttons">
                         <div className="dropdown">
@@ -272,20 +343,24 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                             <li>
                               <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                             </li>
-                            {order.customized === 'Yes' && (
+                            
+                            {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
                               <li>
-                                <button className="dropdown-item">Assign Artisan</button>
+                                <button className="dropdown-item" onClick={() => onViewOrder(order, 'assign')}>Assign Artisan</button>
                               </li>
                             )}
-                            <li>
-                              <button className="dropdown-item">Confirm</button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item">Update</button>
-                            </li>
-                            <li>
-                              <button className="dropdown-item">Cancel</button>
-                            </li>
+                            
+                            {order.customized !== 'Yes' && ['Pending', 'To Pay'].includes(order.status) && (
+                              <li>
+                                <button className="dropdown-item" onClick={() => showConfirmModal(order)}>Confirm</button>
+                              </li>
+                            )}
+                            
+                            {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
+                              <li>
+                                <button className="dropdown-item" onClick={() => showCancelModal(order)}>Cancel</button>
+                              </li>
+                            )}
                           </ul>
                         </div>
                       </td>
@@ -304,6 +379,129 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           <Pagination className="order-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      {confirmModalVisible && (
+        <div className="modal fade show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header py-2">
+                <h5 className="modal-title">Confirm Order</h5>
+                <button type="button" className="btn-close" onClick={() => setConfirmModalVisible(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to confirm Order #{selectedOrderAction?.id}?</p>
+                <p>This will change the order status to "Processing" and notify the customer.</p>
+                {actionError && (
+                  <div className="alert alert-danger py-2">{actionError}</div>
+                )}
+              </div>
+              <div className="modal-footer py-2">
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-outline-secondary" 
+                  onClick={() => setConfirmModalVisible(false)}
+                  style={{
+                    borderRadius: '20px',
+                    paddingLeft: '20px',
+                    paddingRight: '20px',
+                    borderWidth: '1px'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-primary" 
+                  onClick={handleConfirmOrder}
+                  disabled={confirmLoading}
+                  style={{
+                    borderRadius: '20px',
+                    paddingLeft: '25px',
+                    paddingRight: '25px',
+                    width: '140px'
+                  }}
+                >
+                  {confirmLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      Confirming...
+                    </>
+                  ) : "Confirm Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Cancel Modal */}
+      {cancelModalVisible && (
+        <div className="modal fade show" style={{display: 'block', backgroundColor: 'rgba(0,0,0,0.5)'}} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header py-2">
+                <h5 className="modal-title">Cancel Order</h5>
+                <button type="button" className="btn-close" onClick={() => setCancelModalVisible(false)}></button>
+              </div>
+              <div className="modal-body">
+                <p>Are you sure you want to cancel Order #{selectedOrderAction?.id}?</p>
+                <p className="text-muted mb-3">This action cannot be undone, and the customer will be notified.</p>
+                
+                <div className="mb-3">
+                  <label htmlFor="cancelReason" className="form-label small">Reason for Cancellation</label>
+                  <textarea 
+                    className="form-control form-control-sm" 
+                    id="cancelReason"
+                    rows="2"
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Please provide a reason for cancellation"
+                  ></textarea>
+                </div>
+                
+                {actionError && (
+                  <div className="alert alert-danger py-2">{actionError}</div>
+                )}
+              </div>
+              <div className="modal-footer py-2">
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-outline-secondary" 
+                  onClick={() => setCancelModalVisible(false)}
+                  style={{
+                    borderRadius: '20px',
+                    paddingLeft: '20px',
+                    paddingRight: '20px',
+                    borderWidth: '1px'
+                  }}
+                >
+                  Close
+                </button>
+                <button 
+                  type="button" 
+                  className="btn btn-sm btn-danger" 
+                  onClick={handleCancelOrder}
+                  disabled={confirmLoading}
+                  style={{
+                    borderRadius: '20px',
+                    paddingLeft: '25px',
+                    paddingRight: '25px',
+                    width: '140px'
+                  }}
+                >
+                  {confirmLoading ? (
+                    <>
+                      <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                      Processing...
+                    </>
+                  ) : "Cancel Order"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
