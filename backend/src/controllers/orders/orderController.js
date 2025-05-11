@@ -675,6 +675,77 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+const getAssignableOrders = async (req, res) => {
+  try {
+    // Modified to only fetch Pending orders (not Processing)
+    const assignableOrders = await Order.findAll({
+      where: {
+        orderStatus: 'Pending', // Changed to only fetch Pending orders
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { assignedArtisan: null },
+              { assignedArtisan: '' }
+            ]
+          }
+        ]
+      },
+      include: [
+        {
+          model: Customer,
+          as: 'customerInfo',
+          attributes: ['firstName', 'lastName']
+        }
+      ],
+      attributes: ['order_id', 'orderStatus', 'customized', 'orderDate', 'totalAmount'],
+      order: [['orderDate', 'DESC']]
+    });
+
+    // Process and format orders for the frontend with consistent customized field
+    const formattedOrders = assignableOrders.map(order => {
+      const orderData = order.toJSON();
+      
+      // Format customer name
+      let customerName = 'Unknown';
+      if (orderData.customerInfo) {
+        if (orderData.customerInfo.firstName && orderData.customerInfo.lastName) {
+          customerName = `${orderData.customerInfo.firstName} ${orderData.customerInfo.lastName}`;
+        } else if (orderData.customerInfo.firstName) {
+          customerName = orderData.customerInfo.firstName;
+        }
+      }
+      
+      // Normalize the customized field to ensure consistent boolean values
+      const isCustomized = orderData.customized === 'Yes' || 
+                          orderData.customized === 'yes' || 
+                          orderData.customized === true || 
+                          orderData.customized === 'true';
+
+      return {
+        id: orderData.order_id,
+        status: orderData.orderStatus || 'Pending',
+        customized: isCustomized, // Send as boolean for consistency
+        customerName,
+        orderDate: orderData.orderDate,
+        totalAmount: orderData.totalAmount || 0
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: formattedOrders.length,
+      orders: formattedOrders
+    });
+  } catch (error) {
+    console.error('Error fetching assignable orders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching assignable orders',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -684,5 +755,6 @@ module.exports = {
   getArtisansWithOrderInfo,
   getCustomerOrders,
   confirmOrder,
-  cancelOrder
+  cancelOrder,
+  getAssignableOrders  // Add this line to export the function
 };
