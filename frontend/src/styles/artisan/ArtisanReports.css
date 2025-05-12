@@ -170,6 +170,8 @@
 .artisan-reports-page .btn {
   font-size: 14px;
   display: flex;
+  width: 120px;
+  border-radius: 25px;
   align-items: center;
   justify-content: center;
 }

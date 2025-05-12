@@ -188,7 +188,7 @@ const ArtisanReports = () => {
                           className="w-100 d-flex align-items-center justify-content-center"
                           size="sm"
                         >
-                          <FaFilter size={12} className="me-2" />
+                          <FaFileAlt size={12} className="me-2" />
                           Generate Report
                         </Button>
                       </Form>
