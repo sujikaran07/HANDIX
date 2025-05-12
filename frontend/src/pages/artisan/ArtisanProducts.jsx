@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
-import ArtisanTopBar from '../../components/artisan/ArtisanTopbar';
+import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
 import ArtisanManageProducts from '../../components/artisan/ArtisanManageProducts';
 import AddProductForm from '../../components/artisan/AddProductForm';
 import ProductViewForm from '../../components/artisan/ProductViewForm';
