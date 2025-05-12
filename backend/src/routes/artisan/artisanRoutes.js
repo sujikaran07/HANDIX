@@ -6,6 +6,14 @@ const {
   assignOrderToArtisan
 } = require('../../controllers/artisan/artisanController');
 const { getAssignableOrders } = require('../../controllers/orders/orderController');
+const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
+const { 
+  getEmployeeProfile, 
+  updateEmployeeProfile, 
+  updateProfilePicture, 
+  changePassword 
+} = require('../../controllers/employees/settingsController');
+const { upload } = require('../../utils/cloudinaryConfig');
 
 const router = express.Router();
 
@@ -23,5 +31,13 @@ router.get('/:id/workload', getArtisanWorkload);
 
 // Assign an order to an artisan
 router.put('/assign-order/:orderId', assignOrderToArtisan);
+
+// Settings routes - reuse employee controllers but with role check for artisans
+router.get('/settings/profile', authMiddleware, getEmployeeProfile);
+router.put('/settings/profile', authMiddleware, updateEmployeeProfile);
+router.put('/settings/profile-picture', authMiddleware, upload.single('profilePicture'), updateProfilePicture);
+router.put('/settings/password', authMiddleware, changePassword);
+
+// You can add more artisan-specific routes here
 
 module.exports = router;

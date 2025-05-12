@@ -1,38 +1,296 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../styles/admin/AdminSettings.css';
+import axios from 'axios';
 
 const ManageSettings = ({ onViewSetting }) => {
+  // Add state variables for password visibility
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPasswordForEdit, setShowPasswordForEdit] = useState(false);
+  
   const [profile, setProfile] = useState({
     profilePicture: '',
-    username: 'sujikaran',
-    email: 'user@example.com',
-    mobileNumber: '123-456-7890',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
   });
 
+  const [previewImage, setPreviewImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [passwordForEdit, setPasswordForEdit] = useState('');
   const [showPasswordPopup, setShowPasswordPopup] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Fetch user profile data on component mount
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      
+      // Ensure we have the most recent token
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        setError('Authentication token not found. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      // Ensure admin role before proceeding
+      try {
+        const response = await axios.get('/api/employees/settings/profile', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        
+        if (response.data && response.data.success) {
+          const userData = response.data.data;
+          console.log('Profile data received:', userData);
+          
+          // Ensure user is an admin
+          if (userData.roleId !== 1) {
+            setError('You are not authorized to access admin settings.');
+            setLoading(false);
+            return;
+          }
+          
+          setProfile({
+            firstName: userData.firstName || '',
+            lastName: userData.lastName || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: ''
+          });
+          
+          if (userData.profileUrl && userData.profileUrl.trim() !== '') {
+            setPreviewImage(userData.profileUrl);
+          } else {
+            setPreviewImage(null);
+          }
+        }
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching profile:', err);
+        setError('Failed to load profile data. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfile({ ...profile, [name]: value });
   };
 
-  const handleSaveChanges = () => {
-    setShowPasswordPopup(true);
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Preview the image locally
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload the image to the server
+    try {
+      const formData = new FormData();
+      formData.append('profilePicture', file);
+      
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.put('/api/employees/settings/profile-picture', 
+        formData, 
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data && response.data.success) {
+        setPreviewImage(response.data.data.profileUrl);
+        setMessage('Profile picture updated successfully');
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError('Failed to upload image. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleConfirmPassword = () => {
-    if (passwordForEdit === profile.currentPassword) {
-      setShowPasswordPopup(false);
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleSaveChanges = async () => {
+    // If password fields are filled, validate them first
+    if (profile.newPassword || profile.confirmNewPassword || profile.currentPassword) {
+      if (profile.newPassword !== profile.confirmNewPassword) {
+        setError('New passwords do not match');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+      
+      if (!profile.currentPassword) {
+        setError('Current password is required to update password');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+      
+      // Show password confirmation popup
+      setShowPasswordPopup(true);
+      return;
+    }
+    
+    // If only profile info is changed, update without confirmation
+    await updateProfile();
+  };
+
+  const updateProfile = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const profileResponse = await axios.put('/api/employees/settings/profile', 
+        {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          phone: profile.phone
+        }, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (profileResponse.data && profileResponse.data.success) {
+        setMessage('Profile updated successfully');
+      }
+      
+      setError(null);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile. Please try again.');
+    } finally {
+      setLoading(false);
       setIsEditing(false);
-    } else {
-      alert('Incorrect password. Please try again.');
+    }
+  };
+
+  const handleConfirmPassword = async () => {
+    if (!passwordForEdit) {
+      setError('Please enter your password to confirm changes');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Update profile information first
+      await updateProfile();
+      
+      // Update password if fields are filled
+      if (profile.newPassword && profile.currentPassword) {
+        const passwordResponse = await axios.put('/api/employees/settings/password', 
+          {
+            currentPassword: profile.currentPassword,
+            newPassword: profile.newPassword
+          }, 
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          }
+        );
+        
+        if (passwordResponse.data && passwordResponse.data.success) {
+          setMessage(message ? `${message} and password updated successfully` : 'Password updated successfully');
+          
+          // Clear password fields
+          setProfile({
+            ...profile,
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: ''
+          });
+        }
+      }
+      
+      setShowPasswordPopup(false);
+      setPasswordForEdit('');
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      console.error('Error updating settings:', err);
+      setError(err.response?.data?.message || 'Failed to update settings. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveProfilePicture = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.put('/api/employees/settings/profile', 
+        {
+          removeProfilePicture: true,
+          firstName: profile.firstName, 
+          lastName: profile.lastName,
+          phone: profile.phone
+        }, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (response.data && response.data.success) {
+        setPreviewImage(null); // Clear the preview image locally
+        setMessage('Profile picture removed successfully');
+        setTimeout(() => setMessage(null), 3000);
+        
+        // Refresh profile data after removal
+        await fetchProfile();
+      } else {
+        // Handle unexpected response format
+        setError('Unexpected response from server. Please try again.');
+        setTimeout(() => setError(null), 3000);
+      }
+    } catch (err) {
+      console.error('Error removing profile picture:', err);
+      const errorMsg = err.response?.data?.message || 'Failed to remove profile picture. Please try again.';
+      setError(errorMsg);
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -46,26 +304,160 @@ const ManageSettings = ({ onViewSetting }) => {
             </div>
           </div>
 
+          {loading && (
+            <div className="text-center my-3">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="alert alert-danger" role="alert">
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="alert alert-success" role="alert">
+              {message}
+            </div>
+          )}
+
           <div className="profile-section mb-4">
             <h5>Profile Information</h5>
             <div className="row mb-3">
-              <div className="col-md-4">
-                <label htmlFor="profilePicture" className="form-label">Profile Picture</label>
-                <input type="file" className="form-control" id="profilePicture" name="profilePicture" onChange={handleProfileChange} />
+              <div className="col-md-3">
+                <div className="profile-picture-container position-relative mb-3">
+                  {/* Delete icon with white X */}
+                  {previewImage && (
+                    <div 
+                      className="delete-icon position-absolute"
+                      onClick={handleRemoveProfilePicture}
+                      style={{
+                        top: '-5px',
+                        right: '35px',
+                        backgroundColor: '#ff2222',
+                        width: '25px',
+                        height: '25px',
+                        borderRadius: '50%',
+                        cursor: 'pointer',
+                        zIndex: 100,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                      title="Remove profile picture"
+                    >
+                      <span style={{
+                        color: 'white', 
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        lineHeight: '14px'
+                      }}>✕</span>
+                    </div>
+                  )}
+
+                  <div 
+                    className="profile-picture-preview position-relative" 
+                    onClick={handleImageClick}
+                    style={{
+                      width: '150px',
+                      height: '150px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      border: '1px solid #ddd',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      backgroundColor: '#f8f9fa',
+                      margin: '0 auto'
+                    }}
+                  >
+                    {previewImage ? (
+                      <>
+                        <img 
+                          src={previewImage} 
+                          alt="Profile Preview" 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                        />
+                        <div className="edit-overlay position-absolute" style={{
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.3s',
+                          borderRadius: '50%'
+                        }} onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                          onMouseOut={(e) => e.currentTarget.style.opacity = 0}>
+                          <i className="fas fa-edit fa-2x text-white"></i>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-center">
+                          <i className="fas fa-user fa-3x text-secondary"></i>
+                          <p className="mt-2 small text-muted">Click to upload</p>
+                        </div>
+                        <div className="edit-overlay position-absolute" style={{
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: '100%',
+                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: 0,
+                          transition: 'opacity 0.3s',
+                          borderRadius: '50%'
+                        }} onMouseOver={(e) => e.currentTarget.style.opacity = 1}
+                          onMouseOut={(e) => e.currentTarget.style.opacity = 0}>
+                          <i className="fas fa-plus fa-2x text-white"></i>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    className="form-control d-none" 
+                    id="profilePicture" 
+                    name="profilePicture" 
+                    onChange={handleFileChange} 
+                    accept="image/*"
+                  />
+                </div>
               </div>
-              <div className="col-md-4">
-                <label htmlFor="username" className="form-label">Username</label>
-                <input type="text" className="form-control" id="username" name="username" value={profile.username} onChange={handleProfileChange} />
-              </div>
-              <div className="col-md-4">
-                <label htmlFor="email" className="form-label">Email</label>
-                <input type="email" className="form-control" id="email" name="email" value={profile.email} onChange={handleProfileChange} disabled />
-              </div>
-            </div>
-            <div className="row mb-3">
-              <div className="col-md-4">
-                <label htmlFor="mobileNumber" className="form-label">Mobile Number</label>
-                <input type="text" className="form-control" id="mobileNumber" name="mobileNumber" value={profile.mobileNumber} onChange={handleProfileChange} />
+              <div className="col-md-9">
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label htmlFor="firstName" className="form-label">First Name</label>
+                    <input type="text" className="form-control" id="firstName" name="firstName" value={profile.firstName} onChange={handleProfileChange} />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="lastName" className="form-label">Last Name</label>
+                    <input type="text" className="form-control" id="lastName" name="lastName" value={profile.lastName} onChange={handleProfileChange} />
+                  </div>
+                </div>
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label htmlFor="email" className="form-label">Email</label>
+                    <input type="email" className="form-control" id="email" name="email" value={profile.email} onChange={handleProfileChange} disabled />
+                  </div>
+                  <div className="col-md-6">
+                    <label htmlFor="phone" className="form-label">Phone Number</label>
+                    <input type="text" className="form-control" id="phone" name="phone" value={profile.phone} onChange={handleProfileChange} />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -75,25 +467,99 @@ const ManageSettings = ({ onViewSetting }) => {
             <div className="row mb-3">
               <div className="col-md-4">
                 <label htmlFor="currentPassword" className="form-label">Current Password</label>
-                <input type="password" className="form-control" id="currentPassword" name="currentPassword" value={profile.currentPassword} onChange={handleProfileChange} />
+                <div className="position-relative">
+                  <input 
+                    type={showCurrentPassword ? "text" : "password"} 
+                    className="form-control" 
+                    id="currentPassword" 
+                    name="currentPassword" 
+                    value={profile.currentPassword} 
+                    onChange={handleProfileChange} 
+                  />
+                  <span 
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '10px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      fontSize: '16px',
+                      color: '#3e87c3'
+                    }}
+                  >
+                    <i className={showCurrentPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </span>
+                </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="newPassword" className="form-label">New Password</label>
-                <input type="password" className="form-control" id="newPassword" name="newPassword" value={profile.newPassword} onChange={handleProfileChange} />
+                <div className="position-relative">
+                  <input 
+                    type={showNewPassword ? "text" : "password"} 
+                    className="form-control" 
+                    id="newPassword" 
+                    name="newPassword" 
+                    value={profile.newPassword} 
+                    onChange={handleProfileChange} 
+                  />
+                  <span 
+                    onClick={() => setShowNewPassword(!showNewPassword)} 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '10px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      fontSize: '16px',
+                      color: '#3e87c3'
+                    }}
+                  >
+                    <i className={showNewPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </span>
+                </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="confirmNewPassword" className="form-label">Confirm New Password</label>
-                <input type="password" className="form-control" id="confirmNewPassword" name="confirmNewPassword" value={profile.confirmNewPassword} onChange={handleProfileChange} />
+                <div className="position-relative">
+                  <input 
+                    type={showConfirmPassword ? "text" : "password"} 
+                    className="form-control" 
+                    id="confirmNewPassword" 
+                    name="confirmNewPassword" 
+                    value={profile.confirmNewPassword} 
+                    onChange={handleProfileChange} 
+                  />
+                  <span 
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
+                    style={{ 
+                      position: 'absolute', 
+                      right: '10px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      fontSize: '16px',
+                      color: '#3e87c3'
+                    }}
+                  >
+                    <i className={showConfirmPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="d-flex justify-content-end">
-            <button className="btn btn-success" onClick={handleSaveChanges}>Save Changes</button>
+            <button className="btn btn-success" onClick={handleSaveChanges} disabled={loading}>
+              {loading ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
 
           {showPasswordPopup && (
-            <div className="modal password-confirmation-modal">
+            <div className="modal password-confirmation-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <div className="modal-dialog">
                 <div className="modal-content">
                   <div className="modal-header">
@@ -102,11 +568,37 @@ const ManageSettings = ({ onViewSetting }) => {
                   </div>
                   <div className="modal-body">
                     <label htmlFor="passwordForEdit" className="form-label">Enter Password to Confirm</label>
-                    <input type="password" className="form-control" id="passwordForEdit" name="passwordForEdit" value={passwordForEdit} onChange={(e) => setPasswordForEdit(e.target.value)} />
+                    <div className="position-relative">
+                      <input 
+                        type={showPasswordForEdit ? "text" : "password"} 
+                        className="form-control" 
+                        id="passwordForEdit" 
+                        name="passwordForEdit" 
+                        value={passwordForEdit} 
+                        onChange={(e) => setPasswordForEdit(e.target.value)} 
+                      />
+                      <span 
+                        onClick={() => setShowPasswordForEdit(!showPasswordForEdit)} 
+                        style={{ 
+                          position: 'absolute', 
+                          right: '10px', 
+                          top: '50%', 
+                          transform: 'translateY(-50%)', 
+                          cursor: 'pointer',
+                          zIndex: 10,
+                          fontSize: '16px',
+                          color: '#3e87c3'
+                        }}
+                      >
+                        <i className={showPasswordForEdit ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                      </span>
+                    </div>
                   </div>
                   <div className="modal-footer">
                     <button type="button" className="btn btn-secondary" onClick={() => setShowPasswordPopup(false)}>Cancel</button>
-                    <button type="button" className="btn btn-primary" onClick={handleConfirmPassword}>Confirm</button>
+                    <button type="button" className="btn btn-primary" onClick={handleConfirmPassword} disabled={loading}>
+                      {loading ? 'Processing...' : 'Confirm'}
+                    </button>
                   </div>
                 </div>
               </div>

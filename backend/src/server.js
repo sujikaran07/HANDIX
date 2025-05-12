@@ -4,6 +4,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const employeeLoginRoutes = require("./routes/login/employeeLoginRoutes");
 const employeeRoutes = require("./routes/employees/employeeRoutes");
+const employeeSettingsRoutes = require("./routes/employees/settingsRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes');
 const productRoutes = require('./routes/products/productRoutes');
 const adminProductRoutes = require('./routes/admin/adminProductRoutes');
@@ -111,6 +112,7 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/profileImages', profileImageRoutes); 
 app.use('/api/shipping-methods', shippingMethodRoutes);
 app.use('/api/artisans', artisanRoutes);
+app.use('/api/employees/settings', employeeSettingsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

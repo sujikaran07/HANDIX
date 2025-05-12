@@ -20,11 +20,32 @@ const LoginForm = ({ onLoginSuccess }) => {
     setPasswordError(false);
     try {
       console.log('Sending login request:', { email, password });
-      const response = await axios.post('http://localhost:5000/api/login', { email, password }); // Ensure URL matches backend
+      
+      // Clear previous headers and tokens
+      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem('token');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('artisanToken');
+      
+      const response = await axios.post('http://localhost:5000/api/login', { email, password });
       console.log('Login successful:', response.data);
+      
       if (response.status === 200) {
-        const { token, redirectUrl, tokenKey } = response.data; 
-        localStorage.setItem(tokenKey, token); 
+        const { token, redirectUrl, tokenKey } = response.data;
+        
+        // Store the new token
+        localStorage.setItem('token', token);
+        
+        // Also store token in the role-specific key
+        if (tokenKey) {
+          localStorage.setItem(tokenKey, token);
+          console.log('Token stored as:', tokenKey, 'and as general token');
+        }
+        
+        // Set authorization header for future requests
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        console.log('Redirecting to:', redirectUrl);
         onLoginSuccess(redirectUrl);
       } else {
         setEmailError(true);

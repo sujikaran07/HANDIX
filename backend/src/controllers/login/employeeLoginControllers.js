@@ -6,32 +6,60 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const authMiddleware = (req, res, next) => {
+// Auth middleware to protect routes
+const authMiddleware = async (req, res, next) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
-    console.log('Token received in request:', token); 
-
-    if (!token) {
-      console.error('Authorization token is missing');
-      return res.status(401).json({ error: 'Authorization token is required' });
+    // Get token from header
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ success: false, message: 'No token, authorization denied' });
     }
-
+    
+    // Get token from Bearer token
+    const token = authHeader.split(' ')[1];
+    
     try {
+      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      console.log('Decoded token:', decoded); 
+      
+      // Add user to request
       req.user = decoded;
-      next();
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
-        console.error('Authorization token has expired');
-        return res.status(401).json({ error: 'Authorization token has expired' });
+      
+      const employee = await Employee.findByPk(decoded.id);
+      if (employee) {
+        // Add email to user object for convenience
+        req.user.email = employee.email;
+        
+        // Log token info for debugging
+        console.log('Token received in request:', token.substring(0, 20) + '...');
+        console.log('Decoded token:', decoded);
+        console.log('User found:', employee.eId, 'Role:', employee.roleId);
+        console.log('User object attached to request:', req.user);
+        console.log('Auth middleware called');
       }
-      console.error('Error verifying token:', error.message);
-      return res.status(401).json({ error: 'Invalid authorization token' });
+      
+      next();
+    } catch (err) {
+      console.error('Token verification error:', err.message);
+      
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Token has expired', 
+          tokenExpired: true 
+        });
+      }
+      
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Token is not valid',
+        error: err.message 
+      });
     }
   } catch (error) {
-    console.error('Unexpected error in authMiddleware:', error.message);
-    res.status(500).json({ error: 'Internal server error in authMiddleware' });
+    console.error('Auth middleware error:', error);
+    return res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 
@@ -61,10 +89,14 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ id: user.eId, role: user.roleId }, process.env.JWT_SECRET, { expiresIn: '3h' });
+    // Set token expiration to 24 hours for better user experience
+    const token = jwt.sign(
+      { id: user.eId, role: user.roleId }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '24h' }  // 24 hour expiration
+    );
     console.log('Token generated:', token);
     console.log('Login successful, token generated');
-
 
     let redirectUrl = '';
     let tokenKey = ''; 
