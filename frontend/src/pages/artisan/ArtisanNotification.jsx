@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
-import { FaBell, FaCheckCircle, FaTimesCircle, FaShippingFast, FaExclamationCircle, FaInfoCircle } from 'react-icons/fa';
+import { FaBell, FaCheckCircle, FaTimesCircle, FaShippingFast, FaExclamationCircle, FaInfoCircle, FaTrashAlt, FaCheck } from 'react-icons/fa';
 import '../../styles/artisan/ArtisanDashboard.css';
 import '../../styles/artisan/ArtisanNotification.css';
 
 const ArtisanNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -145,6 +146,37 @@ const ArtisanNotification = () => {
            date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Filter notifications based on selected filter
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'all') return true;
+    if (filter === 'unread') return !notification.read;
+    if (filter === 'read') return notification.read;
+    return true;
+  });
+
+  // Group notifications by date
+  const groupNotificationsByDate = () => {
+    const grouped = {};
+    
+    filteredNotifications.forEach(notification => {
+      const date = new Date(notification.timestamp);
+      const dateKey = date.toDateString() === new Date().toDateString() 
+        ? 'Today'
+        : date.toDateString() === new Date(new Date().setDate(new Date().getDate() - 1)).toDateString()
+          ? 'Yesterday'
+          : date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(notification);
+    });
+    
+    return grouped;
+  };
+
+  const groupedNotifications = groupNotificationsByDate();
+
   return (
     <div className="artisan-notification-page">
       <ArtisanSidebar />
@@ -152,28 +184,54 @@ const ArtisanNotification = () => {
         <ArtisanTopBar />
         
         <div className="container mt-4 notification-container">
-          <div className="card p-4 notification-card">
-            <div className="manage-orders-header d-flex justify-content-between align-items-center mb-3">
-              <div className="title-section">
-                <div className="icon-and-title">
-                  <FaBell className="notification-icon" />
-                  <div className="text-section">
-                    <h2>Notifications</h2>
-                    <p>Stay updated with your latest activities</p>
-                  </div>
+          <div className="card notification-card">
+            <div className="notification-header d-flex justify-content-between align-items-center">
+              <div className="title-section d-flex align-items-center">
+                <FaBell className="notification-icon" />
+                <div className="text-section">
+                  <h2>Notifications</h2>
+                  <p>Stay updated with your latest activities</p>
                 </div>
               </div>
               <div className="d-flex align-items-center">
                 {notifications.length > 0 && (
-                  <div className="btn-group">
-                    <button className="btn btn-outline-primary btn-sm me-2" onClick={markAllAsRead}>
-                      Mark all as read
+                  <div className="action-buttons">
+                    <button className="btn btn-outline-primary action-btn" onClick={markAllAsRead}>
+                      <FaCheck className="btn-icon" /> Mark all read
                     </button>
-                    <button className="btn btn-outline-danger btn-sm" onClick={clearAllNotifications}>
-                      Clear all
+                    <button className="btn btn-outline-danger action-btn" onClick={clearAllNotifications}>
+                      <FaTrashAlt className="btn-icon" /> Clear all
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+
+            <div className="notification-filter-bar">
+              <div className="filter-tabs">
+                <button 
+                  className={`filter-tab ${filter === 'all' ? 'active' : ''}`} 
+                  onClick={() => setFilter('all')}
+                >
+                  All
+                </button>
+                <button 
+                  className={`filter-tab ${filter === 'unread' ? 'active' : ''}`} 
+                  onClick={() => setFilter('unread')}
+                >
+                  Unread
+                </button>
+                <button 
+                  className={`filter-tab ${filter === 'read' ? 'active' : ''}`} 
+                  onClick={() => setFilter('read')}
+                >
+                  Read
+                </button>
+              </div>
+              <div className="notification-count">
+                {filter === 'all' ? notifications.length : 
+                 filter === 'unread' ? notifications.filter(n => !n.read).length :
+                 notifications.filter(n => n.read).length} notifications
               </div>
             </div>
 
@@ -185,63 +243,73 @@ const ArtisanNotification = () => {
                   </div>
                   <p className="mt-2">Loading notifications...</p>
                 </div>
+              ) : filteredNotifications.length === 0 ? (
+                <div className="empty-state">
+                  <FaBell size={48} className="text-muted mb-3" />
+                  <h5>No notifications {filter !== 'all' ? `(${filter})` : ''}</h5>
+                  <p className="text-muted">
+                    {filter === 'all' 
+                      ? "You're all caught up! Check back later for new updates."
+                      : filter === 'unread' 
+                        ? "You don't have any unread notifications."
+                        : "You don't have any read notifications."}
+                  </p>
+                </div>
               ) : (
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body p-0">
-                    {notifications.length === 0 ? (
-                      <div className="text-center py-5">
-                        <FaBell size={48} className="text-muted mb-3" />
-                        <h5>No notifications yet</h5>
-                        <p className="text-muted">You're all caught up! Check back later for new updates.</p>
+                <div className="notifications-list">
+                  {Object.entries(groupedNotifications).map(([date, dateNotifications]) => (
+                    <div key={date} className="notification-group">
+                      <div className="notification-date-header">
+                        <span>{date}</span>
                       </div>
-                    ) : (
-                      <div className="list-group list-group-flush">
-                        {notifications.map(notification => (
-                          <div 
-                            key={notification.id} 
-                            className={`list-group-item list-group-item-action d-flex ${!notification.read ? 'bg-light' : ''}`}
-                          >
-                            <div className="me-3 pt-1">
-                              {renderIcon(notification.type)}
+                      {dateNotifications.map(notification => (
+                        <div 
+                          key={notification.id} 
+                          className={`notification-item ${!notification.read ? 'unread' : ''}`}
+                        >
+                          <div className="notification-icon-container">
+                            {renderIcon(notification.type)}
+                          </div>
+                          <div className="notification-content-container">
+                            <div className="notification-message">
+                              <p className={!notification.read ? 'fw-bold' : ''}>
+                                {notification.message}
+                              </p>
+                              <span className="notification-time">
+                                {formatTimestamp(notification.timestamp).split(',')[1] || formatTimestamp(notification.timestamp)}
+                              </span>
                             </div>
-                            <div className="flex-grow-1">
-                              <div className="d-flex justify-content-between align-items-center">
-                                <h6 className={`mb-1 ${!notification.read ? 'fw-bold' : ''}`}>
-                                  {notification.message}
-                                </h6>
-                                <small className="text-muted">
-                                  {formatTimestamp(notification.timestamp)}
-                                </small>
+                            <div className="notification-footer">
+                              <div className="priority-badge">
+                                {notification.priority === 'high' && (
+                                  <span className="high-priority">High priority</span>
+                                )}
+                                {notification.priority === 'medium' && (
+                                  <span className="medium-priority">Medium priority</span>
+                                )}
                               </div>
-                              <div className="d-flex justify-content-between align-items-center">
-                                <small className="text-muted">
-                                  {notification.priority === 'high' && (
-                                    <span className="text-danger">High priority</span>
-                                  )}
-                                </small>
-                                <div>
-                                  {!notification.read && (
-                                    <button 
-                                      className="btn btn-sm btn-link p-0 me-2" 
-                                      onClick={() => markAsRead(notification.id)}
-                                    >
-                                      Mark as read
-                                    </button>
-                                  )}
+                              <div className="notification-actions">
+                                {!notification.read && (
                                   <button 
-                                    className="btn btn-sm btn-link text-danger p-0" 
-                                    onClick={() => deleteNotification(notification.id)}
+                                    className="notification-action-btn read-btn" 
+                                    onClick={(e) => {e.stopPropagation(); markAsRead(notification.id);}}
                                   >
-                                    Delete
+                                    Mark as read
                                   </button>
-                                </div>
+                                )}
+                                <button 
+                                  className="notification-action-btn delete-btn" 
+                                  onClick={(e) => {e.stopPropagation(); deleteNotification(notification.id);}}
+                                >
+                                  Delete
+                                </button>
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
