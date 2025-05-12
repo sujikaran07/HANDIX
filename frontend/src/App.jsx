@@ -12,6 +12,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLogout from "./pages/admin/AdminLogout"; 
 import ArtisanDashboard from "./pages/artisan/ArtisanDashboard"; 
 import ArtisanProducts from "./pages/artisan/ArtisanProducts";
+import ArtisanAssignedOrders from "./pages/artisan/ArtisanAssignedOrders";
 import ArtisanLogout from "./pages/artisan/ArtisanLogout";
 import ArtisanSettings from "./pages/artisan/ArtisanSettings";
 
@@ -46,6 +47,7 @@ function App() {
           <Route path="/admin/logout" element={<AdminLogout />} /> 
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
           <Route path="/artisan/products" element={<ArtisanProducts />} />
+          <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
           <Route path="/artisan/logout" element={<ArtisanLogout />} />
           <Route path="/artisan/settings" element={<ArtisanSettings />} />
         </Routes>

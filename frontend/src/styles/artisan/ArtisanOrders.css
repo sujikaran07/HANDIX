@@ -1,0 +1,278 @@
+/* Orders Page Styling */
+.artisan-orders-page {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  font-size: var(--font-size-base);
+}
+
+.artisan-orders-page .artisan-main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  margin-right: -18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.artisan-orders-page .manage-orders-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: -40px;
+  margin-top: -10px;
+}
+
+.artisan-orders-page .manage-orders-header h2 {
+  font-size: 22px;
+  color: #333;
+  margin-top: 0px;
+}
+
+.order-icon {
+  font-size: 45px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  color: #3e87c3;
+}
+
+.icon-and-title {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.text-section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.text-section p {
+  font-size: 14px;
+  color: #666;
+}
+
+.filter-dropdown .input-group,
+.search-bar .input-group {
+  display: flex;
+  align-items: center;
+  background-color: #f4f6fc;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 2px;
+}
+
+.search-bar .form-control,
+.filter-dropdown .form-select {
+  border: none;
+  background-color: transparent;
+  padding-left: 10px;
+}
+
+.filter-dropdown .form-select {
+  height: 30px;
+  width: 130px;
+  padding: 0 10px;
+}
+
+.order-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: -15px;
+}
+
+.order-table th,
+.order-table td {
+  padding: 5px 10px;
+  border: none;
+  text-align: left;
+  background-color: #ffffff;
+  font-size: 1rem;
+  vertical-align: middle;
+}
+
+.order-table th {
+  background-color: #f8f9fa;
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+}
+
+.order-table tr {
+  margin-bottom: 0px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.status {
+  font-weight: 500;
+}
+
+.status.pending {
+  color: #ffc107 !important;
+}
+
+.status.in-production {
+  color: #3e87c3 !important;
+}
+
+.status.completed {
+  color: #28a745 !important;
+}
+
+.status.cancelled {
+  color: #dc3545 !important;
+}
+
+.action-buttons .dropdown-toggle {
+  border: 1px solid #e2e8f0;
+  background-color: white;
+  color: #4b5563;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 15px;
+  padding: 3px 10px;
+  width: 75px;
+  text-align: center;
+}
+
+.action-buttons .dropdown-toggle:hover, 
+.action-buttons .dropdown-toggle:focus {
+  background-color: #f8fafc;
+}
+
+.action-buttons .dropdown-menu {
+  min-width: 100px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  transform: translateX(-25%);
+}
+
+.action-buttons .dropdown-item {
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+.action-buttons .dropdown-item:hover {
+  background-color: #f1f5f9;
+}
+
+.export-btn {
+  padding: 5px 10px;
+  border: 2px solid;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 14px;
+  font-weight: bold;
+  width: 120px;
+  text-align: center;
+  border-color: #6c757d;
+  color: #000000;
+  background-color: #ffffff;
+}
+
+.export-btn:hover {
+  background-color: #f0f0f0;
+  color: #000000;
+}
+
+/* Order pagination styling */
+.order-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 0px 0;
+  margin-top: 10px;
+  list-style: none;
+}
+
+.order-pagination .page-item {
+  margin: 0 5px;
+}
+
+.order-pagination .page-item .page-link {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 14px;
+  color: #3e87c3;
+}
+
+.order-pagination .page-item .page-link:hover {
+  background-color: #f0f0f0;
+}
+
+.order-pagination .page-item.active .page-link {
+  background-color: #3e87c3;
+  color: #ffffff;
+  border-color: #3e87c3;
+}
+
+.order-pagination .page-item.disabled .page-link {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 100%;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .artisan-orders-page .artisan-main-content {
+    margin-left: 0;
+    margin-top: 20px;
+  }
+  
+  .order-table th,
+  .order-table td {
+    font-size: 0.875rem;
+  }
+  
+  .export-btn {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .artisan-orders-page .artisan-main-content {
+    padding: 10px;
+    margin-right: 0;
+  }
+  
+  .search-bar input {
+    width: 120px;
+  }
+}

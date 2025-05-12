@@ -39,6 +39,7 @@ const addressRoutes = require('./routes/addresses/addressRoutes');
 const profileImageRoutes = require('./routes/profileImages/profileImageRoutes');
 const shippingMethodRoutes = require('./routes/shippingMethods/shippingMethodRoutes');
 const artisanRoutes = require('./routes/artisan/artisanRoutes');
+const assignedOrderRoutes = require('./routes/orders/assignedOrderRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -101,6 +102,7 @@ app.use('/api/admin/products', adminProductRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/orders', assignedOrderRoutes);
 app.use('/api/login', employeeLoginRoutes);
 app.use('/api/auth', authRoutes); 
 app.use('/api/categories', categoryRoutes);
