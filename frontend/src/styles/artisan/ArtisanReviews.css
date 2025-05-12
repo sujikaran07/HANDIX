@@ -1,0 +1,94 @@
+.artisan-reviews-page {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  font-size: var(--font-size-base);
+}
+
+.artisan-reviews-page .artisan-main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  margin-right: -18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-reviews-page .reviews-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 110px);
+  flex: 1;
+  overflow: hidden;
+}
+
+.artisan-reviews-page .reviews-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-reviews-page .reviews-header {
+  padding: 15px;
+}
+
+.artisan-reviews-page .reviews-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.artisan-reviews-page .reviews-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.artisan-reviews-page .reviews-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.artisan-reviews-page .reviews-icon {
+  font-size: 45px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  color: #ffc107;
+}
+
+.artisan-reviews-page .text-section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.artisan-reviews-page .text-section p {
+  font-size: 14px;
+  color: #666;
+}
+
+.artisan-reviews-page .review-card {
+  transition: transform 0.2s;
+  margin-bottom: 20px;
+}
+
+.artisan-reviews-page .review-card:hover {
+  transform: translateY(-3px);
+}
+
+.artisan-reviews-page .progress {
+  height: 8px;
+}
+
+.artisan-reviews-page .progress-bar {
+  border-radius: 4px;
+}

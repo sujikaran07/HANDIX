@@ -1,0 +1,116 @@
+.artisan-notification-page {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  font-size: var(--font-size-base);
+}
+
+.artisan-notification-page .artisan-main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  margin-right: -18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-notification-page .notification-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 110px);
+  flex: 1;
+  overflow: hidden;
+}
+
+.artisan-notification-page .notification-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-notification-page .notification-header {
+  padding: 15px;
+}
+
+.artisan-notification-page .notification-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+.artisan-notification-page .notification-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.artisan-notification-page .notification-content::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.artisan-notification-page .notification-icon {
+  font-size: 45px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  color: #3e87c3;
+}
+
+.artisan-notification-page .text-section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.artisan-notification-page .text-section p {
+  font-size: 14px;
+  color: #666;
+}
+
+.artisan-notification-page .notification-item {
+  transition: background-color 0.2s;
+}
+
+.artisan-notification-page .notification-item:hover {
+  background-color: #f8f9fa;
+}
+
+.artisan-notification-page .notification-item.unread {
+  border-left: 4px solid #3e87c3;
+}
+
+.artisan-notification-page .notification-priority-high {
+  color: #dc3545;
+}
+
+.artisan-notification-page .notification-priority-medium {
+  color: #fd7e14;
+}
+
+.artisan-notification-page .notification-priority-low {
+  color: #6c757d;
+}
+
+.artisan-notification-page .notification-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  overflow-y: auto;
+}
+
+.artisan-notification-page .notification-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.artisan-notification-page .notification-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}

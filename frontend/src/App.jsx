@@ -15,6 +15,9 @@ import ArtisanProducts from "./pages/artisan/ArtisanProducts";
 import ArtisanAssignedOrders from "./pages/artisan/ArtisanAssignedOrders";
 import ArtisanLogout from "./pages/artisan/ArtisanLogout";
 import ArtisanSettings from "./pages/artisan/ArtisanSettings";
+import ArtisanNotification from "./pages/artisan/ArtisanNotification";
+import ArtisanReviews from "./pages/artisan/ArtisanReviews";
+import ArtisanReports from "./pages/artisan/ArtisanReports";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -48,6 +51,9 @@ function App() {
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
           <Route path="/artisan/products" element={<ArtisanProducts />} />
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
+          <Route path="/artisan/reports" element={<ArtisanReports />} />
+          <Route path="/artisan/notification" element={<ArtisanNotification />} />
+          <Route path="/artisan/reviews" element={<ArtisanReviews />} />
           <Route path="/artisan/logout" element={<ArtisanLogout />} />
           <Route path="/artisan/settings" element={<ArtisanSettings />} />
         </Routes>

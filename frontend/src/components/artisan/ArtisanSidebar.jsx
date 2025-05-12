@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaCommentDots, FaStar } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaCommentDots, FaStar, FaFileAlt } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import '../../styles/artisan/ArtisanDashboard.css';
 import logo from '../../assets/logo1.png'; 
@@ -37,9 +37,9 @@ const ArtisanSidebar = () => {
               <FaRegListAlt /> Assigned Orders
             </Link>
           </li>
-          <li className={activeLink === '/artisan/performance' ? 'artisan-active' : ''}>
-            <Link to="/artisan/performance" onClick={() => handleLinkClick('/artisan/performance')}>
-              <FaChartLine /> Performance
+          <li className={activeLink === '/artisan/reports' ? 'artisan-active' : ''}>
+            <Link to="/artisan/reports" onClick={() => handleLinkClick('/artisan/reports')}>
+              <FaFileAlt /> Reports
             </Link>
           </li>
           <li className={activeLink === '/artisan/notification' ? 'artisan-active' : ''}>
