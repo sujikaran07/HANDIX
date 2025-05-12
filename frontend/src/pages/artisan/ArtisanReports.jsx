@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
-import { FaFileAlt, FaDownload, FaPrint, FaCalendarAlt, FaFilter } from 'react-icons/fa';
+import { FaFileAlt, FaCloudDownloadAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa';
 import { Form, Button, Card, Row, Col, Table } from 'react-bootstrap';
 import '../../styles/artisan/ArtisanReports.css';
 
@@ -65,19 +65,9 @@ const ArtisanReports = () => {
     console.log('Generating report with:', { reportType, dateRange, startDate, endDate, customerId, productId });
   };
   
-  const handleExportPDF = () => {
-    console.log('Exporting as PDF');
-    // PDF export implementation
-  };
-  
-  const handleExportCSV = () => {
-    console.log('Exporting as CSV');
-    // CSV export implementation
-  };
-  
-  const handlePrint = () => {
-    console.log('Printing report');
-    window.print();
+  const handleExport = () => {
+    console.log('Exporting report data');
+    // Combined export implementation
   };
   
   // Get current date in YYYY-MM-DD format for max date in date pickers
@@ -90,34 +80,26 @@ const ArtisanReports = () => {
         <ArtisanTopBar />
         
         <div className="container mt-4 reports-container">
-          <div className="card p-4 reports-card">
-            <div className="reports-header manage-orders-header d-flex justify-content-between align-items-center mb-3">
-              <div className="title-section">
-                <div className="icon-and-title">
-                  <FaFileAlt className="reports-icon" />
-                  <div className="text-section">
-                    <h2>Reports</h2>
-                    <p>Generate and analyze your performance reports</p>
-                  </div>
+          <div className="card reports-card">
+            <div className="reports-header d-flex justify-content-between align-items-center">
+              <div className="title-section d-flex align-items-center">
+                <FaFileAlt className="reports-icon" />
+                <div className="text-section">
+                  <h2>Reports</h2>
+                  <p>Generate and analyze your performance reports</p>
                 </div>
               </div>
               <div className="d-flex">
-                <Button variant="outline-secondary" className="me-2" onClick={handleExportPDF}>
-                  <FaDownload /> PDF
-                </Button>
-                <Button variant="outline-secondary" className="me-2" onClick={handleExportCSV}>
-                  <FaDownload /> CSV
-                </Button>
-                <Button variant="outline-secondary" onClick={handlePrint}>
-                  <FaPrint /> Print
-                </Button>
+                <button className="btn btn-outline-secondary export-btn" onClick={handleExport}>
+                  <FaCloudDownloadAlt size={14} /> <span className="ms-1">Export</span>
+                </button>
               </div>
             </div>
             
             <div className="reports-content">
               <Row>
                 <Col lg={3} md={4}>
-                  <Card className="report-sidebar mb-3">
+                  <div className="report-sidebar mb-3">
                     <Card.Header>Report Options</Card.Header>
                     <Card.Body>
                       <Form onSubmit={handleGenerateReport}>
@@ -126,6 +108,7 @@ const ArtisanReports = () => {
                           <Form.Select 
                             value={reportType} 
                             onChange={(e) => setReportType(e.target.value)}
+                            size="sm"
                           >
                             <option value="orders">Order Reports</option>
                             <option value="products">Product Reports</option>
@@ -138,6 +121,7 @@ const ArtisanReports = () => {
                           <Form.Select 
                             value={dateRange} 
                             onChange={(e) => setDateRange(e.target.value)}
+                            size="sm"
                           >
                             <option value="last7">Last 7 Days</option>
                             <option value="last30">Last 30 Days</option>
@@ -154,7 +138,8 @@ const ArtisanReports = () => {
                                 type="date" 
                                 max={today}
                                 value={startDate} 
-                                onChange={(e) => setStartDate(e.target.value)} 
+                                onChange={(e) => setStartDate(e.target.value)}
+                                size="sm"
                               />
                             </Form.Group>
                             
@@ -164,7 +149,8 @@ const ArtisanReports = () => {
                                 type="date" 
                                 max={today}
                                 value={endDate} 
-                                onChange={(e) => setEndDate(e.target.value)} 
+                                onChange={(e) => setEndDate(e.target.value)}
+                                size="sm"
                               />
                             </Form.Group>
                           </>
@@ -178,6 +164,7 @@ const ArtisanReports = () => {
                               value={customerId} 
                               onChange={(e) => setCustomerId(e.target.value)} 
                               placeholder="Enter customer ID"
+                              size="sm"
                             />
                           </Form.Group>
                         )}
@@ -190,6 +177,7 @@ const ArtisanReports = () => {
                               value={productId} 
                               onChange={(e) => setProductId(e.target.value)} 
                               placeholder="Enter product ID"
+                              size="sm"
                             />
                           </Form.Group>
                         )}
@@ -197,35 +185,36 @@ const ArtisanReports = () => {
                         <Button 
                           variant="primary" 
                           type="submit" 
-                          className="w-100"
+                          className="w-100 d-flex align-items-center justify-content-center"
+                          size="sm"
                         >
-                          <FaFilter className="me-2" />
+                          <FaFilter size={12} className="me-2" />
                           Generate Report
                         </Button>
                       </Form>
                     </Card.Body>
-                  </Card>
+                  </div>
                 </Col>
                 
                 <Col lg={9} md={8}>
-                  <Card className="report-content">
+                  <div className="report-content">
                     <Card.Header>
-                      <div className="d-flex justify-content-between align-items-center">
-                        <h5 className="mb-0">
-                          {reportType === 'orders' && 'Order Report'}
-                          {reportType === 'products' && 'Product Report'}
-                          {reportType === 'performance' && 'Performance Report'}
-                        </h5>
-                        <div className="report-date">
-                          <FaCalendarAlt className="me-2" />
+                      <h5 className="mb-0">
+                        {reportType === 'orders' && 'Order Report'}
+                        {reportType === 'products' && 'Product Report'}
+                        {reportType === 'performance' && 'Performance Report'}
+                      </h5>
+                      <div className="report-date">
+                        <FaCalendarAlt className="me-2" />
+                        <span>
                           {dateRange === 'custom' ? `${startDate || 'Start'} to ${endDate || 'End'}` : 
-                           dateRange === 'last7' ? 'Last 7 Days' : 
-                           dateRange === 'last30' ? 'Last 30 Days' : 'Last 90 Days'}
-                        </div>
+                          dateRange === 'last7' ? 'Last 7 Days' : 
+                          dateRange === 'last30' ? 'Last 30 Days' : 'Last 90 Days'}
+                        </span>
                       </div>
                     </Card.Header>
                     
-                    <Card.Body className="report-table-container">
+                    <div className="report-table-container">
                       {loading ? (
                         <div className="text-center my-5">
                           <div className="spinner-border text-primary" role="status">
@@ -315,8 +304,8 @@ const ArtisanReports = () => {
                           <p className="text-muted">No report data available for the selected criteria</p>
                         </div>
                       )}
-                    </Card.Body>
-                  </Card>
+                    </div>
+                  </div>
                 </Col>
               </Row>
             </div>
