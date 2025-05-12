@@ -18,6 +18,7 @@ import ArtisanSettings from "./pages/artisan/ArtisanSettings";
 import ArtisanNotification from "./pages/artisan/ArtisanNotification";
 import ArtisanReviews from "./pages/artisan/ArtisanReviews";
 import ArtisanReports from "./pages/artisan/ArtisanReports";
+import ArtisanChat from "./pages/artisan/ArtisanChat";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -53,6 +54,7 @@ function App() {
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
           <Route path="/artisan/reports" element={<ArtisanReports />} />
           <Route path="/artisan/notification" element={<ArtisanNotification />} />
+          <Route path="/artisan/chat" element={<ArtisanChat />} />
           <Route path="/artisan/reviews" element={<ArtisanReviews />} />
           <Route path="/artisan/logout" element={<ArtisanLogout />} />
           <Route path="/artisan/settings" element={<ArtisanSettings />} />

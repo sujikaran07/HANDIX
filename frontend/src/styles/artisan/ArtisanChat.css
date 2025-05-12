@@ -1,0 +1,478 @@
+.artisan-chat-page {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
+  overflow: hidden;
+  font-size: var(--font-size-base);
+}
+
+.artisan-chat-page .artisan-main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  margin-right: -18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-chat-page .chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 110px);
+  flex: 1;
+  overflow: hidden;
+}
+
+.artisan-chat-page .chat-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-chat-page .chat-header {
+  padding: 12px 15px;
+  background-color: #fff;
+}
+
+.artisan-chat-page .chat-content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 80px);
+}
+
+.artisan-chat-page .chat-icon {
+  font-size: 35px;
+  margin-right: 15px;
+  margin-bottom: 15px;
+  color: #3e87c3;
+}
+
+.artisan-chat-page .text-section h2 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.artisan-chat-page .text-section p {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Contacts list styles */
+.artisan-chat-page .contacts-list {
+  overflow-y: auto;
+  height: calc(100% - 110px);
+  max-height: 500px; /* Add max height */
+  /* Cross-browser scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+  padding-bottom: 10px;
+}
+
+.artisan-chat-page .contacts-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.artisan-chat-page .contacts-list::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.artisan-chat-page .contacts-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.artisan-chat-page .contact-item {
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 8px 10px !important; /* Reduced padding */
+}
+
+.artisan-chat-page .contact-item:hover {
+  background-color: #f8f9fa;
+}
+
+.artisan-chat-page .contact-item.active {
+  background-color: #e9ecef;
+  border-left: 4px solid #3e87c3;
+}
+
+.artisan-chat-page .default-avatar {
+  width: 32px; /* Reduced from 40px */
+  height: 32px; /* Reduced from 40px */
+  border-radius: 50%;
+  background-color: #3e87c3;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.artisan-chat-page .avatar {
+  width: 32px; /* Reduced from 40px */
+  height: 32px; /* Reduced from 40px */
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.artisan-chat-page .contact-location {
+  margin-top: 2px;
+}
+
+.artisan-chat-page .contact-location .badge {
+  font-size: 10px;
+  padding: 2px 5px;
+}
+
+/* Chat box styles */
+.artisan-chat-page .chat-box {
+  height: 100%;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+.artisan-chat-page .chat-box-header {
+  background-color: #fff;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+  padding: 8px 12px;
+}
+
+.artisan-chat-page .messages-container {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9f9f9;
+  flex: 1;
+  height: calc(100% - 110px);
+  max-height: 100%;
+  padding-bottom: 10px;
+  padding: 10px;
+  /* Cross-browser scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+.artisan-chat-page .messages-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.artisan-chat-page .messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.artisan-chat-page .messages-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.artisan-chat-page .message-date-separator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px 0;
+  position: relative;
+  text-align: center;
+}
+
+.artisan-chat-page .message-date-separator span {
+  background-color: #f9f9f9;
+  padding: 0 10px;
+  font-size: 10px;
+  color: #888;
+  position: relative;
+  z-index: 2;
+}
+
+.artisan-chat-page .message-date-separator:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #eaeaea;
+  z-index: 1;
+}
+
+.artisan-chat-page .message-bubble-wrapper {
+  display: flex;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.artisan-chat-page .message-bubble-wrapper.incoming {
+  justify-content: flex-start;
+}
+
+.artisan-chat-page .message-bubble-wrapper.outgoing {
+  justify-content: flex-end;
+}
+
+.artisan-chat-page .message-bubble {
+  max-width: 85%; /* Increased slightly for responsive design */
+  border-radius: 18px;
+  padding: 8px 10px; /* Reduced from 12px 15px */
+  position: relative;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.artisan-chat-page .incoming .message-bubble {
+  background-color: #fff;
+  border-bottom-left-radius: 5px;
+}
+
+.artisan-chat-page .outgoing .message-bubble {
+  background-color: #e1f5fe;
+  border-bottom-right-radius: 5px;
+}
+
+.artisan-chat-page .message-content {
+  margin-bottom: 5px;
+  word-wrap: break-word;
+}
+
+.artisan-chat-page .message-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+}
+
+.artisan-chat-page .message-time {
+  font-size: 9px; /* Reduced from 11px */
+  color: #999;
+}
+
+.artisan-chat-page .message-reactions {
+  display: flex;
+}
+
+.artisan-chat-page .reaction-btn {
+  padding: 0;
+  margin: 0;
+  color: #bbb;
+  background: transparent;
+  border: none;
+}
+
+.artisan-chat-page .reaction-btn:hover {
+  color: #f44336;
+}
+
+.artisan-chat-page .message-reaction-display {
+  font-size: 12px;
+}
+
+.artisan-chat-page .message-input-container {
+  background-color: #fff;
+  padding: 8px 10px;
+  border-top: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.artisan-chat-page .message-input-container .form-control {
+  border-radius: 20px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  height: 36px; /* Defined height */
+  font-size: 13px;
+}
+
+.artisan-chat-page .message-input-container .form-control:focus {
+  box-shadow: 0 0 0 2px rgba(62, 135, 195, 0.25);
+  border-color: #3e87c3;
+}
+
+.artisan-chat-page .send-message-btn {
+  border-radius: 20px;
+  padding: 4px 12px; /* Reduced padding */
+  font-size: 13px;
+}
+
+.artisan-chat-page .filter-tabs .nav-link {
+  color: #666;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 12px; /* Reduced from 14px */
+}
+
+.artisan-chat-page .filter-tabs .nav-link.active {
+  background-color: #3e87c3;
+  color: white;
+}
+
+.artisan-chat-page .search-container .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #eee;
+}
+
+.artisan-chat-page .search-container .form-control {
+  background-color: #f8f9fa;
+  border-color: #eee;
+}
+
+.artisan-chat-page .search-container .form-control:focus {
+  box-shadow: none;
+  border-color: #3e87c3;
+}
+
+/* Improved search bar design */
+.artisan-chat-page .search-container {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.artisan-chat-page .search-container .input-group {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background-color: #f0f2f5;
+  height: 36px;
+  padding: 0 5px;
+}
+
+.artisan-chat-page .search-container .input-group-text {
+  background-color: transparent;
+  border: none;
+  color: #65676b;
+  padding-left: 12px;
+  padding-right: 0;
+  font-size: 12px;
+}
+
+.artisan-chat-page .search-container .form-control {
+  background-color: transparent;
+  border: none;
+  height: 36px;
+  font-size: 13px;
+  color: #333;
+  box-shadow: none;
+  padding-left: 5px;
+}
+
+.artisan-chat-page .search-container .form-control::placeholder {
+  color: #8e9093;
+  font-size: 13px;
+}
+
+.artisan-chat-page .search-container .form-control:focus {
+  background-color: #fff;
+  box-shadow: none;
+  outline: none;
+}
+
+/* Fix for contact location badge */
+.artisan-chat-page .contact-location .badge {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+/* Fix contacts scrolling */
+.artisan-chat-page .col-md-4.col-lg-3.border-end {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.artisan-chat-page .contacts-header {
+  flex: 0 0 auto;
+  padding: 10px 12px !important;
+  flex-shrink: 0;
+}
+
+.artisan-chat-page .contacts-list {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+  height: auto;
+  max-height: none;
+}
+
+/* Fix messages scrolling */
+.artisan-chat-page .chat-box {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.artisan-chat-page .chat-box-header {
+  flex: 0 0 auto;
+}
+
+.artisan-chat-page .messages-container {
+  flex: 1;
+  overflow-y: auto;
+  max-height: none;
+  padding-right: 5px;
+}
+
+.artisan-chat-page .message-input-container {
+  flex: 0 0 auto;
+}
+
+/* Make sure message bubbles don't get too large */
+.artisan-chat-page .message-bubble {
+  max-width: 75%;
+}
+
+/* Make sure all scrollable areas have proper scrollbar styling */
+.artisan-chat-page .contacts-list::-webkit-scrollbar,
+.artisan-chat-page .messages-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.artisan-chat-page .contacts-list::-webkit-scrollbar-thumb,
+.artisan-chat-page .messages-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.artisan-chat-page .contacts-list::-webkit-scrollbar-track,
+.artisan-chat-page .messages-container::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+.artisan-chat-page .row.h-100 {
+  height: 100%;
+  max-height: 100%;
+}
+
+.artisan-chat-page .col-md-8,
+.artisan-chat-page .col-lg-9,
+.artisan-chat-page .col-md-4,
+.artisan-chat-page .col-lg-3 {
+  height: 100%;
+  overflow: hidden;
+}
+
+.artisan-chat-page .chat-box-header h6 {
+  font-size: 14px;
+}
+
+.artisan-chat-page .contact-info h6 {
+  font-size: 13px;
+}
+
+.artisan-chat-page .contact-info p {
+  font-size: 12px;
+}
