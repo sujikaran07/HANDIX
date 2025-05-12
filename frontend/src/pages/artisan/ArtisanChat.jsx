@@ -246,7 +246,7 @@ const ArtisanChat = () => {
                     <div className="search-container">
                       <div className="input-group">
                         <span className="input-group-text">
-                          <FaSearch className="text-muted" size={12} />
+                          <FaSearch size={14} />
                         </span>
                         <input 
                           type="text" 

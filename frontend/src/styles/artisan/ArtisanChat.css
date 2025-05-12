@@ -37,8 +37,8 @@
 }
 
 .artisan-chat-page .chat-header {
-  padding: 12px 15px;
-  background-color: #fff;
+  padding: 15px;
+  background-color: #ffffff;
 }
 
 .artisan-chat-page .chat-content {
@@ -50,21 +50,21 @@
 }
 
 .artisan-chat-page .chat-icon {
-  font-size: 35px;
+  font-size: 45px;
   margin-right: 15px;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
   color: #3e87c3;
 }
 
 .artisan-chat-page .text-section h2 {
-  font-size: 18px;
+  font-size: 20px;
   color: #333;
   margin-bottom: 0px;
   line-height: 1.2;
 }
 
 .artisan-chat-page .text-section p {
-  font-size: 13px;
+  font-size: 14px;
   color: #666;
 }
 
@@ -304,8 +304,23 @@
 
 .artisan-chat-page .send-message-btn {
   border-radius: 20px;
-  padding: 4px 12px; /* Reduced padding */
-  font-size: 13px;
+  padding: 3px 10px; /* Further reduced padding */
+  font-size: 12px; /* Smaller font */
+  min-width: 40px; /* Add minimum width */
+  height: 34px; /* Specific height to match input */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px; /* Reduced margin */
+}
+
+.artisan-chat-page .send-message-btn svg {
+  font-size: 10px; /* Smaller icon */
+}
+
+.artisan-chat-page .send-message-btn .d-none {
+  margin-left: 5px !important; /* Reduced margin for text */
+  font-size: 12px; /* Smaller text */
 }
 
 .artisan-chat-page .filter-tabs .nav-link {
@@ -338,31 +353,29 @@
 /* Improved search bar design */
 .artisan-chat-page .search-container {
   position: relative;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .artisan-chat-page .search-container .input-group {
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  background-color: #f0f2f5;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  background-color: #fff;
   height: 36px;
-  padding: 0 5px;
+  overflow: hidden;
 }
 
 .artisan-chat-page .search-container .input-group-text {
-  background-color: transparent;
+  background-color: #f8f9fa;
   border: none;
-  color: #65676b;
-  padding-left: 12px;
-  padding-right: 0;
-  font-size: 12px;
+  border-right: 1px solid #dee2e6;
+  color: #6c757d;
+  padding: 0.375rem 0.75rem;
 }
 
 .artisan-chat-page .search-container .form-control {
   background-color: transparent;
   border: none;
-  height: 36px;
+  height: 100%;
   font-size: 13px;
   color: #333;
   box-shadow: none;
@@ -428,6 +441,13 @@
 
 .artisan-chat-page .message-input-container {
   flex: 0 0 auto;
+  padding: 6px 8px; /* Reduced padding */
+}
+
+.artisan-chat-page .message-input-container .form-control {
+  height: 34px; /* Slightly reduced height to match button */
+  font-size: 12px; /* Smaller font */
+  padding: 5px 10px; /* Less padding for text input */
 }
 
 /* Make sure message bubbles don't get too large */
@@ -475,4 +495,61 @@
 
 .artisan-chat-page .contact-info p {
   font-size: 12px;
+}
+
+/* Fix filter tabs to match reports page */
+.artisan-chat-page .filter-tabs {
+  margin-bottom: 12px;
+}
+
+.artisan-chat-page .filter-tabs .nav-link {
+  font-size: 13px;
+  padding: 0.25rem 0.75rem;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+  transition: all 0.2s;
+}
+
+.artisan-chat-page .filter-tabs .nav-link.active {
+  background-color: #3e87c3;
+  color: white;
+  border-color: #3e87c3;
+}
+
+/* Match container styling with reports page */
+.artisan-chat-page .chat-container {
+  height: calc(100vh - 110px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.artisan-chat-page .chat-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Fix scrolling for contacts and messages container */
+.artisan-chat-page .row.h-100 {
+  height: 100%;
+  flex: 1;
+}
+
+.artisan-chat-page .col-md-4.col-lg-3,
+.artisan-chat-page .col-md-8.col-lg-9 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.artisan-chat-page .contacts-header {
+  flex: 0 0 auto;
+}
+
+.artisan-chat-page .contacts-list {
+  flex: 1;
+  overflow-y: auto;
+  height: auto;
 }
