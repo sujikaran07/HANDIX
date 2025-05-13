@@ -19,11 +19,11 @@ const ManageProducts = ({ onViewProduct }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
-        console.log('Token being sent:', token);
+        const token = localStorage.getItem('adminToken');
+        console.log('Admin token being sent:', token);
 
         if (!token) {
-          console.error('No token found in localStorage');
+          console.error('No admin token found in localStorage');
           return;
         }
 
@@ -55,7 +55,7 @@ const ManageProducts = ({ onViewProduct }) => {
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
             console.log('Token refreshed:', refreshData.token);
-            localStorage.setItem('token', refreshData.token); 
+            localStorage.setItem('adminToken', refreshData.token); 
             fetchProducts();
           } else {
             console.error('Failed to refresh token:', refreshResponse.statusText);
@@ -101,10 +101,10 @@ const ManageProducts = ({ onViewProduct }) => {
 
   const handleProductAction = async (productId, action) => {
     try {
-      let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        console.error('No token found in localStorage');
+        console.error('No admin token found in localStorage');
         return;
       }
       
@@ -150,7 +150,7 @@ const ManageProducts = ({ onViewProduct }) => {
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
             console.log('Token refreshed:', refreshData.token);
-            localStorage.setItem('token', refreshData.token);
+            localStorage.setItem('adminToken', refreshData.token);
             handleProductAction(productId, action); 
           } else {
             console.error('Failed to refresh token:', refreshResponse.statusText);

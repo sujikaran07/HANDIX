@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
 import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaFileAlt, FaPaypal, FaWallet, FaPercentage, FaReceipt } from 'react-icons/fa';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/admin/AdminDashboard.css';
 import logo from '../assets/logo1.png'; 
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const handleLinkClick = (path) => {
     setActiveLink(path);
+  };
+  
+  const handleLogout = (e) => {
+    e.preventDefault();
+    console.log('Logging out admin user');
+    
+    // Clear only admin token from localStorage
+    localStorage.removeItem('adminToken');
+    
+    // Redirect to login page
+    navigate('/login');
   };
 
   return (
@@ -78,10 +90,10 @@ const AdminSidebar = () => {
               <FaCog /> Settings
             </Link>
           </li>
-          <li className={activeLink === '/admin/logout' ? 'active' : ''}>
-            <Link to="/admin/logout" onClick={() => handleLinkClick('/admin/logout')}>
+          <li>
+            <a href="#" onClick={handleLogout}>
               <FaSignOutAlt /> Logout
-            </Link>
+            </a>
           </li>
         </ul>
       </div>

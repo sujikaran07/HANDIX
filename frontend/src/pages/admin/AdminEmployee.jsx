@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/AdminSidebar';
 import AdminTopbar from '../../components/AdminTopbar';
 import ManageEmployee from '../../components/ManageEmployee'; 
@@ -7,7 +8,28 @@ import axios from 'axios';
 import '../../styles/admin/AdminEmployee.css';
 
 const AdminManageEmployeePage = () => {
+  const navigate = useNavigate();
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [setRefreshKey] = useState(0);
+  const [showEditEmployeeForm, setShowEditEmployeeForm] = useState(false);
+
+  useEffect(() => {
+    // Check if admin token exists
+    const adminToken = localStorage.getItem('adminToken');
+    console.log('AdminEmployee - adminToken check:', adminToken ? 'Token exists' : 'No token found');
+    
+    if (!adminToken) {
+      console.warn('No admin token found, redirecting to login');
+      setIsAuthenticated(false);
+      navigate('/login');
+      return;
+    }
+    
+    setIsAuthenticated(true);
+    setLoading(false);
+  }, [navigate]);
 
   const handleAddEmployeeClick = () => {
     setShowAddEmployeeForm(true);
@@ -19,11 +41,12 @@ const AdminManageEmployeePage = () => {
 
   const handleSave = async (newEmployee) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
         console.error('No token found in localStorage');
         alert('Authentication required. Please login again.');
+        navigate('/login');
         return;
       }
       
@@ -42,6 +65,7 @@ const AdminManageEmployeePage = () => {
       
       if (error.response && error.response.status === 401) {
         alert('Session expired. Please login again.');
+        navigate('/login');
       } else {
         alert('Failed to save employee. Please try again.');
       }
@@ -53,6 +77,21 @@ const AdminManageEmployeePage = () => {
     setShowEditEmployeeForm(false); 
     setRefreshKey((prevKey) => prevKey + 1); 
   };
+
+  if (loading) {
+    return (
+      <div className="container mt-5 text-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+        <p className="mt-2">Verifying credentials...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <div className="admin-employee-page">

@@ -15,10 +15,10 @@ const AdminSettingsPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('adminToken');
         
         if (!token) {
-          console.log('Token missing. Redirecting to login.');
+          console.log('Admin token missing. Redirecting to login.');
           setIsAuthenticated(false);
           navigate('/login');
           return;
@@ -36,21 +36,18 @@ const AdminSettingsPage = () => {
             if (response.data.data.roleId === 1) {
               console.log('Confirmed admin role. Staying on admin page.');
               setIsAuthenticated(true);
-              
-              // Store this token as adminToken
-              localStorage.setItem('adminToken', token);
             } else {
-              console.log('User is not an admin. Redirecting to artisan dashboard.');
-              // User is artisan, store as artisanToken and redirect
-              localStorage.setItem('artisanToken', token);
-              navigate('/artisan/dashboard');
+              console.log('User is not an admin. Redirecting to login.');
+              // Role mismatch - clear admin token and redirect to login
+              localStorage.removeItem('adminToken');
+              setIsAuthenticated(false);
+              navigate('/login');
               return;
             }
           }
         } catch (error) {
           console.log('Error validating admin role:', error);
           if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
             localStorage.removeItem('adminToken');
             setIsAuthenticated(false);
             navigate('/login');

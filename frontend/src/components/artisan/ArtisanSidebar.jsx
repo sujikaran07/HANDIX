@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
 import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaCommentDots, FaStar, FaFileAlt } from 'react-icons/fa';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../../styles/artisan/ArtisanDashboard.css';
 import logo from '../../assets/logo1.png'; 
 
 const ArtisanSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeLink, setActiveLink] = useState(location.pathname);
 
   const handleLinkClick = (path) => {
     setActiveLink(path);
+  };
+  
+  const handleLogout = (e) => {
+    e.preventDefault();
+    console.log('Logging out artisan user');
+    
+    // Clear only artisan token from localStorage
+    localStorage.removeItem('artisanToken');
+    
+    // Redirect to login page
+    navigate('/login');
   };
 
   return (
@@ -62,10 +74,10 @@ const ArtisanSidebar = () => {
               <FaCog /> Settings
             </Link>
           </li>
-          <li className={activeLink === '/artisan/logout' ? 'artisan-active' : ''}>
-            <Link to="/artisan/logout" onClick={() => handleLinkClick('/artisan/logout')}>
+          <li>
+            <a href="#" onClick={handleLogout}>
               <FaSignOutAlt /> Logout
-            </Link>
+            </a>
           </li>
         </ul>
       </div>

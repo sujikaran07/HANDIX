@@ -8,6 +8,8 @@ const ManageLogout = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    // Clear only admin token from localStorage
+    localStorage.removeItem('adminToken');
     navigate('/login');
   };
 

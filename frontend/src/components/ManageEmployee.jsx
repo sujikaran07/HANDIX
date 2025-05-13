@@ -25,16 +25,11 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-       let token = localStorage.getItem('token') || localStorage.getItem('adminToken');
-       const availableKeys = [];
-       for (let i = 0; i < localStorage.length; i++) {
-         availableKeys.push(localStorage.key(i));
-       }
-       console.log('Available localStorage keys:', availableKeys);
-       console.log('Token being sent:', token);
+       const token = localStorage.getItem('adminToken');
+       console.log('Admin token being sent:', token);
         
         if (!token) {
-          console.error('No token found in localStorage');
+          console.error('No admin token found in localStorage');
           setError('Authentication required. Please login again.');
           setLoading(false);
           return;
@@ -55,7 +50,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
         if (error.response && error.response.status === 401) {
           console.warn('Token expired. Attempting to refresh token...');
           try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('adminToken');
             const refreshResponse = await axios.post('http://localhost:5000/api/login/refresh-token', 
               { token },
               { headers: { 'Content-Type': 'application/json' } }
@@ -63,7 +58,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
             if (refreshResponse.status === 200) {
               console.log('Token refreshed:', refreshResponse.data.token);
-              localStorage.setItem('token', refreshResponse.data.token);
+              localStorage.setItem('adminToken', refreshResponse.data.token);
               fetchEmployees();
             } else {
               setError('Session expired. Please login again.');
@@ -86,10 +81,10 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
   const handleDelete = async () => {
     try {
-      const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        console.error('No token found in localStorage');
+        console.error('No admin token found in localStorage');
         alert('Authentication required. Please login again.');
         return;
       }
@@ -137,10 +132,10 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
 
   const handleSave = async (updatedEmployee) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        console.error('No token found in localStorage');
+        console.error('No admin token found in localStorage');
         alert('Authentication required. Please login again.');
         return;
       }

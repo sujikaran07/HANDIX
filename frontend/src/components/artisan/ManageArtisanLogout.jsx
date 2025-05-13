@@ -8,6 +8,8 @@ const ManageArtisanLogout = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    // Clear only artisan token from localStorage
+    localStorage.removeItem('artisanToken');
     navigate('/login');
   };
 

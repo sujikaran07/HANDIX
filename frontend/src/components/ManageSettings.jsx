@@ -3,8 +3,10 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../styles/admin/AdminSettings.css';
 import axios from 'axios';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const ManageSettings = ({ onViewSetting }) => {
+  // Add state variables for password
   // Add state variables for password visibility
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -40,8 +42,8 @@ const ManageSettings = ({ onViewSetting }) => {
     try {
       setLoading(true);
       
-      // Ensure we have the most recent token
-      const token = localStorage.getItem('token');
+      // Use adminToken instead of token
+      const token = localStorage.getItem('adminToken');
       
       if (!token) {
         setError('Authentication token not found. Please log in again.');
@@ -116,7 +118,7 @@ const ManageSettings = ({ onViewSetting }) => {
       formData.append('profilePicture', file);
       
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       const response = await axios.put('/api/employees/settings/profile-picture', 
         formData, 
@@ -173,7 +175,7 @@ const ManageSettings = ({ onViewSetting }) => {
   const updateProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       const profileResponse = await axios.put('/api/employees/settings/profile', 
         {
@@ -223,7 +225,7 @@ const ManageSettings = ({ onViewSetting }) => {
           }, 
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
+              Authorization: `Bearer ${localStorage.getItem('adminToken')}`
             }
           }
         );
@@ -256,7 +258,7 @@ const ManageSettings = ({ onViewSetting }) => {
   const handleRemoveProfilePicture = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('adminToken');
       
       const response = await axios.put('/api/employees/settings/profile', 
         {
@@ -467,7 +469,7 @@ const ManageSettings = ({ onViewSetting }) => {
             <div className="row mb-3">
               <div className="col-md-4">
                 <label htmlFor="currentPassword" className="form-label">Current Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showCurrentPassword ? "text" : "password"} 
                     className="form-control" 
@@ -475,27 +477,20 @@ const ManageSettings = ({ onViewSetting }) => {
                     name="currentPassword" 
                     value={profile.currentPassword} 
                     onChange={handleProfileChange} 
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showCurrentPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="newPassword" className="form-label">New Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showNewPassword ? "text" : "password"} 
                     className="form-control" 
@@ -503,27 +498,20 @@ const ManageSettings = ({ onViewSetting }) => {
                     name="newPassword" 
                     value={profile.newPassword} 
                     onChange={handleProfileChange} 
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowNewPassword(!showNewPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showNewPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="confirmNewPassword" className="form-label">Confirm New Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showConfirmPassword ? "text" : "password"} 
                     className="form-control" 
@@ -531,21 +519,14 @@ const ManageSettings = ({ onViewSetting }) => {
                     name="confirmNewPassword" 
                     value={profile.confirmNewPassword} 
                     onChange={handleProfileChange} 
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showConfirmPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
@@ -568,7 +549,7 @@ const ManageSettings = ({ onViewSetting }) => {
                   </div>
                   <div className="modal-body">
                     <label htmlFor="passwordForEdit" className="form-label">Enter Password to Confirm</label>
-                    <div className="position-relative">
+                    <div className="position-relative input-group">
                       <input 
                         type={showPasswordForEdit ? "text" : "password"} 
                         className="form-control" 
@@ -576,21 +557,14 @@ const ManageSettings = ({ onViewSetting }) => {
                         name="passwordForEdit" 
                         value={passwordForEdit} 
                         onChange={(e) => setPasswordForEdit(e.target.value)} 
+                        style={{ height: "38px" }}
                       />
                       <span 
+                        className="input-icon" 
                         onClick={() => setShowPasswordForEdit(!showPasswordForEdit)} 
-                        style={{ 
-                          position: 'absolute', 
-                          right: '10px', 
-                          top: '50%', 
-                          transform: 'translateY(-50%)', 
-                          cursor: 'pointer',
-                          zIndex: 10,
-                          fontSize: '16px',
-                          color: '#3e87c3'
-                        }}
+                        style={{ cursor: 'pointer' }}
                       >
-                        <i className={showPasswordForEdit ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                        {showPasswordForEdit ? <FaEyeSlash /> : <FaEye />}
                       </span>
                     </div>
                   </div>

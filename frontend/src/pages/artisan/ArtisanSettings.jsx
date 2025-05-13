@@ -15,10 +15,10 @@ const ArtisanSettingsPage = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('artisanToken');
         
         if (!token) {
-          console.log('Token missing. Redirecting to login.');
+          console.log('Artisan token missing. Redirecting to login.');
           setIsAuthenticated(false);
           navigate('/login');
           return;
@@ -36,21 +36,18 @@ const ArtisanSettingsPage = () => {
             if (response.data.data.roleId === 2) {
               console.log('Confirmed artisan role. Staying on artisan page.');
               setIsAuthenticated(true);
-              
-              // Store this token as artisanToken
-              localStorage.setItem('artisanToken', token);
             } else {
-              console.log('User is not an artisan. Redirecting to admin dashboard.');
-              // User is admin, store as adminToken and redirect
-              localStorage.setItem('adminToken', token);
-              navigate('/admin/dashboard');
+              console.log('User is not an artisan. Redirecting to login.');
+              // Role mismatch - clear artisan token and redirect to login
+              localStorage.removeItem('artisanToken');
+              setIsAuthenticated(false);
+              navigate('/login');
               return;
             }
           }
         } catch (error) {
           console.log('Error validating artisan role:', error);
           if (error.response && error.response.status === 401) {
-            localStorage.removeItem('token');
             localStorage.removeItem('artisanToken');
             setIsAuthenticated(false);
             navigate('/login');

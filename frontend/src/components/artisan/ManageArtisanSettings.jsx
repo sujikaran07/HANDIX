@@ -3,19 +3,21 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import '../../styles/artisan/ArtisanSettings.css';
 import axios from 'axios';
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const ManageArtisanSettings = ({ onViewSetting }) => {
-  // Add state variables for password visibility
+  // Add state variables for password
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordForEdit, setShowPasswordForEdit] = useState(false);
   
+  // Initialize all form fields with empty strings to prevent uncontrolled to controlled warnings
   const [profile, setProfile] = useState({
-    profilePicture: '',
-    username: 'artisan_user',
-    email: 'artisan@example.com',
-    mobileNumber: '123-456-7890',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
@@ -39,8 +41,8 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     try {
       setLoading(true);
       
-      // Ensure we have the most recent token
-      const token = localStorage.getItem('token');
+      // Use the artisan-specific token
+      const token = localStorage.getItem('artisanToken');
       
       if (!token) {
         setError('Authentication token not found. Please log in again.');
@@ -113,7 +115,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
       formData.append('profilePicture', file);
       
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('artisanToken');
       
       const response = await axios.put('/api/employees/settings/profile-picture', 
         formData, 
@@ -170,7 +172,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
   const updateProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('artisanToken');
       
       const profileResponse = await axios.put('/api/employees/settings/profile', 
         {
@@ -200,68 +202,14 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
   };
 
   const handleConfirmPassword = async () => {
-    if (!passwordForEdit) {
-      setError('Please enter your password to confirm changes');
-      return;
-    }
-    
     try {
       setLoading(true);
       
-      // Update profile information first
-      await updateProfile();
+      // Verify the current password first
+      const token = localStorage.getItem('artisanToken');
       
-      // Update password if fields are filled
-      if (profile.newPassword && profile.currentPassword) {
-        const passwordResponse = await axios.put('/api/employees/settings/password', 
-          {
-            currentPassword: profile.currentPassword,
-            newPassword: profile.newPassword
-          }, 
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-        
-        if (passwordResponse.data && passwordResponse.data.success) {
-          setMessage(message ? `${message} and password updated successfully` : 'Password updated successfully');
-          
-          // Clear password fields
-          setProfile({
-            ...profile,
-            currentPassword: '',
-            newPassword: '',
-            confirmNewPassword: ''
-          });
-        }
-      }
-      
-      setShowPasswordPopup(false);
-      setPasswordForEdit('');
-      setTimeout(() => setMessage(null), 3000);
-    } catch (err) {
-      console.error('Error updating settings:', err);
-      setError(err.response?.data?.message || 'Failed to update settings. Please try again.');
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRemoveProfilePicture = async () => {
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.put('/api/employees/settings/profile', 
-        {
-          removeProfilePicture: true,
-          firstName: profile.firstName, 
-          lastName: profile.lastName,
-          phone: profile.phone
-        }, 
+      const verifyResponse = await axios.post('/api/employees/settings/verify-password', 
+        { currentPassword: passwordForEdit }, 
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -269,22 +217,65 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         }
       );
       
-      if (response.data && response.data.success) {
-        setPreviewImage(null); // Clear the preview image locally
-        setMessage('Profile picture removed successfully');
-        setTimeout(() => setMessage(null), 3000);
+      if (verifyResponse.data && verifyResponse.data.success) {
+        // If current password is verified, update the password
+        const passwordResponse = await axios.put('/api/employees/settings/password', 
+          {
+            currentPassword: profile.currentPassword,
+            newPassword: profile.newPassword
+          }, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
         
-        // Refresh profile data after removal
-        await fetchProfile();
+        if (passwordResponse.data && passwordResponse.data.success) {
+          setMessage('Password updated successfully');
+          setProfile({
+            ...profile,
+            currentPassword: '',
+            newPassword: '',
+            confirmNewPassword: ''
+          });
+        }
+        
+        setError(null);
       } else {
-        // Handle unexpected response format
-        setError('Unexpected response from server. Please try again.');
+        setError('Current password is incorrect');
         setTimeout(() => setError(null), 3000);
       }
     } catch (err) {
+      console.error('Error updating password:', err);
+      setError('Failed to update password. Please try again.');
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoading(false);
+      setShowPasswordPopup(false);
+      setPasswordForEdit('');
+    }
+  };
+
+  const handleRemoveProfilePicture = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('artisanToken');
+      
+      const response = await axios.delete('/api/employees/settings/profile-picture', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.data && response.data.success) {
+        setPreviewImage(null);
+        setMessage('Profile picture removed successfully');
+        setTimeout(() => setMessage(null), 3000);
+      }
+    } catch (err) {
       console.error('Error removing profile picture:', err);
-      const errorMsg = err.response?.data?.message || 'Failed to remove profile picture. Please try again.';
-      setError(errorMsg);
+      setError('Failed to remove profile picture. Please try again.');
       setTimeout(() => setError(null), 3000);
     } finally {
       setLoading(false);
@@ -438,7 +429,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label htmlFor="firstName" className="form-label">First Name</label>
-                    <input type="text" className="form-control" id="firstName" name="firstName" value={profile.firstName || profile.username} onChange={handleProfileChange} />
+                    <input type="text" className="form-control" id="firstName" name="firstName" value={profile.firstName} onChange={handleProfileChange} />
                   </div>
                   <div className="col-md-6">
                     <label htmlFor="lastName" className="form-label">Last Name</label>
@@ -452,7 +443,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
                   </div>
                   <div className="col-md-6">
                     <label htmlFor="phone" className="form-label">Phone Number</label>
-                    <input type="text" className="form-control" id="phone" name="phone" value={profile.phone || profile.mobileNumber} onChange={handleProfileChange} />
+                    <input type="text" className="form-control" id="phone" name="phone" value={profile.phone} onChange={handleProfileChange} />
                   </div>
                 </div>
               </div>
@@ -464,85 +455,64 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
             <div className="row mb-3">
               <div className="col-md-4">
                 <label htmlFor="currentPassword" className="form-label">Current Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showCurrentPassword ? "text" : "password"} 
                     className="form-control" 
                     id="currentPassword" 
                     name="currentPassword" 
-                    value={profile.currentPassword} 
-                    onChange={handleProfileChange} 
+                    value={profile.currentPassword}
+                    onChange={handleProfileChange}
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showCurrentPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showCurrentPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="newPassword" className="form-label">New Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showNewPassword ? "text" : "password"} 
                     className="form-control" 
                     id="newPassword" 
                     name="newPassword" 
-                    value={profile.newPassword} 
-                    onChange={handleProfileChange} 
+                    value={profile.newPassword}
+                    onChange={handleProfileChange}
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowNewPassword(!showNewPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showNewPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
               <div className="col-md-4">
                 <label htmlFor="confirmNewPassword" className="form-label">Confirm New Password</label>
-                <div className="position-relative">
+                <div className="position-relative input-group">
                   <input 
                     type={showConfirmPassword ? "text" : "password"} 
                     className="form-control" 
                     id="confirmNewPassword" 
                     name="confirmNewPassword" 
-                    value={profile.confirmNewPassword} 
-                    onChange={handleProfileChange} 
+                    value={profile.confirmNewPassword}
+                    onChange={handleProfileChange}
+                    style={{ height: "38px" }}
                   />
                   <span 
+                    className="input-icon" 
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)} 
-                    style={{ 
-                      position: 'absolute', 
-                      right: '10px', 
-                      top: '50%', 
-                      transform: 'translateY(-50%)', 
-                      cursor: 'pointer',
-                      zIndex: 10,
-                      fontSize: '16px',
-                      color: '#3e87c3'
-                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <i className={showConfirmPassword ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
               </div>
@@ -565,7 +535,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
                   </div>
                   <div className="modal-body">
                     <label htmlFor="passwordForEdit" className="form-label">Enter Password to Confirm</label>
-                    <div className="position-relative">
+                    <div className="position-relative input-group">
                       <input 
                         type={showPasswordForEdit ? "text" : "password"} 
                         className="form-control" 
@@ -573,21 +543,14 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
                         name="passwordForEdit" 
                         value={passwordForEdit} 
                         onChange={(e) => setPasswordForEdit(e.target.value)} 
+                        style={{ height: "38px" }}
                       />
                       <span 
+                        className="input-icon" 
                         onClick={() => setShowPasswordForEdit(!showPasswordForEdit)} 
-                        style={{ 
-                          position: 'absolute', 
-                          right: '10px', 
-                          top: '50%', 
-                          transform: 'translateY(-50%)', 
-                          cursor: 'pointer',
-                          zIndex: 10,
-                          fontSize: '16px',
-                          color: '#3e87c3'
-                        }}
+                        style={{ cursor: 'pointer' }}
                       >
-                        <i className={showPasswordForEdit ? "fas fa-eye-slash" : "fas fa-eye"}></i>
+                        {showPasswordForEdit ? <FaEyeSlash /> : <FaEye />}
                       </span>
                     </div>
                   </div>
