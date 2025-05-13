@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faFilter, faCloudDownloadAlt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { FaExchangeAlt } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminTransaction.css';
 
-const paymentMethodsList = ['Cash on Delivery', 'Credit Card', 'PayPal', 'GPay'];
+const paymentMethodsList = ['cod', 'card', 'paypal', 'gpay'];
+const paymentMethodsDisplay = {
+  'cod': 'Cash on Delivery',
+  'card': 'Credit Card',
+  'paypal': 'PayPal',
+  'gpay': 'GPay'
+};
 
 const ManageTransactions = ({ onViewTransaction }) => {
   const [transactions, setTransactions] = useState([]);
@@ -25,7 +31,13 @@ const ManageTransactions = ({ onViewTransaction }) => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+        console.log('Fetching transactions from API...');
+        
+        // Try to use the admin token first, then fall back to the regular token
+        const adminToken = localStorage.getItem('adminToken');
+        const userToken = localStorage.getItem('token');
+        
+        const token = adminToken || userToken;
         
         if (!token) {
           console.error('No token found in localStorage');
@@ -34,43 +46,53 @@ const ManageTransactions = ({ onViewTransaction }) => {
           return;
         }
         
-        // API call to fetch transactions
-        const response = await fetch('http://localhost:5000/api/admin/transactions', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        console.log('Using token type:', adminToken ? 'Admin Token' : 'User Token');
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Fetched transaction data:', data);
-          setTransactions(data.transactions);
-          setLoading(false);
-        } else if (response.status === 401) {
-          console.warn('Token expired. Attempting to refresh token...');
-          const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
-            method: 'POST',
+        try {
+          // API call to fetch transactions
+          const response = await fetch('http://localhost:5000/api/admin/transactions', {
             headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token }),
+              Authorization: `Bearer ${token}`
+            }
           });
-
-          if (refreshResponse.ok) {
-            const refreshData = await refreshResponse.json();
-            console.log('Token refreshed:', refreshData.token);
-            localStorage.setItem('token', refreshData.token);
-            fetchTransactions();
+          
+          console.log('API response status:', response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Fetched transaction data:', data);
+            
+            if (data.success && Array.isArray(data.transactions)) {
+              console.log(`Received ${data.transactions.length} transactions`);
+              // Set transactions with the retrieved data
+              setTransactions(data.transactions);
+              if (data.transactions.length === 0) {
+                console.log('No transactions found in the response');
+                setError('No transactions found. Try creating some transactions first.');
+              }
+            } else {
+              console.error('Invalid transaction data format:', data);
+              setError('Received invalid data format from server');
+            }
           } else {
-            setError('Session expired. Please login again.');
-            setLoading(false);
+            const errorData = await response.text();
+            console.error(`Error response (${response.status}):`, errorData);
+            
+            if (response.status === 401) {
+              console.warn('Token expired or unauthorized. Please log in again.');
+              setError('Session expired. Please login again.');
+            } else {
+              setError(`Failed to fetch transactions: ${response.statusText}`);
+            }
           }
-        } else {
-          setError(`Failed to fetch transactions: ${response.statusText}`);
-          setLoading(false);
+        } catch (fetchError) {
+          console.error('Fetch error:', fetchError);
+          setError(`Network error: ${fetchError.message}`);
         }
+        
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching transactions:', error);
+        console.error('Error in fetchTransactions function:', error);
         setError('An error occurred while fetching transaction data.');
         setLoading(false);
       }
@@ -78,6 +100,125 @@ const ManageTransactions = ({ onViewTransaction }) => {
 
     fetchTransactions();
   }, [refreshKey]);
+
+  const handlePaymentMethodChange = (method) => {
+    setSelectedPaymentMethods((prev) =>
+      prev.includes(method)
+        ? prev.filter((m) => m !== method)
+        : [...prev, method]
+    );
+  };
+
+  const filteredTransactions = transactions.filter(item => {
+    // Handle both direct fields and nested fields safely
+    const paymentMethod = item.paymentMethod || '';
+    const status = item.transactionStatus || '';
+    const transactionId = item.transaction_id?.toString() || '';
+    const customerId = item.c_id?.toString() || '';
+    const orderId = item.order_id?.toString() || '';
+
+    // Map database status values to display status values
+    const statusMap = {
+      'pending': 'Pending',
+      'completed': 'Completed',
+      'refunded': 'Refunded',
+      'failed': 'Failed',
+      'awaiting_payment': 'Awaiting Payment'
+    };
+
+    const displayStatus = statusMap[status.toLowerCase()] || status;
+
+    return (
+      (selectedPaymentMethods.includes(paymentMethod)) &&
+      (filterStatus === 'All' || displayStatus === filterStatus) &&
+      (transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       customerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       paymentMethod.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
+
+  const indexOfLastTransaction = currentPage * transactionsPerPage;
+  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
+  const currentTransactions = filteredTransactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
+  const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  // Format currency amount
+  const formatAmount = (amount) => {
+    if (amount === null || amount === undefined) return 'N/A';
+    
+    try {
+      return typeof amount === 'number' ? 
+        amount.toLocaleString('en-US', { style: 'currency', currency: 'LKR' }).replace('LKR', '') + ' LKR' 
+        : amount;
+    } catch (e) {
+      return amount.toString();
+    }
+  };
+
+  // Format date safely
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      return new Date(dateString).toLocaleString('en-US', { 
+        year: '2-digit', 
+        month: 'numeric', 
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return 'Invalid Date';
+    }
+  };
+
+  // Update the component to map status values to display format
+  const getDisplayStatus = (dbStatus) => {
+    if (!dbStatus) return 'N/A';
+    
+    const statusMap = {
+      'pending': 'Pending',
+      'completed': 'Completed',
+      'refunded': 'Refunded',
+      'failed': 'Failed',
+      'awaiting_payment': 'Awaiting Payment'
+    };
+    
+    return statusMap[dbStatus.toLowerCase()] || dbStatus;
+  };
+  
+  // Update the getStatusClassName function to map status values to CSS classes
+  const getStatusClassName = (status) => {
+    if (!status) return '';
+    
+    const statusLower = status.toLowerCase();
+    
+    if (statusLower === 'pending') {
+      return 'transaction-status-pending';
+    } else if (statusLower === 'awaiting_payment') {
+      return 'transaction-status-awaiting';
+    } else if (statusLower === 'completed') {
+      return 'transaction-status-completed';
+    } else if (statusLower === 'refunded') {
+      return 'transaction-status-refunded';
+    } else if (statusLower === 'failed') {
+      return 'transaction-status-failed';
+    }
+    
+    return `transaction-status-${statusLower}`;
+  };
+
+  // Format payment method for display
+  const formatPaymentMethod = (method) => {
+    if (!method) return 'N/A';
+    return paymentMethodsDisplay[method.toLowerCase()] || method;
+  };
 
   const handleRefund = async (transaction) => {
     try {
@@ -88,20 +229,47 @@ const ManageTransactions = ({ onViewTransaction }) => {
         return;
       }
 
-      const confirmRefund = window.confirm(`Are you sure you want to refund transaction ${transaction.transaction_id} for ${transaction.amount} LKR?`);
+      // Determine refund reason based on transaction state
+      let refundReason = transaction.refundReason || "standard_refund";
+      let refundMessage = '';
+      
+      // Set appropriate message based on the refund reason
+      switch(refundReason) {
+        case 'canceled_before_confirmation':
+          refundMessage = 'This is a full refund for an order canceled before confirmation.';
+          break;
+        case 'admin_cancellation':
+          refundMessage = 'This is a full refund initiated by an admin.';
+          break;
+        case 'artisan_cancellation':
+          refundMessage = 'This is a full refund for an order canceled by an artisan.';
+          break;
+        default:
+          refundMessage = 'Standard refund';
+      }
+
+      const confirmRefund = window.confirm(
+        `Are you sure you want to refund transaction ${transaction.transaction_id} for ${formatAmount(transaction.amount)}?\n\n` +
+        `Reason: ${refundMessage}\n\n` +
+        `Note: No refunds are allowed for orders canceled after confirmation unless initiated by admin or artisan.`
+      );
       
       if (!confirmRefund) {
         return;
       }
 
-      console.log(`Processing refund for transaction ${transaction.transaction_id}`);
+      console.log(`Processing refund for transaction ${transaction.transaction_id} with reason: ${refundReason}`);
       
       const response = await fetch(`http://localhost:5000/api/admin/transactions/${transaction.transaction_id}/refund`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
-        }
+        },
+        body: JSON.stringify({ 
+          reason: refundReason,
+          canceledBy: transaction.canceledBy || 'admin'
+        })
       });
 
       if (response.ok) {
@@ -138,96 +306,44 @@ const ManageTransactions = ({ onViewTransaction }) => {
     }
   };
 
-  const handlePaymentMethodChange = (method) => {
-    setSelectedPaymentMethods((prev) =>
-      prev.includes(method)
-        ? prev.filter((m) => m !== method)
-        : [...prev, method]
-    );
-  };
-
-  const filteredTransactions = transactions.filter(item => {
+  // Added error display component
+  const ErrorDisplay = ({ message }) => {
     return (
-      (selectedPaymentMethods.includes(item.paymentMethod)) &&
-      (filterStatus === 'All' || item.transactionStatus === filterStatus) &&
-      (item.transaction_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-       item.c_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-       item.order_id?.toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
-       item.paymentMethod?.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-  });
-
-  const indexOfLastTransaction = currentPage * transactionsPerPage;
-  const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
-  const currentTransactions = filteredTransactions.slice(indexOfFirstTransaction, indexOfLastTransaction);
-  const totalPages = Math.ceil(filteredTransactions.length / transactionsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
-
-  const renderActionMenu = (item) => {
-    return (
-      <div className="dropdown">
-        <button className="btn dropdown-toggle" type="button" id={`dropdownMenu-${item.transaction_id}`} data-bs-toggle="dropdown" aria-expanded="false">
-          Actions
-        </button>
-        <ul className="dropdown-menu" aria-labelledby={`dropdownMenu-${item.transaction_id}`}>
-          <li>
-            <button className="dropdown-item" onClick={() => onViewTransaction(item)}>
-              View
-            </button>
-          </li>
-          {/* Only show refund option if transaction is completed */}
-          {item.transactionStatus === 'Completed' && (
-            <li>
-              <button className="dropdown-item" onClick={() => handleRefund(item)}>
-                Refund
-              </button>
-            </li>
-          )}
-        </ul>
+      <div className="alert alert-warning" role="alert">
+        <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+        {message}
+        <div className="mt-3">
+          <button 
+            className="btn btn-sm btn-outline-primary me-2" 
+            onClick={() => setRefreshKey(key => key + 1)}
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   };
 
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
-        <div className="manage-inventory-header d-flex justify-content-between align-items-center mb-3">
+      <div className="card p-4" style={{ 
+        borderRadius: '10px', 
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', 
+        backgroundColor: '#ffffff', 
+        flex: '1 1 auto', 
+        display: 'flex', 
+        flexDirection: 'column',
+        border: 'none' 
+      }}>
+        <div className="manage-products-header d-flex justify-content-between align-items-center mb-3">
           <div className="title-section">
             <div className="icon-and-title">
-              <FaExchangeAlt className="inventory-icon" />
+              <FaExchangeAlt className="product-icon" size={24} style={{ color: '#3e87c3', marginRight: '10px' }} />
               <div className="text-section">
-                <h2>Transactions</h2>
-                <p>Manage your transactions</p>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: '0.25rem' }}>Transactions</h2>
+                <p style={{ fontSize: '0.9rem', color: '#6c757d', marginBottom: '0' }}>Manage your transactions</p>
               </div>
             </div>
-          </div>
-          <div className="d-flex align-items-center">
-            <button className="export-btn btn btn-light me-2" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-              <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
-            </button>
-          </div>
-        </div>
-
-        <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
-          <div className="d-flex">
-            {paymentMethodsList.map((method) => (
-              <div className="form-check form-check-inline" key={method}>
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id={`${method.replace(/\s+/g, '').toLowerCase()}Checkbox`}
-                  value={method}
-                  checked={selectedPaymentMethods.includes(method)}
-                  onChange={() => handlePaymentMethodChange(method)}
-                />
-                <label className="form-check-label" htmlFor={`${method.replace(/\s+/g, '').toLowerCase()}Checkbox`}>
-                  {method === 'Cash on Delivery' ? 'COD' : method === 'Credit Card' ? 'Card' : method}
-                </label>
-              </div>
-            ))}
           </div>
           <div className="d-flex align-items-center">
             <div className="search-bar me-2">
@@ -245,6 +361,34 @@ const ManageTransactions = ({ onViewTransaction }) => {
                 />
               </div>
             </div>
+            <button className="export-btn btn btn-light" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+              <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
+            </button>
+          </div>
+        </div>
+
+        {!loading && !error && transactions.length > 0 && (
+          <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
+            <div className="d-flex">
+              {paymentMethodsList.map((method) => (
+                <div className="form-check form-check-inline" key={method}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id={`${method.replace(/\s+/g, '').toLowerCase()}Checkbox`}
+                    value={method}
+                    checked={selectedPaymentMethods.includes(method)}
+                    onChange={() => handlePaymentMethodChange(method)}
+                  />
+                  <label 
+                    className="form-check-label" 
+                    htmlFor={`${method.replace(/\s+/g, '').toLowerCase()}Checkbox`}
+                  >
+                    {paymentMethodsDisplay[method] || method}
+                  </label>
+                </div>
+              ))}
+            </div>
             <div className="filter-dropdown">
               <div className="input-group">
                 <span className="input-group-text bg-light border-0">
@@ -258,15 +402,20 @@ const ManageTransactions = ({ onViewTransaction }) => {
                   <option value="All">All</option>
                   <option value="Completed">Completed</option>
                   <option value="Pending">Pending</option>
+                  <option value="Awaiting Payment">Awaiting Payment</option>
                   <option value="Failed">Failed</option>
                   <option value="Refunded">Refunded</option>
                 </select>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
+        <div style={{ 
+          flex: '1 1 auto', 
+          overflowY: 'auto', 
+          marginTop: '20px'
+        }}>
           {loading ? (
             <div className="text-center py-4">
               <div className="spinner-border text-primary" role="status">
@@ -275,49 +424,129 @@ const ManageTransactions = ({ onViewTransaction }) => {
               <p className="mt-2">Loading transaction data...</p>
             </div>
           ) : error ? (
-            <div className="alert alert-danger" role="alert">
-              {error}
+            <ErrorDisplay message={error} />
+          ) : transactions.length === 0 ? (
+            <div className="text-center py-5">
+              <div className="mb-3">
+                <FontAwesomeIcon icon={faExclamationTriangle} size="3x" style={{ color: '#ffc107' }} />
+              </div>
+              <h5>No Transactions Found</h5>
+              <p className="text-muted">There are no transactions in the system yet.</p>
+              <button 
+                className="btn btn-primary mt-2" 
+                onClick={() => setRefreshKey(key => key + 1)}
+              >
+                Refresh
+              </button>
             </div>
           ) : (
-            <table className="table table-bordered table-striped inventory-table">
+            <table className="table product-table" style={{ 
+              marginBottom: 0,
+              width: '100%',
+              borderCollapse: 'separate',
+              borderSpacing: '0 10px',
+              marginTop: '-15px'
+            }}>
               <thead>
                 <tr>
-                  <th>C-ID</th>
-                  <th>Amount</th>
-                  <th>Payment Method</th>
-                  <th>Transaction Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th style={{ width: '8%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>T-ID</th>
+                  <th style={{ width: '8%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>O-ID</th>
+                  <th style={{ width: '8%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>C-ID</th>
+                  <th style={{ width: '12%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>Amount</th>
+                  <th style={{ width: '12%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>Payment</th>
+                  <th style={{ width: '15%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>Status</th>
+                  <th style={{ width: '22%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>Transaction Date</th>
+                  <th style={{ width: '15%', backgroundColor: '#f8f9fa', borderRadius: '10px 10px 0 0', boxShadow: 'none' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentTransactions.length > 0 ? (
                   currentTransactions.map(item => {
+                    // Get the appropriate transaction status class name
+                    const statusClassName = getStatusClassName(item.transactionStatus);
+                    
                     return (
-                      <tr key={item.transaction_id}>
-                        <td>{item.c_id}</td>
-                        <td>{typeof item.amount === 'number' ? item.amount.toLocaleString('en-US', { style: 'currency', currency: 'LKR' }) : item.amount}</td>
-                        <td>{item.paymentMethod}</td>
-                        <td>{item.transactionDate && new Date(item.transactionDate).toLocaleString('en-US', { 
-                          year: '2-digit', 
-                          month: 'numeric', 
-                          day: 'numeric',
-                          hour: 'numeric',
-                          minute: '2-digit',
-                          hour12: true
-                        })}</td>
-                        <td className={`stock-status ${item.transactionStatus?.toLowerCase().replace(/\s+/g, '-')}`}>
-                          {item.transactionStatus}
+                      <tr key={item.transaction_id} style={{ 
+                        marginBottom: '0px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                        borderRadius: '10px'
+                      }}>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{item.transaction_id || 'N/A'}</td>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{item.order_id || 'N/A'}</td>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{item.c_id || 'N/A'}</td>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{formatAmount(item.amount)}</td>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{formatPaymentMethod(item.paymentMethod)}</td>
+                        <td className={statusClassName} style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>
+                          {getDisplayStatus(item.transactionStatus)}
                         </td>
-                        <td className="action-buttons">
-                          {renderActionMenu(item)}
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>{formatDate(item.transactionDate)}</td>
+                        <td style={{ padding: '5px 10px', border: 'none', textAlign: 'left', backgroundColor: '#ffffff' }}>
+                          <div className="dropdown">
+                            <button 
+                              className="btn dropdown-toggle product-action-btn" 
+                              type="button" 
+                              id={`dropdownMenu-${item.transaction_id}`} 
+                              data-bs-toggle="dropdown" 
+                              aria-expanded="false"
+                            >
+                              Actions
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby={`dropdownMenu-${item.transaction_id}`}>
+                              <li>
+                                <button className="dropdown-item" onClick={() => onViewTransaction(item)}>
+                                  View
+                                </button>
+                              </li>
+                              {/* Only show refund options if payment was successful (completed) */}
+                              {(item.transactionStatus === 'completed' || item.transactionStatus === 'Completed') && (
+                                <>
+                                  {/* Full refund if canceled before confirmation - only applies if order status is pending */}
+                                  {item.order?.status === 'pending' && (
+                                    <li>
+                                      <button 
+                                        className="dropdown-item" 
+                                        onClick={() => handleRefund({...item, refundReason: 'canceled_before_confirmation'})}
+                                        title="Full refund available before order confirmation"
+                                      >
+                                        Refund (Pre-confirmation)
+                                      </button>
+                                    </li>
+                                  )}
+                                  
+                                  {/* No refund if canceled after confirmation - we don't show this option */}
+                                  
+                                  {/* Admin-initiated cancellation always allows refund */}
+                                  <li>
+                                    <button 
+                                      className="dropdown-item" 
+                                      onClick={() => handleRefund({...item, canceledBy: 'admin', refundReason: 'admin_cancellation'})}
+                                      title="Admin-initiated refund"
+                                    >
+                                      Admin Refund
+                                    </button>
+                                  </li>
+                                  
+                                  {/* Artisan-initiated cancellation always allows refund */}
+                                  <li>
+                                    <button 
+                                      className="dropdown-item" 
+                                      onClick={() => handleRefund({...item, canceledBy: 'artisan', refundReason: 'artisan_cancellation'})}
+                                      title="Artisan-initiated refund"
+                                    >
+                                      Artisan Refund
+                                    </button>
+                                  </li>
+                                </>
+                              )}
+                            </ul>
+                          </div>
                         </td>
                       </tr>
                     );
                   })
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">No transactions available</td>
+                    <td colSpan="8" className="text-center py-4">No transactions available</td>
                   </tr>
                 )}
               </tbody>
@@ -325,7 +554,15 @@ const ManageTransactions = ({ onViewTransaction }) => {
           )}
         </div>
 
-        <Pagination className="inventory-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+        {!loading && !error && transactions.length > 0 && (
+          <Pagination 
+            className="product-pagination" 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={handlePageChange}
+            style={{ marginTop: '20px' }}
+          />
+        )}
       </div>
     </div>
   );

@@ -9,11 +9,13 @@ const getAllTransactions = async (req, res) => {
       include: [
         {
           model: Customer,
-          attributes: ['c_id', 'name', 'email', 'phone']
+          as: 'customer',
+          attributes: ['c_id', 'firstName', 'lastName', 'email', 'phone']
         },
         {
           model: Order,
-          attributes: ['order_id', 'order_status', 'total_price']
+          as: 'order',
+          attributes: ['order_id', 'orderStatus', 'totalAmount']
         }
       ],
       order: [['transactionDate', 'DESC']]
@@ -43,11 +45,13 @@ const getTransactionById = async (req, res) => {
       include: [
         {
           model: Customer,
-          attributes: ['c_id', 'name', 'email', 'phone']
+          as: 'customer',
+          attributes: ['c_id', 'firstName', 'lastName', 'email', 'phone']
         },
         {
           model: Order,
-          attributes: ['order_id', 'order_status', 'total_price', 'shipping_address']
+          as: 'order',
+          attributes: ['order_id', 'orderStatus', 'totalAmount']
         }
       ]
     });
@@ -113,7 +117,7 @@ const processRefund = async (req, res) => {
 
     if (order) {
       await order.update({ 
-        order_status: 'Refunded',
+        orderStatus: 'Refunded',
         updated_at: new Date()
       });
     }

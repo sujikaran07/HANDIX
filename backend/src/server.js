@@ -24,6 +24,7 @@ const ProductImage = require('./models/productImageModel');
 const ProductEntry = require('./models/productEntryModel'); 
 const ProductVariation = require('./models/productVariationModel');
 const { Customer } = require('./models/customerModel');
+const { Transaction } = require('./models/transactionModel');
 const adminInventoryRoutes = require('./routes/admin/adminInventoryRoutes');
 const orderRoutes = require('./routes/orders/orderRoutes');
 const authRoutes = require('./routes/auth/authRoutes'); 
@@ -80,6 +81,12 @@ Customer.hasMany(Order, {
   onDelete: 'SET NULL',
   onUpdate: 'CASCADE',
 });
+
+// Transaction associations
+Transaction.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+Transaction.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+Customer.hasMany(Transaction, { foreignKey: 'c_id', as: 'transactions' });
+Order.hasMany(Transaction, { foreignKey: 'order_id', as: 'transactions' });
 
 // Associate Order with ShippingMethod
 Order.belongsTo(ShippingMethod, { foreignKey: 'shippingMethodId', as: 'shippingMethod' });
