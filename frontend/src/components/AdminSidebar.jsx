@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaFileAlt, FaPaypal, FaWallet, FaPercentage, FaReceipt } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaFileAlt, FaPaypal, FaExchangeAlt, FaPercentage, FaReceipt } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../styles/admin/AdminDashboard.css';
 import logo from '../assets/logo1.png'; 
@@ -59,9 +59,9 @@ const AdminSidebar = () => {
               <FaGift /> Orders
             </Link>
           </li>
-          <li className={activeLink === '/admin/payments' ? 'active' : ''}>
-            <Link to="/admin/payments" onClick={() => handleLinkClick('/admin/payments')}>
-              <FaWallet /> Payments
+          <li className={activeLink === '/admin/transactions' ? 'active' : ''}>
+            <Link to="/admin/transactions" onClick={() => handleLinkClick('/admin/transactions')}>
+              <FaExchangeAlt /> Transactions
             </Link>
           </li>
           <li className={activeLink === '/admin/inventory' ? 'active' : ''}>

@@ -1,0 +1,271 @@
+.admin-transaction-page {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  flex-direction: row;
+  height: 100vh;
+}
+
+.admin-transaction-page .main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  margin-right: -18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-transaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: -40px;
+  margin-top: -10px;
+}
+
+.admin-transaction-header h2 {
+  font-size: 22px;
+  color: #333;
+  margin-top: 0px;
+}
+
+.admin-transaction-search-bar .input-group,
+.admin-transaction-filter-dropdown .input-group {
+  display: flex;
+  align-items: center;
+  background-color: #f4f6fc;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.admin-transaction-search-bar .form-control,
+.admin-transaction-filter-dropdown .form-select {
+  border: none;
+  background-color: transparent;
+  padding-left: 10px;
+}
+
+.admin-transaction-filter-dropdown .form-select {
+  height: 30px; 
+  width: 130px;
+  padding: 0 10px; 
+}
+
+.admin-transaction-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: -15px; 
+}
+
+.admin-transaction-table th,
+.admin-transaction-table td {
+  padding: 5px 10px;
+  border: none;
+  text-align: left;
+  background-color: #ffffff;
+}
+
+.admin-transaction-table th {
+  background-color: #f8f9fa;
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+}
+
+.admin-transaction-table tr {
+  margin-bottom: 0px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.admin-transaction-btn-primary,
+.admin-transaction-btn-secondary,
+.admin-transaction-btn-success,
+.admin-transaction-btn-warning,
+.admin-transaction-btn-danger {
+  padding: 4px 8px;
+  border: 2px solid;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 12px;
+  font-weight: bold;
+  width: 80px;
+  text-align: center;
+  margin-right: 5px;
+}
+
+.admin-transaction-btn-primary {
+  border-color: #3e87c3;
+  color: #3e87c3;
+  background-color: transparent;
+}
+
+.admin-transaction-btn-primary:hover {
+  background-color: #3e87c3;
+  color: #ffffff;
+}
+
+.admin-transaction-btn-secondary {
+  border-color: #6c757d;
+  color: #6c757d;
+  background-color: transparent;
+}
+
+.admin-transaction-btn-secondary:hover {
+  background-color: #6c757d;
+  color: #ffffff;
+}
+
+.admin-transaction-btn-success {
+  border-color: #28a745;
+  color: #28a745;
+  background-color: transparent;
+}
+
+.admin-transaction-btn-success:hover {
+  background-color: #28a745;
+  color: #ffffff;
+}
+
+.admin-transaction-btn-warning {
+  border-color: #ffc107;
+  color: #ffc107;
+  background-color: transparent;
+}
+
+.admin-transaction-btn-warning:hover {
+  background-color: #ffc107;
+  color: #ffffff;
+}
+
+.admin-transaction-btn-danger {
+  border-color: #dc3545;
+  color: #dc3545;
+  background-color: transparent;
+}
+
+.admin-transaction-btn-danger:hover {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
+.admin-transaction-stock-status.in-stock {
+  color: #28a745 !important; 
+}
+
+.admin-transaction-stock-status.low-stock {
+  color: #ffc107 !important; 
+}
+
+.admin-transaction-stock-status.out-of-stock {
+  color: #dc3545 !important; 
+}
+
+.admin-transaction-stock-status.disabled {
+  color: #8aa5bc !important; 
+}
+
+.admin-transaction-icon-and-title {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.admin-transaction-icon {
+  font-size: 45px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  color: #3e87c3;
+}
+
+.admin-transaction-text-section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.admin-transaction-text-section p {
+  font-size: 14px;
+  color: #666;
+}
+
+.admin-transaction-export-btn {
+  padding: 5px 10px;
+  border: 2px solid;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 14px;
+  font-weight: bold;
+  width: 120px;
+  text-align: center;
+}
+
+.admin-transaction-export-btn:hover {
+  background-color: #3e87c3;
+  color: #fff;
+  border-color: #3e87c3;
+}
+
+.admin-transaction-pagination {
+  margin-top: 20px;
+}
+
+.admin-transaction-pagination .page-item .page-link {
+  color: #3e87c3;
+  border: 1px solid #3e87c3;
+  border-radius: 50%;
+  margin: 0 3px;
+  font-size: 14px;
+  font-weight: bold;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.admin-transaction-pagination .page-item .page-link:hover {
+  background-color: #3e87c3;
+  color: #fff;
+}
+
+.admin-transaction-pagination .page-item.active .page-link {
+  background-color: #3e87c3;
+  color: #fff;
+  border-color: #3e87c3;
+}
+
+.admin-transaction-pagination .page-item.disabled .page-link {
+  color: #ccc;
+  border-color: #ccc;
+  background-color: #f8f9fa;
+}
+
+input[type="checkbox"].admin-transaction-checkbox:checked {
+  background-color: #3e87c3;
+  border-color: #3e87c3;
+}
+
+@media (max-width: 768px) {
+  .admin-transaction-page .main-content {
+    margin-left: 0;
+    margin-top: 0;
+    margin-right: 0;
+    padding: 10px;
+  }
+  .admin-transaction-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .admin-transaction-table th,
+  .admin-transaction-table td {
+    padding: 8px 5px;
+  }
+} 

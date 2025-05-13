@@ -7,12 +7,12 @@ import AdminCustomer from "./pages/admin/AdminCustomer";
 import AdminOrder from "./pages/admin/AdminOrder.jsx"; 
 import AdminProducts from "./pages/admin/AdminProducts"; 
 import AdminInventory from "./pages/admin/AdminInventory"; 
+import AdminTransaction from "./pages/admin/AdminTransaction";
 import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; 
 import AdminSettings from "./pages/admin/AdminSettings"; 
 import AdminLogout from "./pages/admin/AdminLogout"; 
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminReports from "./pages/admin/AdminReports";
-import AdminPayments from "./pages/admin/AdminPayments";
 import ArtisanDashboard from "./pages/artisan/ArtisanDashboard"; 
 import ArtisanProducts from "./pages/artisan/ArtisanProducts";
 import ArtisanAssignedOrders from "./pages/artisan/ArtisanAssignedOrders";
@@ -49,12 +49,12 @@ function App() {
           <Route path="/admin/orders" element={<AdminOrder />} /> 
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/inventory" element={<AdminInventory />} /> 
+          <Route path="/admin/transactions" element={<AdminTransaction />} />
           <Route path="/admin/assignorders" element={<AdminAssignOrder />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/logout" element={<AdminLogout />} /> 
           <Route path="/admin/pricing" element={<AdminPricing />} />
           <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/admin/payments" element={<AdminPayments />} />
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
           <Route path="/artisan/products" element={<ArtisanProducts />} />
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
@@ -66,7 +66,6 @@ function App() {
           <Route path="/artisan/settings" element={<ArtisanSettings />} />
           <Route path="/pricing" element={<AdminPricing />} />
           <Route path="/reports" element={<AdminReports />} />
-          <Route path="/payments" element={<AdminPayments />} />
           <Route path="/" element={<AdminDashboard />} />
         </Routes>
       </Router>
