@@ -1,0 +1,267 @@
+.reports-page {
+  display: flex;
+  height: 100vh;
+}
+
+.reports-page .reports-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  overflow-y: auto;
+}
+
+.reports-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+}
+
+.reports-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.reports-header h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.reports-header p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.reports-btn-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reports-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  background-color: transparent;
+  border: 1px solid #dee2e6;
+}
+
+.reports-btn-primary {
+  border-color: #3e87c3;
+  color: #3e87c3;
+}
+
+.reports-btn-primary:hover, .reports-btn-primary.active {
+  background-color: #3e87c3;
+  color: white;
+}
+
+.reports-filter-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.reports-date-range {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.reports-content-area {
+  min-height: 400px;
+  padding: 1.5rem;
+}
+
+.reports-placeholder {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border: 1px dashed #dee2e6;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+}
+
+.reports-chart-container {
+  height: 300px;
+  margin-bottom: 1.5rem;
+}
+
+.reports-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.reports-dropdown-menu {
+  border-radius: 0.25rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.reports-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 1rem;
+  border-radius: 0.25rem;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #212529;
+}
+
+.reports-export-btn:hover {
+  background-color: #e9ecef;
+}
+
+.reports-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.reports-page .main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  overflow: hidden;
+}
+
+.reports-page .inventory-icon {
+  font-size: 45px;
+  margin-right: 15px;
+  margin-bottom: 20px;
+  color: #3e87c3;
+}
+
+.reports-page .text-section h2 {
+  font-size: 20px;
+  color: #333;
+  margin-bottom: 0px;
+  line-height: 1.2;
+}
+
+.reports-page .text-section p {
+  font-size: 14px;
+  color: #666;
+}
+
+.reports-page .icon-and-title {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.reports-page .segmented-control {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.reports-page .segmented-control .btn {
+  border-radius: 0;
+  margin-right: -1px;
+}
+
+.reports-page .segmented-control .btn:first-child {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.reports-page .segmented-control .btn:last-child {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+.reports-page .card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+}
+
+.reports-page .card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  padding: 12px 15px;
+}
+
+.reports-page .search-bar .input-group {
+  display: flex;
+  align-items: center;
+  background-color: #f4f6fc;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.reports-page .search-bar .form-control {
+  border: none;
+  background-color: transparent;
+  padding-left: 10px;
+}
+
+.reports-page .inventory-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.reports-page .inventory-table th,
+.reports-page .inventory-table td {
+  padding: 5px 10px;
+  border: none;
+  text-align: left;
+  background-color: #ffffff;
+}
+
+.reports-page .inventory-table th {
+  background-color: #f8f9fa;
+  border-radius: 10px 10px 0 0;
+  box-shadow: none;
+}
+
+.reports-page .inventory-table tr {
+  margin-bottom: 0px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.reports-page .progress {
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.reports-page .progress-bar {
+  transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .reports-page .reports-content {
+    margin-left: 0;
+  }
+  
+  .reports-btn-group {
+    flex-direction: column;
+  }
+  
+  .reports-date-range {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reports-page .main-content {
+    margin-left: 0;
+  }
+}

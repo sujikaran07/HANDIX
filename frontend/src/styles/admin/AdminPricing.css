@@ -1,0 +1,158 @@
+.pricing-page {
+  display: flex;
+  height: 100vh;
+}
+
+.pricing-page .main-content {
+  flex: 1;
+  padding: 15px;
+  background-color: #f4f6fc;
+  margin-left: 232px;
+  margin-top: 55px;
+  overflow: hidden; /* Prevent scrollbars */
+}
+
+.pricing-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  height: 100%;
+  overflow: hidden; /* Prevent scrollbars */
+}
+
+.pricing-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.pricing-header h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+}
+
+.pricing-header p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.pricing-tabs .nav-link {
+  color: #495057;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-weight: 500;
+}
+
+.pricing-tabs .nav-link.active {
+  color: #3e87c3;
+  border-bottom: 2px solid #3e87c3;
+  background: none;
+}
+
+.pricing-tab-content {
+  padding: 1.5rem 0;
+}
+
+.pricing-form-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.pricing-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-bottom: 0; /* Prevent extra space that could cause scrolling */
+}
+
+.pricing-table th {
+  background-color: #f8f9fa;
+  border: none;
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+.pricing-table td {
+  background-color: #ffffff;
+  border: none;
+  padding: 0.75rem;
+}
+
+.pricing-table tr {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+}
+
+.pricing-badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 500;
+  border-radius: 20px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.pricing-badge-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.pricing-badge-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  color: #ffc107;
+}
+
+.pricing-badge-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.pricing-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.pricing-btn-primary {
+  background-color: #3e87c3;
+  border-color: #3e87c3;
+  color: white;
+}
+
+.pricing-btn-primary:hover {
+  background-color: #3678b0;
+  border-color: #3678b0;
+}
+
+.pricing-pagination {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+  margin-top: 10px;
+  margin-bottom: 0; /* Prevent extra space */
+}
+
+@media (max-width: 768px) {
+  .pricing-page .main-content {
+    margin-left: 0;
+  }
+}
+
+/* Make sure the table doesn't force scrolling */
+.table-responsive {
+  overflow: hidden; /* Hide scrollbars */
+}
+
+/* Match inventory page form styling */
+.pricing-form-container {
+  height: 100%;
+}
+
+/* Fixed height for the tab content to fit in the card without scrolling */
+.tab-content {
+  height: calc(100% - 130px);
+  display: flex;
+  flex-direction: column;
+}
