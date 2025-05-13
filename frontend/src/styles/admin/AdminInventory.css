@@ -241,7 +241,7 @@ body {
 .export-btn {
     padding: 5px 10px;
     border: 2px solid;
-    border-radius: 20px;
+    border-radius: 25px;
     cursor: pointer;
     transition: background-color 0.3s ease, color 0.3s ease;
     font-size: 14px;
@@ -255,6 +255,26 @@ body {
 
 .export-btn:hover {
     background-color: #6c757d;
+    color: #ffffff;
+}
+
+.categories-btn {
+    padding: 5px 10px;
+    border: 2px solid;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 14px;
+    font-weight: bold;
+    width: 120px;
+    text-align: center;
+    border-color: #28a745;
+    color: #28a745;
+    background-color: transparent;
+}
+
+.categories-btn:hover {
+    background-color: #28a745;
     color: #ffffff;
 }
 

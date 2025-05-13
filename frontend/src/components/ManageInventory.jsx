@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faFilter, faCloudDownloadAlt, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
 import { FaWarehouse } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
 
-const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
+const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories }) => {
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -236,23 +236,15 @@ const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
             </div>
           </div>
           <div className="d-flex align-items-center">
-            <div className="search-bar me-2">
-              <div className="input-group">
-                <span className="input-group-text bg-light border-0">
-                  <FontAwesomeIcon icon={faSearch} />
-                </span>
-                <input
-                  type="text"
-                  className="form-control border-0"
-                  placeholder="Search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ boxShadow: 'none' }}
-                />
-              </div>
-            </div>
-            <button className="export-btn btn btn-light" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <button className="export-btn btn btn-light me-2" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
               <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
+            </button>
+            <button 
+              className="categories-btn btn btn-light" 
+              style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}
+              onClick={onManageCategories}
+            >
+              Categories
             </button>
           </div>
         </div>
@@ -316,9 +308,21 @@ const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
             </div>
           </div>
           <div className="d-flex align-items-center">
-            <button className="btn btn-secondary me-2">
-              <FontAwesomeIcon icon={faHistory} />
-            </button>
+            <div className="search-bar me-2">
+              <div className="input-group">
+                <span className="input-group-text bg-light border-0">
+                  <FontAwesomeIcon icon={faSearch} />
+                </span>
+                <input
+                  type="text"
+                  className="form-control border-0"
+                  placeholder="Search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{ boxShadow: 'none' }}
+                />
+              </div>
+            </div>
             <div className="filter-dropdown">
               <div className="input-group">
                 <span className="input-group-text bg-light border-0">

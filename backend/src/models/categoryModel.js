@@ -21,6 +21,10 @@ const Category = sequelize.define('Category', {
     defaultValue: 0, 
     allowNull: true,
   },
+  category_image_url: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+  },
 }, {
   tableName: 'Categories',
   timestamps: false,

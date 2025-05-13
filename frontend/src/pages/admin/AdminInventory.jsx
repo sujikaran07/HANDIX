@@ -4,11 +4,12 @@ import AdminTopbar from '../../components/AdminTopbar';
 import ManageInventory from '../../components/ManageInventory';
 import RestockProduct from '../../components/RestockProduct';
 import InventoryViewForm from '../../components/InventoryViewForm';
+import CategoryManagement from '../../components/CategoryManagement';
 import '../../styles/admin/AdminInventory.css';
 
 const AdminManageInventoryPage = () => {
   const [selectedInventory, setSelectedInventory] = useState(null);
-  const [currentView, setCurrentView] = useState('inventory'); // 'inventory', 'details', 'restock'
+  const [currentView, setCurrentView] = useState('inventory'); // 'inventory', 'details', 'restock', 'categories'
 
   const handleViewInventory = (inventory) => {
     setSelectedInventory(inventory);
@@ -18,6 +19,10 @@ const AdminManageInventoryPage = () => {
   const handleRestockProduct = (inventory) => {
     setSelectedInventory(inventory);
     setCurrentView('restock');
+  };
+
+  const handleManageCategories = () => {
+    setCurrentView('categories');
   };
 
   const handleBackToInventory = () => {
@@ -42,6 +47,7 @@ const AdminManageInventoryPage = () => {
           <ManageInventory 
             onViewInventory={handleViewInventory} 
             onRestockProduct={handleRestockProduct}
+            onManageCategories={handleManageCategories}
           />
         )}
         {currentView === 'details' && selectedInventory && (
@@ -55,6 +61,11 @@ const AdminManageInventoryPage = () => {
             product={selectedInventory}
             onBack={handleBackToInventory}
             onRestock={handleRestockComplete}
+          />
+        )}
+        {currentView === 'categories' && (
+          <CategoryManagement 
+            onBackToInventory={handleBackToInventory}
           />
         )}
       </div>

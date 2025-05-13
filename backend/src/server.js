@@ -8,6 +8,7 @@ const employeeSettingsRoutes = require("./routes/employees/settingsRoutes");
 const customerRoutes = require('./routes/customers/customerRoutes');
 const productRoutes = require('./routes/products/productRoutes');
 const adminProductRoutes = require('./routes/admin/adminProductRoutes');
+const adminRoutes = require('./routes/admin/adminRoutes'); // Add this line to import adminRoutes
 const inventoryRoutes = require('./routes/inventory/inventoryRoutes');
 const { connectToDatabase, sequelize } = require('./config/db');
 const { Employee } = require('./models/employeeModel');
@@ -101,6 +102,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductRoutes); 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
+app.use('/api/admin', adminRoutes); // Add this line to use adminRoutes
 app.use('/api/orders', orderRoutes);
 app.use('/api/orders', assignedOrderRoutes);
 app.use('/api/login', employeeLoginRoutes);
