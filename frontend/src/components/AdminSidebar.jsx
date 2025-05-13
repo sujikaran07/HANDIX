@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox } from 'react-icons/fa';
+import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaFileAlt, FaPaypal, FaWallet, FaPercentage, FaReceipt } from 'react-icons/fa';
 import { Link, useLocation } from 'react-router-dom';
 import '../styles/admin/AdminDashboard.css';
 import logo from '../assets/logo1.png'; 
@@ -47,6 +47,11 @@ const AdminSidebar = () => {
               <FaGift /> Orders
             </Link>
           </li>
+          <li className={activeLink === '/admin/payments' ? 'active' : ''}>
+            <Link to="/admin/payments" onClick={() => handleLinkClick('/admin/payments')}>
+              <FaWallet /> Payments
+            </Link>
+          </li>
           <li className={activeLink === '/admin/inventory' ? 'active' : ''}>
             <Link to="/admin/inventory" onClick={() => handleLinkClick('/admin/inventory')}>
               <FaWarehouse /> Inventory
@@ -57,6 +62,17 @@ const AdminSidebar = () => {
               <FaBox /> Products
             </Link>
           </li>
+          <li className={activeLink === '/admin/pricing' ? 'active' : ''}>
+            <Link to="/pricing" onClick={() => handleLinkClick('/admin/pricing')}>
+              <FaReceipt /> Pricing
+            </Link>
+          </li>
+          <li className={activeLink === '/admin/reports' ? 'active' : ''}>
+            <Link to="/admin/reports" onClick={() => handleLinkClick('/admin/reports')}>
+              <FaFileAlt /> Reports
+            </Link>
+          </li>
+
           <li className={activeLink === '/admin/settings' ? 'active' : ''}>
             <Link to="/admin/settings" onClick={() => handleLinkClick('/admin/settings')}>
               <FaCog /> Settings
