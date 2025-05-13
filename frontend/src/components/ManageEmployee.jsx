@@ -20,7 +20,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [employeeToDelete, setEmployeeToDelete] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const employeesPerPage = 4;
+  const employeesPerPage = 8;
 
   useEffect(() => {
     const fetchEmployees = async () => {

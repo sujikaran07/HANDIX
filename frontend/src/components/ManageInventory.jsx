@@ -16,7 +16,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct }) => {
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const inventoryPerPage = 4;
+  const inventoryPerPage = 7;
   const [refreshKey, setRefreshKey] = useState(0); 
 
   useEffect(() => {

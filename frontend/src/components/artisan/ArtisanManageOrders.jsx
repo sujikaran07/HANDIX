@@ -13,7 +13,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const ordersPerPage = 4;
+  const ordersPerPage = 7;
 
   useEffect(() => {
     if (artisan && (artisan.name || artisan.id)) {

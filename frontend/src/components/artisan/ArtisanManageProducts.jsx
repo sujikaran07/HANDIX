@@ -20,7 +20,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
   const [productToDelete, setProductToDelete] = useState(null); 
   const [totalPages, setTotalPages] = useState(1); 
-  const entriesPerPage = 4;
+  const entriesPerPage = 7;
 
   useEffect(() => {
     fetchEntries();

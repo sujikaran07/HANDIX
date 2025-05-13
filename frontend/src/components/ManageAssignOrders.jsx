@@ -20,7 +20,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
   const [selectedArtisan, setSelectedArtisan] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [artisanWorkload, setArtisanWorkload] = useState(null);
-  const artisansPerPage = 4;
+  const artisansPerPage = 7;
 
   useEffect(() => {
     fetchArtisans();

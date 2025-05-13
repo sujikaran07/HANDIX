@@ -17,7 +17,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const ordersPerPage = 4;
+  const ordersPerPage = 7;
 
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
