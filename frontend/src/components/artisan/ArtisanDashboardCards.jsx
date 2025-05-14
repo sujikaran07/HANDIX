@@ -54,16 +54,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
         
         console.log('Fetching artisan dashboard summary...');
         
-        // Try debug endpoint first to diagnose issues
-        try {
-          console.log('Checking debug info before fetching main data...');
-          const debugResponse = await axios.get(`http://localhost:5000/api/artisan-debug/check-artisan-data/${artisanId}`);
-          console.log('Debug data:', debugResponse.data);
-        } catch (debugError) {
-          console.log('Debug endpoint not available:', debugError.message);
-        }
-        
-        // Now fetch the actual summary data
+        // Fetch the actual summary data
         const fetchPromise = axios.get(`http://localhost:5000/api/artisan-dashboard/summary/${artisanId}`);
         
         try {

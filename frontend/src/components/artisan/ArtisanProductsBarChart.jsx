@@ -27,8 +27,6 @@ const ArtisanProductsBarChart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEmpty, setIsEmpty] = useState(false);
-  const [debugInfo, setDebugInfo] = useState(null);
-  const [showDebug, setShowDebug] = useState(false);
 
   // Get last 12 months for labels
   const getLastTwelveMonths = () => {
@@ -252,26 +250,6 @@ const ArtisanProductsBarChart = () => {
     );
   }
 
-  const createTestProducts = async () => {
-    try {
-      setLoading(true);
-      const artisanId = getArtisanIdFromToken();
-      const token = localStorage.getItem('artisanToken');
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
-      await axios.post(`http://localhost:5000/api/artisan-debug/create-test-products/${artisanId}`, {
-        count: 10 // Create 10 test products
-      });
-      
-      // Refresh the page to show new data
-      window.location.reload();
-    } catch (error) {
-      console.error('Error creating test products:', error);
-      setError('Failed to create test products: ' + error.message);
-      setLoading(false);
-    }
-  };
-
   if (isEmpty) {
     return (
       <div className="artisan-products-bar-chart">
@@ -322,45 +300,6 @@ const ArtisanProductsBarChart = () => {
               }} 
             />
           </div>
-          
-          {/* Debug tools */}
-          {process.env.NODE_ENV === 'development' && (
-            <div style={{ marginTop: '20px' }}>
-              <button 
-                onClick={createTestProducts}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#3498db',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
-                Create Test Products
-              </button>
-              <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
-                (This button is only visible in development mode)
-              </p>
-            </div>
-          )}
-          
-          {showDebug && debugInfo && (
-            <div style={{ 
-              marginTop: '20px', 
-              textAlign: 'left', 
-              backgroundColor: '#f1f1f1',
-              padding: '10px',
-              borderRadius: '4px',
-              maxWidth: '90%',
-              overflow: 'auto'
-            }}>
-              <h5>Debug Information:</h5>
-              <pre style={{ fontSize: '12px' }}>
-                {JSON.stringify(debugInfo, null, 2)}
-              </pre>
-            </div>
-          )}
         </div>
       </div>
     );

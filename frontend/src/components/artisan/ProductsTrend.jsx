@@ -47,10 +47,8 @@ const ProductsTrend = () => {
         const response = await axios.get(`http://localhost:5000/api/artisan-dashboard/summary/${artisanId}`);
         console.log('Artisan dashboard summary response:', response.data);
         
-        // Explicitly convert the quantity to a number and ensure it's not null/undefined
-        const productQuantity = response.data.totalProductQuantity !== null && 
-                               response.data.totalProductQuantity !== undefined ? 
-                               Number(response.data.totalProductQuantity) : 0;
+        // Explicitly convert the quantity to a number
+        const productQuantity = Number(response.data.totalProductQuantity) || 0;
         
         // Make sure we're using the right property and it's a number
         const data = {
@@ -58,11 +56,7 @@ const ProductsTrend = () => {
           totalProductQuantity: productQuantity
         };
         
-        setSummary(data);
-        
-        // Debug to verify the data is set correctly
-        console.log('Setting summary data:', data);
-        
+        setSummary(data);        
         setError(null);
       } catch (error) {
         console.error('Error fetching product summary data:', error);
@@ -74,18 +68,6 @@ const ProductsTrend = () => {
 
     fetchData();
   }, []);
-
-  // Render debug info during development to verify data
-  const renderDebugInfo = () => {
-    if (process.env.NODE_ENV !== 'production') {
-      return (
-        <div className="alert alert-info mt-2 p-2">
-          <small>Debug: totalProductQuantity = {summary.totalProductQuantity} (type: {typeof summary.totalProductQuantity})</small>
-        </div>
-      );
-    }
-    return null;
-  };
 
   if (loading) {
     return (
@@ -124,7 +106,6 @@ const ProductsTrend = () => {
             <h6 className="text-muted mb-2">Total Products</h6>
             <h2 className="mb-0 text-primary">{displayQuantity}</h2>
             <small className="text-muted">All product items</small>
-            {renderDebugInfo()}
           </Card.Body>
         </Card>
       </Col>
