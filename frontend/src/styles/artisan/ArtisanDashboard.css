@@ -206,76 +206,41 @@ body {
 }
 
 .artisan-sales-trend-graph {
-    flex: 0 0 60%;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-bottom: 10px;
-}
-
-.artisan-product-sales-chart {
-    flex: 0 0 40%;
-    background-color: #ffffff;
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    margin-bottom: 10px;
-}
-
-.artisan-product-sales-chart h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    color: #333333;
-}
-
-.artisan-product-sales-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.artisan-product-categories {
     flex: 1;
-    padding-right: 20px;
-    padding-top: 25px;
-    padding-left: 20px;
-}
-
-.artisan-product-categories ul {
-    list-style: none;
-    padding: 0;
-}
-
-.artisan-product-categories ul li {
-    margin-bottom: 10px;
-    font-size: 16px;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
-    align-items: center;
-}
-
-.artisan-product-pie-chart {
-    flex: 2;
+    flex-direction: column;
     height: 100%;
-    max-width: 250px;
-    max-height: 250px;
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    margin-bottom: 10px;
 }
 
-.artisan-sales-trend-graph h3, .artisan-product-sales-chart h3 {
+.artisan-sales-trend-graph h3 {
     font-size: 16px;
     margin-bottom: 10px;
     color: #333333;
+}
+
+.artisan-products-bar-chart {
+    flex: 1;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 10px;
+}
+
+.chart-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 300px;
 }
 
 .logo-title-container {
@@ -337,9 +302,15 @@ body {
         flex-direction: column;
     }
 
-    .artisan-sales-trend-graph, .artisan-product-sales-chart {
+    .artisan-sales-trend-graph {
         flex: none;
         width: 100%;
+    }
+
+    .artisan-products-bar-chart {
+        flex: none;
+        width: 100%;
+        min-height: 350px;
     }
 }
 

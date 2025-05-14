@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
 import ArtisanDashboardCards from '../../components/artisan/ArtisanDashboardCards';
-import ArtisanSalesTrendGraph from '../../components/artisan/ArtisanSalesTrendGraph';
-import ArtisanProductSalesChart from '../../components/artisan/ArtisanProductSalesChart';
+import ArtisanProductsBarChart from '../../components/artisan/ArtisanProductsBarChart';
 import '../../styles/artisan/ArtisanDashboard.css';
 
 const ArtisanDashboard = () => {
@@ -55,8 +54,7 @@ const ArtisanDashboard = () => {
           <ArtisanDashboardCards />
         </div>
         <div className="artisan-graph-container">
-          <ArtisanSalesTrendGraph />
-          <ArtisanProductSalesChart />
+          <ArtisanProductsBarChart />
         </div>
       </div>
     </div>
