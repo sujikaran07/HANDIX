@@ -8,77 +8,6 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../../config/db');
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
 
-// New diagnostic endpoint to help debug data issues
-router.get('/debug/:artisanId', async (req, res) => {
-  try {
-    const { artisanId } = req.params;
-    console.log('==== RUNNING DIAGNOSTICS FOR ARTISAN:', artisanId, ' ====');
-    
-    // 1. Check if the artisan exists
-    const artisan = await Employee.findByPk(artisanId);
-    console.log('Artisan found:', artisan ? 'YES' : 'NO');
-    if (artisan) {
-      console.log('Artisan data:', {
-        id: artisan.eId,
-        firstName: artisan.firstName,
-        lastName: artisan.lastName,
-        role: artisan.roleId
-      });
-    }
-    
-    // 2. Check for products created by this artisan
-    const products = await ProductEntry.findAll({
-      where: { e_id: artisanId },
-      limit: 5,
-      raw: true
-    });
-    console.log(`Found ${products.length} products for artisan`);
-    if (products.length > 0) {
-      console.log('Sample products:', products.map(p => ({
-        id: p.entry_id,
-        name: p.product_name,
-        status: p.status,
-        dateAdded: p.date_added
-      })));
-    }
-    
-    // 3. Check for orders assigned to this artisan (using both field names)
-    const orders = await Order.findAll({
-      limit: 5,
-      raw: true
-    });
-    console.log(`Found ${orders.length} orders in system`);
-    if (orders.length > 0) {
-      console.log('Sample orders:', orders.map(o => ({
-        id: o.order_id,
-        artisanId: o.assignedArtisan || o.assigned_artisan,
-        totalAmount: o.totalAmount,
-        paymentStatus: o.paymentStatus,
-        orderStatus: o.orderStatus
-      })));
-    }
-    
-    // 4. Show all available column names for Order table
-    const orderAttributes = Object.keys(Order.getAttributes());
-    console.log('Available Order columns:', orderAttributes);
-    
-    // 5. Show all available column names for ProductEntry table
-    const productAttributes = Object.keys(ProductEntry.getAttributes());
-    console.log('Available ProductEntry columns:', productAttributes);
-    
-    res.json({
-      artisanExists: !!artisan,
-      productsCount: products.length,
-      ordersCount: orders.length,
-      orderColumns: orderAttributes,
-      productColumns: productAttributes
-    });
-  } catch (error) {
-    console.error('Diagnostic error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Apply auth middleware to all other artisan dashboard routes
 router.use(authMiddleware);
 
@@ -101,88 +30,115 @@ router.get('/summary/:artisanId', async (req, res) => {
       });
     }
     
-    console.log('Fetching artisan dashboard summary data for artisan:', artisanId);
-    
     // Get artisan's name for order matching
     const artisan = await Employee.findByPk(artisanId);
     const artisanFullName = artisan ? `${artisan.firstName} ${artisan.lastName}`.toLowerCase() : '';
-    
-    // Get total products created by the artisan (using e_id from ProductEntry)
-    const totalProducts = await ProductEntry.count({
+      
+    // Get total products created by the artisan (only approved products)
+    const totalProductsQuery = {
       where: {
         e_id: artisanId,
         status: 'approved'
       }
+    };
+    
+    // Count only approved products
+    const totalProducts = await ProductEntry.count(totalProductsQuery).catch(err => {
+      console.error('Error counting approved products:', err);
+      return 0;
+    });
+
+    // Get ALL products quantity (including non-approved) created by the artisan
+    const totalProductQuantity = await ProductEntry.sum('quantity', {
+      where: {
+        e_id: artisanId
+      }
     }).catch(err => {
-      console.error('Error counting products:', err);
+      console.error('Error calculating total product quantity:', err);
       return 0;
     });
     
-    console.log(`Total products count for ${artisanId}:`, totalProducts);
+    console.log(`Artisan ${artisanId} product quantities:`, { totalProducts, totalProductQuantity });
     
-    // Debug: List some product entries to verify data
-    const sampleProducts = await ProductEntry.findAll({
-      where: { e_id: artisanId, status: 'approved' },
-      limit: 3,
-      raw: true
-    });
-    console.log('Sample products:', sampleProducts.map(p => ({
-      id: p.entry_id,
-      name: p.product_name,
-      status: p.status
-    })));
+    // Make sure totalProductQuantity is a number, not null
+    const finalQuantity = totalProductQuantity || 0;
     
-    // Get total assigned orders in the last 30 days
+    // Get ongoing/assigned orders (not completed/shipped/delivered/canceled) 
     // We need to use the artisan's name since that's what the Orders table uses
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
+    // Use case-insensitive matching with both field names
     const assignedOrders = await Order.count({
       where: {
-        [Op.or]: [
-          { assignedArtisan: artisanFullName },
-          { assigned_artisan: artisanFullName }
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { assignedArtisan: { [Op.iLike]: artisanFullName } },
+              { assigned_artisan: { [Op.iLike]: artisanFullName } }
+            ]
+          },
+          {
+            [Op.and]: [
+              {
+                [Op.or]: [
+                  { orderStatus: { [Op.notIn]: ['Shipped', 'Delivered', 'Cancelled', 'Canceled', 'Completed'] } },
+                  { order_status: { [Op.notIn]: ['Shipped', 'Delivered', 'Cancelled', 'Canceled', 'Completed'] } }
+                ]
+              },
+              { 
+                [Op.or]: [
+                  { orderStatus: { [Op.not]: null } },
+                  { order_status: { [Op.not]: null } }
+                ]
+              }
+            ]
+          }
         ]
-      }
-    }).catch(err => {
+      }    }).catch(err => {
       console.error('Error counting orders:', err);
       return 0;
     });
     
-    console.log(`Assigned orders count for ${artisanId} (${artisanFullName}):`, assignedOrders);
-    
-    // Debug: List some orders to verify data
-    const sampleOrders = await Order.findAll({
+    // Get completed orders count
+    const completedOrders = await Order.count({
       where: {
-        [Op.or]: [
-          { assignedArtisan: artisanFullName },
-          { assigned_artisan: artisanFullName }
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { assignedArtisan: { [Op.iLike]: artisanFullName } },
+              { assigned_artisan: { [Op.iLike]: artisanFullName } }
+            ]
+          },
+          {
+            [Op.or]: [
+              { orderStatus: 'Shipped' },
+              { orderStatus: 'Delivered' },
+              { orderStatus: 'Completed' },
+              { order_status: 'Shipped' },
+              { order_status: 'Delivered' },
+              { order_status: 'Completed' }
+            ]
+          }
         ]
-      },
-      limit: 3,
-      raw: true
+      }
+    }).catch(err => {
+      console.error('Error counting completed orders:', err);
+      return 0;
     });
-    console.log('Sample orders:', sampleOrders);
-    
-    // For total revenue, use mock data since we can't determine it from the table structure
-    // In a real application, this would be calculated from order details
-    let totalRevenue = 0;
-    // Use a formula based on the number of products and orders to generate a plausible revenue
-    totalRevenue = (totalProducts * 1500) + (assignedOrders * 3500);
     
     res.json({
       totalProducts,
+      totalProductQuantity: finalQuantity,
       assignedOrders,
-      totalRevenue: parseFloat(totalRevenue)
-    });
+      completedOrders
+    });  
   } catch (error) {
     console.error('Error in artisan dashboard summary:', error);
     // Return empty data with 200 status to prevent frontend errors
-    res.json({ 
+    res.json({
       totalProducts: 0,
+      totalProductQuantity: 0,
       assignedOrders: 0,
-      totalRevenue: 0,
-      error: error.message 
+      completedOrders: 0,
+      error: error.message
     });
   }
 });
@@ -206,56 +162,93 @@ router.get('/products-trend/:artisanId', async (req, res) => {
       });
     }
     
-    console.log('Fetching products trend data for artisan:', artisanId);
-    
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
     
     let productsData = [];
     try {
-      // Products use e_id to reference the artisan/employee
+      // Query to sum product quantity by month for this artisan
       productsData = await ProductEntry.findAll({
         where: {
           e_id: artisanId,
           date_added: {
             [Op.gte]: twelveMonthsAgo
-          },
-          status: 'approved'
+          }
         },
         attributes: [
           [sequelize.fn('DATE_TRUNC', 'month', sequelize.col('date_added')), 'month'],
-          [sequelize.fn('COUNT', '*'), 'count']
+          [sequelize.fn('SUM', sequelize.col('quantity')), 'count'] // Sum quantity for each month
         ],
         group: [sequelize.fn('DATE_TRUNC', 'month', sequelize.col('date_added'))],
         order: [[sequelize.fn('DATE_TRUNC', 'month', sequelize.col('date_added')), 'ASC']],
         raw: true
       });
       
-      console.log('Products data from database:', productsData);
+      console.log('Products quantity by month:', productsData);
+      
     } catch (err) {
-      console.error('Error fetching products data:', err);
+      console.error('Error fetching products quantity data:', err);
+      return res.status(500).json({ error: 'Database error when fetching product data' });
     }
     
     // Format the data to include all months (even those with zero products)
     const monthlyData = [];
     const currentDate = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(currentDate);
-      date.setMonth(currentDate.getMonth() - i);
-      const monthKey = date.toISOString().slice(0, 7) + '-01';
-      
-      const monthData = productsData.find(data => 
-        data && data.month && data.month.slice(0, 7) === monthKey.slice(0, 7)
-      );
-      
-      monthlyData.push({
-        month: monthKey,
-        count: monthData ? parseInt(monthData.count) || 0 : 0
+    // Create a mapping of month-year strings to the quantities
+    const dataMap = {};
+    
+    if (productsData && Array.isArray(productsData)) {
+      productsData.forEach(item => {
+        if (item && item.month) {
+          // Convert the date to a string format 'YYYY-MM' regardless of whether it's a Date object or string
+          let monthStr;
+          if (typeof item.month === 'string') {
+            // If it's already a string, take the first 7 chars (YYYY-MM)
+            monthStr = item.month.substring(0, 7);
+          } else if (item.month instanceof Date) {
+            // If it's a Date object, format it properly
+            monthStr = item.month.toISOString().substring(0, 7);
+          } else {
+            // For other formats (like when PostgreSQL returns a special date type)
+            // Convert to ISO string if possible, or use a default
+            try {
+              monthStr = new Date(item.month).toISOString().substring(0, 7);
+            } catch (e) {
+              console.error('Failed to format date:', item.month);
+              return; // Skip this item
+            }
+          }
+          
+          dataMap[monthStr] = parseInt(item.count) || 0;
+        }
       });
     }
     
-    console.log('Formatted monthly data:', monthlyData);
+    // Generate entries for all 12 months, with zero quantities for months without data
+    for (let i = 11; i >= 0; i--) {
+      const date = new Date(currentDate);
+      date.setMonth(currentDate.getMonth() - i);
+      
+      // Format the month as YYYY-MM
+      const monthStr = date.toISOString().substring(0, 7);
+      
+      // Get the month name and year for display
+      const monthName = months[date.getMonth()];
+      const yearShort = date.getFullYear().toString().slice(2);
+      const formattedLabel = `${monthName} '${yearShort}`;
+      
+      // Get the quantity for this month from our map, or 0 if none
+      const quantity = dataMap[monthStr] || 0;
+      
+      monthlyData.push({
+        month: date.toISOString().slice(0, 10), // ISO date (YYYY-MM-DD)
+        monthLabel: formattedLabel,
+        count: quantity
+      });
+    }
+    
     res.json(monthlyData);
   } catch (error) {
     console.error('Error in products trend:', error);
@@ -263,8 +256,11 @@ router.get('/products-trend/:artisanId', async (req, res) => {
     const emptyData = Array(12).fill().map((_, i) => {
       const date = new Date();
       date.setMonth(date.getMonth() - (11 - i));
+      const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.getMonth()];
+      const yearShort = date.getFullYear().toString().slice(2);
       return {
-        month: date.toISOString().slice(0, 7) + '-01',
+        month: date.toISOString().slice(0, 10),
+        monthLabel: `${monthName} '${yearShort}`,
         count: 0
       };
     });
@@ -288,10 +284,7 @@ router.get('/revenue-trend/:artisanId', async (req, res) => {
       // Allow admin (role 1) to see any artisan's data
       return res.status(403).json({
         error: 'Unauthorized access to another artisan\'s data'
-      });
-    }
-    
-    console.log('Fetching revenue trend data for artisan:', artisanId);
+      });    }
     
     // Get artisan's name for order matching
     const artisan = await Employee.findByPk(artisanId);
@@ -332,10 +325,8 @@ router.get('/revenue-trend/:artisanId', async (req, res) => {
       monthlyRevenue.push({
         month: monthKey,
         total: revenue
-      });
-    }
+      });    }
     
-    console.log('Generated monthly revenue:', monthlyRevenue);
     res.json(monthlyRevenue);
   } catch (error) {
     console.error('Error in revenue trend:', error);

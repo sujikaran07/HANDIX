@@ -3,11 +3,11 @@ import "../../styles/artisan/ArtisanDashboard.css";
 import axios from "axios";
 import { jwtDecode } from 'jwt-decode';
 
-const ArtisanDashboardCards = () => {
-  const [summaryData, setSummaryData] = useState({
+const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = useState({
     totalProducts: 0,
+    totalProductQuantity: 0,
     assignedOrders: 0,
-    totalRevenue: 0
+    completedOrders: 0
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,7 +28,6 @@ const ArtisanDashboardCards = () => {
       return null;
     }
   };
-
   useEffect(() => {
     const fetchSummaryData = async () => {
       try {
@@ -54,17 +53,31 @@ const ArtisanDashboardCards = () => {
         );
         
         console.log('Fetching artisan dashboard summary...');
+        
+        // Try debug endpoint first to diagnose issues
+        try {
+          console.log('Checking debug info before fetching main data...');
+          const debugResponse = await axios.get(`http://localhost:5000/api/artisan-debug/check-artisan-data/${artisanId}`);
+          console.log('Debug data:', debugResponse.data);
+        } catch (debugError) {
+          console.log('Debug endpoint not available:', debugError.message);
+        }
+        
+        // Now fetch the actual summary data
         const fetchPromise = axios.get(`http://localhost:5000/api/artisan-dashboard/summary/${artisanId}`);
         
         try {
           const response = await Promise.race([fetchPromise, timeoutPromise]);
           console.log('Artisan dashboard summary response:', response.data);
           
-          // Ensure data has proper format
+          // Explicitly convert the totalProductQuantity to a number to fix display issues
+          const productQuantity = Number(response.data.totalProductQuantity) || 0;
+            
+          // Ensure data has proper format - use productQuantity for totalProducts
           const responseData = {
-            totalProducts: parseInt(response.data.totalProducts) || 0,
+            totalProducts: productQuantity, // Use the quantity here for display
             assignedOrders: parseInt(response.data.assignedOrders) || 0,
-            totalRevenue: parseFloat(response.data.totalRevenue) || 0
+            completedOrders: parseInt(response.data.completedOrders) || 0
           };
           
           setSummaryData(responseData);
@@ -72,8 +85,12 @@ const ArtisanDashboardCards = () => {
         } catch (fetchError) {
           console.error('Error fetching artisan dashboard summary:', fetchError);
           
-          // Keep using the default values but show an error message
-          setError('Could not load summary data');
+          // Show more detailed error messages
+          const errorMessage = fetchError.response ? 
+            `Error ${fetchError.response.status}: ${fetchError.response.data?.error || 'Unknown error'}` :
+            `Failed to fetch data: ${fetchError.message}`;
+          
+          setError(errorMessage);
         }
       } finally {
         setLoading(false);
@@ -97,26 +114,24 @@ const ArtisanDashboardCards = () => {
             <span className="visually-hidden">Loading...</span>
           </div>
         </div>
-        
-        <div className="artisan-card" style={{ 
+          <div className="artisan-card" style={{ 
           padding: '20px',
           borderRadius: '10px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           backgroundColor: '#fff',
         }}>
-          <h4 style={{ color: '#666', marginBottom: '15px' }}>Assigned Orders</h4>
+          <h4 style={{ color: '#666', marginBottom: '15px' }}>Ongoing Orders</h4>
           <div className="spinner-border spinner-border-sm text-success" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
         </div>
-        
-        <div className="artisan-card" style={{ 
+          <div className="artisan-card" style={{ 
           padding: '20px',
           borderRadius: '10px',
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           backgroundColor: '#fff',
         }}>
-          <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Revenue</h4>
+          <h4 style={{ color: '#666', marginBottom: '15px' }}>Completed Orders</h4>
           <div className="spinner-border spinner-border-sm text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
@@ -150,11 +165,10 @@ const ArtisanDashboardCards = () => {
           display: 'block',
           marginTop: '5px'
         }}>
-          All time
+          All product items
         </span>
       </div>
-      
-      <div className="artisan-card" style={{ 
+        <div className="artisan-card" style={{ 
         padding: '20px',
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -162,7 +176,7 @@ const ArtisanDashboardCards = () => {
         transition: 'transform 0.2s',
         cursor: 'pointer'
       }}>
-        <h4 style={{ color: '#666', marginBottom: '15px' }}>Assigned Orders</h4>
+        <h4 style={{ color: '#666', marginBottom: '15px' }}>Ongoing Orders</h4>
         <p style={{ 
           fontSize: '24px', 
           fontWeight: 'bold', 
@@ -177,11 +191,10 @@ const ArtisanDashboardCards = () => {
           display: 'block',
           marginTop: '5px'
         }}>
-          Last 30 Days
+          Currently Active
         </span>
       </div>
-      
-      <div className="artisan-card" style={{ 
+        <div className="artisan-card" style={{ 
         padding: '20px',
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -189,14 +202,14 @@ const ArtisanDashboardCards = () => {
         transition: 'transform 0.2s',
         cursor: 'pointer'
       }}>
-        <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Revenue</h4>
+        <h4 style={{ color: '#666', marginBottom: '15px' }}>Completed Orders</h4>
         <p style={{ 
           fontSize: '24px', 
           fontWeight: 'bold', 
           color: '#0022ff',
           marginBottom: '10px'
         }}>
-          LKR {summaryData.totalRevenue.toLocaleString()}
+          {summaryData.completedOrders}
         </p>
         <span className="artisan-percentage" style={{ 
           color: '#666',
@@ -204,7 +217,7 @@ const ArtisanDashboardCards = () => {
           display: 'block',
           marginTop: '5px'
         }}>
-          Last 30 Days
+          All Time
         </span>
       </div>
       {error && (

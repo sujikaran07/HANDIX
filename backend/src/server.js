@@ -44,6 +44,7 @@ const artisanRoutes = require('./routes/artisan/artisanRoutes');
 const assignedOrderRoutes = require('./routes/orders/assignedOrderRoutes');
 const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
 const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
+const artisanDebugRoutes = require('./routes/artisan/debugRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -128,6 +129,14 @@ app.use('/api/artisans', artisanRoutes);
 app.use('/api/employees/settings', employeeSettingsRoutes);
 app.use('/api/dashboard', adminDashboardRoutes);
 app.use('/api/artisan-dashboard', artisanDashboardRoutes);
+
+// Enable debug routes regardless of environment for now
+app.use('/api/artisan-debug', artisanDebugRoutes);
+
+// Comment out conditional debug routes setup
+// if (process.env.NODE_ENV === 'development') {
+//   app.use('/api/artisan-debug', artisanDebugRoutes);
+// }
 
 const PORT = process.env.PORT || 5000;
 

@@ -27,6 +27,8 @@ const ArtisanProductsBarChart = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEmpty, setIsEmpty] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
+  const [showDebug, setShowDebug] = useState(false);
 
   // Get last 12 months for labels
   const getLastTwelveMonths = () => {
@@ -67,7 +69,6 @@ const ArtisanProductsBarChart = () => {
         setError(null);
         setIsEmpty(false);
 
-        // Get artisan ID from token
         const artisanId = getArtisanIdFromToken();
         
         if (!artisanId) {
@@ -75,99 +76,48 @@ const ArtisanProductsBarChart = () => {
           throw new Error('Authentication error. Please log in again.');
         }
         
-        // Store artisanId in localStorage for other components
-        localStorage.setItem('artisanId', artisanId);
-        
-        console.log(`Fetching data for artisan ID: ${artisanId}`);
-        
         // Set authorization header with token
         const token = localStorage.getItem('artisanToken');
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
-        // Set a timeout for requests
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 8000)
+        // Fetch product trend data showing quantities per month
+        const response = await axios.get(
+          `http://localhost:5000/api/artisan-dashboard/products-trend/${artisanId}`
         );
         
-        // Fetch both products and revenue data
-        const [productsResponse, revenueResponse] = await Promise.all([
-          Promise.race([
-            axios.get(`http://localhost:5000/api/artisan-dashboard/products-trend/${artisanId}`),
-            timeoutPromise
-          ]),
-          Promise.race([
-            axios.get(`http://localhost:5000/api/artisan-dashboard/revenue-trend/${artisanId}`),
-            timeoutPromise
-          ])
-        ]);
+        console.log('Products monthly quantity data:', response.data);
         
-        console.log('API responses:', { 
-          products: productsResponse.data,
-          revenue: revenueResponse.data 
-        });
-        
-        const monthLabels = getLastTwelveMonths();
-        const productData = new Array(12).fill(0);
-        const revenueData = new Array(12).fill(0);
-        
-        // Process products data
-        if (productsResponse.data && Array.isArray(productsResponse.data)) {
-          productsResponse.data.forEach(item => {
-            if (item && item.month) {
-              const monthDate = new Date(item.month);
-              const monthIndex = monthDate.getMonth();
-              const currentMonth = new Date().getMonth();
-              const position = (monthIndex - currentMonth + 12) % 12;
-              if (position >= 0 && position < 12) {
-                productData[position] = parseInt(item.count) || 0;
-              }
-            }
-          });
+        if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
+          setIsEmpty(true);
+          return;
         }
         
-        // Process revenue data
-        if (revenueResponse.data && Array.isArray(revenueResponse.data)) {
-          revenueResponse.data.forEach(item => {
-            if (item && item.month) {
-              const monthDate = new Date(item.month);
-              const monthIndex = monthDate.getMonth();
-              const currentMonth = new Date().getMonth();
-              const position = (monthIndex - currentMonth + 12) % 12;
-              if (position >= 0 && position < 12) {
-                revenueData[position] = parseFloat(item.total) || 0;
-              }
-            }
-          });
-        }
-
+        // Extract data for the chart
+        const labels = response.data.map(item => item.monthLabel || 'Unknown');
+        const quantities = response.data.map(item => Number(item.count) || 0);
+        
         // Check if there's any data
-        const hasData = productData.some(val => val > 0) || revenueData.some(val => val > 0);
+        const hasData = quantities.some(val => val > 0);
         setIsEmpty(!hasData);
         
+        // Create the chart data, always showing all 12 months
         setChartData({
-          labels: monthLabels,
+          labels: labels,
           datasets: [
             {
-              label: 'Products Created',
-              data: productData,
+              label: 'Product Quantity',
+              data: quantities,
               backgroundColor: '#3498db',
+              borderColor: '#2980b9',
+              borderWidth: 1,
               borderRadius: 5,
-              yAxisID: 'y',
-            },
-            {
-              label: 'Revenue (LKR)',
-              data: revenueData,
-              backgroundColor: '#27ae60',
-              borderRadius: 5,
-              yAxisID: 'y1',
+              hoverBackgroundColor: '#2980b9'
             }
           ]
         });
-        
       } catch (error) {
         console.error('Error fetching chart data:', error);
         setError(error.message || 'Failed to load chart data');
-        setChartData(null);
       } finally {
         setLoading(false);
       }
@@ -176,68 +126,65 @@ const ArtisanProductsBarChart = () => {
     fetchData();
   }, []);
 
+  // Update chart options to better display X vs Y axis
   const options = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
     plugins: {
       legend: {
         position: 'top',
       },
       title: {
         display: true,
-        text: 'Products and Revenue Trends',
+        text: 'Monthly Product Quantity',
         font: {
           size: 16,
           weight: 'bold'
         },
         color: '#333'
       },
+      tooltip: {
+        callbacks: {
+          title: function(tooltipItems) {
+            return tooltipItems[0].label;
+          },
+          label: function(context) {
+            return `Quantity: ${context.parsed.y}`;
+          }
+        }
+      }
     },
     scales: {
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
+      x: {
         title: {
           display: true,
-          text: 'Products Count',
-          color: '#3498db'
-        },
-        ticks: {
-          precision: 0,
+          text: 'Month',
           color: '#666'
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        title: {
-          display: true,
-          text: 'Revenue (LKR)',
-          color: '#27ae60'
-        },
-        ticks: {
-          color: '#666',
-          callback: (value) => `${value.toLocaleString()} LKR`
-        },
-        grid: {
-          drawOnChartArea: false
-        }
-      },
-      x: {
         ticks: {
           color: '#666'
         },
         grid: {
           display: false
+        }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Quantity',
+          color: '#3498db'
+        },
+        ticks: {
+          precision: 0,
+          color: '#666',
+          // Ensure we include 0 on the y-axis
+          callback: function(value) {
+            return value;
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
         }
       }
     },
@@ -305,6 +252,26 @@ const ArtisanProductsBarChart = () => {
     );
   }
 
+  const createTestProducts = async () => {
+    try {
+      setLoading(true);
+      const artisanId = getArtisanIdFromToken();
+      const token = localStorage.getItem('artisanToken');
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      await axios.post(`http://localhost:5000/api/artisan-debug/create-test-products/${artisanId}`, {
+        count: 10 // Create 10 test products
+      });
+      
+      // Refresh the page to show new data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error creating test products:', error);
+      setError('Failed to create test products: ' + error.message);
+      setLoading(false);
+    }
+  };
+
   if (isEmpty) {
     return (
       <div className="artisan-products-bar-chart">
@@ -321,10 +288,79 @@ const ArtisanProductsBarChart = () => {
           justifyContent: 'center'
         }}>
           <div style={{ fontSize: '24px', marginBottom: '10px' }}>📊</div>
-          <h4 style={{ color: '#666', margin: '0' }}>No Data Available</h4>
+          <h4 style={{ color: '#666', margin: '0' }}>No Product Data</h4>
           <p style={{ margin: '0', color: '#888' }}>
-            There are no products or revenue data for the last 12 months.
+            No products have been created in the last 12 months.
+            <br />
+            All months will show zero quantity.
           </p>
+          
+          {/* Create a simple example chart to show the X and Y axes */}
+          <div style={{ width: '80%', height: '200px', marginTop: '20px' }}>
+            <Bar 
+              data={{
+                labels: getLastTwelveMonths(),
+                datasets: [
+                  {
+                    label: 'Product Quantity',
+                    data: Array(12).fill(0),
+                    backgroundColor: 'rgba(52, 152, 219, 0.2)',
+                    borderColor: 'rgba(52, 152, 219, 0.5)',
+                    borderWidth: 1
+                  }
+                ]
+              }} 
+              options={{
+                ...options,
+                scales: {
+                  ...options.scales,
+                  y: {
+                    ...options.scales.y,
+                    max: 10, // Set a fixed max for the empty chart
+                  }
+                }
+              }} 
+            />
+          </div>
+          
+          {/* Debug tools */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ marginTop: '20px' }}>
+              <button 
+                onClick={createTestProducts}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#3498db',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Create Test Products
+              </button>
+              <p style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+                (This button is only visible in development mode)
+              </p>
+            </div>
+          )}
+          
+          {showDebug && debugInfo && (
+            <div style={{ 
+              marginTop: '20px', 
+              textAlign: 'left', 
+              backgroundColor: '#f1f1f1',
+              padding: '10px',
+              borderRadius: '4px',
+              maxWidth: '90%',
+              overflow: 'auto'
+            }}>
+              <h5>Debug Information:</h5>
+              <pre style={{ fontSize: '12px' }}>
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -332,7 +368,7 @@ const ArtisanProductsBarChart = () => {
 
   return (
     <div className="artisan-products-bar-chart">
-      <div className="chart-container">
+      <div className="chart-container" style={{ height: '400px', width: '100%' }}>
         <Bar data={chartData} options={options} />
       </div>
     </div>
