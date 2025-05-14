@@ -43,6 +43,7 @@ const shippingMethodRoutes = require('./routes/shippingMethods/shippingMethodRou
 const artisanRoutes = require('./routes/artisan/artisanRoutes');
 const assignedOrderRoutes = require('./routes/orders/assignedOrderRoutes');
 const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
+const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -126,6 +127,7 @@ app.use('/api/shipping-methods', shippingMethodRoutes);
 app.use('/api/artisans', artisanRoutes);
 app.use('/api/employees/settings', employeeSettingsRoutes);
 app.use('/api/dashboard', adminDashboardRoutes);
+app.use('/api/artisan-dashboard', artisanDashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 

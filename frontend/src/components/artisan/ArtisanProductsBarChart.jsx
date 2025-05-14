@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
+import axios from 'axios';
 import { 
   Chart as ChartJS,
   CategoryScale,
@@ -21,6 +22,10 @@ ChartJS.register(
 );
 
 const ArtisanProductsBarChart = () => {
+  const [chartData, setChartData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   // Get last 12 months for labels
   const getLastTwelveMonths = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -36,32 +41,88 @@ const ArtisanProductsBarChart = () => {
     return lastTwelveMonths;
   };
 
-  // Sample data - replace with actual data from API
-  const data = {
-    labels: getLastTwelveMonths(),
-    datasets: [
-      {
-        label: 'Products Created',
-        data: [12, 19, 8, 15, 7, 14, 18, 10, 13, 9, 17, 22], // Sample data
-        backgroundColor: [
-          '#3498db', // Blue
-          '#27ae60', // Green
-          '#0022ff', // Dark Blue
-          '#e74c3c', // Red
-          '#f39c12', // Orange
-          '#9b59b6', // Purple
-          '#1abc9c', // Teal
-          '#34495e', // Dark Gray
-          '#2ecc71', // Light Green
-          '#e67e22', // Dark Orange
-          '#16a085', // Dark Teal
-          '#8e44ad'  // Dark Purple
-        ],
-        borderRadius: 5,
-        hoverBackgroundColor: '#2980b9',
+  useEffect(() => {
+    const fetchProductsTrend = async () => {
+      try {
+        setLoading(true);
+        const artisanId = localStorage.getItem('artisanId') || '1'; // Default to 1 for testing
+        console.log(`Fetching products trend for artisan ID: ${artisanId}`);
+        
+        // Set a timeout to prevent infinite loading if the request fails
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 5000)
+        );
+        
+        const fetchPromise = axios.get(`http://localhost:5000/api/artisan-dashboard/products-trend/${artisanId}`);
+        
+        // Race between the fetch and the timeout
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
+        console.log('Products trend API response:', response.data);
+        
+        // Process the data
+        if (response.data && Array.isArray(response.data)) {
+          const monthLabels = getLastTwelveMonths();
+          const monthData = new Array(12).fill(0);
+          
+          response.data.forEach(item => {
+            const monthDate = new Date(item.month);
+            const monthIndex = monthDate.getMonth();
+            const currentMonth = new Date().getMonth();
+            const position = (monthIndex - currentMonth + 12) % 12;
+            if (position >= 0 && position < 12) {
+              monthData[position] = parseInt(item.count);
+            }
+          });
+          
+          setChartData({
+            labels: monthLabels,
+            datasets: [
+              {
+                label: 'Products Created',
+                data: monthData,
+                backgroundColor: [
+                  '#3498db', '#27ae60', '#0022ff', '#e74c3c',
+                  '#f39c12', '#9b59b6', '#1abc9c', '#34495e',
+                  '#2ecc71', '#e67e22', '#16a085', '#8e44ad'
+                ],
+                borderRadius: 5,
+                hoverBackgroundColor: '#2980b9',
+              }
+            ]
+          });
+        } else {
+          throw new Error('Invalid data format from API');
+        }
+        
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching products trend:', error);
+        setError('Failed to load chart data');
+        
+        // Fall back to default data
+        setChartData({
+          labels: getLastTwelveMonths(),
+          datasets: [
+            {
+              label: 'Products Created',
+              data: [12, 19, 8, 15, 7, 14, 18, 10, 13, 9, 17, 22], // Sample data
+              backgroundColor: [
+                '#3498db', '#27ae60', '#0022ff', '#e74c3c',
+                '#f39c12', '#9b59b6', '#1abc9c', '#34495e',
+                '#2ecc71', '#e67e22', '#16a085', '#8e44ad'
+              ],
+              borderRadius: 5,
+              hoverBackgroundColor: '#2980b9',
+            }
+          ]
+        });
+      } finally {
+        setLoading(false);
       }
-    ],
-  };
+    };
+
+    fetchProductsTrend();
+  }, []);
 
   const options = {
     responsive: true,
@@ -106,10 +167,21 @@ const ArtisanProductsBarChart = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="artisan-products-bar-chart">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px' }}>
+          Loading chart data...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="artisan-products-bar-chart">
+      {error && <div className="chart-error-message" style={{color: '#e74c3c', padding: '10px', textAlign: 'center'}}>{error} - Showing sample data</div>}
       <div className="chart-container">
-        <Bar data={data} options={options} />
+        <Bar data={chartData} options={options} />
       </div>
     </div>
   );
