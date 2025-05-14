@@ -43,8 +43,22 @@ const ArtisanProductsBarChart = () => {
       {
         label: 'Products Created',
         data: [12, 19, 8, 15, 7, 14, 18, 10, 13, 9, 17, 22], // Sample data
-        backgroundColor: '#3e87c3',
-        borderRadius: 5
+        backgroundColor: [
+          '#3498db', // Blue
+          '#27ae60', // Green
+          '#0022ff', // Dark Blue
+          '#e74c3c', // Red
+          '#f39c12', // Orange
+          '#9b59b6', // Purple
+          '#1abc9c', // Teal
+          '#34495e', // Dark Gray
+          '#2ecc71', // Light Green
+          '#e67e22', // Dark Orange
+          '#16a085', // Dark Teal
+          '#8e44ad'  // Dark Purple
+        ],
+        borderRadius: 5,
+        hoverBackgroundColor: '#2980b9',
       }
     ],
   };
@@ -58,19 +72,37 @@ const ArtisanProductsBarChart = () => {
       },
       title: {
         display: true,
-        text: 'Products Created per Month ',
+        text: 'Products Created per Month',
         font: {
-          size: 16
-        }
+          size: 16,
+          weight: 'bold'
+        },
+        color: '#333'
       },
     },
     scales: {
       y: {
         beginAtZero: true,
         ticks: {
-          precision: 0
+          precision: 0,
+          color: '#666'
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        }
+      },
+      x: {
+        ticks: {
+          color: '#666'
+        },
+        grid: {
+          display: false
         }
       }
+    },
+    animation: {
+      duration: 1500,
+      easing: 'easeInOutQuart'
     }
   };
 
