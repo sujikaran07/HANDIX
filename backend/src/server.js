@@ -44,6 +44,7 @@ const artisanRoutes = require('./routes/artisan/artisanRoutes');
 const assignedOrderRoutes = require('./routes/orders/assignedOrderRoutes');
 const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
 const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
+const reportRoutes = require('./routes/reports/reportRoutes'); // Add this line
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -99,7 +100,8 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'], 
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
+  credentials: true
 }));
 app.use(bodyParser.json());
 app.use(express.json());
@@ -128,6 +130,7 @@ app.use('/api/artisans', artisanRoutes);
 app.use('/api/employees/settings', employeeSettingsRoutes);
 app.use('/api/dashboard', adminDashboardRoutes);
 app.use('/api/artisan-dashboard', artisanDashboardRoutes);
+app.use('/api/reports', reportRoutes); // Add this line
 
 // Enable debug routes only in development environment
 if (process.env.NODE_ENV === 'development') {

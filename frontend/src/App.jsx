@@ -13,6 +13,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLogout from "./pages/admin/AdminLogout"; 
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminReports from "./pages/admin/AdminReports";
+import ReportViewer from "./pages/admin/ReportViewer"; // Import the ReportViewer component
 import ArtisanDashboard from "./pages/artisan/ArtisanDashboard"; 
 import ArtisanProducts from "./pages/artisan/ArtisanProducts";
 import ArtisanAssignedOrders from "./pages/artisan/ArtisanAssignedOrders";
@@ -55,6 +56,7 @@ function App() {
           <Route path="/admin/logout" element={<AdminLogout />} /> 
           <Route path="/admin/pricing" element={<AdminPricing />} />
           <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="/report-viewer" element={<ReportViewer />} /> {/* Add the ReportViewer route */}
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
           <Route path="/artisan/products" element={<ArtisanProducts />} />
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />

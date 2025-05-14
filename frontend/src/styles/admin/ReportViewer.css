@@ -1,0 +1,51 @@
+.report-viewer {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.nav-link {
+  cursor: pointer;
+}
+
+/* Print styles */
+@media print {
+  button {
+    display: none !important;
+  }
+  
+  .card {
+    border: none !important;
+  }
+  
+  .card-header {
+    background: none !important;
+    color: black !important;
+  }
+  
+  body {
+    font-size: 12pt;
+  }
+  
+  .container-fluid {
+    padding: 0 !important;
+  }
+}
+
+/* Summary section styling */
+.summary-section .card {
+  transition: all 0.2s ease;
+}
+
+.summary-section .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.chart-placeholder {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+}

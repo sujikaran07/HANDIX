@@ -1,140 +1,51 @@
+/* Base layout styling */
 .reports-page {
   display: flex;
   height: 100vh;
+  align-items: stretch;
 }
 
-.reports-page .reports-content {
-  flex: 1;
-  padding: 15px;
-  background-color: #f4f6fc;
-  margin-left: 232px;
-  margin-top: 55px;
-  overflow-y: auto;
-}
-
-.reports-card {
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #ffffff;
-}
-
-.reports-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.reports-header h2 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 0.2rem;
-}
-
-.reports-header p {
-  font-size: 0.9rem;
-  color: #666;
-  margin: 0;
-}
-
-.reports-btn-group {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.reports-btn {
-  padding: 0.375rem 0.75rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-  background-color: transparent;
-  border: 1px solid #dee2e6;
-}
-
-.reports-btn-primary {
-  border-color: #3e87c3;
-  color: #3e87c3;
-}
-
-.reports-btn-primary:hover, .reports-btn-primary.active {
-  background-color: #3e87c3;
-  color: white;
-}
-
-.reports-filter-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  padding: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.reports-date-range {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.reports-content-area {
-  min-height: 400px;
-  padding: 1.5rem;
-}
-
-.reports-placeholder {
-  height: 300px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  border: 1px dashed #dee2e6;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  padding: 1.5rem;
-}
-
-.reports-chart-container {
-  height: 300px;
-  margin-bottom: 1.5rem;
-}
-
-.reports-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.reports-dropdown-menu {
-  border-radius: 0.25rem;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-}
-
-.reports-export-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 1rem;
-  border-radius: 0.25rem;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  color: #212529;
-}
-
-.reports-export-btn:hover {
-  background-color: #e9ecef;
-}
-
-.reports-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-}
-
+.reports-page .reports-content,
 .reports-page .main-content {
   flex: 1;
   padding: 15px;
   background-color: #f4f6fc;
   margin-left: 232px;
   margin-top: 55px;
+}
+
+.reports-page .main-content {
+  height: 100vh;
   overflow: hidden;
+}
+
+/* Card styling with consistent properties */
+.reports-card,
+.reports-page .card,
+.fixed-height-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border: 1px solid #eaeaea;
+  height: 100%;
+}
+
+/* Consistent header styles */
+.reports-header,
+.reports-page .card-header,
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  padding: 15px 18px !important;
+}
+
+/* Typography alignment */
+.reports-header h2,
+h2.h5 {
+  font-size: 1.25rem !important;
+  font-weight: 500;
+  margin-bottom: 8px !important;
+  line-height: 1.3;
 }
 
 .reports-page .inventory-icon {
@@ -181,18 +92,6 @@
 .reports-page .segmented-control .btn:last-child {
   border-top-right-radius: 5px;
   border-bottom-right-radius: 5px;
-}
-
-.reports-page .card {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  border: 1px solid #eaeaea;
-}
-
-.reports-page .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #eaeaea;
-  padding: 12px 15px;
 }
 
 .reports-page .search-bar .input-group {
@@ -264,4 +163,1122 @@
   .reports-page .main-content {
     margin-left: 0;
   }
+}
+
+/* Report card styling */
+.report-card {
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+  overflow: hidden;
+  height: 100%;
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.report-card.selected, .selected-report {
+  border-color: var(--bs-primary);
+  background-color: rgba(13, 110, 253, 0.05);
+  box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+.icon-circle {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-circle-lg {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.report-card:hover .icon-circle-lg {
+  transform: scale(1.1);
+}
+
+.bg-primary-subtle {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.bg-success-subtle {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-info-subtle {
+  background-color: rgba(13, 202, 240, 0.1);
+}
+
+.bg-warning-subtle {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+/* Table styling */
+.inventory-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.inventory-table th {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  font-weight: 600;
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.inventory-table td {
+  font-size: 0.85rem;
+}
+
+/* Hover effects */
+.hover-row:hover {
+  background-color: rgba(13, 110, 253, 0.04);
+}
+
+.summary-card {
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border-radius: 8px;
+  padding: 1.5rem;
+  height: 100%;
+  border-left: 4px solid var(--bs-primary);
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.08);
+}
+
+/* Responsive layout */
+.main-content {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Chart placeholders */
+.chart-container {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.chart-container:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+/* Bar chart placeholder */
+.bar-chart-placeholder {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 160px;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.chart-bar {
+  width: 60px;
+  background-color: #0d6efd;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.chart-bar:hover {
+  background-color: #0b5ed7;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+  transform: translateY(-5px);
+}
+
+.chart-label {
+  position: absolute;
+  bottom: -25px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+/* Pie chart placeholder */
+.pie-chart-placeholder {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: #f8f9fa;
+  margin: 0 auto;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.pie-chart-placeholder:hover {
+  transform: scale(1.05);
+}
+
+.pie-segment {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+}
+
+.segment-1 {
+  background-color: #0d6efd;
+  clip-path: polygon(50% 50%, 100% 0, 100% 50%);
+  transform: rotate(0deg);
+}
+
+.segment-2 {
+  background-color: #20c997;
+  clip-path: polygon(50% 50%, 100% 0, 100% 100%, 50% 100%);
+  transform: rotate(90deg);
+}
+
+.segment-3 {
+  background-color: #ffc107;
+  clip-path: polygon(50% 50%, 100% 0, 50% 0, 0 0, 0 50%);
+  transform: rotate(180deg);
+}
+
+.segment-4 {
+  background-color: #6c757d;
+  clip-path: polygon(50% 50%, 0 0, 0 100%, 50% 100%);
+  transform: rotate(270deg);
+}
+
+.pie-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  margin-right: 5px;
+}
+
+.legend-1 { background-color: #0d6efd; }
+.legend-2 { background-color: #20c997; }
+.legend-3 { background-color: #ffc107; }
+.legend-4 { background-color: #6c757d; }
+
+/* Line chart placeholder */
+.line-chart-placeholder {
+  width: 100%;
+  height: 180px;
+  position: relative;
+}
+
+.line-chart-x-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.line-chart-legend {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 20px;
+  height: 2px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.line-1 {
+  background-color: #0d6efd;
+}
+
+.line-2 {
+  background-color: #20c997;
+  stroke-dasharray: 5,5;
+}
+
+/* Print styles */
+@media print {
+  .main-content {
+    height: auto;
+    overflow: visible;
+  }
+  
+  .card {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
+  }
+  
+  button, .nav-tabs {
+    display: none !important;
+  }
+  
+  .container-fluid {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .chart-container {
+    page-break-inside: avoid;
+  }
+  
+  .table {
+    width: 100% !important;
+    page-break-inside: auto;
+  }
+  
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+}
+
+.nav-link {
+  cursor: pointer;
+}
+
+/* Full height container adjustments */
+.reports-page .container-fluid,
+.reports-page .card {
+  height: 100%;
+}
+
+/* Scrollable content area */
+.card-body.overflow-auto {
+  scrollbar-width: thin;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 10px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.3);
+}
+
+/* Date selector enhancements */
+.date-range-buttons .btn {
+  flex: 1;
+  transition: all 0.2s ease;
+}
+
+.date-range-buttons .btn:hover:not(.btn-primary) {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Tab navigation enhancements */
+.nav-tabs {
+  border-bottom: none;
+}
+
+.nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  font-weight: 500;
+  color: #6c757d;
+  padding: 0.75rem 1.25rem;
+}
+
+.nav-tabs .nav-link:hover:not(.active) {
+  border-bottom: 3px solid #dee2e6;
+  background-color: transparent;
+}
+
+.nav-tabs .nav-link.active {
+  color: var(--bs-primary);
+  border-bottom: 3px solid var(--bs-primary);
+  background-color: transparent;
+}
+
+/* Report info card */
+.report-info .card {
+  border-left: 4px solid var(--bs-primary);
+}
+
+/* Fixed layout for no scrolling */
+.fixed-height-container {
+  padding: 15px;
+  height: calc(100vh - 76px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.fixed-height-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.fixed-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 15px !important;
+}
+
+/* Fixed footer with increased bottom margin */
+.fixed-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px; /* Increased from 15px to 30px */
+}
+
+.fixed-footer .btn-primary {
+  width: auto;
+  min-width: 220px;
+  padding: 12px 30px !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(45deg, #2e7d32, #4caf50);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.fixed-footer .btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.5);
+  background: linear-gradient(45deg, #388e3c, #66bb6a);
+}
+
+.fixed-footer .btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+}
+
+.fixed-footer .btn-primary:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: all 0.6s;
+}
+
+.fixed-footer .btn-primary:hover:before {
+  left: 100%;
+}
+
+.fixed-footer .btn-primary .spinner-border {
+  width: 1.2rem;
+  height: 1.2rem;
+  border-width: 0.15em;
+}
+
+.fixed-report-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.fixed-content {
+  flex: 1;
+  overflow: hidden;
+  padding: 15px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* More compact card styling */
+.report-card {
+  padding: 0;
+  margin-bottom: 0;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.report-card.selected {
+  border-color: var(--bs-primary);
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Compact chart containers */
+.chart-container {
+  height: 200px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.bar-chart-placeholder {
+  height: 160px;
+}
+
+.pie-chart-placeholder {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+/* Compact table design for reports */
+.report-data .table {
+  margin: 0;
+}
+
+.report-data .table th {
+  padding: 5px;
+  font-size: 0.8rem;
+}
+
+.report-data .table td {
+  padding: 5px;
+  font-size: 0.8rem;
+}
+
+/* Prevent unnecessary scrolling */
+.admin-inventory-page.reports-page .main-content {
+  overflow: hidden;
+}
+
+/* Compact summary cards */
+.summary-card {
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 3px solid var(--bs-primary);
+}
+
+.summary-card h5 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+/* Set fixed height for nav tabs */
+.nav-tabs {
+  min-height: 41px;
+}
+
+/* Compact navigation design */
+.nav-tabs .nav-link {
+  padding: 0.75rem 1.25rem;
+}
+
+/* Reduced spacing adjustments - reducing by 2-4px throughout */
+.fixed-height-container {
+  padding: 15px;
+  height: calc(100vh - 76px);
+  overflow: hidden;
+}
+
+.card-header {
+  padding: 15px 18px !important;
+}
+
+.card-body {
+  padding: 15px !important;
+}
+
+.fixed-body {
+  padding: 15px !important;
+}
+
+.fixed-content {
+  padding: 15px;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem !important;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1rem !important;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+
+.mt-1 {
+  margin-top: 0.25rem !important;
+}
+
+.mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.mt-3 {
+  margin-top: 1rem !important;
+}
+
+.me-1 {
+  margin-right: 0.25rem !important;
+}
+
+.me-2 {
+  margin-right: 0.5rem !important;
+}
+
+.me-3 {
+  margin-right: 1rem !important;
+}
+
+.p-1 {
+  padding: 0.25rem !important;
+}
+
+.p-2 {
+  padding: 0.5rem !important;
+}
+
+.p-3 {
+  padding: 1rem !important;
+}
+
+.px-2 {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+
+.py-1 {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+}
+
+.py-2 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+/* Smaller card elements */
+.report-card .card-body {
+  padding: 15px !important;
+}
+
+.summary-card {
+  padding: 15px;
+  margin-bottom: 15px;
+  border-left: 3px solid var(--bs-primary);
+}
+
+.summary-card h5 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.summary-card p {
+  font-size: 0.85rem;
+}
+
+/* Increase heights for chart containers */
+.chart-container {
+  height: 200px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.bar-chart-placeholder {
+  height: 160px;
+}
+
+.pie-chart-placeholder {
+  width: 150px;
+  height: 150px;
+}
+
+/* Line chart increased */
+.line-chart-placeholder {
+  height: 180px;
+}
+
+/* Comfortable button sizes */
+.btn {
+  padding: 0.375rem 0.75rem !important;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.875rem !important;
+}
+
+/* Normal icon sizes */
+.icon-circle {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-circle-lg {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+/* Comfortable table cell padding */
+.table th, .table td {
+  padding: 8px 12px !important;
+  font-size: 0.875rem;
+  vertical-align: middle;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Row spacing */
+.g-2 {
+  --bs-gutter-y: 0.75rem !important;
+  --bs-gutter-x: 0.75rem !important;
+}
+
+.row {
+  margin-bottom: 15px !important;
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* Adjust font sizing for headings */
+h2.h5 {
+  font-size: 1.25rem !important;
+  margin-bottom: 8px !important;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+h6, .h6 {
+  font-size: 1rem !important;
+  margin-bottom: 8px !important;
+}
+
+/* Adjust small text */
+small, .small {
+  font-size: 0.85rem !important;
+}
+
+/* Compact date range section */
+.date-selector {
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.date-selector h6 {
+  font-size: 0.9rem !important;
+  margin-bottom: 18px !important;
+  text-align: left;
+}
+
+/* Button group alignment */
+.date-selector .btn-group {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.date-selector .btn-group .btn {
+  flex: 1;
+  text-align: center;
+  border-radius: 0;
+  margin: 0;
+  border-width: 1px;
+  border-right-width: 0;
+}
+
+.date-selector .btn-group .btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.date-selector .btn-group .btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-right-width: 1px;
+}
+
+/* Date range row alignment */
+.date-selector .row {
+  margin: 8px 0 !important;
+  align-items: center;
+}
+
+.date-selector .input-group {
+  width: 100%;
+  height: 35px;
+}
+
+.date-selector .input-group-text,
+.date-selector .form-control {
+  height: 35px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-color: #dee2e6;
+}
+
+/* Custom date range alignment */
+.date-selector .text-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 35px;
+}
+
+/* Advanced options button alignment */
+.date-selector .text-end {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.date-selector .btn-outline-secondary {
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+/* Full width generate button with improved hover */
+.fixed-footer .btn-primary {
+  width: 100%;
+  padding: 10px !important;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  border: none;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.fixed-footer .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(10, 88, 202, 0.4);
+  background: linear-gradient(135deg, #0a58ca 0%, #084298 100%);
+}
+
+.fixed-footer .btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(10, 88, 202, 0.4);
+}
+
+.fixed-footer .btn-primary .spinner-border {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Advanced options button styling */
+.date-selector .btn-outline-secondary {
+  transition: all 0.3s ease;
+  border-color: #6c757d;
+  color: #6c757d;
+  background-color: transparent;
+}
+
+.date-selector .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+  box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Make the date selector card more compact */
+.card-body .card {
+  margin-bottom: 10px !important;
+}
+
+.card-body .card .card-body {
+  padding: 10px !important;
+}
+
+/* Fix for custom date picker collapse issue */
+.date-selector .row.g-3.mt-2 {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0.75rem !important;
+  max-height: 100px; /* Ensure sufficient height */
+  opacity: 1;
+  transition: all 0.3s ease;
+}
+
+.date-selector .input-group {
+  width: 100%;
+  height: 38px; /* Increased height */
+  margin-bottom: 5px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.date-selector .input-group-text {
+  height: 38px; /* Match container height */
+  padding: 0 10px;
+  font-size: 0.9rem;
+  border-color: #dee2e6;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.date-selector input[type="date"] {
+  height: 38px; /* Match container height */
+  padding: 0.375rem 0.75rem;
+  font-size: 0.9rem;
+  border-color: #dee2e6;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23adb5bd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+/* Hide default calendar icon in webkit browsers */
+.date-selector input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: pointer;
+}
+
+/* Center the "to" text */
+.date-selector .text-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px; /* Match same height */
+  padding: 0 5px;
+  font-weight: 500;
+  color: #6c757d;
+}
+
+/* Ensure date inputs have proper sizing */
+.date-selector input[type="date"] {
+  min-height: 38px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Ensure consistent spacing in date selector section */
+.date-selector .col-md-5,
+.date-selector .col-md-2 {
+  margin-bottom: 8px;
+}
+
+/* Ensure responsive behavior */
+@media (max-width: 768px) {
+  .date-selector .row.g-3.mt-2 {
+    flex-direction: column;
+  }
+  
+  .date-selector .col-md-5 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  
+  .date-selector .col-md-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    margin: 5px 0;
+    text-align: center;
+  }
+}
+
+/* Advanced filter options styling */
+.filter-modal-content {
+  border-radius: 10px;
+  border: none;
+}
+
+.filter-modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  padding: 15px 20px;
+  border-radius: 10px 10px 0 0;
+}
+
+.filter-modal-body {
+  padding: 20px;
+}
+
+.filter-section {
+  margin-bottom: 20px;
+}
+
+.filter-section h6 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+.filter-section .form-group {
+  margin-bottom: 15px;
+}
+
+.filter-section label {
+  font-size: 0.85rem;
+  color: #495057;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.filter-section .form-control,
+.filter-section .form-select {
+  height: 38px;
+  font-size: 0.9rem;
+  border-color: #dee2e6;
+  border-radius: 4px;
+}
+
+.filter-section .form-check {
+  margin-bottom: 8px;
+}
+
+.filter-section .form-check-label {
+  font-size: 0.9rem;
+}
+
+.filter-section .form-check-input {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+}
+
+.filter-section .form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.filter-actions {
+  padding-top: 15px;
+  margin-top: 15px;
+  border-top: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+}
+
+.filter-actions .btn-link {
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.filter-actions .btn-link:hover {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.filter-actions .btn-primary {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  font-weight: 500;
+  padding: 6px 15px;
+}
+
+.filter-actions .btn-primary:hover {
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Applied filters area */
+.applied-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 10px 0;
+}
+
+.filter-tag {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+}
+
+.filter-tag .close-icon {
+  margin-left: 5px;
+  font-size: 0.7rem;
+  cursor: pointer;
 }
