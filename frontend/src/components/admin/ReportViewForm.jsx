@@ -12,10 +12,6 @@ import { getChartConfig, prepareBarChartData, preparePieChartData, prepareLineCh
 import '../../styles/admin/ReportViewForm.css';
 import axios from 'axios';
 
-// Fix for "process is not defined" error
-// Get API base URL from window.__env__ if available (set by the application),
-// or use a default URL as fallback
-import { API_BASE_URL } from '../../utils/environment';
 
 const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, appliedFilters = [] }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
