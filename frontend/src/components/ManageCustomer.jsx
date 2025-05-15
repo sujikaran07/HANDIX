@@ -31,7 +31,7 @@ const ManageCustomer = ({
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
   const [customerToDelete, setCustomerToDelete] = useState(null); 
-  const customersPerPage = 4;
+  const customersPerPage = 7;
 
   console.log('Customers passed to ManageCustomer:', customers);
 

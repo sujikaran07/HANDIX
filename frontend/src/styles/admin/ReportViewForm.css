@@ -1,0 +1,126 @@
+/* ReportViewForm styles */
+.report-view-form {
+  padding: 20px;
+}
+
+.report-icon {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(13, 110, 253, 0.1);
+  border-radius: 50%;
+}
+
+/* Chart styles */
+.chart-container {
+  position: relative;
+  height: 100%;
+  min-height: 300px;
+}
+
+/* Tab navigation */
+.report-view-form .nav-tabs {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.report-view-form .nav-tabs .nav-link {
+  color: #6c757d;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.report-view-form .nav-tabs .nav-link.active {
+  color: #0d6efd;
+  border-bottom: 3px solid #0d6efd;
+}
+
+.report-view-form .nav-tabs .nav-link:not(.active):hover {
+  border-bottom: 3px solid #dee2e6;
+  color: #495057;
+}
+
+/* Card styles */
+.report-view-form .card {
+  transition: all 0.2s ease-in-out;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.report-view-form .card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.report-view-form .card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  background-color: #fff;
+  padding: 1rem;
+  font-weight: 500;
+}
+
+/* Print styles */
+@media print {
+  .report-view-form {
+    padding: 0;
+  }
+  
+  .report-view-form button,
+  .report-view-form .nav-tabs {
+    display: none !important;
+  }
+  
+  .report-view-form .card {
+    border: 1px solid #dee2e6;
+    box-shadow: none !important;
+    margin-bottom: 1rem;
+    break-inside: avoid;
+  }
+  
+  .report-view-form .card-header {
+    background-color: #f8f9fa !important;
+  }
+  
+  .report-view-form .table {
+    border-collapse: collapse;
+  }
+  
+  .report-view-form .table th,
+  .report-view-form .table td {
+    border: 1px solid #dee2e6;
+  }
+}
+
+/* Table styles */
+.report-view-form .table-responsive {
+  overflow-x: auto;
+}
+
+.report-view-form .table {
+  min-width: 100%;
+  margin-bottom: 0;
+}
+
+.report-view-form .table th {
+  position: sticky;
+  top: 0;
+  background-color: #f8f9fa;
+  border-top: none;
+  font-weight: 600;
+}
+
+.report-view-form .table th,
+.report-view-form .table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .report-view-form {
+    padding: 10px;
+  }
+}
