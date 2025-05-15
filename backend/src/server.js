@@ -44,7 +44,8 @@ const artisanRoutes = require('./routes/artisan/artisanRoutes');
 const assignedOrderRoutes = require('./routes/orders/assignedOrderRoutes');
 const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
 const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
-const reportRoutes = require('./routes/reports/reportRoutes'); // Add this line
+const reportRoutes = require('./routes/reports/reportRoutes'); 
+const artisanReportRoutes = require('./routes/artisan/artisanReportRoutes');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -119,7 +120,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/admin/products', adminProductRoutes); 
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/admin', adminInventoryRoutes);
-app.use('/api/admin', adminRoutes); // Add this line to use adminRoutes
+app.use('/api/admin', adminRoutes); 
 app.use('/api/orders', orderRoutes);
 app.use('/api/orders', assignedOrderRoutes);
 app.use('/api/login', employeeLoginRoutes);
@@ -136,7 +137,11 @@ app.use('/api/artisans', artisanRoutes);
 app.use('/api/employees/settings', employeeSettingsRoutes);
 app.use('/api/dashboard', adminDashboardRoutes);
 app.use('/api/artisan-dashboard', artisanDashboardRoutes);
-app.use('/api/reports', reportRoutes); // Add this line
+app.use('/api/reports', reportRoutes); 
+app.use('/api/artisan/reports', artisanReportRoutes); 
+
+// Register artisan routes
+app.use('/api/artisan', artisanRoutes);
 
 // Enable debug routes only in development environment
 if (process.env.NODE_ENV === 'development') {

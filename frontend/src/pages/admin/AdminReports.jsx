@@ -1174,7 +1174,7 @@ const renderSummaryCards = () => {
     );
   };
 
-  // Replace the renderReportTypeCards function with this improved version
+  
 const renderReportTypeCards = () => {
   const reportColors = {
     sales: { primary: '#0d6efd', gradient: 'linear-gradient(135deg, #0d6efd, #0a58ca)' },

@@ -1,315 +1,437 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
-import { FaFileAlt, FaCloudDownloadAlt, FaCalendarAlt, FaFilter } from 'react-icons/fa';
-import { Form, Button, Card, Row, Col, Table } from 'react-bootstrap';
+import { 
+  FaFileAlt, FaCloudDownloadAlt, FaCalendarAlt, FaFilter, 
+  FaChartLine, FaShoppingBag, FaBoxOpen, FaTrophy, FaChartBar,
+  FaSpinner, FaInfoCircle, FaExclamationTriangle, FaTimes
+} from 'react-icons/fa';
+import { Form, Button, Card, Row, Col, Alert, Spinner } from 'react-bootstrap';
 import '../../styles/artisan/ArtisanReports.css';
+import { formatCurrency, formatDate, formatNumber } from '../../utils/formatters';
+import axios from 'axios';
+import ArtisanReportViewForm from "../../components/artisan/ArtisanReportViewForm";
+import { API_BASE_URL } from "../../utils/environment";
+
+// Report type definitions
+const reportTypes = [
+  {
+    id: 'orders',
+    title: 'Orders Report',
+    description: 'Track your order history, sales performance, and revenue analytics',
+    icon: FaShoppingBag,
+    color: 'primary'
+  },
+  {
+    id: 'products',
+    title: 'Products Report',
+    description: 'View detailed insights on your crafted products and their performance',
+    icon: FaBoxOpen,
+    color: 'success'
+  },
+  {
+    id: 'performance',
+    title: 'Performance Report',
+    description: 'Analyze your productivity, efficiency, and customer satisfaction metrics',
+    icon: FaTrophy,
+    color: 'warning'
+  }
+];
 
 const ArtisanReports = () => {
-  const [reportType, setReportType] = useState('orders');
-  const [dateRange, setDateRange] = useState('last30');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  // State variables
+  const [activeReportType, setActiveReportType] = useState('orders');
+  const [dateRange, setDateRange] = useState({
+    preset: 'this-month',
+    startDate: getDefaultStartDate(),
+    endDate: formatDateForInput(new Date())
+  });
   const [loading, setLoading] = useState(false);
-  const [reportData, setReportData] = useState([]);
-  const [customerId, setCustomerId] = useState('');
-  const [productId, setProductId] = useState('');
+  const [error, setError] = useState(null);
+  const [reportData, setReportData] = useState(null);
+  // Removed filter related states
+  
+  // Get artisan ID from localStorage
+  const artisanId = localStorage.getItem('artisanId');
 
-  // Sample report data - would be fetched from API
+  // Initialize with default dates
   useEffect(() => {
-    const fetchReportData = async () => {
-      setLoading(true);
-      try {
-        // In a real app, you'd fetch from API based on parameters
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (reportType === 'orders') {
-          setReportData([
-            { id: 'O123', date: '2023-09-15', customer: 'John Smith', status: 'Completed', total: 'Rs. 4,500' },
-            { id: 'O124', date: '2023-09-17', customer: 'Emily Brown', status: 'In Production', total: 'Rs. 2,800' },
-            { id: 'O125', date: '2023-09-20', customer: 'Sarah Wilson', status: 'Completed', total: 'Rs. 3,200' },
-            { id: 'O126', date: '2023-09-22', customer: 'Mark Johnson', status: 'In Production', total: 'Rs. 1,950' },
-            { id: 'O127', date: '2023-09-25', customer: 'Lisa Williams', status: 'Completed', total: 'Rs. 5,300' }
-          ]);
-        } else if (reportType === 'products') {
-          setReportData([
-            { id: 'P101', name: 'Handwoven Basket', quantity: 15, status: 'Available', sales: 28 },
-            { id: 'P102', name: 'Artisan Vase', quantity: 8, status: 'Low Stock', sales: 42 },
-            { id: 'P103', name: 'Handmade Rug', quantity: 5, status: 'Low Stock', sales: 12 },
-            { id: 'P104', name: 'Carved Wooden Bowl', quantity: 20, status: 'Available', sales: 35 },
-            { id: 'P105', name: 'Embroidered Cushion', quantity: 0, status: 'Out of Stock', sales: 18 }
-          ]);
-        } else if (reportType === 'performance') {
-          setReportData([
-            { month: 'January', completed: 12, ratings: 4.7, onTime: '95%', revisions: 2 },
-            { month: 'February', completed: 9, ratings: 4.8, onTime: '100%', revisions: 0 },
-            { month: 'March', completed: 15, ratings: 4.5, onTime: '93%', revisions: 3 },
-            { month: 'April', completed: 10, ratings: 4.9, onTime: '100%', revisions: 1 },
-            { month: 'May', completed: 14, ratings: 4.6, onTime: '95%', revisions: 2 }
-          ]);
-        }
-      } catch (error) {
-        console.error('Error fetching report data:', error);
-      } finally {
-        setLoading(false);
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    setDateRange({
+      preset: 'this-month',
+      startDate: formatDateForInput(firstDayOfMonth),
+      endDate: formatDateForInput(today)
+    });
+  }, []);
+  
+  // Helper function to format date for input fields
+  function formatDateForInput(date) {
+    return date.toISOString().split('T')[0];
+  }
+
+  // Get default start date (first day of current month)
+  function getDefaultStartDate() {
+    const today = new Date();
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    return formatDateForInput(firstDayOfMonth);
+  }
+  
+  // Handle preset date range changes
+  const handlePresetChange = (preset) => {
+    const today = new Date();
+    let startDate, endDate = formatDateForInput(today);
+    
+    switch(preset) {
+      case 'today':
+        startDate = formatDateForInput(today);
+        break;
+      case 'this-week': {
+        const firstDayOfWeek = new Date(today);
+        const day = today.getDay() || 7; // Convert Sunday (0) to 7
+        if (day !== 1) firstDayOfWeek.setDate(today.getDate() - day + 1); // Monday as first day
+        startDate = formatDateForInput(firstDayOfWeek);
+        break;
       }
+      case 'this-month':
+        startDate = formatDateForInput(new Date(today.getFullYear(), today.getMonth(), 1));
+        break;
+      case 'last-month': {
+        const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+        startDate = formatDateForInput(firstDayLastMonth);
+        endDate = formatDateForInput(lastDayLastMonth);
+        break;
+      }
+      // Removed last-3-months case
+      case 'custom':
+        // Keep current custom dates
+        return setDateRange({
+          ...dateRange,
+          preset
+        });
+      default:
+        startDate = getDefaultStartDate();
+    }
+    
+    setDateRange({
+      preset,
+      startDate,
+      endDate
+    });
+  };
+  
+  // Handle custom date changes
+  const handleDateChange = (field, value) => {
+    setDateRange({
+      ...dateRange,
+      [field]: value,
+      preset: 'custom' // Switch to custom when dates are manually changed
+    });
+  };
+  
+  // Generate report
+  const handleGenerateReport = async () => {
+    if (!artisanId) {
+      setError('Artisan ID not found. Please log in again.');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/artisan/reports/${activeReportType}`, {
+        params: {
+          artisanId,
+          startDate: dateRange.startDate,
+          endDate: dateRange.endDate,
+          // Removed filters
+          includeCharts: true // Always include charts
+        }
+      });
+      
+      if (response.data.success) {
+        setReportData(response.data);
+      } else {
+        setError('Failed to generate report: ' + (response.data.message || 'Unknown error'));
+      }
+    } catch (err) {
+      console.error('Error generating report:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to generate report');
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Handle back button click from report view
+  const handleBackToReportConfig = () => {
+    setReportData(null);
+  };
+  
+  // Get current report type details
+  const currentReportType = reportTypes.find(type => type.id === activeReportType) || reportTypes[0];
+  const reportColor = `var(--bs-${currentReportType.color})`;
+  
+  // Get report type colors similar to AdminReports
+  const getReportColors = (reportColor) => {
+    const colorMap = {
+      'primary': { primary: '#0d6efd', gradient: 'linear-gradient(135deg, #0d6efd, #0a58ca)' },
+      'success': { primary: '#198754', gradient: 'linear-gradient(135deg, #198754, #146c43)' },
+      'warning': { primary: '#ff9800', gradient: 'linear-gradient(135deg, #ff9800, #e68a00)' }
     };
     
-    fetchReportData();
-  }, [reportType, dateRange, startDate, endDate]);
-  
-  const handleGenerateReport = (e) => {
-    e.preventDefault();
-    // Implementation would trigger API call with parameters
-    console.log('Generating report with:', { reportType, dateRange, startDate, endDate, customerId, productId });
+    return colorMap[reportColor] || colorMap.primary;
   };
   
-  const handleExport = () => {
-    console.log('Exporting report data');
-    // Combined export implementation
-  };
-  
-  // Get current date in YYYY-MM-DD format for max date in date pickers
-  const today = new Date().toISOString().split('T')[0];
-  
+  // Get current colors
+  const colors = getReportColors(currentReportType.color);
+
   return (
     <div className="artisan-reports-page">
       <ArtisanSidebar />
-      <div className="artisan-main-content">
+      <div className="art-main-content">
         <ArtisanTopBar />
         
-        <div className="container mt-4 reports-container">
-          <div className="card reports-card">
-            <div className="reports-header d-flex justify-content-between align-items-center">
-              <div className="title-section d-flex align-items-center">
-                <FaFileAlt className="reports-icon" />
-                <div className="text-section">
-                  <h2>Reports</h2>
-                  <p>Generate and analyze your performance reports</p>
-                </div>
-              </div>
-              <div className="d-flex">
-                <button className="btn btn-outline-secondary export-btn" onClick={handleExport}>
-                  <FaCloudDownloadAlt size={14} /> <span className="ms-1">Export</span>
-                </button>
-              </div>
-            </div>
-            
-            <div className="reports-content">
-              <Row>
-                <Col lg={3} md={4}>
-                  <div className="report-sidebar mb-3">
-                    <Card.Header>Report Options</Card.Header>
-                    <Card.Body>
-                      <Form onSubmit={handleGenerateReport}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Report Type</Form.Label>
-                          <Form.Select 
-                            value={reportType} 
-                            onChange={(e) => setReportType(e.target.value)}
-                            size="sm"
-                          >
-                            <option value="orders">Order Reports</option>
-                            <option value="products">Product Reports</option>
-                            <option value="performance">Performance Reports</option>
-                          </Form.Select>
-                        </Form.Group>
-                        
-                        <Form.Group className="mb-3">
-                          <Form.Label>Date Range</Form.Label>
-                          <Form.Select 
-                            value={dateRange} 
-                            onChange={(e) => setDateRange(e.target.value)}
-                            size="sm"
-                          >
-                            <option value="last7">Last 7 Days</option>
-                            <option value="last30">Last 30 Days</option>
-                            <option value="last90">Last 90 Days</option>
-                            <option value="custom">Custom Range</option>
-                          </Form.Select>
-                        </Form.Group>
-                        
-                        {dateRange === 'custom' && (
-                          <>
-                            <Form.Group className="mb-3">
-                              <Form.Label>Start Date</Form.Label>
-                              <Form.Control 
-                                type="date" 
-                                max={today}
-                                value={startDate} 
-                                onChange={(e) => setStartDate(e.target.value)}
-                                size="sm"
-                              />
-                            </Form.Group>
-                            
-                            <Form.Group className="mb-3">
-                              <Form.Label>End Date</Form.Label>
-                              <Form.Control 
-                                type="date" 
-                                max={today}
-                                value={endDate} 
-                                onChange={(e) => setEndDate(e.target.value)}
-                                size="sm"
-                              />
-                            </Form.Group>
-                          </>
-                        )}
-                        
-                        {reportType === 'orders' && (
-                          <Form.Group className="mb-3">
-                            <Form.Label>Customer ID (Optional)</Form.Label>
-                            <Form.Control 
-                              type="text" 
-                              value={customerId} 
-                              onChange={(e) => setCustomerId(e.target.value)} 
-                              placeholder="Enter customer ID"
-                              size="sm"
-                            />
-                          </Form.Group>
-                        )}
-                        
-                        {reportType === 'products' && (
-                          <Form.Group className="mb-3">
-                            <Form.Label>Product ID (Optional)</Form.Label>
-                            <Form.Control 
-                              type="text" 
-                              value={productId} 
-                              onChange={(e) => setProductId(e.target.value)} 
-                              placeholder="Enter product ID"
-                              size="sm"
-                            />
-                          </Form.Group>
-                        )}
-                        
-                        <Button 
-                          variant="primary" 
-                          type="submit" 
-                          className="w-100 d-flex align-items-center justify-content-center"
-                          size="sm"
-                        >
-                          <FaFileAlt size={12} className="me-2" />
-                          Generate Report
-                        </Button>
-                      </Form>
-                    </Card.Body>
-                  </div>
-                </Col>
-                
-                <Col lg={9} md={8}>
-                  <div className="report-content">
-                    <Card.Header>
-                      <h5 className="mb-0">
-                        {reportType === 'orders' && 'Order Report'}
-                        {reportType === 'products' && 'Product Report'}
-                        {reportType === 'performance' && 'Performance Report'}
-                      </h5>
-                      <div className="report-date">
-                        <FaCalendarAlt className="me-2" />
-                        <span>
-                          {dateRange === 'custom' ? `${startDate || 'Start'} to ${endDate || 'End'}` : 
-                          dateRange === 'last7' ? 'Last 7 Days' : 
-                          dateRange === 'last30' ? 'Last 30 Days' : 'Last 90 Days'}
+        <div className="art-fixed-height-container">
+          <Card className="art-fixed-height-card">
+            {!reportData ? (
+              <>
+                {/* Report Configuration */}
+                <Card.Header className="art-card-header">
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center">
+                      <div className="art-header-icon" style={{backgroundColor: `${reportColor}20`, color: reportColor}}>
+                        <FaChartBar />
+                      </div>
+                      <div>
+                        <h5 className="mb-0 art-header-title">Artisan Reports</h5>
+                        <p className="text-muted small mb-0">Generate reports to track your business performance</p>
+                      </div>
+                    </div>
+                    
+                    {activeReportType && (
+                      <div className="header-report-type">
+                        <span className="report-type-label">Currently viewing:</span>
+                        <span className="report-type-value" style={{color: colors.primary}}>
+                          {currentReportType.title}
                         </span>
                       </div>
-                    </Card.Header>
+                    )}
+                  </div>
+                </Card.Header>
+                
+                <Card.Body className="p-0 art-fixed-body">
+                  {/* Error Alert */}
+                  {error && (
+                    <div className="alert alert-danger m-3 art-alert">
+                      <div className="error-content">
+                        <FaExclamationTriangle className="me-2 error-icon" />
+                        <div className="error-message">{error}</div>
+                      </div>
+                      <Button 
+                        variant="link" 
+                        className="p-0 ms-auto art-close-alert" 
+                        onClick={() => setError(null)}
+                      >
+                        <FaTimes />
+                      </Button>
+                    </div>
+                  )}
+                
+                  {/* Report Configuration UI */}
+                  <div className="report-config-container">
+                    {/* Left Side: Report Types */}
+                    <div className="report-type-container">
+                      <h6 className="section-title">Report Type</h6>
+                      
+                      <div className="report-type-selector">
+                        {reportTypes.map(reportType => {
+                          const isSelected = activeReportType === reportType.id;
+                          // Get colors for this specific report type
+                          const reportTypeColors = getReportColors(reportType.color);
+                          
+                          return (
+                            <div 
+                              key={reportType.id}
+                              className={`report-type-card ${isSelected ? 'selected' : ''}`}
+                              onClick={() => setActiveReportType(reportType.id)}
+                              style={isSelected ? {
+                                borderColor: reportTypeColors.primary,
+                                backgroundColor: `${reportTypeColors.primary}08`,
+                                boxShadow: `0 5px 15px rgba(0,0,0,0.08), 0 0 0 2px ${reportTypeColors.primary}30`
+                              } : {}}
+                            >
+                              <div 
+                                className="report-type-icon" 
+                                style={{
+                                  background: isSelected ? reportTypeColors.gradient : '#f8f9fa',
+                                  color: isSelected ? '#fff' : reportTypeColors.primary
+                                }}
+                              >
+                                <reportType.icon />
+                              </div>
+                              <div className="report-type-info">
+                                <h5 style={isSelected ? {color: reportTypeColors.primary} : {}}>{reportType.title}</h5>
+                                <p>{reportType.description}</p>
+                              </div>
+                              {isSelected && (
+                                <div className="report-type-check">
+                                  <span className="checkmark-circle" style={{backgroundColor: reportTypeColors.primary}}>
+                                    <reportType.icon className="text-white" style={{fontSize: '12px'}} />
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                     
-                    <div className="report-table-container">
-                      {loading ? (
-                        <div className="text-center my-5">
-                          <div className="spinner-border text-primary" role="status">
-                            <span className="visually-hidden">Loading...</span>
+                    {/* Right Side: Date Range & Options */}
+                    <div className="report-options-container">
+                      <div className="date-range-selector">
+                        <h6 className="section-title">Select Date Range</h6>
+                        
+                        <div className="date-preset-buttons">
+                          {[
+                            { id: 'today', label: 'Today' },
+                            { id: 'this-week', label: 'This Week' },
+                            { id: 'this-month', label: 'This Month' },
+                            { id: 'last-month', label: 'Last Month' },
+                            { id: 'custom', label: 'Custom Range' }
+                            // Removed last-3-months
+                          ].map(preset => (
+                            <button 
+                              key={preset.id}
+                              type="button"
+                              className={`date-preset-btn ${dateRange.preset === preset.id ? 'active pulse' : ''}`}
+                              onClick={() => handlePresetChange(preset.id)}
+                              style={dateRange.preset === preset.id ? {
+                                borderColor: colors.primary,
+                                backgroundColor: `${colors.primary}10`,
+                                boxShadow: `0 3px 10px ${colors.primary}20`
+                              } : {}}
+                            >
+                              <span 
+                                className="preset-icon"
+                                style={{
+                                  backgroundColor: dateRange.preset === preset.id ? colors.primary : `${colors.primary}20`,
+                                  color: dateRange.preset === preset.id ? 'white' : colors.primary
+                                }}
+                              >
+                                <FaCalendarAlt />
+                              </span>
+                              <span 
+                                className="preset-label"
+                                style={{
+                                  color: dateRange.preset === preset.id ? colors.primary : ''
+                                }}
+                              >
+                                {preset.label}
+                              </span>
+                              {dateRange.preset === preset.id && (
+                                <span className="preset-selected">✓</span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Custom Date Range */}
+                        {dateRange.preset === 'custom' && (
+                          <div className="custom-date-inputs" style={{borderTopColor: colors.primary}}>
+                            <div className="date-range-header">
+                              <FaCalendarAlt className="date-range-icon" style={{color: colors.primary}} />
+                              <span>Enter Custom Date Range</span>
+                            </div>
+                            
+                            <div className="date-inputs-container">
+                              <div className="date-input-group">
+                                <label style={{color: colors.primary}}>Start Date</label>
+                                <div className="date-input-wrapper">
+                                  <FaCalendarAlt className="date-input-icon" />
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    value={dateRange.startDate}
+                                    onChange={(e) => handleDateChange('startDate', e.target.value)}
+                                    style={{borderColor: colors.primary}}
+                                  />
+                                </div>
+                              </div>
+                              
+                              <div className="date-range-separator">
+                                <span>to</span>
+                              </div>
+                              
+                              <div className="date-input-group">
+                                <label style={{color: colors.primary}}>End Date</label>
+                                <div className="date-input-wrapper">
+                                  <FaCalendarAlt className="date-input-icon" />
+                                  <input
+                                    type="date"
+                                    className="form-control"
+                                    value={dateRange.endDate}
+                                    onChange={(e) => handleDateChange('endDate', e.target.value)}
+                                    style={{borderColor: colors.primary}}
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                          <p className="mt-2">Loading report data...</p>
+                        )}
+                        
+                        {/* Selected Date Range Summary */}
+                        {dateRange.preset !== 'custom' && (
+                          <div className="date-range-summary" style={{borderLeftColor: colors.primary}}>
+                            <FaCalendarAlt className="summary-icon" style={{color: colors.primary}} />
+                            <div className="date-range-info">
+                              <div className="date-range-period">Selected Period</div>
+                              <div className="date-range-dates">
+                                <strong>{formatDate(dateRange.startDate)} - {formatDate(dateRange.endDate)}</strong>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Generate Report Button */}
+                        <div className="generate-report-container">
+                          <button
+                            type="button"
+                            className="btn-generate-report"
+                            onClick={handleGenerateReport}
+                            disabled={loading}
+                            style={{
+                              background: colors.gradient,
+                              boxShadow: `0 4px 15px ${colors.primary}40`
+                            }}
+                          >
+                            <div className="generate-icon">
+                              {loading ? (
+                                <div className="spinner"></div>
+                              ) : (
+                                <FaChartLine />
+                              )}
+                            </div>
+                            <span>{loading ? 'Generating...' : 'Generate Report'}</span>
+                          </button>
                         </div>
-                      ) : reportData.length > 0 ? (
-                        <div className="table-responsive">
-                          {reportType === 'orders' && (
-                            <Table striped bordered hover>
-                              <thead>
-                                <tr>
-                                  <th>Order ID</th>
-                                  <th>Date</th>
-                                  <th>Customer</th>
-                                  <th>Status</th>
-                                  <th>Total</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {reportData.map((order, index) => (
-                                  <tr key={index}>
-                                    <td>{order.id}</td>
-                                    <td>{order.date}</td>
-                                    <td>{order.customer}</td>
-                                    <td>{order.status}</td>
-                                    <td>{order.total}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </Table>
-                          )}
-                          
-                          {reportType === 'products' && (
-                            <Table striped bordered hover>
-                              <thead>
-                                <tr>
-                                  <th>Product ID</th>
-                                  <th>Name</th>
-                                  <th>Quantity</th>
-                                  <th>Status</th>
-                                  <th>Total Sales</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {reportData.map((product, index) => (
-                                  <tr key={index}>
-                                    <td>{product.id}</td>
-                                    <td>{product.name}</td>
-                                    <td>{product.quantity}</td>
-                                    <td>{product.status}</td>
-                                    <td>{product.sales}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </Table>
-                          )}
-                          
-                          {reportType === 'performance' && (
-                            <Table striped bordered hover>
-                              <thead>
-                                <tr>
-                                  <th>Period</th>
-                                  <th>Completed Orders</th>
-                                  <th>Avg. Rating</th>
-                                  <th>On-Time Rate</th>
-                                  <th>Revisions</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {reportData.map((perf, index) => (
-                                  <tr key={index}>
-                                    <td>{perf.month}</td>
-                                    <td>{perf.completed}</td>
-                                    <td>{perf.ratings}</td>
-                                    <td>{perf.onTime}</td>
-                                    <td>{perf.revisions}</td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </Table>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-center my-5">
-                          <p className="text-muted">No report data available for the selected criteria</p>
-                        </div>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </Col>
-              </Row>
-            </div>
-          </div>
+                </Card.Body>
+              </>
+            ) : (
+              // Report View Component
+              <ArtisanReportViewForm
+                reportData={reportData}
+                reportType={activeReportType}
+                dateRange={dateRange}
+                onBackClick={handleBackToReportConfig}
+              />
+            )}
+          </Card>
         </div>
       </div>
     </div>
