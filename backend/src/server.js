@@ -100,7 +100,13 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000'], 
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174', 
+    'http://localhost:5175', 
+    'http://localhost:5176', 
+    'http://localhost:3000'
+  ], 
   credentials: true
 }));
 app.use(bodyParser.json());
@@ -137,7 +143,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use('/api/artisan-debug', require('./routes/artisan/debugRoutes'));
 }
 
-const PORT = process.env.PORT || 5000;
+const PRIMARY_PORT = process.env.PRIMARY_PORT || 5000;
+const SECONDARY_PORT = process.env.SECONDARY_PORT || 5001;
 
 try {
   require('./setup/copyLogo');
@@ -164,16 +171,48 @@ const checkPort = (port) => {
   });
 };
 
-checkPort(PORT)
+checkPort(PRIMARY_PORT)
   .then(() => {
-    app.listen(PORT, async () => {
+    app.listen(PRIMARY_PORT, async () => {
       try {
         if (typeof connectToDatabase === 'function') {
           await connectToDatabase();
         } else {
           console.log('PostgreSQL connected');
         }
-        console.log(`Server is running on port ${PORT}`);
+        console.log(`Primary server is running on port ${PRIMARY_PORT}`);
+        
+        // Start secondary server
+        try {
+          await checkPort(SECONDARY_PORT);
+          const secondaryApp = express();
+          // Apply same middleware and routes
+          secondaryApp.use(cors({
+            origin: [
+              'http://localhost:5173', 
+              'http://localhost:5174', 
+              'http://localhost:5175', 
+              'http://localhost:5176', 
+              'http://localhost:3000'
+            ], 
+            credentials: true
+          }));
+          secondaryApp.use(bodyParser.json());
+          secondaryApp.use(express.json());
+          
+          // Copy all routes to secondaryApp
+          Object.keys(app._router.stack).forEach(key => {
+            if (app._router.stack[key].route) {
+              secondaryApp.use(app._router.stack[key].route);
+            }
+          });
+          
+          secondaryApp.listen(SECONDARY_PORT, () => {
+            console.log(`Secondary server is running on port ${SECONDARY_PORT}`);
+          });
+        } catch (error) {
+          console.error(`Failed to start secondary server: ${error.message}`);
+        }
       } catch (error) {
         console.error('Error during server startup:', error);
       }
