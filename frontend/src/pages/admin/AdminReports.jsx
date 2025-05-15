@@ -67,7 +67,6 @@ const AdminReportsPage = () => {
     productivityLevel: '',
     compareWithPrevious: false,
     includeGraphs: true,
-    showTotalsOnly: false,
     dataPointsLimit: 10,
     groupBy: 'day'
   });
@@ -237,7 +236,7 @@ const AdminReportsPage = () => {
     setAppliedFilters(newAppliedFilters);
   }, [filters, metadata.categories]);
 
-  // Generate report with improved filter handling - complete rewrite of this function
+  // Generate report with improved filter handling
 const handleGenerateReport = async () => {
   setLoading(true);
   setError(null);
@@ -253,8 +252,12 @@ const handleGenerateReport = async () => {
     // Base request data with common parameters
     const requestData = {
       startDate: dateRange.startDate,
-      endDate: dateRange.endDate
+      endDate: dateRange.endDate,
+      // Always include the includeGraphs setting
+      includeGraphs: filters.includeGraphs
     };
+    
+    console.log("Report request with includeGraphs =", filters.includeGraphs);
     
     // Add categories only if there are selected categories
     if (filters.categories && filters.categories.length > 0) {
@@ -299,19 +302,8 @@ const handleGenerateReport = async () => {
         if (filters.groupBy) {
           requestData.groupBy = filters.groupBy;
         }
-        if (filters.showTotalsOnly) {
-          requestData.showTotalsOnly = true;
-        }
         break;
     }
-    
-    // Add common display options
-    requestData.includeGraphs = filters.includeGraphs === false ? false : true;
-    if (filters.dataPointsLimit) {
-      requestData.dataPointsLimit = Number(filters.dataPointsLimit);
-    }
-    
-    console.log(`Generating ${currentReport} report with filters:`, requestData);
     
     // Make the API request
     const response = await axios.post(
@@ -320,12 +312,13 @@ const handleGenerateReport = async () => {
     );
     
     if (response.data.success) {
-      // Log what we got back to help with debugging
-      console.log(`Received ${currentReport} report data:`, {
-        summaryKeys: response.data.summary ? Object.keys(response.data.summary) : 'No summary',
-        dataCount: response.data.data ? response.data.data.length : 'No data',
-        additionalProps: Object.keys(response.data).filter(key => !['success', 'summary', 'data'].includes(key))
-      });
+      // Ensure applied filters are included in the response
+      if (!response.data.appliedFilters) {
+        response.data.appliedFilters = {};
+      }
+      
+      // Make sure includeGraphs setting is passed through
+      response.data.appliedFilters.includeGraphs = filters.includeGraphs;
       
       setReportData(response.data);
       
@@ -894,7 +887,8 @@ const renderSummaryCards = () => {
         stockStatus: filters.stockStatus,
         customerType: filters.customerType,
         minLifetimeValue: filters.minLifetimeValue, 
-        productivityLevel: filters.productivityLevel
+        productivityLevel: filters.productivityLevel,
+        includeGraphs: filters.includeGraphs // Log this specifically
       });
       
       // Now close the modal
@@ -1033,7 +1027,7 @@ const renderSummaryCards = () => {
                         color: filters.bestSellers ? reportColor : ''
                       }}
                     >
-                      Show best sellers only
+                      Show best selling products only
                     </label>
                   </div>
                 </div>
@@ -1097,47 +1091,36 @@ const renderSummaryCards = () => {
                 </div>
               )}
               
-              {/* Display Options - only shown for relevant report types */}
-              {(currentReport === 'sales' || currentReport === 'products') && (
-                <div className="filter-section">
-                  <h6 style={{ color: reportColor }}>Display Options</h6>
-                  <div className="form-check mb-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="includeGraphs"
-                      checked={filters.includeGraphs}
-                      onChange={(e) => setFilters({...filters, includeGraphs: e.target.checked})}
-                      style={{ 
-                        borderColor: filters.includeGraphs ? reportColor : '',
-                        backgroundColor: filters.includeGraphs ? reportColor : ''
-                      }}
-                    />
-                    <label className="form-check-label" htmlFor="includeGraphs">
-                      Include graphs in report
-                    </label>
-                  </div>
-                  
-                  {currentReport === 'sales' && (
-                    <div className="form-check">
-                      <input
-                        className="form-check-input"
-                        type="checkbox"
-                        id="showTotalsOnly"
-                        checked={filters.showTotalsOnly}
-                        onChange={(e) => setFilters({...filters, showTotalsOnly: e.target.checked})}
-                        style={{ 
-                          borderColor: filters.showTotalsOnly ? reportColor : '',
-                          backgroundColor: filters.showTotalsOnly ? reportColor : ''
-                        }}
-                      />
-                      <label className="form-check-label" htmlFor="showTotalsOnly">
-                        Show totals only
-                      </label>
-                    </div>
-                  )}
+              {/* Display Options - make this available for all reports */}
+              <div className="filter-section">
+                <h6 style={{ color: reportColor, borderBottom: `2px solid ${reportColor}30`, paddingBottom: '8px' }}>Display Options</h6>
+                <div className="form-check mb-2">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id="includeGraphs"
+                    checked={filters.includeGraphs}
+                    onChange={(e) => {
+                      console.log("includeGraphs changed to:", e.target.checked);
+                      setFilters({...filters, includeGraphs: e.target.checked});
+                    }}
+                    style={{ 
+                      borderColor: filters.includeGraphs ? reportColor : '',
+                      backgroundColor: filters.includeGraphs ? reportColor : ''
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor="includeGraphs">
+                    Include graphs in report
+                    <span 
+                      className="ms-1 tooltip-icon" 
+                      title="When enabled, shows charts and visualizations in the report"
+                    >
+                      <FontAwesomeIcon icon={faInfoCircle} style={{ opacity: 0.7 }} />
+                    </span>
+                  </label>
                 </div>
-              )}
+                
+              </div>
               
               {/* Filter Actions */}
               <div className="filter-actions">
@@ -1148,7 +1131,7 @@ const renderSummaryCards = () => {
                     // Reset to default filters - keep only report-specific ones
                     const defaultFilters = {
                       categories: [],
-                      includeGraphs: true,
+                      includeGraphs: true, // Reset to default (true)
                       dataPointsLimit: 10
                     };
                     
@@ -1163,7 +1146,6 @@ const renderSummaryCards = () => {
                     } else if (currentReport === 'artisans') {
                       defaultFilters.productivityLevel = '';
                     } else if (currentReport === 'sales') {
-                      defaultFilters.showTotalsOnly = false;
                     }
                     
                     setFilters(defaultFilters);
@@ -1513,6 +1495,7 @@ return (
                 reportType={currentReport}
                 dateRange={getDateRangeFromPreset()}
                 onBackClick={() => setReportData(null)}
+                appliedFilters={appliedFilters} // Pass the applied filters
               />
             </div>
           )}

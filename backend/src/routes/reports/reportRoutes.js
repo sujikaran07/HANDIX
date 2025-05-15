@@ -56,7 +56,21 @@ const getReportTitle = (reportType) => {
 router.post('/sales', async (req, res) => {
   try {
     console.log('Received sales report request with filters:', req.body);
-    const { startDate, endDate, categories = [], groupBy = 'day' } = req.body;
+    const { 
+      startDate, 
+      endDate, 
+      categories = [], 
+      groupBy = 'day', 
+      includeGraphs = true // Extract the includeGraphs setting
+    } = req.body;
+    
+    // Log all filters for debugging
+    console.log(`Generating sales report with: 
+      - Date range: ${startDate} to ${endDate}
+      - Categories: ${categories.join(', ') || 'All'}
+      - Group by: ${groupBy}
+      - Include graphs: ${includeGraphs}
+    `);
     
     // Build the WHERE clause for date filtering
     let dateFilter = '';
@@ -137,7 +151,7 @@ router.post('/sales', async (req, res) => {
       ORDER BY sales_amount DESC
     `;
 
-    // Query to get detailed sales data - Same as before but with enhanced fields
+    // Query for detailed sales data (removed conditional based on showTotalsOnly)
     const detailQuery = `
       SELECT 
         o.order_id,
@@ -160,7 +174,7 @@ router.post('/sales', async (req, res) => {
       ${dateFilter}
       ${categoryFilter}
       GROUP BY o.order_id, o.order_date, o.total_amount, i.product_name, cat.category_name, 
-               c.c_id, c.first_name, c.last_name, o.payment_method, o.order_status, o.payment_status
+              c.c_id, c.first_name, c.last_name, o.payment_method, o.order_status, o.payment_status
       ORDER BY o.order_date DESC
       LIMIT 100
     `;
@@ -185,10 +199,18 @@ router.post('/sales', async (req, res) => {
       return res.json({
         success: true,
         summary,
-        timeSeries: timeSeriesResults || [],
-        categories: categoryResults || [],
+        timeSeries: includeGraphs ? timeSeriesResults || [] : [], // Only include if graphs are enabled
+        categories: includeGraphs ? categoryResults || [] : [], // Only include if graphs are enabled
         data: detailResults || [],
-        isMockData: false
+        isMockData: false,
+        // Include applied filters in the response
+        appliedFilters: {
+          categories,
+          groupBy,
+          startDate,
+          endDate,
+          includeGraphs // Make sure this is included
+        }
       });
     } catch (sqlError) {
       console.error('SQL Error in sales report:', sqlError);
@@ -212,10 +234,22 @@ router.post('/sales', async (req, res) => {
 router.post('/products', async (req, res) => {
   try {
     console.log('Received products report request with filters:', req.body);
-    const { startDate, endDate, categories = [], stockStatus = '' } = req.body;
+    const { 
+      startDate, 
+      endDate, 
+      categories = [], 
+      stockStatus = '',
+      customizableOnly = false,
+      bestSellers = false,
+      includeGraphs = true
+    } = req.body;
     
-    // Log stock status filter specifically for debugging
-    console.log(`Filtering products by stock status: "${stockStatus}"`);
+    // Log filters for debugging
+    console.log(`Filtering products by:
+      - Stock status: "${stockStatus}"
+      - Customizable only: ${customizableOnly}
+      - Best sellers only: ${bestSellers}
+    `);
     
     // Build the WHERE clause for date filtering
     let dateFilter = '';
@@ -242,24 +276,20 @@ router.post('/products', async (req, res) => {
       }
     }
 
-    // Query to get summary data
-    const summaryQuery = `
-      SELECT 
-        COUNT(DISTINCT i.product_id) as totalProducts,
-        SUM(CASE WHEN i.quantity = 0 THEN 1 ELSE 0 END) as productsOutOfStock,
-        SUM(CASE WHEN i.quantity BETWEEN 1 AND 5 THEN 1 ELSE 0 END) as productsLowStock
-      FROM "Inventory" i
-      WHERE 1=1
-      ${categoryFilter}
-    `;
-
-    // Query to get detailed product data
-    const detailQuery = `
+    // Add filter for customizable products
+    let customizableFilter = '';
+    if (customizableOnly) {
+      customizableFilter = 'AND i.customization_available = true';
+    }
+    
+    // Build the query based on filters
+    let query = `
       SELECT 
         i.product_id,
         i.product_name,
         i.quantity as stock_level,
         cat.category_name,
+        i.customization_available,
         COUNT(DISTINCT od.order_id) as order_count,
         SUM(od.quantity) as total_sold,
         SUM(od.price_at_purchase * od.quantity) as total_revenue
@@ -271,16 +301,40 @@ router.post('/products', async (req, res) => {
       ${dateFilter}
       ${categoryFilter}
       ${stockFilter}
-      GROUP BY i.product_id, i.product_name, i.quantity, cat.category_name
-      ORDER BY total_sold DESC NULLS LAST
-      LIMIT 100
+      ${customizableFilter}
+      GROUP BY i.product_id, i.product_name, i.quantity, cat.category_name, i.customization_available
+    `;
+    
+    // Add ORDER BY clause based on bestSellers filter
+    if (bestSellers) {
+      query += `
+        HAVING SUM(od.quantity) > 0  
+        ORDER BY total_sold DESC, total_revenue DESC 
+        LIMIT 20
+      `;
+    } else {
+      query += `
+        ORDER BY total_sold DESC NULLS LAST
+        LIMIT 100
+      `;
+    }
+
+    // Query to get summary data
+    const summaryQuery = `
+      SELECT 
+        COUNT(DISTINCT i.product_id) as totalProducts,
+        SUM(CASE WHEN i.quantity = 0 THEN 1 ELSE 0 END) as productsOutOfStock,
+        SUM(CASE WHEN i.quantity BETWEEN 1 AND 5 THEN 1 ELSE 0 END) as productsLowStock
+      FROM "Inventory" i
+      WHERE 1=1
+      ${categoryFilter}
     `;
 
     // Execute queries with error handling
     let summaryResults, detailResults;
     try {
       summaryResults = await sequelize.query(summaryQuery, { type: QueryTypes.SELECT });
-      detailResults = await sequelize.query(detailQuery, { type: QueryTypes.SELECT });
+      detailResults = await sequelize.query(query, { type: QueryTypes.SELECT });
     } catch (sqlError) {
       console.error('SQL Error in product report:', sqlError);
       return res.status(500).json({ 
@@ -314,15 +368,18 @@ router.post('/products', async (req, res) => {
       data: formattedData,
       summary: {
         ...summary,
-        productsLowStock: lowStockCount, // Add this explicitly
+        productsLowStock: lowStockCount,
       },
-      lowStockCount: lowStockCount, // Also add as a top-level property
+      lowStockCount: lowStockCount,
       isMockData: false,
       appliedFilters: {
         stockStatus,
         categories,
+        customizableOnly,
+        bestSellers, // Make sure this is included in the response
         startDate,
-        endDate
+        endDate,
+        includeGraphs
       }
     };
     
@@ -449,31 +506,49 @@ router.post('/artisans', async (req, res) => {
     // Modify the productivityLevel HAVING clause application
     // Build the WHERE clause for productivity level filtering
     let productivityFilter = '';
+    let topPerformerFilter = ''; // New filter for the top performer query
+    
     if (productivityLevel) {
       if (productivityLevel === 'high') {
         console.log('Applying HIGH performer filter (> 10 products)');
         productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) > 10';
+        topPerformerFilter = 'WHERE product_count > 10'; // Add constraint to top performer query
       } else if (productivityLevel === 'medium') {
         console.log('Applying MEDIUM performer filter (5-10 products)');
         productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) BETWEEN 5 AND 10';
+        topPerformerFilter = 'WHERE product_count BETWEEN 5 AND 10'; // Add constraint to top performer query
       } else if (productivityLevel === 'low') {
         console.log('Applying LOW performer filter (< 5 products)');
         productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) < 5';
+        topPerformerFilter = 'WHERE product_count < 5'; // Add constraint to top performer query
       }
     }
     
-    // Query to get summary data
+    // Modify the query to get summary data so top performer is filtered by productivity level
     const summaryQuery = `
+      WITH artisan_stats AS (
+        SELECT 
+          e.e_id,
+          CONCAT(e.first_name, ' ', e.last_name) AS artisan_name,
+          COUNT(DISTINCT i.product_id) AS product_count,
+          SUM(od.quantity * od.price_at_purchase) AS total_sales
+        FROM "Employees" e
+        LEFT JOIN "Inventory" i ON e.e_id = i.e_id
+        LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
+        LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled'
+        WHERE e.role_id = 2
+        ${dateFilter}
+        GROUP BY e.e_id, e.first_name, e.last_name
+        ${productivityFilter}
+      )
       SELECT 
         COUNT(DISTINCT e.e_id) as totalArtisans,
         COUNT(DISTINCT CASE WHEN i.product_id IS NOT NULL THEN e.e_id END) as activeArtisans,
         (
-          SELECT CONCAT(first_name, ' ', last_name)
-          FROM "Employees" e
-          JOIN "Inventory" i ON e.e_id = i.e_id
-          JOIN "OrderDetails" od ON i.product_id = od.product_id
-          GROUP BY e.e_id, e.first_name, e.last_name
-          ORDER BY SUM(od.quantity * od.price_at_purchase) DESC
+          SELECT artisan_name
+          FROM artisan_stats
+          ${topPerformerFilter}
+          ORDER BY total_sales DESC
           LIMIT 1
         ) as topPerformer
       FROM "Employees" e
@@ -481,7 +556,7 @@ router.post('/artisans', async (req, res) => {
       WHERE e.role_id = 2
     `;
 
-    // Query to get detailed artisan data
+    // Query to get detailed artisan data - no change needed here
     const detailQuery = `
       SELECT 
         e.e_id,
@@ -521,7 +596,10 @@ router.post('/artisans', async (req, res) => {
       const summary = {
         totalArtisans: parseInt(summaryResults[0]?.totalartisans || 0) || 0,
         activeArtisans: parseInt(summaryResults[0]?.activeartisans || 0) || 0,
-        topPerformer: summaryResults[0]?.topperformer || 'N/A'
+        topPerformer: summaryResults[0]?.topperformer || 'N/A',
+        // Add a label to indicate this is filtered by productivity level
+        filterApplied: productivityLevel ? true : false,
+        filterType: productivityLevel
       };
 
       return res.json({
