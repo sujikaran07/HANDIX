@@ -749,7 +749,7 @@ router.post('/export/excel', async (req, res) => {
   }
 });
 
-// Download generated report
+// Enhanced download route with proper content type and headers
 router.get('/download/:filename', (req, res) => {
   const { filename } = req.params;
   const filePath = path.resolve(__dirname, `../../temp/${filename}`);
@@ -761,14 +761,39 @@ router.get('/download/:filename', (req, res) => {
     });
   }
   
-  res.download(filePath, filename, (err) => {
-    if (err) {
-      console.error('Error downloading file:', err);
+  // Set appropriate content type based on file extension
+  const ext = path.extname(filename).toLowerCase();
+  let contentType = 'application/octet-stream';
+  
+  if (ext === '.pdf') {
+    contentType = 'application/pdf';
+  } else if (ext === '.xlsx') {
+    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+  } else if (ext === '.xls') {
+    contentType = 'application/vnd.ms-excel';
+  } else if (ext === '.json') {
+    contentType = 'application/json';
+  }
+  
+  // Set appropriate headers for the download
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Cache-Control', 'no-cache');
+  
+  // Stream the file to the client
+  const fileStream = fs.createReadStream(filePath);
+  fileStream.pipe(res);
+  
+  // Handle errors during streaming
+  fileStream.on('error', (err) => {
+    console.error('Error streaming file:', err);
+    if (!res.headersSent) {
       return res.status(500).json({
         success: false,
         message: 'Failed to download file'
       });
     }
+    res.end();
   });
 });
 

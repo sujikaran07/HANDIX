@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Container, Row, Col, Button, Alert, Spinner, Badge } from 'react-bootstrap';
+import { Card, Container, Row, Col, Button, Alert, Spinner, Badge, Modal, Form, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faChartLine, faChartPie, faChartBar, faTable, 
   faFileDownload, faPrint, faInfoCircle, faExclamationTriangle,
-  faExclamation 
+  faExclamation, faFilePdf, faFileCode
 } from '@fortawesome/free-solid-svg-icons';
 import { formatCurrency, formatDate, formatNumber } from '../../utils/formatters';
 import Chart from 'chart.js/auto';
 import { getChartConfig, prepareBarChartData, preparePieChartData, prepareLineChartData, getReportColors } from '../../utils/reportChartHelper';
 import '../../styles/admin/ReportViewForm.css';
+import axios from 'axios';
+
+// Fix for "process is not defined" error
+// Get API base URL from window.__env__ if available (set by the application),
+// or use a default URL as fallback
+import { API_BASE_URL } from '../../utils/environment';
 
 const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, appliedFilters = [] }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -92,7 +98,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     // Clean up on unmount
     return () => {
       if (barChartInstance.current) barChartInstance.current.destroy();
-      if (pieChartInstance.current) pieChartInstance.current.destroy();
+      if (pieChartInstance.current) barChartInstance.current.destroy();
       if (lineChartInstance.current) barChartInstance.current.destroy();
     };
   }, [reportData, activeTab, chartConfig]);
@@ -477,6 +483,17 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
   const LowStockAlert = ({ count }) => {
     if (!count || count === 0) return null;
     
+    return (
+      <Alert variant="warning" className="mb-4">
+        <div className="d-flex align-items-center">
+          <FontAwesomeIcon icon={faExclamation} className="me-2" />
+          <div>
+            <strong>{count} products are running low on stock</strong>
+            <p className="mb-0">Consider restocking these items soon.</p>
+          </div>
+        </div>
+      </Alert>
+    );
   };
 
   // Add function to check if a filter is being applied (for debugging)
@@ -502,6 +519,239 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     }
     // Default behavior - show graphs unless specified otherwise
     return true;
+  };
+
+  // Modify the handleExportPDF function to include all report data and configuration options
+  const handleExportPDF = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Prepare the export data with all necessary information
+      const exportData = {
+        reportData: reportData,
+        reportType: reportType,
+        dateRange: dateRange,
+        filters: {
+          // Pass all applied filters
+          ...(reportData.appliedFilters || {}),
+          // Ensure we pass the current view state
+          includeGraphs: true // Always include graphs in PDF exports
+        },
+        // Add PDF formatting options
+        pdfOptions: {
+          paperSize: 'a4', // Default to A4
+          orientation: 'portrait',
+          includeHeader: true,
+          includeFooter: true,
+          includeCharts: true,
+          includeDataTable: true
+        }
+      };
+      
+      // Send to API for PDF generation
+      const response = await axios.post(`${API_BASE_URL}/api/reports/export/pdf`, exportData);
+      
+      if (response.data.success) {
+        // Download the generated PDF
+        const downloadUrl = `${API_BASE_URL}/api/reports/download/${response.data.fileName}`;
+        
+        // Create a download link and trigger click
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${getReportTitle()}_${formatDate(new Date()).replace(/\//g, '-')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        showNotification('Report PDF exported successfully');
+      } else {
+        setError('Failed to generate PDF report');
+        showNotification('Failed to export PDF report', 'danger');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      setError(error.message || 'Failed to export PDF report');
+      showNotification('Error exporting PDF report', 'danger');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Add new function to allow customizing PDF export options
+  const [showPdfOptions, setShowPdfOptions] = useState(false);
+  const [pdfOptions, setPdfOptions] = useState({
+    paperSize: 'a4',
+    orientation: 'portrait',
+    includeCharts: true,
+    includeDataTable: true,
+    maxTableRows: 100
+  });
+
+  // PDF export options modal
+  const renderPdfOptionsModal = () => {
+    return (
+      <Modal show={showPdfOptions} onHide={() => setShowPdfOptions(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>PDF Export Options</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Paper Size</Form.Label>
+              <Form.Select 
+                value={pdfOptions.paperSize}
+                onChange={(e) => setPdfOptions({...pdfOptions, paperSize: e.target.value})}
+              >
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+                <option value="legal">Legal</option>
+              </Form.Select>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Orientation</Form.Label>
+              <Form.Select 
+                value={pdfOptions.orientation}
+                onChange={(e) => setPdfOptions({...pdfOptions, orientation: e.target.value})}
+              >
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </Form.Select>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Check 
+                type="checkbox"
+                id="include-charts"
+                label="Include Charts"
+                checked={pdfOptions.includeCharts}
+                onChange={(e) => setPdfOptions({...pdfOptions, includeCharts: e.target.checked})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Check 
+                type="checkbox"
+                id="include-data-table"
+                label="Include Data Table"
+                checked={pdfOptions.includeDataTable}
+                onChange={(e) => setPdfOptions({...pdfOptions, includeDataTable: e.target.checked})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Max Table Rows</Form.Label>
+              <Form.Control 
+                type="number"
+                min="10"
+                max="500"
+                value={pdfOptions.maxTableRows}
+                onChange={(e) => setPdfOptions({
+                  ...pdfOptions, 
+                  maxTableRows: Math.max(10, Math.min(500, parseInt(e.target.value) || 100))
+                })}
+              />
+              <Form.Text className="text-muted">
+                Maximum number of rows to include in data table (10-500)
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPdfOptions(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={() => {
+              setShowPdfOptions(false);
+              handleExportPDFWithOptions();
+            }}
+            style={{
+              backgroundColor: reportColors.primary,
+              borderColor: reportColors.primary
+            }}
+          >
+            Export PDF
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
+  // Function to handle PDF export with configured options
+  const handleExportPDFWithOptions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Prepare the export data with all necessary information and configured options
+      const exportData = {
+        reportData: reportData,
+        reportType: reportType,
+        dateRange: dateRange,
+        filters: {
+          ...(reportData.appliedFilters || {}),
+          includeGraphs: true
+        },
+        pdfOptions: pdfOptions
+      };
+      
+      // Send to API for PDF generation
+      const response = await axios.post(`${API_BASE_URL}/api/reports/export/pdf`, exportData);
+      
+      if (response.data.success) {
+        // Download the generated PDF
+        const downloadUrl = `${API_BASE_URL}/api/reports/download/${response.data.fileName}`;
+        
+        // Create a download link and trigger click
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${getReportTitle()}_${formatDate(new Date()).replace(/\//g, '-')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        showNotification('PDF exported successfully');
+      } else {
+        setError('Failed to generate PDF report');
+        showNotification('Failed to export PDF report', 'danger');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      setError(error.message || 'Failed to export PDF');
+      showNotification('Error exporting PDF report', 'danger');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Simple notification function to replace toast
+  const showNotification = (message, type = 'success') => {
+    // Create a bootstrap alert that auto-dismisses
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.minWidth = '300px';
+    alertDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+    
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto dismiss after 3 seconds
+    setTimeout(() => {
+      alertDiv.classList.remove('show');
+      setTimeout(() => alertDiv.remove(), 150);
+    }, 3000);
   };
 
   return (
@@ -533,7 +783,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
                   <Badge bg="info" className="ms-2" pill>Customizable Only</Badge>
                 }
                 {reportData?.appliedFilters?.bestSellers && 
-                  <Badge bg="success" className="ms-2" pill>Best Selling </Badge>
+                  <Badge bg="success" className="ms-2" pill>Best Selling</Badge>
                 }
               </p>
             </div>
@@ -545,17 +795,29 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
             <Button variant="outline-secondary" size="sm" className="me-2" onClick={handlePrint}>
               <FontAwesomeIcon icon={faPrint} className="me-1" /> Print
             </Button>
-            <Button 
-              size="sm" 
-              onClick={handleDownload}
-              style={{
-                backgroundColor: reportColors.primary,
-                borderColor: reportColors.primary,
-                color: 'white' 
-              }}
-            >
-              <FontAwesomeIcon icon={faFileDownload} className="me-1" /> Download
-            </Button>
+            <Dropdown className="d-inline-block">
+              <Dropdown.Toggle 
+                variant="primary"
+                size="sm"
+                style={{
+                  backgroundColor: reportColors.primary,
+                  borderColor: reportColors.primary
+                }}
+              >
+                <FontAwesomeIcon icon={faFileDownload} className="me-1" /> Export
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => setShowPdfOptions(true)}>
+                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> PDF (Advanced)
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleExportPDF}>
+                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> Quick PDF
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleDownload}>
+                  <FontAwesomeIcon icon={faFileCode} className="me-2" /> Raw Data (JSON)
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
         </Card.Header>
       </Card>
@@ -840,6 +1102,9 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       <div className="text-muted small text-center mt-4">
         <p>Report generated on {formatDate(new Date(), true)}</p>
       </div>
+      
+      {/* PDF Options Modal */}
+      {renderPdfOptionsModal()}
     </div>
   );
 };
