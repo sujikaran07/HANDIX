@@ -5,8 +5,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const FAQPage = () => {
   // FAQ data
-  const faqCategories = [
-    {
+  const faqCategories = [    {
       id: 'ordering',
       title: 'Ordering & Payment',
       faqs: [
@@ -18,7 +17,7 @@ const FAQPage = () => {
         {
           id: 'payment-methods',
           question: 'What payment methods do you accept?',
-          answer: 'We accept Visa, Mastercard, American Express credit/debit cards, PayPal, and bank transfers for international customers. All payments are processed securely.'
+          answer: 'We accept Visa, Mastercard, American Express credit/debit cards, PayPal, and bank transfers for international customers. All payments are processed securely. For details on Cash on Delivery and payment terms, please see our Terms & Policies page.'
         },
         {
           id: 'order-confirmation',
@@ -28,11 +27,10 @@ const FAQPage = () => {
         {
           id: 'cancel-order',
           question: 'Can I cancel or modify my order?',
-          answer: 'You can modify or cancel your order within 24 hours of placing it by contacting our customer service. After this period, orders enter the processing stage and cannot be modified or canceled.'
+          answer: 'For our detailed cancellation policy, please refer to our Terms & Policies page. Generally, you can modify or cancel your order within 24 hours of placing it by contacting our customer service.'
         }
       ]
-    },
-    {
+    },{
       id: 'shipping',
       title: 'Shipping & Delivery',
       faqs: [
@@ -40,11 +38,6 @@ const FAQPage = () => {
           id: 'shipping-time',
           question: 'How long will it take to receive my order?',
           answer: 'Shipping times vary depending on your location. For domestic orders within Sri Lanka, delivery typically takes 3-5 business days. International shipping usually takes 7-14 business days, depending on the destination country and local customs processes.'
-        },
-        {
-          id: 'shipping-cost',
-          question: 'How much is shipping?',
-          answer: 'Shipping costs are calculated based on the weight of your order and your delivery location. You can see the exact shipping cost during checkout before completing your payment. We offer free shipping on orders over $100 within Sri Lanka.'
         },
         {
           id: 'shipping-tracking',
@@ -57,25 +50,14 @@ const FAQPage = () => {
           answer: 'Yes, we ship to most countries worldwide. Please note that international orders may be subject to customs duties and import taxes, which are the responsibility of the recipient.'
         }
       ]
-    },
-    {
+    },    {
       id: 'returns',
       title: 'Returns & Exchanges',
       faqs: [
         {
-          id: 'return-policy',
-          question: 'What is your return policy?',
-          answer: 'We accept returns within 30 days of delivery if the product is in its original condition. Custom or personalized items cannot be returned unless there is a manufacturing defect. To initiate a return, please contact our customer service team.'
-        },
-        {
           id: 'return-process',
           question: 'How do I return an item?',
-          answer: 'To return an item, please contact our customer service with your order number and reason for return. We\'ll provide you with return instructions and a return shipping label (for domestic returns). Once we receive and inspect the returned item, we\'ll process your refund or exchange.'
-        },
-        {
-          id: 'refund-time',
-          question: 'When will I receive my refund?',
-          answer: 'Once we receive and inspect your return, we\'ll process your refund within 3-5 business days. Depending on your payment method and financial institution, it may take an additional 5-10 business days for the refund to appear in your account.'
+          answer: 'To return an item, please contact our customer service with your order number and reason for return. We\'ll provide you with return instructions. Please note that our detailed refund policies can be found on our Policies page.'
         },
         {
           id: 'damaged-items',
@@ -134,9 +116,10 @@ const FAQPage = () => {
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-8">Frequently Asked Questions</h1>
-            
-            <p className="text-gray-700 mb-8">
+              <p className="text-gray-700 mb-8">
               Find answers to the most common questions about our products, ordering process, shipping, and more.
+              For detailed information on shipping, payment, refund policies and other terms, please visit our 
+              <a href="/policies" className="text-primary hover:underline mx-1">Terms & Policies</a> page.
               If you can't find what you're looking for, please don't hesitate to <a href="/contact" className="text-primary hover:underline">contact us</a>.
             </p>
             
