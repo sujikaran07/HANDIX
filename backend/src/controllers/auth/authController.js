@@ -142,11 +142,10 @@ const generateOTP = () => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    
-    if (!email) {
+      if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
-    mail
+    
     const customer = await Customer.findOne({ where: { email } });
     
     if (!customer) {

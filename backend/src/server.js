@@ -46,6 +46,8 @@ const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
 const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
 const reportRoutes = require('./routes/reports/reportRoutes'); 
 const artisanReportRoutes = require('./routes/artisan/artisanReportRoutes');
+const discountRoutes = require('./routes/discounts/discountRoutes');
+const { Discount } = require('./models/discountModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -96,6 +98,10 @@ Order.hasMany(Transaction, { foreignKey: 'order_id', as: 'transactions' });
 Order.belongsTo(ShippingMethod, { foreignKey: 'shippingMethodId', as: 'shippingMethod' });
 ShippingMethod.hasMany(Order, { foreignKey: 'shippingMethodId', as: 'orders' });
 
+// Add association between Customer and Discount
+Customer.hasMany(Discount, { foreignKey: 'c_id', as: 'discounts', onDelete: 'CASCADE' });
+Discount.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+
 dotenv.config();
 
 const app = express();
@@ -139,6 +145,7 @@ app.use('/api/dashboard', adminDashboardRoutes);
 app.use('/api/artisan-dashboard', artisanDashboardRoutes);
 app.use('/api/reports', reportRoutes); 
 app.use('/api/artisan/reports', artisanReportRoutes); 
+app.use('/api/discounts', discountRoutes);
 
 // Register artisan routes
 app.use('/api/artisan', artisanRoutes);
