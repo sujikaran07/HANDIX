@@ -1,56 +1,88 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/db');
-const { Customer } = require('./customerModel');
 
 const Discount = sequelize.define('Discount', {
-  discount_id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+  discountId: {
+    type: DataTypes.INTEGER,
     primaryKey: true,
-    allowNull: false
+    autoIncrement: true,
+    field: 'DiscountId'
   },
-  c_id: {
-    type: DataTypes.STRING,
+  productId: {
+    type: DataTypes.STRING(10),
     allowNull: false,
+    field: 'ProductId',
     references: {
-      model: 'Customers',
-      key: 'c_id'
+      model: 'Inventory',
+      key: 'product_id'
+    },
+    onDelete: 'CASCADE'
+  },
+  discountCode: {
+    type: DataTypes.STRING(50),
+    allowNull: false,
+    unique: true,
+    field: 'DiscountCode'
+  },
+  description: {
+    type: DataTypes.TEXT,
+    field: 'Description'
+  },
+  discountType: {
+    type: DataTypes.STRING(20),
+    allowNull: false,
+    field: 'DiscountType',
+    validate: {
+      isIn: [['percentage', 'fixed']]
     }
   },
-  account_type: {
-    type: DataTypes.ENUM('Retail', 'Wholesale'),
+  value: {
+    type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
-    defaultValue: 'Retail'
+    field: 'Value'
   },
-  min_order_value: {
-    type: DataTypes.DECIMAL(12, 2),
-    allowNull: false
+  minOrderValue: {
+    type: DataTypes.DECIMAL(10, 2),
+    defaultValue: 0.00,
+    field: 'MinOrderValue'
   },
-  max_order_value: {
-    type: DataTypes.DECIMAL(12, 2),
-    allowNull: false
-  },
-  discount_percent: {
-    type: DataTypes.DECIMAL(5, 2),
-    allowNull: false
-  },
-  is_base_discount: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false
-  },
-  created_at: {
+  startDate: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+    field: 'StartDate'
   },
-  updated_at: {
+  endDate: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+    field: 'EndDate'
+  },
+  usageLimit: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    field: 'UsageLimit'
+  },
+  status: {
+    type: DataTypes.STRING(20),
+    defaultValue: 'active',
+    field: 'Status',
+    validate: {
+      isIn: [['active', 'expired', 'disabled']]
+    }
+  },
+  lastUpdated: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+    field: 'LastUpdated'
+  },
+  c_id: {
+    type: DataTypes.INTEGER,
+    references: {
+      model: 'Customer',
+      key: 'c_id'
+    },
+    onDelete: 'CASCADE'
   }
 }, {
   tableName: 'Discounts',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
+  timestamps: false
 });
 
 module.exports = { Discount };
