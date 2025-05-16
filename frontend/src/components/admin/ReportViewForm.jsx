@@ -67,7 +67,10 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
 
   // Initialize charts when reportData changes
   useEffect(() => {
-    if (!reportData || !reportData.data || reportData.data.length === 0) return;
+    if (!reportData || !reportData.data || reportData.data.length === 0) {
+      // Don't try to initialize charts if there's no data
+      return;
+    }
     
     // Clean up any existing charts
     if (barChartInstance.current) {
@@ -80,14 +83,18 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       lineChartInstance.current.destroy();
     }
     
+    // Only initialize charts if we have actual data
+    const hasRealData = reportData.data && reportData.data.length > 0 && 
+                        !reportData.isEmptyResponse; // Check for empty response flag
+    
     // Initialize charts if we have data and the canvas elements exist
-    if (barChartRef.current && chartConfig.showBarChart) {
+    if (hasRealData && barChartRef.current && chartConfig.showBarChart) {
       initBarChart();
     }
-    if (pieChartRef.current && chartConfig.showPieChart) {
+    if (hasRealData && pieChartRef.current && chartConfig.showPieChart) {
       initPieChart();
     }
-    if (lineChartRef.current && chartConfig.showLineChart) {
+    if (hasRealData && lineChartRef.current && chartConfig.showLineChart) {
       initLineChart();
     }
     
@@ -478,18 +485,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
   // Add this new component for displaying low stock alert
   const LowStockAlert = ({ count }) => {
     if (!count || count === 0) return null;
-    
-    return (
-      <Alert variant="warning" className="mb-4">
-        <div className="d-flex align-items-center">
-          <FontAwesomeIcon icon={faExclamation} className="me-2" />
-          <div>
-            <strong>{count} products are running low on stock</strong>
-            <p className="mb-0">Consider restocking these items soon.</p>
-          </div>
-        </div>
-      </Alert>
-    );
+  
   };
 
   // Add function to check if a filter is being applied (for debugging)

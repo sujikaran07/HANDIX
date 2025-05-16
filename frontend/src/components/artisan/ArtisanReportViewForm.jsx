@@ -1,21 +1,74 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button, Card, Alert, Row, Col, Table, Badge, Nav, Tab, Spinner } from 'react-bootstrap';
-import { formatCurrency, formatDate, formatNumber } from '../../utils/formatters';
+import { Card, Container, Row, Col, Button, Alert, Spinner, Badge, Modal, Form, Dropdown } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  FaArrowLeft, FaChartLine, FaChartPie, FaChartBar, FaTable, 
-  FaCloudDownloadAlt, FaPrint, FaInfoCircle, FaFilePdf, FaFileCode
-} from 'react-icons/fa';
+  faChartLine, faChartPie, faChartBar, faTable, 
+  faFileDownload, faPrint, faInfoCircle, faExclamationTriangle,
+  faExclamation, faFilePdf, faFileCode, faArrowLeft, 
+  faBoxOpen, faTools, faTruck, faCalendarCheck
+} from '@fortawesome/free-solid-svg-icons';
+import { formatCurrency, formatDate, formatNumber } from '../../utils/formatters';
 import Chart from 'chart.js/auto';
-import axios from 'axios';
-import { API_BASE_URL } from '../../utils/environment';
+import { getArtisanChartConfig, prepareBarChartData, preparePieChartData, prepareLineChartData } from '../../utils/reportChartHelper';
 import '../../styles/artisan/ArtisanReportViewForm.css';
+import axios from 'axios';
 
-const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick }) => {
-  const [activeKey, setActiveKey] = useState('dashboard');
-  const [loading, setLoading] = useState(false);
+const API_BASE_URL = 'http://localhost:5000';
+
+// Report type colors and icons mapping
+const reportTypeInfo = {
+  orders: {
+    title: 'Orders Report',
+    icon: faChartLine,
+    color: '#0d6efd',
+    gradientColor: '#0a58ca'
+  },
+  products: {
+    title: 'Products Report',
+    icon: faBoxOpen,
+    color: '#198754',
+    gradientColor: '#146c43'
+  },
+  assignments: {
+    title: 'Order Assignments',
+    icon: faTruck,
+    color: '#6f42c1',
+    gradientColor: '#5a32a3'
+  },
+  inventory: {
+    title: 'Customizable Inventory',
+    icon: faTools,
+    color: '#fd7e14',
+    gradientColor: '#ca6510'
+  },
+  'custom-performance': {
+    title: 'Custom Products Performance',
+    icon: faCalendarCheck,
+    color: '#20c997',
+    gradientColor: '#17a47b'
+  },
+  performance: {
+    title: 'Performance Report',
+    icon: faChartPie,
+    color: '#ffc107',
+    gradientColor: '#cc9a06'
+  }
+};
+
+const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick, appliedFilters = [] }) => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [chartConfig, setChartConfig] = useState({
+    showBarChart: true,
+    showPieChart: true,
+    showLineChart: true,
+    showTables: true,
+    showSummary: true
+  });
+  const [dashboardCharts, setDashboardCharts] = useState([]);
   
-  // Chart refs
+  // Refs for chart instances
   const barChartRef = useRef(null);
   const pieChartRef = useRef(null);
   const lineChartRef = useRef(null);
@@ -24,66 +77,161 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
   const barChartInstance = useRef(null);
   const pieChartInstance = useRef(null);
   const lineChartInstance = useRef(null);
-  
-  // Define report type colors
-  const reportTypeColors = {
-    orders: {
-      primary: '#0d6efd',
-      light: '#cfe2ff',
-      lighter: '#f0f7ff'
-    },
-    products: {
-      primary: '#198754',
-      light: '#d1e7dd',
-      lighter: '#f0f9f6'
-    }, 
-    performance: {
-      primary: '#6f42c1',
-      light: '#e2d9f3',
-      lighter: '#f3f0f9'
-    }
+
+  // Get report title based on type
+  const getReportTitle = () => {
+    return reportTypeInfo[reportType]?.title || 'Report';
   };
   
-  const currentColors = reportTypeColors[reportType] || reportTypeColors.orders;
+  // Get report icon based on type
+  const getReportIcon = () => {
+    return reportTypeInfo[reportType]?.icon || faChartLine;
+  };
   
-  // Initialize charts when component mounts
+  // Get report color based on type
+  const getReportColor = () => {
+    return reportTypeInfo[reportType]?.color || '#0d6efd';
+  };
+
+  // Determine which charts to show based on report type
   useEffect(() => {
-    // Clean up any existing charts
-    if (barChartInstance.current) barChartInstance.current.destroy();
-    if (pieChartInstance.current) pieChartInstance.current.destroy();
-    if (lineChartInstance.current) barChartInstance.current.destroy();
-    
-    // Create charts if we have data and are on the right tab
-    if (reportData && reportData.data && reportData.data.length > 0) {
-      if (activeKey === 'dashboard' || activeKey === 'charts') {
-        if (barChartRef.current) initBarChart();
-        if (pieChartRef.current) initPieChart();
-        if (lineChartRef.current) initLineChart();
-      }
+    const config = getArtisanChartConfig(reportType, reportData);
+    setChartConfig(config);
+    setDashboardCharts(config.dashboardCharts || []);
+  }, [reportType, reportData]);
+
+  // Initialize charts when reportData changes
+  useEffect(() => {
+    // Check explicitly for the isEmptyResponse flag first
+    if (reportData?.isEmptyResponse === true) {
+      console.log('Empty response detected, skipping chart initialization');
+      return;
     }
     
-    // Cleanup on unmount
+    if (!reportData || !reportData.data || reportData.data.length === 0) {
+      // Don't try to initialize charts if there's no data
+      return;
+    }
+    
+    // Clean up any existing charts
+    if (barChartInstance.current) {
+      barChartInstance.current.destroy();
+      barChartInstance.current = null;
+    }
+    if (pieChartInstance.current) {
+      pieChartInstance.current.destroy();
+      pieChartInstance.current = null;
+    }
+    if (lineChartInstance.current) {
+      lineChartInstance.current.destroy();
+      lineChartInstance.current = null;
+    }
+    
+    // Initialize charts if we have data and the canvas elements exist
+    if (barChartRef.current && chartConfig.showBarChart) {
+      initBarChart();
+    }
+    if (pieChartRef.current && chartConfig.showPieChart) {
+      initPieChart();
+    }
+    if (lineChartRef.current && chartConfig.showLineChart) {
+      initLineChart();
+    }
+    
+    // Clean up on unmount
     return () => {
       if (barChartInstance.current) barChartInstance.current.destroy();
       if (pieChartInstance.current) pieChartInstance.current.destroy();
       if (lineChartInstance.current) barChartInstance.current.destroy();
     };
-  }, [reportData, activeKey]);
-  
-  // Bar chart initialization
+  }, [reportData, activeTab, chartConfig]);
+
+  // Initialize bar chart
   const initBarChart = () => {
     const ctx = barChartRef.current.getContext('2d');
-    const chartData = prepareBarChartData();
+    const chartData = prepareBarChartData(reportType, reportData.data, true); // true for artisan specific
+    const reportColor = getReportColor();
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, reportColor);
+    gradient.addColorStop(1, reportColor + '80');
     
     barChartInstance.current = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: chartData.labels,
         datasets: [{
-          label: chartData.title,
+          label: chartConfig.barChartTitle || 'Values',
           data: chartData.values,
-          backgroundColor: generateGradientColors(currentColors.primary, chartData.labels.length),
-          borderColor: currentColors.primary,
+          backgroundColor: chartData.colors || gradient,
+          borderColor: reportColor,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                if (chartData.isCurrency) {
+                  return 'Rs. ' + value;
+                }
+                return value;
+              }
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                  label += ': ';
+                }
+                if (chartData.isCurrency) {
+                  label += formatCurrency(context.raw);
+                } else {
+                  label += formatNumber(context.raw);
+                }
+                return label;
+              }
+            }
+          }
+        }
+      }
+    });
+  };
+
+  // Initialize pie chart
+  const initPieChart = () => {
+    const ctx = pieChartRef.current.getContext('2d');
+    const chartData = preparePieChartData(reportType, reportData.data, true); // true for artisan specific
+    const reportColor = getReportColor();
+    
+    // Generate color palette based on report type
+    const colorPalette = [
+      reportColor,
+      reportColor + 'CC',
+      reportColor + '99',
+      reportColor + '66',
+      '#6c757d',
+      '#495057'
+    ];
+    
+    pieChartInstance.current = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: chartData.map(item => item.label),
+        datasets: [{
+          data: chartData.map(item => item.value),
+          backgroundColor: chartData.map((_, index) => colorPalette[index % colorPalette.length]),
+          borderColor: '#fff',
           borderWidth: 1
         }]
       },
@@ -92,97 +240,45 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
         maintainAspectRatio: false,
         plugins: {
           legend: {
-            display: false
-          },
-          title: {
-            display: true,
-            text: chartData.title
+            position: 'bottom',
+            labels: {
+              boxWidth: 15,
+              padding: 15
+            }
           },
           tooltip: {
             callbacks: {
               label: function(context) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (chartData.isCurrency) {
-                  label += formatCurrency(context.raw);
-                } else {
-                  label += formatNumber(context.raw);
-                }
-                return label;
+                const item = chartData[context.dataIndex];
+                const value = ['orders', 'custom-performance', 'assignments'].includes(reportType) ? 
+                  formatCurrency(item.value) : formatNumber(item.value);
+                return `${item.label}: ${value} (${item.percentage.toFixed(1)}%)`;
               }
             }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                if (chartData.isCurrency) {
-                  return 'Rs. ' + value;
-                }
-                return value;
-              }
+          },
+          title: {
+            display: true,
+            text: chartConfig.pieChartTitle || 'Distribution',
+            color: reportColor,
+            font: {
+              size: 16
             }
           }
         }
       }
     });
   };
-  
-  // Pie chart initialization
-  const initPieChart = () => {
-    const ctx = pieChartRef.current.getContext('2d');
-    const chartData = preparePieChartData();
-    
-    pieChartInstance.current = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: chartData.labels,
-        datasets: [{
-          data: chartData.values,
-          backgroundColor: generateGradientColors(currentColors.primary, chartData.labels.length),
-          borderColor: '#ffffff',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom'
-          },
-          title: {
-            display: true,
-            text: chartData.title
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const label = context.label || '';
-                const value = context.raw;
-                const total = context.dataset.data.reduce((acc, data) => acc + data, 0);
-                const percentage = Math.round((value / total) * 100);
-                
-                if (chartData.isCurrency) {
-                  return `${label}: ${formatCurrency(value)} (${percentage}%)`;
-                }
-                return `${label}: ${formatNumber(value)} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      }
-    });
-  };
-  
-  // Line chart initialization
+
+  // Initialize line chart
   const initLineChart = () => {
     const ctx = lineChartRef.current.getContext('2d');
-    const chartData = prepareLineChartData();
+    const chartData = prepareLineChartData(reportType, reportData, true); // true for artisan specific
+    const reportColor = getReportColor();
+    
+    // Create gradient fill
+    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, reportColor + '40');
+    gradient.addColorStop(1, reportColor + '05');
     
     lineChartInstance.current = new Chart(ctx, {
       type: 'line',
@@ -191,23 +287,35 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
         datasets: [{
           label: chartData.title,
           data: chartData.values,
-          backgroundColor: `${currentColors.primary}20`,
-          borderColor: currentColors.primary,
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true,
-          pointBackgroundColor: currentColors.primary,
+          backgroundColor: gradient,
+          borderColor: reportColor,
+          pointBackgroundColor: reportColor,
+          pointBorderColor: '#fff',
           pointRadius: 4,
-          pointHoverRadius: 6
+          borderWidth: 2,
+          tension: 0.3,
+          fill: true
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value) {
+                if (chartData.isCurrency) {
+                  return 'Rs. ' + value;
+                }
+                return value;
+              }
+            }
+          }
+        },
         plugins: {
-          title: {
-            display: true,
-            text: chartData.title
+          legend: {
+            display: false
           },
           tooltip: {
             callbacks: {
@@ -224,301 +332,394 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
                 return label;
               }
             }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              callback: function(value) {
-                if (chartData.isCurrency) {
-                  return 'Rs. ' + value;
-                }
-                return value;
-              }
+          },
+          title: {
+            display: true,
+            text: chartConfig.lineChartTitle || chartData.title,
+            color: reportColor,
+            font: {
+              size: 16
             }
           }
         }
       }
     });
   };
-  
-  // Prepare data for bar chart based on report type
-  const prepareBarChartData = () => {
-    let data = { labels: [], values: [], title: '', isCurrency: false };
+
+  // Helper function to detect currency fields
+  const shouldUseCurrency = (key) => {
+    const fieldName = key.toLowerCase();
     
-    if (!reportData || !reportData.data || reportData.data.length === 0) return data;
-    
-    switch(reportType) {
-      case 'orders':
-        // Group orders by product or category
-        const ordersByProduct = {};
-        reportData.data.forEach(order => {
-          if (!ordersByProduct[order.product_name]) {
-            ordersByProduct[order.product_name] = 0;
-          }
-          ordersByProduct[order.product_name] += parseFloat(order.total_amount || 0);
-        });
-        
-        // Sort by value and take top 7
-        const sortedOrders = Object.entries(ordersByProduct)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 7);
-        
-        data.labels = sortedOrders.map(([name]) => name);
-        data.values = sortedOrders.map(([_, value]) => value);
-        data.title = 'Top Products by Sales Value';
-        data.isCurrency = true;
-        break;
-        
-      case 'products':
-        // Group by product inventory
-        const sortedProducts = [...reportData.data]
-          .sort((a, b) => b.stock_level - a.stock_level)
-          .slice(0, 7);
-        
-        data.labels = sortedProducts.map(product => product.product_name);
-        data.values = sortedProducts.map(product => product.stock_level);
-        data.title = 'Current Inventory Levels';
-        break;
-        
-      case 'performance':
-        // Performance by period
-        const sortedPerformance = [...reportData.data];
-        
-        data.labels = sortedPerformance.map(perf => perf.period);
-        data.values = sortedPerformance.map(perf => parseFloat(perf.completed_orders));
-        data.title = 'Completed Orders by Period';
-        break;
-        
-      default:
-        // Default empty data
-        data.title = 'No Data Available';
-        break;
-    }
-    
-    return data;
+    // Check for currency-related field name patterns
+    return fieldName.includes('sales') || 
+           fieldName.includes('revenue') || 
+           fieldName.includes('amount') ||
+           fieldName.includes('price') || 
+           fieldName.includes('value') ||
+           fieldName.includes('spent');
   };
-  
-  // Prepare data for pie chart based on report type
-  const preparePieChartData = () => {
-    let data = { labels: [], values: [], title: '', isCurrency: false };
+
+  // Format value based on field name
+  const formatValue = (value, field) => {
+    if (value === null || value === undefined) return '-';
     
-    if (!reportData || !reportData.data || reportData.data.length === 0) return data;
-    
-    switch(reportType) {
-      case 'orders':
-        // Group orders by status
-        const ordersByStatus = {};
-        reportData.data.forEach(order => {
-          if (!ordersByStatus[order.status]) {
-            ordersByStatus[order.status] = 0;
-          }
-          ordersByStatus[order.status]++;
-        });
-        
-        data.labels = Object.keys(ordersByStatus);
-        data.values = Object.values(ordersByStatus);
-        data.title = 'Orders by Status';
-        break;
-        
-      case 'products':
-        // Group products by category
-        const productsByCategory = {};
-        reportData.data.forEach(product => {
-          if (!productsByCategory[product.category]) {
-            productsByCategory[product.category] = 0;
-          }
-          productsByCategory[product.category]++;
-        });
-        
-        data.labels = Object.keys(productsByCategory);
-        data.values = Object.values(productsByCategory);
-        data.title = 'Products by Category';
-        break;
-        
-      case 'performance':
-        // Performance metrics distribution
-        const performanceMetrics = {
-          'On Time': 0,
-          'Late': 0,
-          'Early': 0
-        };
-        
-        reportData.data.forEach(perf => {
-          performanceMetrics['On Time'] += parseInt(perf.on_time || 0);
-          performanceMetrics['Late'] += parseInt(perf.late || 0);
-          performanceMetrics['Early'] += parseInt(perf.early || 0);
-        });
-        
-        data.labels = Object.keys(performanceMetrics);
-        data.values = Object.values(performanceMetrics);
-        data.title = 'Delivery Performance';
-        break;
-        
-      default:
-        // Default empty data
-        data.title = 'No Data Available';
-        break;
+    // Check if value is a date
+    if (field && field.toLowerCase().includes('date')) {
+      return formatDate(value);
     }
     
-    return data;
-  };
-  
-  // Prepare data for line chart based on report type
-  const prepareLineChartData = () => {
-    let data = { labels: [], values: [], title: '', isCurrency: false };
-    
-    if (!reportData || !reportData.data || reportData.data.length === 0) return data;
-    
-    switch(reportType) {
-      case 'orders':
-        // Group orders by date
-        const ordersByDate = {};
-        reportData.data.forEach(order => {
-          const date = formatDate(order.date);
-          if (!ordersByDate[date]) {
-            ordersByDate[date] = 0;
-          }
-          ordersByDate[date] += parseFloat(order.total_amount || 0);
-        });
-        
-        // Sort by date
-        const sortedDates = Object.keys(ordersByDate).sort((a, b) => {
-          return new Date(a) - new Date(b);
-        });
-        
-        data.labels = sortedDates;
-        data.values = sortedDates.map(date => ordersByDate[date]);
-        data.title = 'Sales Trend Over Time';
-        data.isCurrency = true;
-        break;
-        
-      case 'products':
-        // Product sales over time
-        // Assuming we have a date field in the data
-        const productTrend = {};
-        reportData.data.forEach(product => {
-          if (product.sales_data) {
-            Object.entries(product.sales_data).forEach(([date, value]) => {
-              if (!productTrend[date]) {
-                productTrend[date] = 0;
-              }
-              productTrend[date] += parseFloat(value || 0);
-            });
-          }
-        });
-        
-        const sortedProductDates = Object.keys(productTrend).sort((a, b) => {
-          return new Date(a) - new Date(b);
-        });
-        
-        data.labels = sortedProductDates;
-        data.values = sortedProductDates.map(date => productTrend[date]);
-        data.title = 'Product Sales Trend';
-        data.isCurrency = true;
-        break;
-        
-      case 'performance':
-        // Rating trend over time
-        data.labels = reportData.data.map(perf => perf.period);
-        data.values = reportData.data.map(perf => parseFloat(perf.rating || 0));
-        data.title = 'Rating Trend';
-        break;
-        
-      default:
-        // Default empty data
-        data.title = 'No Data Available';
-        break;
-    }
-    
-    return data;
-  };
-  
-  // Generate gradient colors based on primary color
-  const generateGradientColors = (baseColor, count) => {
-    const colors = [];
-    
-    // Handle empty or invalid inputs
-    if (!baseColor || !count || count < 1) {
-      return ['#0d6efd', '#5da0e6', '#70b0ea', '#83c0ee'];
-    }
-    
-    try {
-      // Extract RGB values from hex color
-      const r = parseInt(baseColor.slice(1, 3), 16);
-      const g = parseInt(baseColor.slice(3, 5), 16);
-      const b = parseInt(baseColor.slice(5, 7), 16);
-      
-      // Generate variations
-      for (let i = 0; i < count; i++) {
-        const opacity = 1 - (i * 0.7 / count);
-        colors.push(`rgba(${r}, ${g}, ${b}, ${Math.max(0.3, opacity)})`);
+    // Check if it's a number
+    if (typeof value === 'number' || !isNaN(parseFloat(value))) {
+      if (field && shouldUseCurrency(field)) {
+        return formatCurrency(value);
       }
-    } catch (error) {
-      console.error('Error generating gradient colors:', error);
-      // Fallback colors
-      return ['#0d6efd', '#5da0e6', '#70b0ea', '#83c0ee'];
+      return formatNumber(value);
     }
     
-    return colors;
+    return String(value);
+  };
+
+  // Render summary cards with report colors
+  const renderSummaryCards = () => {
+    if (!reportData || !reportData.summary) {
+      return (
+        <Alert variant="info">
+          <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+          No summary data available for this report.
+        </Alert>
+      );
+    }
+    
+    const summary = reportData.summary;
+    const reportColor = getReportColor();
+    
+    // Exclude fields that shouldn't be displayed as cards
+    const excludeFields = ['filterApplied', 'filterType'];
+    
+    return (
+      <Row className="g-3 mb-4">
+        {Object.entries(summary).map(([key, summaryValue], index) => {
+          // Skip fields in exclude list
+          if (excludeFields.includes(key)) return null;
+          
+          // Format the display name
+          const displayName = key
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/_/g, ' ')
+            .replace(/^./, str => str.toUpperCase());
+          
+          // Format the value based on the key name
+          let formattedValue;
+          if (typeof summaryValue === 'number') {
+            if (shouldUseCurrency(key)) {
+              formattedValue = formatCurrency(summaryValue);
+            } else {
+              formattedValue = formatNumber(summaryValue);
+            }
+          } else {
+            formattedValue = summaryValue.toString();
+          }
+          
+          // Add special styling for certain values (like low stock or urgent orders)
+          let valueStyle = { color: reportColor };
+          let badgeVariant = null;
+          
+          if (key === 'lowStockProducts' && summaryValue > 0) {
+            valueStyle.color = '#ffc107';
+            badgeVariant = 'warning';
+          } else if (key === 'outOfStockProducts' && summaryValue > 0) {
+            valueStyle.color = '#dc3545';
+            badgeVariant = 'danger';
+          } else if (key === 'urgentOrders' && summaryValue > 0) {
+            valueStyle.color = '#dc3545';
+            badgeVariant = 'danger';
+          }
+          
+          // Card style with gradient border
+          const cardStyle = {
+            borderLeft: `4px solid ${reportColor}`,
+            borderRadius: '0.5rem',
+            transition: 'transform 0.2s',
+            boxShadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)'
+          };
+
+          return (
+            <Col md={4} sm={6} key={index}>
+              <Card className="h-100" style={cardStyle}>
+                <Card.Body className="p-3">
+                  <div className="d-flex flex-column align-items-center text-center">
+                    <h3 style={valueStyle} className="mb-1">
+                      {formattedValue}
+                      {badgeVariant && (
+                        <Badge bg={badgeVariant} className="ms-2" pill>!</Badge>
+                      )}
+                    </h3>
+                    <p className="text-muted mb-0">{displayName}</p>
+                  </div>
+                </Card.Body>
+              </Card>
+            </Col>
+          );
+        })}
+      </Row>
+    );
+  };
+
+  // Add this component after the renderSummaryCards method
+  // This will display the specific cards for order assignments
+
+  const renderOrderAssignmentCards = () => {
+    if (!reportData || !reportData.summary) {
+      return null;
+    }
+    
+    const summary = reportData.summary;
+    const reportColor = getReportColor();
+    
+    // Only show for orders report type
+    if (reportType !== 'orders') return null;
+    
+    return (
+      <Row className="g-3 mb-4">
+        {/* Assigned Orders Card */}
+        <Col md={4} sm={6}>
+          <Card className="h-100" style={{
+            borderLeft: `4px solid ${reportColor}`,
+            borderRadius: '0.5rem',
+            transition: 'transform 0.2s',
+            boxShadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)'
+          }}>
+            <Card.Body className="p-3">
+              <div className="d-flex flex-column align-items-center text-center">
+                <h3 style={{ color: reportColor }} className="mb-1">
+                  {formatNumber(summary.assignedOrderCount || 0)}
+                </h3>
+                <p className="text-muted mb-0">Assigned Orders</p>
+                <div className="mt-2 small text-muted">
+                  Orders specifically assigned to you
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        
+        {/* Customized Orders Card */}
+        <Col md={4} sm={6}>
+          <Card className="h-100" style={{
+            borderLeft: `4px solid #20c997`,
+            borderRadius: '0.5rem',
+            transition: 'transform 0.2s',
+            boxShadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)'
+          }}>
+            <Card.Body className="p-3">
+              <div className="d-flex flex-column align-items-center text-center">
+                <h3 style={{ color: '#20c997' }} className="mb-1">
+                  {formatNumber(summary.customizedCount || 0)}
+                </h3>
+                <p className="text-muted mb-0">Customized Orders</p>
+                <div className="mt-2 small text-muted">
+                  Orders with customization requests
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        
+        {/* Total Value Card */}
+        <Col md={4} sm={6}>
+          <Card className="h-100" style={{
+            borderLeft: `4px solid #fd7e14`,
+            borderRadius: '0.5rem',
+            transition: 'transform 0.2s',
+            boxShadow: '0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)'
+          }}>
+            <Card.Body className="p-3">
+              <div className="d-flex flex-column align-items-center text-center">
+                <h3 style={{ color: '#fd7e14' }} className="mb-1">
+                  {formatCurrency(summary.assignedOrdersValue || 0)}
+                </h3>
+                <p className="text-muted mb-0">Assigned Orders Value</p>
+                <div className="mt-2 small text-muted">
+                  Total value of your assigned orders
+                </div>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    );
+  };
+
+  // Render data table
+  const renderDataTable = () => {
+    // First check for isEmptyResponse flag
+    if (reportData?.isEmptyResponse === true || !reportData || !reportData.data || reportData.data.length === 0) {
+      return (
+        <Alert variant="info">
+          <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+          {reportData?.message || 'No data available for this report.'}
+        </Alert>
+      );
+    }
+    
+    const data = reportData.data;
+    
+    // Exclude fields that shouldn't be displayed in the table
+    const excludeFields = ['id', 'entry_id', 'e_id', 'artisan_id', 'customization_requests'];
+    
+    // Get column headers excluding excluded fields
+    const headers = Object.keys(data[0]).filter(key => !excludeFields.includes(key));
+    
+    return (
+      <div className="table-responsive">
+        <table className="table table-striped table-hover">
+          <thead>
+            <tr>
+              {headers.map((header, index) => (
+                <th key={index}>
+                  {header.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {headers.map((header, colIndex) => {
+                  // Format cell values based on header name
+                  let cellValue = row[header];
+                  
+                  if (header.toLowerCase().includes('date')) {
+                    cellValue = formatDate(cellValue);
+                  } else if (header.toLowerCase().includes('days_remaining')) {
+                    if (cellValue !== null) {
+                      const daysNum = parseInt(cellValue);
+                      const textClass = daysNum <= 2 ? 'text-danger' : 
+                                      daysNum <= 5 ? 'text-warning' : 'text-success';
+                      cellValue = <span className={textClass}>{daysNum} days</span>;
+                    }
+                  } else if (header === 'order_status') {
+                    const statusClass = getStatusClass(cellValue);
+                    cellValue = <Badge bg={statusClass}>{cellValue}</Badge>;
+                  } else if (header === 'is_customized') {
+                    cellValue = cellValue ? <Badge bg="info">Yes</Badge> : 'No';
+                  } else {
+                    cellValue = formatValue(cellValue, header);
+                  }
+                  
+                  return <td key={colIndex}>{cellValue}</td>;
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   };
   
-  // Handle print button click
+  // Helper function to get badge color for order status
+  const getStatusClass = (status) => {
+    if (!status) return 'secondary';
+    
+    switch (status.toLowerCase()) {
+      case 'processing': return 'primary';
+      case 'in production': return 'info';
+      case 'ready for shipping': return 'warning';
+      case 'shipped': return 'success';
+      case 'delivered': return 'success';
+      case 'cancelled': return 'danger';
+      default: return 'secondary';
+    }
+  };
+
+  // Handle print function
   const handlePrint = () => {
     window.print();
   };
   
-  // Handle download report as JSON
-  const handleDownloadJson = () => {
+  // Handle download function
+  const handleDownload = () => {
+    if (!reportData) return;
+    
+    // Create a downloadable JSON file
     const element = document.createElement('a');
-    const fileData = JSON.stringify(reportData, null, 2);
-    const blob = new Blob([fileData], { type: 'application/json' });
-    element.href = URL.createObjectURL(blob);
-    element.download = `${getReportTitle()}_${formatDate(new Date())}.json`;
+    const file = new Blob([JSON.stringify(reportData, null, 2)], {type: 'application/json'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${getReportTitle()}_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
   };
-  
-  // Handle export as PDF
-  const handleExportPdf = async () => {
+
+  // Add function to check if a filter is being applied
+  const isFilterApplied = () => {
+    if (reportData && reportData.appliedFilters) {
+      const filters = reportData.appliedFilters;
+      return Object.keys(filters).some(key => 
+        filters[key] !== '' && 
+        filters[key] !== null && 
+        (Array.isArray(filters[key]) ? filters[key].length > 0 : true)
+      );
+    }
+    return appliedFilters && appliedFilters.length > 0;
+  };
+
+  // Check if graphs should be shown
+  const shouldShowGraphs = () => {
+    // First check for isEmptyResponse flag
+    if (reportData?.isEmptyResponse === true) {
+      return false;
+    }
+
+    if (reportData && reportData.appliedFilters) {
+      return reportData.appliedFilters.includeGraphs !== false;
+    }
+    return true;
+  };
+
+  // Handle PDF export
+  const handleExportPDF = async () => {
     try {
-      setLoading(true);
+      setIsLoading(true);
       setError(null);
       
-      // Prepare export data
+      // Prepare the export data
       const exportData = {
         reportData: reportData,
         reportType: reportType,
         dateRange: dateRange,
-        artisanId: reportData.artisanId || localStorage.getItem('artisanId'),
+        filters: {
+          ...(reportData.appliedFilters || {}),
+          includeGraphs: true
+        },
+        artisanId: reportData.artisanId,
         pdfOptions: {
-          paperSize: 'a4',
+          paperSize: 'a4', 
           orientation: 'portrait',
+          includeHeader: true,
+          includeFooter: true,
           includeCharts: true,
           includeDataTable: true
         }
       };
       
-      // Send to API
-      const response = await axios.post(
-        `${API_BASE_URL}/api/artisan/reports/export/pdf`,
-        exportData
-      );
+      // Send to API for PDF generation
+      const response = await axios.post(`${API_BASE_URL}/api/artisan/report/export/pdf`, exportData);
       
       if (response.data.success) {
-        // Download the PDF
-        const downloadUrl = `${API_BASE_URL}/api/artisan/reports/download/${response.data.fileName}`;
+        // Download the generated PDF
+        const downloadUrl = `${API_BASE_URL}/api/artisan/report/download/${response.data.fileName}`;
         
+        // Create a download link and trigger click
         const link = document.createElement('a');
         link.href = downloadUrl;
-        link.download = `${getReportTitle()}_${formatDate(new Date())}.pdf`;
+        link.download = `${getReportTitle()}_${formatDate(new Date()).replace(/\//g, '-')}.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         
-        showNotification('PDF exported successfully');
+        // Show success message
+        showNotification('Report PDF exported successfully');
       } else {
         setError('Failed to generate PDF report');
         showNotification('Failed to export PDF report', 'danger');
@@ -528,15 +729,168 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
       setError(error.message || 'Failed to export PDF report');
       showNotification('Error exporting PDF report', 'danger');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-  
-  // Show notification function
+
+  // Add function to show PDF options
+  const [showPdfOptions, setShowPdfOptions] = useState(false);
+  const [pdfOptions, setPdfOptions] = useState({
+    paperSize: 'a4',
+    orientation: 'portrait',
+    includeCharts: true,
+    includeDataTable: true,
+    maxTableRows: 100
+  });
+
+  // PDF export options modal
+  const renderPdfOptionsModal = () => {
+    const reportColor = getReportColor();
+    
+    return (
+      <Modal show={showPdfOptions} onHide={() => setShowPdfOptions(false)}>
+        <Modal.Header closeButton style={{ backgroundColor: reportColor + '10' }}>
+          <Modal.Title style={{ color: reportColor }}>PDF Export Options</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Paper Size</Form.Label>
+              <Form.Select 
+                value={pdfOptions.paperSize}
+                onChange={(e) => setPdfOptions({...pdfOptions, paperSize: e.target.value})}
+              >
+                <option value="a4">A4</option>
+                <option value="letter">Letter</option>
+                <option value="legal">Legal</option>
+              </Form.Select>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Orientation</Form.Label>
+              <Form.Select 
+                value={pdfOptions.orientation}
+                onChange={(e) => setPdfOptions({...pdfOptions, orientation: e.target.value})}
+              >
+                <option value="portrait">Portrait</option>
+                <option value="landscape">Landscape</option>
+              </Form.Select>
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Check 
+                type="checkbox"
+                id="include-charts"
+                label="Include Charts"
+                checked={pdfOptions.includeCharts}
+                onChange={(e) => setPdfOptions({...pdfOptions, includeCharts: e.target.checked})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Check 
+                type="checkbox"
+                id="include-data-table"
+                label="Include Data Table"
+                checked={pdfOptions.includeDataTable}
+                onChange={(e) => setPdfOptions({...pdfOptions, includeDataTable: e.target.checked})}
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Max Table Rows</Form.Label>
+              <Form.Control 
+                type="number"
+                min="10"
+                max="500"
+                value={pdfOptions.maxTableRows}
+                onChange={(e) => setPdfOptions({
+                  ...pdfOptions, 
+                  maxTableRows: Math.max(10, Math.min(500, parseInt(e.target.value) || 100))
+                })}
+              />
+              <Form.Text className="text-muted">
+                Maximum number of rows to include in data table (10-500)
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPdfOptions(false)}>
+            Cancel
+          </Button>
+          <Button 
+            variant="primary" 
+            onClick={() => {
+              setShowPdfOptions(false);
+              handleExportPDFWithOptions();
+            }}
+            style={{
+              backgroundColor: reportColor,
+              borderColor: reportColor
+            }}
+          >
+            Export PDF
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    );
+  };
+
+  // Function to handle PDF export with configured options
+  const handleExportPDFWithOptions = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // Prepare the export data with options
+      const exportData = {
+        reportData: reportData,
+        reportType: reportType,
+        dateRange: dateRange,
+        filters: {
+          ...(reportData.appliedFilters || {}),
+          includeGraphs: true
+        },
+        artisanId: reportData.artisanId,
+        pdfOptions: pdfOptions
+      };
+      
+      // Send to API for PDF generation
+      const response = await axios.post(`${API_BASE_URL}/api/artisan/report/export/pdf`, exportData);
+      
+      if (response.data.success) {
+        // Download the generated PDF
+        const downloadUrl = `${API_BASE_URL}/api/artisan/report/download/${response.data.fileName}`;
+        
+        // Create a download link and trigger click
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `${getReportTitle()}_${formatDate(new Date()).replace(/\//g, '-')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show success message
+        showNotification('PDF exported successfully');
+      } else {
+        setError('Failed to generate PDF report');
+        showNotification('Failed to export PDF report', 'danger');
+      }
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      setError(error.message || 'Failed to export PDF');
+      showNotification('Error exporting PDF report', 'danger');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Simple notification function
   const showNotification = (message, type = 'success') => {
     // Create a bootstrap alert that auto-dismisses
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed art-notification`;
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alertDiv.style.top = '20px';
     alertDiv.style.right = '20px';
     alertDiv.style.zIndex = '9999';
@@ -557,480 +911,414 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick 
     }, 3000);
   };
   
-  // Get formatted report title
-  const getReportTitle = () => {
-    switch(reportType) {
-      case 'orders': return 'Artisan Order Report';
-      case 'products': return 'Artisan Product Report';
-      case 'performance': return 'Artisan Performance Report';
-      default: return 'Artisan Report';
-    }
-  };
-  
-  // Render summary cards based on report type
-  const renderSummaryCards = () => {
-    if (!reportData || !reportData.summary) {
-      return (
-        <Alert variant="info" className="art-alert-info">
-          <FaInfoCircle className="me-2" />
-          No summary data available for this report.
-        </Alert>
-      );
-    }
+  // Render alerts for specific report types
+  const renderSpecialAlerts = () => {
+    const reportColor = getReportColor();
     
-    return (
-      <Row className="g-3 mb-4 art-summary-row">
-        {Object.entries(reportData.summary).map(([key, value], index) => {
-          // Skip internal fields
-          if (['filterApplied', 'filterType'].includes(key)) return null;
-          
-          // Format display name
-          const displayName = key
-            .replace(/([A-Z])/g, ' $1')
-            .replace(/_/g, ' ')
-            .replace(/^./, str => str.toUpperCase());
-            
-          // Format value
-          let formattedValue;
-          if (typeof value === 'number') {
-            if (key.toLowerCase().includes('sales') || 
-                key.toLowerCase().includes('revenue') ||
-                key.toLowerCase().includes('amount')) {
-              formattedValue = formatCurrency(value);
-            } else {
-              formattedValue = formatNumber(value);
-            }
-          } else if (typeof value === 'string' && !isNaN(parseFloat(value))) {
-            if (key.toLowerCase().includes('sales') || 
-                key.toLowerCase().includes('revenue') ||
-                key.toLowerCase().includes('amount')) {
-              formattedValue = formatCurrency(parseFloat(value));
-            } else {
-              formattedValue = formatNumber(parseFloat(value));
-            }
-          } else {
-            formattedValue = value;
-          }
-          
-          return (
-            <Col md={4} sm={6} key={index}>
-              <Card className="art-summary-card h-100" style={{borderLeftColor: currentColors.primary}}>
-                <Card.Body className="p-3 d-flex flex-column align-items-center text-center">
-                  <h5 className="mb-1 art-summary-value" style={{color: currentColors.primary}}>{formattedValue}</h5>
-                  <p className="mb-0 small text-muted art-summary-label">{displayName}</p>
-                </Card.Body>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
-    );
-  };
-  
-  // Render report data table
-  const renderDataTable = () => {
-    if (!reportData || !reportData.data || reportData.data.length === 0) {
-      return (
-        <Alert variant="info" className="art-alert-info">
-          <FaInfoCircle className="me-2" />
-          No data available for this report.
-        </Alert>
-      );
+    // Low stock alert for inventory report
+    if (reportType === 'inventory' && reportData && reportData.summary) {
+      const { lowStockProducts, outOfStockProducts } = reportData.summary;
+      
+      if (outOfStockProducts > 0) {
+        return (
+          <Alert variant="danger" className="mb-4">
+            <div className="d-flex align-items-center">
+              <div className="me-3">
+                <FontAwesomeIcon icon={faExclamationTriangle} size="lg" />
+              </div>
+              <div>
+                <h5 className="alert-heading mb-1">Stock Alert</h5>
+                <p className="mb-0">
+                  <strong>{outOfStockProducts}</strong> customizable products are out of stock. 
+                  {lowStockProducts > 0 && <span> Additionally, <strong>{lowStockProducts}</strong> products are running low.</span>}
+                </p>
+              </div>
+            </div>
+          </Alert>
+        );
+      } else if (lowStockProducts > 0) {
+        return (
+          <Alert variant="warning" className="mb-4">
+            <div className="d-flex align-items-center">
+              <div className="me-3">
+                <FontAwesomeIcon icon={faExclamation} size="lg" />
+              </div>
+              <div>
+                <h5 className="alert-heading mb-1">Low Stock Warning</h5>
+                <p className="mb-0"><strong>{lowStockProducts}</strong> customizable products are running low on stock.</p>
+              </div>
+            </div>
+          </Alert>
+        );
+      }
     }
     
-    // Get table headers (excluding any internal fields)
-    const excludeFields = ['id', 'artisan_id'];
-    const headers = Object.keys(reportData.data[0])
-      .filter(key => !excludeFields.includes(key.toLowerCase()));
+    // Urgent orders alert for assignments report
+    if (reportType === 'assignments' && reportData && reportData.summary) {
+      const { urgentOrders } = reportData.summary;
+      
+      if (urgentOrders > 0) {
+        return (
+          <Alert variant="warning" className="mb-4" style={{ borderLeft: `4px solid ${reportColor}` }}>
+            <div className="d-flex align-items-center">
+              <div className="me-3">
+                <FontAwesomeIcon icon={faTruck} size="lg" style={{ color: reportColor }} />
+              </div>
+              <div>
+                <h5 className="alert-heading mb-1" style={{ color: reportColor }}>Urgent Orders</h5>
+                <p className="mb-0">You have <strong>{urgentOrders}</strong> orders due within the next 3 days.</p>
+              </div>
+            </div>
+          </Alert>
+        );
+      }
+    }
     
-    return (
-      <div className="table-responsive art-table-container">
-        <Table striped hover bordered className="art-data-table">
-          <thead>
-            <tr>
-              {headers.map((header, index) => (
-                <th key={index} className="art-table-header">
-                  {header.replace(/_/g, ' ').replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.data.map((row, rowIndex) => (
-              <tr key={rowIndex} className="art-table-row">
-                {headers.map((header, colIndex) => {
-                  let cellValue = row[header];
-                  
-                  // Format cell values based on content
-                  if (header.toLowerCase().includes('date') && cellValue) {
-                    cellValue = formatDate(cellValue);
-                  } else if (header.toLowerCase() === 'status') {
-                    // Color-code status badges
-                    let variant;
-                    switch(String(cellValue).toLowerCase()) {
-                      case 'completed':
-                      case 'delivered':
-                        variant = 'success';
-                        break;
-                      case 'processing':
-                      case 'in progress':
-                        variant = 'primary';
-                        break;
-                      case 'pending':
-                      case 'on hold':
-                        variant = 'warning';
-                        break;
-                      case 'cancelled':
-                        variant = 'danger';
-                        break;
-                      default:
-                        variant = 'secondary';
-                    }
-                    
-                    cellValue = <Badge bg={variant} className="art-status-badge">{cellValue}</Badge>;
-                  } else if (header.toLowerCase().includes('amount') || 
-                             header.toLowerCase().includes('price') ||
-                             header.toLowerCase().includes('sales') ||
-                             header.toLowerCase().includes('revenue')) {
-                    // Format currency values
-                    if (!isNaN(parseFloat(cellValue))) {
-                      cellValue = formatCurrency(parseFloat(cellValue));
-                    }
-                  } else if (typeof cellValue === 'number' || 
-                             (typeof cellValue === 'string' && !isNaN(parseFloat(cellValue)))) {
-                    // Format numbers with thousands separators
-                    if (typeof cellValue === 'string') {
-                      cellValue = formatNumber(parseFloat(cellValue));
-                    } else {
-                      cellValue = formatNumber(cellValue);
-                    }
-                  }
-                  
-                  return <td key={colIndex} className="art-table-cell">{cellValue ?? '-'}</td>;
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      </div>
-    );
+    return null;
   };
+
+  const reportColor = getReportColor();
   
   return (
-    <div className="art-report-view-container" style={{height: '100%', overflowY: 'auto'}}>
+    <div className="artisan-report-view-form pb-4" style={{
+      overflowY: 'auto',
+      height: '100%'
+    }}>
       {/* Report Header */}
-      <Card className="mb-3 shadow-sm art-report-header-card">
-        <Card.Header 
-          className="bg-white py-3 d-flex justify-content-between align-items-center art-report-header"
-          style={{borderBottom: `2px solid ${currentColors.primary}30`}}
-        >
+      <Card className="mb-4 shadow-sm">
+        <Card.Header className="d-flex justify-content-between align-items-center bg-white py-3">
           <div className="d-flex align-items-center">
-            <Button 
-              variant="outline-secondary" 
-              size="sm"
-              className="me-3 d-flex align-items-center justify-content-center art-back-btn"
-              onClick={onBackClick}
-              aria-label="Back"
-            >
-              <FaArrowLeft />
-            </Button>
-            
-            <div className="art-header-title-container">
-              <h4 className="mb-0 art-report-title" style={{color: currentColors.primary}}>{getReportTitle()}</h4>
-              <small className="text-muted art-date-range">
+            <div className="report-icon me-3" style={{ 
+              backgroundColor: reportColor + '20',
+              color: reportColor 
+            }}>
+              <FontAwesomeIcon icon={getReportIcon()} />
+            </div>
+            <div>
+              <h4 className="mb-0" style={{ color: reportColor }}>{getReportTitle()}</h4>
+              <p className="text-muted mb-0 small">
                 {formatDate(dateRange?.startDate)} - {formatDate(dateRange?.endDate)}
-              </small>
+              </p>
             </div>
           </div>
-          
-          <div className="d-flex art-header-actions">
+          <div>
             <Button 
               variant="outline-secondary" 
               size="sm" 
-              className="me-2 d-flex align-items-center art-print-btn"
+              className="me-2" 
+              onClick={onBackClick}
+            >
+              <FontAwesomeIcon icon={faArrowLeft} className="me-1" /> Back
+            </Button>
+            <Button 
+              variant="outline-secondary" 
+              size="sm" 
+              className="me-2" 
               onClick={handlePrint}
             >
-              <FaPrint className="me-1" /> Print
+              <FontAwesomeIcon icon={faPrint} className="me-1" /> Print
             </Button>
-            
-            <div className="dropdown d-inline-block art-export-dropdown">
-              <Button 
-                variant="primary" 
-                size="sm" 
-                className="dropdown-toggle d-flex align-items-center art-export-btn"
-                id="artExportDropdown"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
+            <Dropdown className="d-inline-block">
+              <Dropdown.Toggle 
+                variant="primary"
+                size="sm"
                 style={{
-                  backgroundColor: currentColors.primary,
-                  borderColor: currentColors.primary
+                  backgroundColor: reportColor,
+                  borderColor: reportColor
                 }}
               >
-                <FaCloudDownloadAlt className="me-1" /> Export
-              </Button>
-              <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="artExportDropdown">
-                <li>
-                  <button 
-                    className="dropdown-item d-flex align-items-center art-export-pdf-btn" 
-                    onClick={handleExportPdf}
-                    disabled={loading}
-                  >
-                    <FaFilePdf className="me-2" /> Export as PDF
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    className="dropdown-item d-flex align-items-center art-export-json-btn" 
-                    onClick={handleDownloadJson}
-                  >
-                    <FaFileCode className="me-2" /> Export Raw Data (JSON)
-                  </button>
-                </li>
-              </ul>
-            </div>
+                <FontAwesomeIcon icon={faFileDownload} className="me-1" /> Export
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => setShowPdfOptions(true)}>
+                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> PDF (Advanced)
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleExportPDF}>
+                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> Quick PDF
+                </Dropdown.Item>
+                <Dropdown.Item onClick={handleDownload}>
+                  <FontAwesomeIcon icon={faFileCode} className="me-2" /> Raw Data (JSON)
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
         </Card.Header>
       </Card>
       
       {/* Error Alert */}
       {error && (
-        <Alert variant="danger" className="mb-3 art-error-alert">
-          <FaInfoCircle className="me-2" />
+        <Alert variant="danger" className="mb-4">
+          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
           {error}
         </Alert>
       )}
       
-      {/* Report Tabs Navigation */}
-      <Nav 
-        variant="tabs" 
-        activeKey={activeKey} 
-        onSelect={(k) => setActiveKey(k)}
-        className="mb-3 art-report-tabs"
-      >
-        <Nav.Item>
-          <Nav.Link 
-            eventKey="dashboard"
-            className="d-flex align-items-center art-nav-link"
-            style={{
-              borderBottomColor: activeKey === 'dashboard' ? currentColors.primary : 'transparent',
-              color: activeKey === 'dashboard' ? currentColors.primary : 'inherit'
-            }}
+      {/* Report Navigation */}
+      <div className="nav nav-tabs mb-4">
+        <div className="nav-item">
+          <button 
+            className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActiveTab('dashboard')}
+            style={activeTab === 'dashboard' ? {
+              borderBottom: `3px solid ${reportColor}`,
+              color: reportColor
+            } : {}}
           >
-            <FaChartPie className="me-2" /> Dashboard
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link 
-            eventKey="charts"
-            className="d-flex align-items-center art-nav-link"
-            style={{
-              borderBottomColor: activeKey === 'charts' ? currentColors.primary : 'transparent',
-              color: activeKey === 'charts' ? currentColors.primary : 'inherit'
-            }}
+            <FontAwesomeIcon icon={faChartPie} className="me-2" />
+            Dashboard
+          </button>
+        </div>
+        <div className="nav-item">
+          <button 
+            className={`nav-link ${activeTab === 'charts' ? 'active' : ''}`}
+            onClick={() => setActiveTab('charts')}
+            style={activeTab === 'charts' ? {
+              borderBottom: `3px solid ${reportColor}`,
+              color: reportColor
+            } : {}}
           >
-            <FaChartBar className="me-2" /> Charts
-          </Nav.Link>
-        </Nav.Item>
-        <Nav.Item>
-          <Nav.Link 
-            eventKey="data"
-            className="d-flex align-items-center art-nav-link"
-            style={{
-              borderBottomColor: activeKey === 'data' ? currentColors.primary : 'transparent',
-              color: activeKey === 'data' ? currentColors.primary : 'inherit'
-            }}
+            <FontAwesomeIcon icon={faChartBar} className="me-2" />
+            Charts
+          </button>
+        </div>
+        <div className="nav-item">
+          <button 
+            className={`nav-link ${activeTab === 'data' ? 'active' : ''}`}
+            onClick={() => setActiveTab('data')}
+            style={activeTab === 'data' ? {
+              borderBottom: `3px solid ${reportColor}`,
+              color: reportColor
+            } : {}}
           >
-            <FaTable className="me-2" /> Data Table
-          </Nav.Link>
-        </Nav.Item>
-      </Nav>
+            <FontAwesomeIcon icon={faTable} className="me-2" />
+            Data Table
+          </button>
+        </div>
+      </div>
       
-      {/* Tab Content */}
-      <Tab.Content className="art-tab-content">
-        {/* Dashboard Tab */}
-        <Tab.Pane active={activeKey === 'dashboard'} className="art-dashboard-tab">
-          <h5 className="mb-3 art-section-title" style={{color: currentColors.primary}}>Report Summary</h5>
-          {renderSummaryCards()}
+      {/* Dashboard Tab */}
+      {activeTab === 'dashboard' && (
+        <>
+          <h5 className="mb-3" style={{ color: reportColor }}>Report Summary</h5>
           
-          <div className="art-line-separator" style={{height: '1px', backgroundColor: '#e9ecef', margin: '20px 0'}}></div>
+          {/* Special alerts for specific report types */}
+          {renderSpecialAlerts()}
           
-          <Row className="mb-4 art-chart-row">
-            {/* Bar Chart */}
-            <Col lg={6} className="mb-4">
-              <Card className="shadow-sm h-100 art-chart-card">
-                <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-                  <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                    {reportType === 'orders' ? 'Top Products' : 
-                     reportType === 'products' ? 'Inventory Levels' : 
-                     'Completed Orders'}
-                  </h5>
-                </Card.Header>
-                <Card.Body className="art-chart-body">
-                  {loading ? (
-                    <div className="text-center py-5 art-chart-loading">
-                      <Spinner animation="border" style={{color: currentColors.primary}} />
-                    </div>
-                  ) : (
-                    <div style={{height: '300px'}} className="art-chart-container">
-                      <canvas ref={barChartRef} className="art-bar-chart"></canvas>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-            
-            {/* Pie Chart */}
-            <Col lg={6} className="mb-4">
-              <Card className="shadow-sm h-100 art-chart-card">
-                <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-                  <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                    {reportType === 'orders' ? 'Order Status Distribution' : 
-                     reportType === 'products' ? 'Product Categories' : 
-                     'Delivery Performance'}
-                  </h5>
-                </Card.Header>
-                <Card.Body className="art-chart-body">
-                  {loading ? (
-                    <div className="text-center py-5 art-chart-loading">
-                      <Spinner animation="border" style={{color: currentColors.primary}} />
-                    </div>
-                  ) : (
-                    <div style={{height: '300px'}} className="art-chart-container">
-                      <canvas ref={pieChartRef} className="art-pie-chart"></canvas>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
+          {/* Order Assignment Cards for orders report type */}
+          {reportType === 'orders' && renderOrderAssignmentCards()}
           
-          {/* Line Chart - Full width */}
-          <Card className="shadow-sm mb-4 art-chart-card">
-            <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-              <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                {reportType === 'orders' ? 'Sales Trend' : 
-                 reportType === 'products' ? 'Product Sales Trend' : 
-                 'Rating Trend'}
-              </h5>
-            </Card.Header>
-            <Card.Body className="art-chart-body">
-              {loading ? (
-                <div className="text-center py-5 art-chart-loading">
-                  <Spinner animation="border" style={{color: currentColors.primary}} />
-                </div>
-              ) : (
-                <div style={{height: '300px'}} className="art-chart-container">
-                  <canvas ref={lineChartRef} className="art-line-chart"></canvas>
-                </div>
+          {/* Show message if empty response */}
+          {reportData?.isEmptyResponse === true && (
+            <Alert variant="info" className="mb-4">
+              <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+              <strong>No data available.</strong> {reportData.message || 'There is no data matching your criteria.'}
+            </Alert>
+          )}
+          
+          {/* Only show summary cards if not empty response */}
+          {!reportData?.isEmptyResponse && chartConfig.showSummary && renderSummaryCards()}
+          
+          {shouldShowGraphs() && (
+            <Row className="mb-4">
+              {dashboardCharts.includes('barChart') && chartConfig.showBarChart && (
+                <Col md={dashboardCharts.length > 1 ? 6 : 12}>
+                  <Card className="h-100 shadow-sm">
+                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                      <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.barChartTitle || 'Analysis'}</h5>
+                    </Card.Header>
+                    <Card.Body>
+                      {isLoading ? (
+                        <div className="text-center py-5">
+                          <Spinner animation="border" style={{ color: reportColor }} />
+                        </div>
+                      ) : (
+                        <div style={{height: '300px'}}>
+                          <canvas ref={barChartRef}></canvas>
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
               )}
-            </Card.Body>
-          </Card>
-        </Tab.Pane>
-        
-        {/* Charts Tab */}
-        <Tab.Pane active={activeKey === 'charts'} className="art-charts-tab">
-          <h5 className="mb-3 art-section-title" style={{color: currentColors.primary}}>Detailed Charts</h5>
-          
-          {/* Line Chart - Full width */}
-          <Card className="shadow-sm mb-4 art-chart-card">
-            <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-              <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                {reportType === 'orders' ? 'Sales Trend' : 
-                 reportType === 'products' ? 'Product Sales Trend' : 
-                 'Rating Trend'}
-              </h5>
-            </Card.Header>
-            <Card.Body className="art-chart-body">
-              {loading ? (
-                <div className="text-center py-5 art-chart-loading">
-                  <Spinner animation="border" style={{color: currentColors.primary}} />
-                </div>
-              ) : (
-                <div style={{height: '400px'}} className="art-chart-container">
-                  <canvas ref={lineChartRef} className="art-line-chart-large"></canvas>
-                </div>
+              
+              {dashboardCharts.includes('pieChart') && chartConfig.showPieChart && (
+                <Col md={dashboardCharts.length > 1 ? 6 : 12}>
+                  <Card className="h-100 shadow-sm">
+                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                      <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.pieChartTitle || 'Distribution'}</h5>
+                    </Card.Header>
+                    <Card.Body>
+                      {isLoading ? (
+                        <div className="text-center py-5">
+                          <Spinner animation="border" style={{ color: reportColor }} />
+                        </div>
+                      ) : (
+                        <div style={{height: '300px'}}>
+                          <canvas ref={pieChartRef}></canvas>
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
               )}
-            </Card.Body>
-          </Card>
+
+              {dashboardCharts.includes('lineChart') && chartConfig.showLineChart && (
+                <Col md={12} className="mt-4">
+                  <Card className="h-100 shadow-sm">
+                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                      <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.lineChartTitle || 'Trend Analysis'}</h5>
+                    </Card.Header>
+                    <Card.Body>
+                      {isLoading ? (
+                        <div className="text-center py-5">
+                          <Spinner animation="border" style={{ color: reportColor }} />
+                        </div>
+                      ) : (
+                        <div style={{height: '300px'}}>
+                          <canvas ref={lineChartRef}></canvas>
+                        </div>
+                      )}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              )}
+
+              {dashboardCharts.length === 0 && (
+                <Col>
+                  <Alert variant="info">
+                    <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                    No charts available for this report type.
+                  </Alert>
+                </Col>
+              )}
+            </Row>
+          )}
           
-          <Row className="art-chart-row">
-            {/* Bar Chart */}
-            <Col lg={6} className="mb-4">
-              <Card className="shadow-sm h-100 art-chart-card">
-                <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-                  <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                    {reportType === 'orders' ? 'Top Products' : 
-                     reportType === 'products' ? 'Inventory Levels' : 
-                     'Completed Orders'}
-                  </h5>
-                </Card.Header>
-                <Card.Body className="art-chart-body">
-                  {loading ? (
-                    <div className="text-center py-5 art-chart-loading">
-                      <Spinner animation="border" style={{color: currentColors.primary}} />
-                    </div>
-                  ) : (
-                    <div style={{height: '350px'}} className="art-chart-container">
-                      <canvas ref={barChartRef} className="art-bar-chart-large"></canvas>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-            
-            {/* Pie Chart */}
-            <Col lg={6} className="mb-4">
-              <Card className="shadow-sm h-100 art-chart-card">
-                <Card.Header className="bg-white art-chart-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-                  <h5 className="mb-0 art-chart-title" style={{color: currentColors.primary}}>
-                    {reportType === 'orders' ? 'Order Status Distribution' : 
-                     reportType === 'products' ? 'Product Categories' : 
-                     'Delivery Performance'}
-                  </h5>
-                </Card.Header>
-                <Card.Body className="art-chart-body">
-                  {loading ? (
-                    <div className="text-center py-5 art-chart-loading">
-                      <Spinner animation="border" style={{color: currentColors.primary}} />
-                    </div>
-                  ) : (
-                    <div style={{height: '350px'}} className="art-chart-container">
-                      <canvas ref={pieChartRef} className="art-pie-chart-large"></canvas>
-                    </div>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Tab.Pane>
-        
-        {/* Data Table Tab */}
-        <Tab.Pane active={activeKey === 'data'} className="art-data-tab">
-          <h5 className="mb-3 art-section-title" style={{color: currentColors.primary}}>Detailed Data</h5>
-          
-          <Card className="shadow-sm art-data-card">
-            <Card.Header className="bg-white art-data-header" style={{borderBottom: `2px solid ${currentColors.primary}20`}}>
-              <h5 className="mb-0 art-data-title" style={{color: currentColors.primary}}>
-                {getReportTitle()} - Raw Data
-              </h5>
+          {!shouldShowGraphs() && (
+            <Alert variant="info" className="mb-4">
+              <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+              Graphs are hidden based on your report settings. You can enable graphs in the Advanced Options.
+            </Alert>
+          )}
+        </>
+      )}
+      
+      {/* Charts Tab */}
+      {activeTab === 'charts' && (
+        <>
+          {!shouldShowGraphs() ? (
+            <Alert variant="info" className="mb-4">
+              <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+              Charts are hidden based on your report settings. You can enable graphs in the Advanced Options.
+            </Alert>
+          ) : (
+            <>
+              {chartConfig.showBarChart && (
+                <Row className="mb-4">
+                  <Col>
+                    <Card className="shadow-sm">
+                      <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                        <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.barChartTitle || 'Analysis'}</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {isLoading ? (
+                          <div className="text-center py-5">
+                            <Spinner animation="border" style={{ color: reportColor }} />
+                          </div>
+                        ) : (
+                          <div style={{height: '400px'}}>
+                            <canvas ref={barChartRef}></canvas>
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+              )}
+              
+              <Row className="mb-4">
+                {chartConfig.showPieChart && (
+                  <Col md={chartConfig.showLineChart ? 6 : 12}>
+                    <Card className="h-100 shadow-sm">
+                      <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                        <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.pieChartTitle || 'Distribution'}</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {isLoading ? (
+                          <div className="text-center py-5">
+                            <Spinner animation="border" style={{ color: reportColor }} />
+                          </div>
+                        ) : (
+                          <div style={{height: '300px'}}>
+                            <canvas ref={pieChartRef}></canvas>
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                )}
+                
+                {chartConfig.showLineChart && (
+                  <Col md={chartConfig.showPieChart ? 6 : 12}>
+                    <Card className="h-100 shadow-sm">
+                      <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+                        <h5 className="mb-0" style={{ color: reportColor }}>{chartConfig.lineChartTitle || 'Trend Analysis'}</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {isLoading ? (
+                          <div className="text-center py-5">
+                            <Spinner animation="border" style={{ color: reportColor }} />
+                          </div>
+                        ) : (
+                          <div style={{height: '300px'}}>
+                            <canvas ref={lineChartRef}></canvas>
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+              
+              {!chartConfig.showBarChart && !chartConfig.showPieChart && !chartConfig.showLineChart && (
+                <Alert variant="info">
+                  <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                  No charts are available for this report type.
+                </Alert>
+              )}
+            </>
+          )}
+        </>
+      )}
+      
+      {/* Data Tab */}
+      {activeTab === 'data' && (
+        <>
+          <h5 className="mb-3" style={{ color: reportColor }}>Report Data</h5>
+          <Card className="shadow-sm">
+            <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColor}20` }}>
+              <h5 className="mb-0" style={{ color: reportColor }}>{getReportTitle()} - Detailed Data</h5>
             </Card.Header>
-            <Card.Body className="p-0 art-data-body">
-              {loading ? (
-                <div className="text-center py-5 art-data-loading">
-                  <Spinner animation="border" style={{color: currentColors.primary}} />
+            <Card.Body className="p-0">
+              {isLoading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" style={{ color: reportColor }} />
                 </div>
               ) : (
                 renderDataTable()
               )}
             </Card.Body>
           </Card>
-        </Tab.Pane>
-      </Tab.Content>
+        </>
+      )}
       
       {/* Footer Info */}
-      <div className="text-muted small text-center mt-4 mb-4 art-report-footer">
-        <p className="mb-0">Report generated on {formatDate(new Date(), true)}</p>
+      <div className="text-muted small text-center mt-4">
+        <p>Report generated on {formatDate(new Date(), true)}</p>
       </div>
+      
+      {/* PDF Options Modal */}
+      {renderPdfOptionsModal()}
     </div>
   );
 };

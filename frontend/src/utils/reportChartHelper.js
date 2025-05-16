@@ -132,12 +132,78 @@ export const getChartConfig = (reportType, reportData) => {
 };
 
 /**
+ * Gets chart configuration for artisan reports with specific handling for order reports
+ * @param {string} reportType - The type of report
+ * @param {object} reportData - The report data
+ * @returns {object} Chart configuration
+ */
+export const getArtisanChartConfig = (reportType, reportData) => {
+  let config = {
+    showBarChart: true,
+    showPieChart: true,
+    showLineChart: true,
+    showTables: true,
+    showSummary: true,
+    dashboardCharts: ['barChart', 'pieChart', 'lineChart']
+  };
+
+  switch (reportType) {
+    case 'orders':
+      config.barChartTitle = 'Top Products by Sales Value';
+      config.pieChartTitle = 'Orders by Status';
+      config.lineChartTitle = 'Monthly Order Trend';
+      
+      // For order reports, prioritize what's shown in dashboard
+      if (reportData && reportData.charts) {
+        config.dashboardCharts = ['pieChart', 'barChart']; // Show status distribution and product distribution
+      }
+      break;
+    case 'products':
+      config.barChartTitle = 'Top Products by Units Sold';
+      config.pieChartTitle = 'Products by Category';
+      config.lineChartTitle = 'Sales Trend';
+      break;
+    case 'performance':
+      config.barChartTitle = 'Performance by Period';
+      config.pieChartTitle = 'Delivery Performance';
+      config.lineChartTitle = 'Rating Trend';
+      break;
+    case 'assignments':
+      config.barChartTitle = 'Orders by Status';
+      config.pieChartTitle = 'Order Status Distribution';
+      config.lineChartTitle = 'Upcoming Deadlines';
+      break;
+    case 'inventory':
+      config.barChartTitle = 'Stock Levels';
+      config.pieChartTitle = 'Products by Category';
+      config.lineChartTitle = 'Product Sales History';
+      config.dashboardCharts = ['barChart', 'pieChart'];
+      break;
+    case 'custom-performance':
+      config.barChartTitle = 'Top Customized Products';
+      config.pieChartTitle = 'Custom Order Distribution';
+      config.lineChartTitle = 'Custom Orders Trend';
+      break;
+    default:
+      break;
+  }
+
+  // Check if we have enough data for charts
+  if (reportData && reportData.data && reportData.data.length < 2) {
+    config.dashboardCharts = [];
+  }
+
+  return config;
+};
+
+/**
  * Prepares data for a bar chart based on report type
  * @param {string} reportType - The type of report
  * @param {Array} data - The report data
+ * @param {boolean} isArtisan - Whether this is for artisan view
  * @returns {Object} Formatted data for bar chart
  */
-export const prepareBarChartData = (reportType, data) => {
+export const prepareBarChartData = (reportType, data, isArtisan = false) => {
   if (!data || data.length === 0) return { labels: [], values: [], isCurrency: false };
   
   let labels = [];
@@ -146,6 +212,17 @@ export const prepareBarChartData = (reportType, data) => {
   let lowStockCount = 0; // Add counter for low stock products
   const colors = getReportColors(reportType).palette; // Get color palette for this report type
   
+  // Special handling for artisan order reports
+  if (isArtisan && reportType === 'orders' && data.charts && data.charts.productDistribution) {
+    const productData = data.charts.productDistribution;
+    return {
+      labels: productData.map(item => item.label),
+      values: productData.map(item => item.value),
+      title: 'Top Products by Sales Value',
+      isCurrency: true
+    };
+  }
+
   switch (reportType) {
     case 'sales':
       // Group by product_name and sum total_amount
@@ -223,15 +300,21 @@ export const prepareBarChartData = (reportType, data) => {
  * Prepares data for a pie chart based on report type
  * @param {string} reportType - The type of report
  * @param {Array} data - The report data
+ * @param {boolean} isArtisan - Whether this is for artisan view
  * @returns {Array} Formatted data for pie chart
  */
-export const preparePieChartData = (reportType, data) => {
+export const preparePieChartData = (reportType, data, isArtisan = false) => {
   if (!data || data.length === 0) return [];
   
   let groupedData = {};
   let total = 0;
   let field, labelField;
   
+  // Special handling for artisan order reports
+  if (isArtisan && reportType === 'orders' && data.charts && data.charts.statusDistribution) {
+    return data.charts.statusDistribution;
+  }
+
   switch (reportType) {
     case 'sales':
       field = 'total_amount';
@@ -324,9 +407,10 @@ export const preparePieChartData = (reportType, data) => {
  * Prepares data for line chart based on report type
  * @param {string} reportType - The type of report
  * @param {Object} reportData - The report data object
+ * @param {boolean} isArtisan - Whether this is for artisan view
  * @returns {Object} Formatted data for line chart
  */
-export const prepareLineChartData = (reportType, reportData) => {
+export const prepareLineChartData = (reportType, reportData, isArtisan = false) => {
   if (!reportData || !reportData.data || reportData.data.length === 0) {
     return { 
       labels: [], 
@@ -337,6 +421,16 @@ export const prepareLineChartData = (reportType, reportData) => {
     };
   }
   
+  // Special handling for artisan order reports
+  if (isArtisan && reportType === 'orders' && reportData.charts && reportData.charts.monthlyTrend) {
+    return {
+      labels: reportData.charts.monthlyTrend.labels,
+      values: reportData.charts.monthlyTrend.values,
+      title: 'Monthly Order Trend',
+      isCurrency: false
+    };
+  }
+
   // Check if we have timeSeries data first
   if (reportData.timeSeries && reportData.timeSeries.length > 0) {
     const timeData = [...reportData.timeSeries].sort((a, b) => 
