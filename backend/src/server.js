@@ -55,6 +55,9 @@ const Review = require('./models/reviewModel');
 const ReviewImage = require('./models/reviewImageModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
+// Change the alias to match what we set in the Review model
+Order.hasMany(Review, { foreignKey: 'order_id', as: 'reviews' });
+Review.belongsTo(Order, { foreignKey: 'order_id', as: 'orderInfo' });
 
 Inventory.hasMany(ProductEntry, { foreignKey: 'product_id', as: 'inventoryEntries' });
 ProductEntry.belongsTo(Inventory, { foreignKey: 'product_id', as: 'inventory' });
@@ -115,9 +118,19 @@ Discount.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id'
 Inventory.hasOne(PurchaseLimit, { foreignKey: 'productId', as: 'purchaseLimit', sourceKey: 'product_id' });
 PurchaseLimit.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id', as: 'inventory' });
 
+// Remove this if statement if it's causing issues, and use direct associations instead
 // Register associations for reviews
+// Comment out the problematic block to prevent duplicate associations
+/* 
 if (Review.associate) Review.associate({ Customer, Order, Inventory, ReviewImage });
 if (ReviewImage.associate) ReviewImage.associate({ Review });
+*/
+
+// Add these direct associations instead
+Review.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
+Review.belongsTo(Inventory, { foreignKey: 'product_id', as: 'product' });
+Review.hasMany(ReviewImage, { foreignKey: 'review_id', as: 'reviewImages' });
+ReviewImage.belongsTo(Review, { foreignKey: 'review_id', as: 'review' });
 
 dotenv.config();
 

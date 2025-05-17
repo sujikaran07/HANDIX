@@ -61,7 +61,7 @@ const Order = sequelize.define('Order', {
   assignedArtisan: {
     type: DataTypes.STRING,
     allowNull: true,
-    field: 'assigned_artisan',
+    field: 'assigned_artisan', // Ensure this exactly matches the database column name
   },
   deliveryStartDate: {
     type: DataTypes.DATEONLY,
@@ -83,4 +83,5 @@ Order.belongsTo(Customer, {
   foreignKey: 'c_id', 
   as: 'customerInfo'
 });
+
 module.exports = { Order };

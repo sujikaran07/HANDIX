@@ -233,7 +233,7 @@ const EditProfilePage = () => {
       
       console.log('User update response:', userResponse.data);
       
-      // 3. Update or create address
+      // 3. Update or create address - FIX THE ENDPOINT ISSUE HERE
       const addressData = {
         street_address: formData.address,
         city: formData.city,
@@ -245,30 +245,49 @@ const EditProfilePage = () => {
       
       console.log('Sending address data to API:', addressData);
       
-      // Use the appropriate endpoint
-      const addressUrl = addressLoaded 
-        ? `${baseUrl}/api/addresses/customer/${user.c_id}`
-        : `${baseUrl}/api/addresses`;
-      
-      console.log('Using address endpoint:', addressUrl);
+      // Modified approach for address update/create
+      // Instead of trying to PUT to /api/addresses/customer/C005, we'll use the appropriate endpoints
+      let addressResponse;
       
       if (addressLoaded) {
-        // Update existing address
-        const addressResponse = await axios.put(addressUrl, addressData, {
+        // First get the existing addresses to find the address_id
+        const getAddressesResponse = await axios.get(`${baseUrl}/api/addresses/customer/${user.c_id}`, {
           headers: {
             'Authorization': token ? `Bearer ${token}` : undefined
           }
         });
-        console.log('Address update response:', addressResponse.data);
+        
+        if (getAddressesResponse.data && Array.isArray(getAddressesResponse.data) && getAddressesResponse.data.length > 0) {
+          // Get the first address ID
+          const addressId = getAddressesResponse.data[0].address_id;
+          console.log('Updating existing address with ID:', addressId);
+          
+          // Update the specific address by ID
+          addressResponse = await axios.put(`${baseUrl}/api/addresses/${addressId}`, addressData, {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : undefined
+            }
+          });
+        } else {
+          // No addresses found, create a new one
+          console.log('No addresses found despite addressLoaded flag. Creating new address.');
+          addressResponse = await axios.post(`${baseUrl}/api/addresses`, addressData, {
+            headers: {
+              'Authorization': token ? `Bearer ${token}` : undefined
+            }
+          });
+        }
       } else {
         // Create new address
-        const addressResponse = await axios.post(addressUrl, addressData, {
+        console.log('Creating new address for customer', user.c_id);
+        addressResponse = await axios.post(`${baseUrl}/api/addresses`, addressData, {
           headers: {
             'Authorization': token ? `Bearer ${token}` : undefined
           }
         });
-        console.log('Address create response:', addressResponse.data);
       }
+      
+      console.log('Address API response:', addressResponse?.data || 'No response data');
       
       // 4. Format address for local storage and display
       const addressParts = [
@@ -302,8 +321,17 @@ const EditProfilePage = () => {
       navigate('/profile');
     } catch (error) {
       console.error('Error updating profile:', error);
-      console.error('Error details:', error.response?.data || 'No response data');
-      alert('An error occurred while updating your profile. Please try again.');
+      console.error('Error details:', error.response?.data || error.message || 'No response data');
+      
+      // More user-friendly error message
+      let errorMessage = 'An error occurred while updating your profile.';
+      if (error.response?.status === 404) {
+        errorMessage += ' The address update endpoint was not found.';
+      } else if (error.response?.status === 401) {
+        errorMessage += ' You may need to log in again.';
+      }
+      
+      alert(errorMessage + ' Please try again.');
     }
   };
   

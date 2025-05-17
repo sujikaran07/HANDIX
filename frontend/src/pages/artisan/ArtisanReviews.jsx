@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
-import { FaStar, FaThumbsUp, FaThumbsDown, FaFilter, FaSort, FaSearch, FaBox, FaReply } from 'react-icons/fa';
+import { FaStar, FaThumbsUp, FaThumbsDown, FaFilter, FaSort, FaSearch, FaBox, FaReply, FaCheck, FaImage } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 import '../../styles/artisan/ArtisanDashboard.css';
 import '../../styles/artisan/ArtisanReviews.css';
 
@@ -13,32 +15,112 @@ const ArtisanReviews = () => {
   const [filterRating, setFilterRating] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
+  const [responseText, setResponseText] = useState({});
+  const [submittingResponse, setSubmittingResponse] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    const fetchReviews = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        // Get artisan e_id from localStorage (adjust key as needed)
-        const eId = localStorage.getItem('e_id');
-        if (!eId) {
-          setError('No artisan e_id found.');
-          setIsLoading(false);
-          return;
-        }
-        // Fetch reviews for products created by this artisan
-        const res = await fetch(`/api/reviews?e_id=${eId}`);
-        if (!res.ok) throw new Error('Failed to fetch reviews');
-        const data = await res.json();
-        // Expecting data to be an array of products with reviews
-        setProducts(data.products || []);
-      } catch (err) {
-        setError(err.message || 'Failed to fetch reviews');
-      }
-      setIsLoading(false);
-    };
     fetchReviews();
   }, []);
+
+  const fetchReviews = async () => {
+    setIsLoading(true);
+    setError(null);
+    setStatusMessage('');
+    
+    try {
+      // Get artisan ID from the various possible storage locations
+      // Based on what we see in employeeLoginControllers.js, artisans likely use artisanToken
+      let eId = null;
+      
+      // Try to get the JWT token first
+      const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
+      
+      if (artisanToken) {
+        // If token exists, try to decode it to get the ID
+        try {
+          // JWT tokens have three parts separated by dots
+          const tokenParts = artisanToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            eId = payload.id; // The ID will be in the payload
+            console.log('Found eId from token:', eId);
+          }
+        } catch (err) {
+          console.error('Error decoding token:', err);
+        }
+      }
+      
+      // If no eId from token, try direct storage
+      if (!eId) {
+        eId = localStorage.getItem('eId') || 
+              sessionStorage.getItem('eId') || 
+              localStorage.getItem('e_id') || 
+              sessionStorage.getItem('e_id') ||
+              localStorage.getItem('employee_id') ||
+              sessionStorage.getItem('employee_id');
+      
+        // Final attempt - check if there's an employee object with ID
+        if (!eId) {
+          const employeeStr = localStorage.getItem('employee') || sessionStorage.getItem('employee');
+          if (employeeStr) {
+            try {
+              const employee = JSON.parse(employeeStr);
+              eId = employee.eId || employee.id || employee.e_id || employee.employee_id;
+            } catch (err) {
+              console.error('Error parsing employee object:', err);
+            }
+          }
+        }
+      }
+    
+      if (!eId) {
+        console.error('No artisan ID found in storage', {
+          localStorage: Object.keys(localStorage),
+          sessionStorage: Object.keys(sessionStorage)
+        });
+        setError('No artisan ID found. Please log in again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('Using artisan ID for reviews:', eId);
+      
+      // Fetch reviews for products handled by this artisan
+      const response = await axios.get(`/api/reviews?e_id=${eId}`);
+      console.log('Review API response:', response.data);
+    
+      const { products, message, debug } = response.data;
+    
+      if (debug) {
+        console.log('Debug info from API:', debug);
+      }
+    
+      if (products && products.length > 0) {
+        setProducts(products);
+      } else {
+        setProducts([]);
+        const debugInfo = debug ? ` (${JSON.stringify(debug)})` : '';
+        setStatusMessage(`${message || 'No reviews found for your orders.'}${debugInfo}`);
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to fetch reviews');
+    
+      // Add more detailed debugging for network errors
+      if (err.response) {
+        console.error('Error response:', {
+          status: err.response.status,
+          data: err.response.data
+        });
+      } else if (err.request) {
+        console.error('No response received:', err.request);
+      }
+    }
+    
+    setIsLoading(false);
+  };
 
   // Get all reviews across all products
   const getAllReviews = () => {
@@ -77,8 +159,14 @@ const ArtisanReviews = () => {
         if (searchTerm) {
           const searchLower = searchTerm.toLowerCase();
           return review.productName?.toLowerCase().includes(searchLower) ||
-                review.review.toLowerCase().includes(searchLower) ||
-                review.customer.toLowerCase().includes(searchLower);
+                review.review?.toLowerCase().includes(searchLower) ||
+                review.customer?.toLowerCase().includes(searchLower) ||
+                review.orderInfo?.orderId?.toLowerCase().includes(searchLower);
+        }
+        
+        // Filter by status
+        if (statusFilter !== 'all') {
+          return review.status === statusFilter;
         }
         
         return true;
@@ -130,32 +218,176 @@ const ArtisanReviews = () => {
     } else {
       // Return stats for selected product
       const product = products.find(p => p.id === selectedProduct);
-      return product 
-        ? { 
-            avg: product.avgRating, 
-            counts: product.ratingCounts, 
-            total: product.totalReviews 
-          }
-        : { avg: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, total: 0 };
+      if (!product) return { avg: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, total: 0 };
+      
+      return { 
+        avg: product.avgRating || 0, 
+        counts: product.ratingCounts || { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, 
+        total: product.totalReviews || 0 
+      };
     }
   };
 
   const ratingData = calculateRatingData();
 
-  const handleAddResponse = (productId, reviewId, response) => {
-    setProducts(products.map(product => 
-      product.id === productId 
-        ? {
-            ...product,
-            reviews: product.reviews.map(review =>
-              review.id === reviewId ? { ...review, response } : review
-            )
+  const handleResponseChange = (reviewId, text) => {
+    setResponseText(prev => ({
+      ...prev,
+      [reviewId]: text
+    }));
+  };
+
+  const handleSubmitResponse = async (productId, reviewId) => {
+    if (!responseText[reviewId] || responseText[reviewId].trim() === '') {
+      toast.error('Response cannot be empty');
+      return;
+    }
+
+    setSubmittingResponse(true);
+    try {
+      // Use the same token retrieval logic as in fetchReviews
+      let eId = null;
+      
+      // Try to get the JWT token first
+      const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
+      
+      if (artisanToken) {
+        try {
+          const tokenParts = artisanToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            eId = payload.id;
           }
-        : product
-    ));
+        } catch (err) {
+          console.error('Error decoding token:', err);
+        }
+      }
+      
+      if (!eId) {
+        eId = localStorage.getItem('eId') || 
+              sessionStorage.getItem('eId') || 
+              localStorage.getItem('e_id') || 
+              sessionStorage.getItem('e_id');
+      }
+      
+      if (!eId) {
+        toast.error('Session expired. Please log in again.');
+        return;
+      }
+
+      await axios.post(`/api/reviews/respond?e_id=${eId}`, {
+        review_id: reviewId,
+        response: responseText[reviewId]
+      });
+      
+      // Update local state
+      setProducts(products.map(product => 
+        product.id === productId 
+          ? {
+              ...product,
+              reviews: product.reviews.map(review =>
+                review.id === reviewId 
+                  ? { ...review, response: responseText[reviewId] } 
+                  : review
+              )
+            }
+          : product
+      ));
+      
+      // Clear the response text
+      setResponseText(prev => ({
+        ...prev,
+        [reviewId]: ''
+      }));
+      
+      toast.success('Response added successfully');
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast.error(error.response?.data?.message || 'Failed to submit response');
+    } finally {
+      setSubmittingResponse(false);
+    }
+  };
+
+  // Add new functions to handle approve/reject
+  const handleStatusChange = async (productId, reviewId, status) => {
+    setSubmittingResponse(true);
+    try {
+      let eId = null;
+      // Use the same token retrieval logic as in handleSubmitResponse
+      const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
+      
+      if (artisanToken) {
+        try {
+          const tokenParts = artisanToken.split('.');
+          if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            eId = payload.id;
+          }
+        } catch (err) {
+          console.error('Error decoding token:', err);
+        }
+      }
+      
+      if (!eId) {
+        eId = localStorage.getItem('eId') || 
+              sessionStorage.getItem('eId') || 
+              localStorage.getItem('e_id') || 
+              sessionStorage.getItem('e_id');
+      }
+      
+      if (!eId) {
+        toast.error('Session expired. Please log in again.');
+        return;
+      }
+
+      await axios.post(`/api/reviews/respond?e_id=${eId}`, {
+        review_id: reviewId,
+        status: status
+      });
+      
+      // Update local state
+      setProducts(products.map(product => 
+        product.id === productId 
+          ? {
+              ...product,
+              reviews: product.reviews.map(review =>
+                review.id === reviewId 
+                  ? { ...review, status: status } 
+                  : review
+              )
+            }
+          : product
+      ));
+      
+      toast.success(`Review ${status === 'Approved' ? 'approved' : 'rejected'} successfully`);
+    } catch (error) {
+      console.error(`Error ${status.toLowerCase()}ing review:`, error);
+      toast.error(error.response?.data?.message || `Failed to ${status.toLowerCase()} review`);
+    } finally {
+      setSubmittingResponse(false);
+    }
+  };
+
+  const handleEditResponse = (reviewId, currentResponse) => {
+    setResponseText(prev => ({
+      ...prev,
+      [reviewId]: currentResponse
+    }));
+    
+    // Find the review and set response to null to show the edit form
+    setProducts(products.map(product => ({
+      ...product,
+      reviews: product.reviews.map(review =>
+        review.id === reviewId 
+          ? { ...review, isEditing: true } 
+          : review
+      )
+    })));
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown date';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
@@ -178,8 +410,8 @@ const ArtisanReviews = () => {
               <div className="title-section d-flex align-items-center">
                 <FaStar className="reviews-icon" />
                 <div className="text-section">
-                  <h2>Product Reviews</h2>
-                  <p>View and respond to customer feedback for your handcrafted items</p>
+                  <h2>Your Order Reviews</h2>
+                  <p>View and respond to customer feedback for products from orders you've completed</p>
                 </div>
               </div>
               <div className="d-flex align-items-center">
@@ -187,28 +419,30 @@ const ArtisanReviews = () => {
               </div>
             </div>
 
-            <div className="product-filter-bar">
-              <div className="product-selector">
-                <div className="product-selector-label">
-                  <FaBox className="icon" />
-                  <span>Select Product:</span>
-                </div>
-                <div className="product-dropdown-wrapper">
-                  <select
-                    className="form-select product-select"
-                    value={selectedProduct}
-                    onChange={(e) => setSelectedProduct(e.target.value)}
-                  >
-                    <option value="all">All Products ({getAllReviews().length} reviews)</option>
-                    {products.map(product => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} ({product.reviews.length} reviews)
-                      </option>
-                    ))}
-                  </select>
+            {products.length > 0 && (
+              <div className="product-filter-bar">
+                <div className="product-selector">
+                  <div className="product-selector-label">
+                    <FaBox className="icon" />
+                    <span>Select Product:</span>
+                  </div>
+                  <div className="product-dropdown-wrapper">
+                    <select
+                      className="form-select product-select"
+                      value={selectedProduct}
+                      onChange={(e) => setSelectedProduct(e.target.value)}
+                    >
+                      <option value="all">All Products ({getAllReviews().length} reviews)</option>
+                      {products.map(product => (
+                        <option key={product.id} value={product.id}>
+                          {product.name} ({product.reviews.length} reviews)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="reviews-content">
               {isLoading ? (
@@ -219,8 +453,14 @@ const ArtisanReviews = () => {
                   <p className="mt-2">Loading product reviews...</p>
                 </div>
               ) : error ? (
-                <div className="text-center my-5">
+                <div className="text-center my-5 error-message">
                   <p className="text-danger">{error}</p>
+                </div>
+              ) : products.length === 0 ? (
+                <div className="text-center my-5 no-reviews">
+                  <FaStar size={64} className="text-muted mb-3" />
+                  <h4>No customers have left reviews for your completed orders yet</h4>
+                  <p className="text-muted">Once customers leave reviews for orders you've completed, they'll appear here.</p>
                 </div>
               ) : (
                 <>
@@ -359,11 +599,21 @@ const ArtisanReviews = () => {
                             {selectedProduct === 'all' && (
                               <div className="col-md-12 mb-3">
                                 <div className="product-info-banner">
-                                  <img 
-                                    src={review.productImage} 
-                                    alt={review.productName} 
-                                    className="product-thumbnail"
-                                  />
+                                  {review.productImage ? (
+                                    <img 
+                                      src={review.productImage} 
+                                      alt={review.productName} 
+                                      className="product-thumbnail"
+                                      onError={(e) => {
+                                        e.target.src = '/placeholder-product.jpg'; // Fallback image on error
+                                        e.target.onerror = null; // Prevent infinite loop
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="placeholder-image">
+                                      <FaBox size={24} />
+                                    </div>
+                                  )}
                                   <span className="product-name">
                                     {review.productName}
                                   </span>
@@ -374,39 +624,53 @@ const ArtisanReviews = () => {
                             <div className="col-md-12">
                               <div className="review-content">
                                 <div className="review-header">
-                                  <img 
-                                    src={review.customerAvatar} 
-                                    alt={review.customer} 
-                                    className="reviewer-avatar"
-                                  />
+                                  <div className="reviewer-avatar">
+                                    {review.customerAvatar ? (
+                                      <img src={review.customerAvatar} alt={review.customer} />
+                                    ) : (
+                                      <div className="default-avatar">
+                                        {review.customer ? review.customer.charAt(0) : 'A'}
+                                      </div>
+                                    )}
+                                  </div>
                                   <div className="reviewer-info">
                                     <h5>{review.customer}</h5>
                                     <div className="review-meta">
                                       <div className="stars">
                                         {renderStars(review.rating)}
                                       </div>
-                                      <span className="review-date">{formatDate(review.date)}</span>
+                                      <span className="review-date">
+                                        {formatDate(review.date)}
+                                      </span>
+                                      {review.orderInfo && (
+                                        <span className="order-info">
+                                          Order: {review.orderInfo.orderId}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
                                 
                                 <div className="review-text">
                                   <p>{review.review}</p>
+                                  
+                                  {review.images && review.images.length > 0 && (
+                                    <div className="review-images">
+                                      <div className="images-label">
+                                        <FaImage className="me-1" /> Customer Photos:
+                                      </div>
+                                      <div className="image-gallery">
+                                        {review.images.map((img, idx) => (
+                                          <div key={idx} className="review-image-container">
+                                            <img src={img} alt={`Review ${idx+1}`} />
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                                 
-                                <div className="review-actions">
-                                  <div className="helpful-buttons">
-                                    <span className="text-muted me-2">Was this helpful?</span>
-                                    <button className="btn btn-sm helpful-btn">
-                                      <FaThumbsUp className="me-1" /> {review.helpful}
-                                    </button>
-                                    <button className="btn btn-sm not-helpful-btn">
-                                      <FaThumbsDown className="me-1" /> {review.unhelpful}
-                                    </button>
-                                  </div>
-                                </div>
-                                
-                                {review.response && (
+                                {review.response && !review.isEditing ? (
                                   <div className="response-container">
                                     <div className="response-header">
                                       <FaReply className="response-icon" />
@@ -414,37 +678,83 @@ const ArtisanReviews = () => {
                                     </div>
                                     <p>{review.response}</p>
                                     <div className="response-actions">
-                                      <button className="btn btn-sm btn-link edit-response">
+                                      <button 
+                                        className="btn btn-sm btn-link edit-response"
+                                        onClick={() => handleEditResponse(review.id, review.response)}
+                                      >
                                         Edit Response
                                       </button>
                                     </div>
                                   </div>
-                                )}
-                                
-                                {!review.response && (
+                                ) : (
                                   <div className="add-response">
+                                    <div className="response-header">
+                                      <FaReply className="response-icon" />
+                                      <h6>{review.response ? 'Edit Your Response' : 'Add Your Response'}</h6>
+                                    </div>
                                     <div className="response-form">
                                       <textarea 
                                         className="form-control" 
-                                        rows="2" 
+                                        rows="3" 
                                         placeholder="Write a public response to this review..."
-                                        id={`response-${review.id}`}
+                                        value={responseText[review.id] || ''}
+                                        onChange={(e) => handleResponseChange(review.id, e.target.value)}
                                       ></textarea>
                                       <button 
-                                        className="btn btn-sm btn-primary mt-2"
-                                        onClick={() => {
-                                          const responseText = document.getElementById(`response-${review.id}`).value;
-                                          if (responseText.trim()) {
-                                            handleAddResponse(review.productId, review.id, responseText);
-                                            document.getElementById(`response-${review.id}`).value = '';
-                                          }
-                                        }}
+                                        className="btn btn-primary mt-2"
+                                        onClick={() => handleSubmitResponse(review.productId, review.id)}
+                                        disabled={submittingResponse || !responseText[review.id] || responseText[review.id].trim() === ''}
                                       >
-                                        <FaReply className="me-1" /> Post Response
+                                        {submittingResponse ? (
+                                          <>
+                                            <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                            Submitting...
+                                          </>
+                                        ) : review.response ? (
+                                          <>
+                                            <FaCheck className="me-1" /> Save Changes
+                                          </>
+                                        ) : (
+                                          <>
+                                            <FaReply className="me-1" /> Post Response
+                                          </>
+                                        )}
                                       </button>
                                     </div>
                                   </div>
                                 )}
+                              </div>
+                              
+                              {/* Add review status indicator and actions */}
+                              <div className="review-status-controls mt-3">
+                                <div className="d-flex align-items-center justify-content-between">
+                                  <div>
+                                    <span className={`badge bg-${
+                                      review.status === 'Approved' ? 'success' : 
+                                      review.status === 'Rejected' ? 'danger' : 'warning'
+                                    } me-2`}>
+                                      {review.status || 'Pending'}
+                                    </span>
+                                  </div>
+                                  <div className="review-action-buttons">
+                                    <button 
+                                      className="btn btn-sm btn-outline-success me-2"
+                                      onClick={() => handleStatusChange(review.productId, review.id, 'Approved')}
+                                      disabled={submittingResponse || review.status === 'Approved'}
+                                    >
+                                      <i className="fas fa-check me-1"></i> 
+                                      {review.status === 'Approved' ? 'Approved' : 'Approve'}
+                                    </button>
+                                    <button 
+                                      className="btn btn-sm btn-outline-danger"
+                                      onClick={() => handleStatusChange(review.productId, review.id, 'Rejected')}
+                                      disabled={submittingResponse || review.status === 'Rejected'}
+                                    >
+                                      <i className="fas fa-times me-1"></i>
+                                      {review.status === 'Rejected' ? 'Rejected' : 'Reject'}
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>

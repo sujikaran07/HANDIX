@@ -4,6 +4,7 @@ const { Employee } = require('../../models/employeeModel');
 const ProductEntry = require('../../models/productEntryModel');
 const { Order } = require('../../models/orderModel');
 const { Op } = require('sequelize');
+const { sequelize } = require('../../config/db');
 
 // Debug endpoint to check artisan data
 router.get('/check-artisan-data/:artisanId', async (req, res) => {
@@ -206,6 +207,35 @@ router.post('/create-test-products/:artisanId', async (req, res) => {
     res.status(500).json({
       error: error.message,
       source: 'create test products endpoint'
+    });
+  }
+});
+
+// GET /api/artisan-debug/schema/:tableName - Get table schema
+router.get('/schema/:tableName', async (req, res) => {
+  try {
+    const { tableName } = req.params;
+    
+    // Get column information for the specified table
+    const [columns] = await sequelize.query(`
+      SELECT column_name, data_type, is_nullable
+      FROM information_schema.columns
+      WHERE table_name = :tableName
+    `, {
+      replacements: { tableName },
+      type: sequelize.QueryTypes.SELECT
+    });
+    
+    return res.json({ 
+      table: tableName,
+      columns,
+      message: 'Schema retrieved successfully'
+    });
+  } catch (error) {
+    console.error('Error fetching schema:', error);
+    return res.status(500).json({ 
+      message: 'Failed to fetch schema', 
+      error: error.message 
     });
   }
 });

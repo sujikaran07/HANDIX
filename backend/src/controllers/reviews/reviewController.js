@@ -4,7 +4,10 @@ const { Order } = require('../../models/orderModel');
 const Inventory = require('../../models/inventoryModel');
 const { Customer } = require('../../models/customerModel');
 const { Employee } = require('../../models/employeeModel');
+const ProductImage = require('../../models/productImageModel');
 const { uploadToCloudinary } = require('../../utils/cloudinaryConfig');
+const { sequelize, Sequelize } = require('../../config/db');
+const Op = Sequelize.Op; // Import the operators
 
 // Create a new review
 exports.createReview = async (req, res) => {
@@ -80,60 +83,388 @@ exports.getArtisanReviews = async (req, res) => {
     if (!e_id) {
       return res.status(400).json({ message: 'e_id is required' });
     }
-    console.log('Requested e_id:', e_id);
-    // Find all orders assigned to this artisan
-    const orders = await Order.findAll({ where: { assignedArtisan: e_id } });
-    const orderIds = orders.map(o => o.order_id);
-    console.log('Orders for artisan:', orderIds);
-    if (orderIds.length === 0) {
-      console.log('No orders found for this artisan.');
-      return res.json({ products: [], debug: 'No orders found for this artisan.' });
+    console.log('Looking up reviews for artisan with e_id:', e_id);
+    
+    // First, get the employee's name since assigned_artisan stores the full name
+    const employee = await Employee.findOne({ 
+      where: { eId: e_id },
+      attributes: ['firstName', 'lastName'] 
+    });
+    
+    if (!employee) {
+      return res.status(404).json({ 
+        message: 'Artisan not found', 
+        debug: { providedId: e_id } 
+      });
     }
-    // Find all reviews for these orders
+    
+    // Create the full name to match against the assigned_artisan field
+    const artisanFullName = `${employee.firstName} ${employee.lastName}`;
+    console.log(`Looking for orders assigned to: "${artisanFullName}"`);
+    
+    // Find orders where assigned_artisan matches the artisan's name
+    // We use LIKE query to handle partial/case sensitive matches
+    const orders = await Order.findAll({ 
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('assigned_artisan')),
+        'LIKE', 
+        `%${artisanFullName.toLowerCase()}%`
+      ),
+      attributes: ['order_id', 'c_id', 'orderDate', 'customerName', 'totalAmount', 'assignedArtisan'],
+      include: [
+        { 
+          model: Customer, 
+          as: 'customerInfo',
+          attributes: ['c_id', 'firstName', 'lastName', 'email'] // No profileImage
+        }
+      ]
+    });
+    
+    console.log(`Found ${orders.length} orders for artisan ${artisanFullName}`);
+
+    // If no orders found, try a direct SQL query approach
+    if (orders.length === 0) {
+      try {
+        const [directResults] = await sequelize.query(
+          `SELECT order_id, c_id, order_date as "orderDate", customer_name as "customerName", 
+                  total_amount as "totalAmount", assigned_artisan as "assignedArtisan" 
+           FROM "Orders" 
+           WHERE LOWER(assigned_artisan) LIKE :artisanName`,
+          {
+            replacements: { artisanName: `%${artisanFullName.toLowerCase()}%` },
+            type: sequelize.QueryTypes.SELECT
+          }
+        );
+        
+        console.log('Direct SQL query results:', directResults);
+        
+        // Get all assigned artisans for debugging
+        const [allArtisans] = await sequelize.query(
+          `SELECT DISTINCT assigned_artisan FROM "Orders" WHERE assigned_artisan IS NOT NULL`
+        );
+        
+        return res.json({ 
+          products: [], 
+          message: 'No orders have been assigned to you yet',
+          debug: { 
+            artisanId: e_id,
+            artisanName: artisanFullName,
+            orderCount: orders.length,
+            sqlResults: directResults ? directResults.length : 0,
+            availableArtisans: allArtisans
+          }
+        });
+      } catch (sqlError) {
+        console.error('SQL query error:', sqlError);
+      }
+      
+      return res.json({ 
+        products: [], 
+        message: 'No orders have been assigned to you yet',
+        debug: { 
+          artisanId: e_id,
+          artisanName: artisanFullName,
+          orderCount: orders.length
+        }
+      });
+    }
+
+    const orderIds = orders.map(o => o.order_id);
+    console.log('Order IDs found:', orderIds);
+
+    // Fetch all reviews for these orders with related data
     const reviews = await Review.findAll({
       where: { order_id: orderIds },
       include: [
-        { model: ReviewImage, as: 'reviewImages' },
-        { model: Customer, as: 'customer' },
-        { model: Inventory, as: 'product' }
+        { 
+          model: ReviewImage, 
+          as: 'reviewImages' 
+        },
+        { 
+          model: Customer, 
+          as: 'customer',
+          attributes: ['c_id', 'firstName', 'lastName'] // Remove profileImage
+        },
+        { 
+          model: Inventory, 
+          as: 'product',
+          attributes: ['product_id', 'product_name', 'default_image_url', 'description'],
+          include: [
+            {
+              model: ProductImage,
+              as: 'productImages',
+              attributes: ['image_url'],
+              limit: 1,  // We just need one image
+            }
+          ]
+        },
+        {
+          model: Order,
+          as: 'orderInfo',
+          attributes: ['order_id', 'orderDate', 'customerName', 'totalAmount']
+        }
       ]
     });
-    console.log('Reviews found:', reviews.length);
+    
+    console.log(`Found ${reviews.length} reviews for orders handled by artisan ${e_id}`);
+    
     if (reviews.length === 0) {
-      console.log('No reviews found for these orders.');
-      return res.json({ products: [], debug: 'No reviews found for these orders.' });
+      return res.json({ 
+        products: [], 
+        message: 'No customers have left reviews for your completed orders yet',
+        debug: { orderIds }
+      });
     }
-    // Group reviews by product
+
+    // Group reviews by product for better display
     const productMap = {};
+    
     reviews.forEach(review => {
       const product = review.product;
       if (!product) return;
+      
       if (!productMap[product.product_id]) {
+        // Set the product image, prefer default_image_url, but fallback to productImages if available
+        let productImage = product.default_image_url;
+        
+        // Use the first productImage if available and default_image_url is missing
+        if (!productImage && product.productImages && product.productImages.length > 0) {
+          productImage = product.productImages[0].image_url;
+        }
+        
         productMap[product.product_id] = {
           id: product.product_id,
           name: product.product_name,
-          image: product.default_image_url,
+          image: productImage || '/placeholder-product.jpg', // Fallback image if none found
+          description: product.description,
           reviews: []
         };
       }
+      
+      // Get customer info either from the review.customer or from the order
+      const customerFirstName = review.customer?.firstName || review.orderInfo?.customerName?.split(' ')[0] || 'Anonymous';
+      const customerLastName = review.customer?.lastName || review.orderInfo?.customerName?.split(' ')[1] || '';
+      // Set a default avatar instead of using the non-existent profileImage field
+      const customerProfileImage = null; // No profile image available
+      
       productMap[product.product_id].reviews.push({
         id: review.review_id,
-        customer: review.customer ? `${review.customer.firstName} ${review.customer.lastName}` : 'Unknown',
-        customerAvatar: null, // Add avatar if available
+        customer: `${customerFirstName} ${customerLastName}`.trim(),
+        customerAvatar: customerProfileImage,
         rating: review.rating,
         review: review.review_text,
         date: review.review_date,
-        helpful: 0, // Placeholder, add logic if needed
+        helpful: 0, // Placeholder, implement if needed
         unhelpful: 0, // Placeholder
         response: review.response,
+        orderInfo: {
+          orderId: review.order_id,
+          orderDate: review.orderInfo?.orderDate
+        },
         images: review.reviewImages ? review.reviewImages.map(img => img.image_url) : []
       });
     });
+    
+    // Calculate average ratings and counts for each product
+    Object.values(productMap).forEach(product => {
+      const ratings = product.reviews.map(r => r.rating);
+      product.avgRating = (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1);
+      product.totalReviews = ratings.length;
+      product.ratingCounts = {
+        1: ratings.filter(r => r === 1).length,
+        2: ratings.filter(r => r === 2).length,
+        3: ratings.filter(r => r === 3).length,
+        4: ratings.filter(r => r === 4).length,
+        5: ratings.filter(r => r === 5).length,
+      };
+    });
+    
     const productsResult = Object.values(productMap);
-    console.log('Final grouped products:', productsResult);
-    return res.json({ products: productsResult, debug: 'Success', orderIds, reviewCount: reviews.length });
+    return res.json({ 
+      products: productsResult, 
+      message: 'Successfully retrieved reviews',
+      orderCount: orderIds.length,
+      reviewCount: reviews.length
+    });
   } catch (error) {
+    // Add more detailed error logging
     console.error('Error fetching artisan reviews:', error);
-    return res.status(500).json({ message: 'Failed to fetch reviews', error: error.message });
+    console.error('SQL query that caused the error:', error.sql || 'SQL not available');
+    
+    return res.status(500).json({ 
+      message: 'Failed to fetch reviews', 
+      error: error.message,
+      stack: error.stack,
+      // Add a user-friendly error message
+      userMessage: 'There was an issue retrieving your reviews. Please try again later.'
+    });
   }
-}; 
+};
+
+// Add a new method to respond to reviews and update status
+exports.respondToReview = async (req, res) => {
+  try {
+    const { review_id, response, status } = req.body;
+    const { e_id } = req.query;
+
+    if (!review_id || !e_id || (!response && !status)) {
+      return res.status(400).json({ message: 'Missing required fields: review_id, status/response, and e_id' });
+    }
+
+    // Find the review
+    const review = await Review.findByPk(review_id);
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    // Get the employee's name
+    const employee = await Employee.findOne({ 
+      where: { eId: e_id },
+      attributes: ['firstName', 'lastName'] 
+    });
+    
+    if (!employee) {
+      return res.status(404).json({ message: 'Artisan not found' });
+    }
+    
+    // Create the full name to match
+    const artisanFullName = `${employee.firstName} ${employee.lastName}`;
+    
+    // Use LIKE instead of iLike for better compatibility
+    const order = await Order.findOne({ 
+      where: { 
+        order_id: review.order_id,
+        assigned_artisan: {
+          [Op.like]: `%${artisanFullName}%` // Use Op.like instead of Op.iLike
+        }
+      }
+    });
+
+    if (!order) {
+      // Debug query to see what artisan is actually assigned
+      const orderInfo = await Order.findOne({
+        where: { order_id: review.order_id },
+        attributes: ['order_id', 'assignedArtisan', 'customerName']
+      });
+      
+      return res.status(403).json({ 
+        message: 'You do not have permission to respond to this review',
+        debug: {
+          providedEid: e_id,
+          artisanName: artisanFullName,
+          orderInfo: orderInfo ? {
+            orderExists: true,
+            assignedArtisan: orderInfo.assignedArtisan,
+            customerName: orderInfo.customerName
+          } : {
+            orderExists: false
+          }
+        }
+      });
+    }
+
+    // Prepare update data
+    const updateData = {};
+    
+    // Add response if provided
+    if (response) {
+      updateData.response = response;
+    }
+    
+    // Update status if provided (only allow Approved or Rejected)
+    if (status && ['Approved', 'Rejected'].includes(status)) {
+      updateData.status = status;
+    }
+
+    // Update the review
+    await review.update(updateData);
+
+    return res.status(200).json({
+      message: 'Review updated successfully',
+      review_id: review.review_id,
+      response: updateData.response,
+      status: updateData.status
+    });
+  } catch (error) {
+    console.error('Error updating review:', error);
+    return res.status(500).json({ 
+      message: 'Failed to update review', 
+      error: error.message,
+      stack: error.stack // Include stack trace for debugging
+    });
+  }
+};
+
+// Add new method to get reviews by status (for admin/artisan filtering)
+exports.getReviewsByStatus = async (req, res) => {
+  try {
+    const { status, e_id } = req.query;
+    
+    if (!e_id) {
+      return res.status(400).json({ message: 'e_id is required' });
+    }
+    
+    // First get artisan info
+    const employee = await Employee.findOne({ 
+      where: { eId: e_id },
+      attributes: ['firstName', 'lastName'] 
+    });
+    
+    if (!employee) {
+      return res.status(404).json({ message: 'Artisan not found' });
+    }
+    
+    const artisanFullName = `${employee.firstName} ${employee.lastName}`;
+    
+    // Find orders for this artisan
+    const orders = await Order.findAll({ 
+      where: sequelize.where(
+        sequelize.fn('LOWER', sequelize.col('assigned_artisan')), 
+        'LIKE', 
+        `%${artisanFullName.toLowerCase()}%`
+      ),
+      attributes: ['order_id']
+    });
+    
+    const orderIds = orders.map(o => o.order_id);
+    
+    if (orderIds.length === 0) {
+      return res.json({ products: [], message: 'No orders found for this artisan' });
+    }
+    
+    // Build the where clause
+    const whereClause = {
+      order_id: orderIds
+    };
+    
+    // Add status filter if provided
+    if (status && ['Pending', 'Approved', 'Rejected'].includes(status)) {
+      whereClause.status = status;
+    }
+    
+    // Fetch reviews with the filter
+    const reviews = await Review.findAll({
+      where: whereClause,
+      include: [
+        { model: ReviewImage, as: 'reviewImages' },
+        { model: Customer, as: 'customer', attributes: ['c_id', 'firstName', 'lastName'] },
+        { model: Inventory, as: 'product', attributes: ['product_id', 'product_name', 'default_image_url'] },
+        { model: Order, as: 'orderInfo', attributes: ['order_id', 'orderDate', 'customerName'] }
+      ]
+    });
+    
+    // Process reviews as in getArtisanReviews method
+    // ...
+
+    return res.json({
+      reviews,
+      message: `Retrieved ${reviews.length} reviews with status: ${status || 'any'}`
+    });
+  } catch (error) {
+    console.error('Error fetching filtered reviews:', error);
+    return res.status(500).json({
+      message: 'Failed to fetch reviews',
+      error: error.message
+    });
+  }
+};

@@ -67,7 +67,7 @@ const Review = sequelize.define('Review', {
   },
   status: {
     type: DataTypes.STRING(20),
-    defaultValue: 'Pending',
+    defaultValue: 'Pending', // Status can be 'Pending', 'Approved', or 'Rejected'
     field: 'status',
   },
   images: {
@@ -86,12 +86,14 @@ const Review = sequelize.define('Review', {
   underscored: true,
 });
 
+// Fix the associate function to prevent duplicate alias usage
 Review.associate = (models) => {
   Review.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'customer' });
-  Review.belongsTo(models.Order, { foreignKey: 'order_id', as: 'order' });
+  // Change the alias to 'orderInfo' instead of 'order' to avoid conflict
+  Review.belongsTo(models.Order, { foreignKey: 'order_id', as: 'orderInfo' });
   Review.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'product' });
   Review.hasMany(models.ReviewImage || ReviewImage, { foreignKey: 'review_id', as: 'reviewImages' });
   (models.ReviewImage || ReviewImage).belongsTo(Review, { foreignKey: 'review_id', as: 'review' });
 };
 
-module.exports = Review; 
+module.exports = Review;
