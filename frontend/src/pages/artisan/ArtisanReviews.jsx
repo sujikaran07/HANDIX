@@ -124,14 +124,19 @@ const ArtisanReviews = () => {
 
   // Get all reviews across all products
   const getAllReviews = () => {
-    return products.flatMap(product => 
-      product.reviews.map(review => ({
-        ...review,
-        productId: product.id,
-        productName: product.name,
-        productImage: product.image
-      }))
+    const allReviews = products.flatMap(product => 
+      product.reviews.map(review => {
+        // Debug logging for review status
+        console.log(`Review ${review.id} status: ${review.status || 'undefined'}`);
+        return {
+          ...review,
+          productId: product.id,
+          productName: product.name,
+          productImage: product.image
+        };
+      })
     );
+    return allReviews;
   };
 
   // Filter and sort reviews
@@ -742,14 +747,21 @@ const ArtisanReviews = () => {
                               {/* Add review status indicator and actions */}
                               <div className="review-status-controls mt-3">
                                 <div className="d-flex align-items-center justify-content-between">
-                                  <div>
+                                  <div className="status-display">
                                     <span className={`badge bg-${
                                       review.status === 'Approved' ? 'success' : 
                                       review.status === 'Rejected' ? 'danger' : 'warning'
                                     } me-2`}>
                                       {review.status || 'Pending'}
                                     </span>
+                                    {/* Add debug info during development */}
+                                    {process.env.NODE_ENV === 'development' && (
+                                      <small className="text-muted ms-2">
+                                       
+                                      </small>
+                                    )}
                                   </div>
+                                  
                                   <div className="review-action-buttons">
                                     <button 
                                       className="btn btn-sm btn-outline-success me-2"

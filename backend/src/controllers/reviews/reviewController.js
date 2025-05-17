@@ -254,6 +254,7 @@ exports.getArtisanReviews = async (req, res) => {
         rating: review.rating,
         review: review.review_text,
         date: review.review_date,
+        status: review.status, // Explicitly include the status field
         helpful: 0, // Placeholder, implement if needed
         unhelpful: 0, // Placeholder
         response: review.response,
