@@ -74,11 +74,11 @@ const AdminSidebar = () => {
               <FaBox /> Products
             </Link>
           </li>
-          <li className={activeLink === '/admin/pricing' ? 'active' : ''}>
-            <Link to="/pricing" onClick={() => handleLinkClick('/admin/pricing')}>
+          {/* <li className={activeLink === '/admin/pricing' ? 'active' : ''}>
+            <Link to="/admin/pricing" onClick={() => handleLinkClick('/admin/pricing')}>
               <FaReceipt /> Pricing
             </Link>
-          </li>
+          </li> */}
           <li className={activeLink === '/admin/reports' ? 'active' : ''}>
             <Link to="/admin/reports" onClick={() => handleLinkClick('/admin/reports')}>
               <FaFileAlt /> Reports
