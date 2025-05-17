@@ -3,6 +3,7 @@ const { sequelize } = require('../config/db');
 const { Customer } = require('./customerModel');
 const { Order } = require('./orderModel');
 const Inventory = require('./inventoryModel');
+const ReviewImage = require('./reviewImageModel');
 
 const Review = sequelize.define('Review', {
   review_id: {
@@ -34,7 +35,7 @@ const Review = sequelize.define('Review', {
     onUpdate: 'CASCADE',
     field: 'product_id',
   },
-  customer_id: {
+  c_id: {
     type: DataTypes.STRING,
     allowNull: false,
     references: {
@@ -43,7 +44,7 @@ const Review = sequelize.define('Review', {
     },
     onDelete: 'SET NULL',
     onUpdate: 'CASCADE',
-    field: 'customer_id',
+    field: 'c_id',
   },
   rating: {
     type: DataTypes.SMALLINT,
@@ -86,9 +87,11 @@ const Review = sequelize.define('Review', {
 });
 
 Review.associate = (models) => {
-  Review.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
+  Review.belongsTo(models.Customer, { foreignKey: 'c_id', as: 'customer' });
   Review.belongsTo(models.Order, { foreignKey: 'order_id', as: 'order' });
   Review.belongsTo(models.Inventory, { foreignKey: 'product_id', as: 'product' });
+  Review.hasMany(models.ReviewImage || ReviewImage, { foreignKey: 'review_id', as: 'reviewImages' });
+  (models.ReviewImage || ReviewImage).belongsTo(Review, { foreignKey: 'review_id', as: 'review' });
 };
 
 module.exports = Review; 

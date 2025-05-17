@@ -9,130 +9,35 @@ const ArtisanReviews = () => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterRating, setFilterRating] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchReviews = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        const token = localStorage.getItem('artisanToken');
-        if (!token) {
-          console.error('No token found for artisan');
+        // Get artisan e_id from localStorage (adjust key as needed)
+        const eId = localStorage.getItem('e_id');
+        if (!eId) {
+          setError('No artisan e_id found.');
+          setIsLoading(false);
           return;
         }
-
-        // Simulate API response
-        setTimeout(() => {
-          // Dummy data
-          const data = [
-            {
-              id: 'P001',
-              name: 'Handwoven Basket',
-              image: 'https://images.unsplash.com/photo-1595231776515-ddffb1f4eb73?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80',
-              avgRating: 4.5,
-              totalReviews: 24,
-              ratingCounts: { 5: 18, 4: 4, 3: 1, 2: 1, 1: 0 },
-              reviews: [
-                {
-                  id: 1,
-                  customer: 'John S.',
-                  customerAvatar: 'https://randomuser.me/api/portraits/men/41.jpg',
-                  rating: 5,
-                  review: "The basket is beautifully made with incredible attention to detail. Exactly what I was looking for!",
-                  date: '2023-08-01T14:30:00',
-                  helpful: 12,
-                  unhelpful: 0,
-                  response: null
-                },
-                {
-                  id: 4,
-                  customer: 'Sarah T.',
-                  customerAvatar: 'https://randomuser.me/api/portraits/women/65.jpg',
-                  rating: 3,
-                  review: 'The basket is well-made but the colors don\'t match what was shown on the website.',
-                  date: '2023-07-22T11:20:00',
-                  helpful: 4,
-                  unhelpful: 2,
-                  response: null
-                }
-              ]
-            },
-            {
-              id: 'P002',
-              name: 'Handcrafted Wooden Bowl',
-              image: 'https://images.unsplash.com/photo-1605666807903-7e3924943070?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80',
-              avgRating: 4.0,
-              totalReviews: 15,
-              ratingCounts: { 5: 8, 4: 5, 3: 1, 2: 1, 1: 0 },
-              reviews: [
-                {
-                  id: 2,
-                  customer: 'Emma L.',
-                  customerAvatar: 'https://randomuser.me/api/portraits/women/32.jpg',
-                  rating: 4,
-                  review: 'Beautiful craftsmanship. The bowl is slightly smaller than I expected, but the quality is excellent.',
-                  date: '2023-07-29T09:15:00',
-                  helpful: 8,
-                  unhelpful: 1,
-                  response: 'Thank you for your feedback! Our product descriptions include dimensions, but we appreciate your comment about size expectations.'
-                }
-              ]
-            },
-            {
-              id: 'P003',
-              name: 'Macrame Wall Hanging',
-              image: 'https://images.unsplash.com/photo-1595231776337-ad35d79a0a81?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80',
-              avgRating: 5.0,
-              totalReviews: 18,
-              ratingCounts: { 5: 16, 4: 2, 3: 0, 2: 0, 1: 0 },
-              reviews: [
-                {
-                  id: 3,
-                  customer: 'Michael R.',
-                  customerAvatar: 'https://randomuser.me/api/portraits/men/55.jpg',
-                  rating: 5,
-                  review: "This wall hanging exceeded my expectations. The craftsmanship is top-notch and it looks amazing in my living room.",
-                  date: '2023-07-25T16:50:00',
-                  helpful: 15,
-                  unhelpful: 0,
-                  response: "We're so happy you love your wall hanging! Thank you for supporting traditional crafts."
-                }
-              ]
-            },
-            {
-              id: 'P004',
-              name: 'Ceramic Vase',
-              image: 'https://images.unsplash.com/photo-1612196808214-b40b912de67a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=100&q=80',
-              avgRating: 5.0,
-              totalReviews: 10,
-              ratingCounts: { 5: 10, 4: 0, 3: 0, 2: 0, 1: 0 },
-              reviews: [
-                {
-                  id: 5,
-                  customer: 'David K.',
-                  customerAvatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-                  rating: 5,
-                  review: 'Absolutely beautiful vase. The artisan is truly skilled - you can see the dedication in every detail.',
-                  date: '2023-07-20T13:45:00',
-                  helpful: 10,
-                  unhelpful: 0,
-                  response: 'Thank you for your kind words, David! We take great pride in our ceramic work.'
-                }
-              ]
-            },
-          ];
-          
-          setProducts(data);
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Error fetching products and reviews:', error);
-        setIsLoading(false);
+        // Fetch reviews for products created by this artisan
+        const res = await fetch(`/api/reviews?e_id=${eId}`);
+        if (!res.ok) throw new Error('Failed to fetch reviews');
+        const data = await res.json();
+        // Expecting data to be an array of products with reviews
+        setProducts(data.products || []);
+      } catch (err) {
+        setError(err.message || 'Failed to fetch reviews');
       }
+      setIsLoading(false);
     };
-
-    fetchProducts();
+    fetchReviews();
   }, []);
 
   // Get all reviews across all products
@@ -312,6 +217,10 @@ const ArtisanReviews = () => {
                     <span className="visually-hidden">Loading...</span>
                   </div>
                   <p className="mt-2">Loading product reviews...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center my-5">
+                  <p className="text-danger">{error}</p>
                 </div>
               ) : (
                 <>

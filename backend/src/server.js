@@ -51,6 +51,8 @@ const { Discount } = require('./models/discountModel');
 const RetailShippingSettings = require('./models/retailShippingSettingsModel');
 const DistrictShippingRates = require('./models/districtShippingRatesModel');
 const PurchaseLimit = require('./models/purchaseLimitsModel');
+const Review = require('./models/reviewModel');
+const ReviewImage = require('./models/reviewImageModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 
@@ -113,6 +115,10 @@ Discount.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id'
 Inventory.hasOne(PurchaseLimit, { foreignKey: 'productId', as: 'purchaseLimit', sourceKey: 'product_id' });
 PurchaseLimit.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id', as: 'inventory' });
 
+// Register associations for reviews
+if (Review.associate) Review.associate({ Customer, Order, Inventory, ReviewImage });
+if (ReviewImage.associate) ReviewImage.associate({ Review });
+
 dotenv.config();
 
 const app = express();
@@ -160,6 +166,9 @@ app.use('/api/discounts', discountRoutes);
 
 // Register artisan routes
 app.use('/api/artisan', artisanRoutes);
+
+// Register review routes
+app.use('/api/reviews', require('./routes/reviews/reviewRoutes'));
 
 // Enable debug routes only in development environment
 if (process.env.NODE_ENV === 'development') {
