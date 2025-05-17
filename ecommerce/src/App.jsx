@@ -40,6 +40,7 @@ import EditProfilePage from './pages/EditProfilePage';
 import OrderDetailsPage from './pages/OrderDetailsPage';
 import WriteReviewPage from './pages/WriteReviewPage';
 import PoliciesPage from './pages/Policies';
+import ProductReviews from './pages/ProductReviews';
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => (
                 {/* Add these new routes for the redirection to work */}
                 <Route path="/reviews/write/:orderId" element={<WriteReviewPage />} />
                 <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
+                <Route path="/products/:id/reviews" element={<ProductReviews />} />
                 
                 <Route path="*" element={<NotFound />} />
               </Routes>

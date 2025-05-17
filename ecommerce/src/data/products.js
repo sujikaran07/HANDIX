@@ -207,8 +207,8 @@ export const fetchProductById = async (productId) => {
       stockStatus: effectiveStatus,
       isCustomizable: Boolean(item.customization_available),
       quantity: effectiveQuantity,
-      rating: parseFloat(item.rating || 0),
-      reviewCount: parseInt(item.review_count || 0)
+      rating: 0,         // Initialize with 0 instead of parsed value
+      reviewCount: 0     // Initialize with 0 instead of parsed value
     };
     
     if (item.variations && Array.isArray(item.variations)) {
@@ -271,6 +271,27 @@ export const fetchProductById = async (productId) => {
       
       if (product.variations && product.variations.length > 0) {
         product.hasAdditionalPriceOptions = true;
+      }
+    }
+    
+    // Fetch approved reviews for this product
+    try {
+      const reviewsResponse = await axios.get(`http://localhost:5000/api/reviews/product?product_id=${productId}`);
+      
+      if (reviewsResponse.data) {
+        // Replace the static rating values with the calculated ones from approved reviews
+        product.reviews = reviewsResponse.data.reviews || [];
+        product.rating = reviewsResponse.data.avgRating || 0;
+        product.reviewCount = reviewsResponse.data.reviewCount || 0;
+        
+        console.log(`Loaded ${product.reviewCount} approved reviews with avg rating ${product.rating}`);
+      }
+    } catch (reviewError) {
+      console.error('Failed to fetch product reviews:', reviewError);
+      // If we fail to fetch reviews, use original values if available
+      if (item.rating !== undefined && item.rating !== null) {
+        product.rating = parseFloat(item.rating);
+        product.reviewCount = parseInt(item.review_count || 0);
       }
     }
     

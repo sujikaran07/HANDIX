@@ -341,26 +341,40 @@ const ArtisanReviews = () => {
         return;
       }
 
-      await axios.post(`/api/reviews/respond?e_id=${eId}`, {
+      // Log the request for debugging
+      console.log(`Sending request to update review ${reviewId} status to ${status}`);
+
+      const response = await axios.post(`/api/reviews/respond?e_id=${eId}`, {
         review_id: reviewId,
         status: status
       });
       
-      // Update local state
-      setProducts(products.map(product => 
-        product.id === productId 
-          ? {
-              ...product,
-              reviews: product.reviews.map(review =>
-                review.id === reviewId 
-                  ? { ...review, status: status } 
-                  : review
-              )
-            }
-          : product
-      ));
+      console.log('Status update response:', response.data);
       
-      toast.success(`Review ${status === 'Approved' ? 'approved' : 'rejected'} successfully`);
+      // Update local state - make sure product with ID exists and the review is in the reviews array
+      const updatedProducts = [...products];
+      let reviewUpdated = false;
+      
+      for (const product of updatedProducts) {
+        const reviewIndex = product.reviews.findIndex(r => r.id === reviewId);
+        if (reviewIndex !== -1) {
+          product.reviews[reviewIndex] = {
+            ...product.reviews[reviewIndex],
+            status: status
+          };
+          reviewUpdated = true;
+          break;
+        }
+      }
+      
+      if (reviewUpdated) {
+        setProducts(updatedProducts);
+        toast.success(`Review ${status === 'Approved' ? 'approved' : 'rejected'} successfully`);
+      } else {
+        console.error(`Could not find review ${reviewId} in local products state`);
+        // Refresh data to ensure UI reflects current server state
+        fetchReviews();
+      }
     } catch (error) {
       console.error(`Error ${status.toLowerCase()}ing review:`, error);
       toast.error(error.response?.data?.message || `Failed to ${status.toLowerCase()} review`);

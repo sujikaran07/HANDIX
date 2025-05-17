@@ -272,11 +272,13 @@ const ProductDetailPage = () => {
                     <Star 
                       key={star}
                       size={16} 
-                      className={`${star <= product.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
+                      className={`${star <= Math.round(product.rating) ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'}`}
                     />
                   ))}
                 </div>
-                <span className="text-gray-500">({product.reviewCount} reviews)</span>
+                <span className="text-gray-500">
+                  {product.rating > 0 ? `${product.rating.toFixed(1)} (${product.reviewCount} reviews)` : '(No reviews yet)'}
+                </span>
               </div>
               
               <p className="text-xl font-bold mb-4 text-primary">
@@ -426,37 +428,80 @@ const ProductDetailPage = () => {
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6">Customer Reviews</h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {product.reviewCount > 0 ? (
-                [1, 2].map(i => (
-                  <div key={i} className="border rounded-lg p-5">
-                    <div className="flex items-center mb-2">
-                      <div className="h-10 w-10 bg-gray-200 rounded-full mr-3"></div>
-                      <div>
-                        <p className="font-medium">Customer Name</p>
-                        <div className="flex items-center">
-                          {Array.from({ length: 5 }).map((_, index) => (
-                            <Star 
-                              key={index}
-                              size={14} 
-                              className={`${
-                                index < Math.floor(product.rating) 
-                                  ? 'text-yellow-500 fill-yellow-500' 
-                                  : 'text-gray-300'
-                              }`}
+              {product.reviewCount > 0 && product.reviews && product.reviews.length > 0 ? (
+                // Display only top 3 reviews if available - sort by highest rating first
+                product.reviews
+                  .slice()
+                  .sort((a, b) => b.rating - a.rating)
+                  .slice(0, 3)
+                  .map((review) => (
+                    <div key={review.id} className="border rounded-lg p-5">
+                      <div className="flex items-center mb-2">
+                        <div className="h-10 w-10 bg-gray-200 rounded-full mr-3 flex items-center justify-center">
+                          {review.customer.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-medium">{review.customer}</p>
+                          <div className="flex items-center">
+                            {Array.from({ length: 5 }).map((_, index) => (
+                              <Star 
+                                key={index}
+                                size={14} 
+                                className={`${
+                                  index < Math.floor(review.rating) 
+                                    ? 'text-yellow-500 fill-yellow-500' 
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                            <span className="ml-2 text-sm text-gray-500">
+                              {new Date(review.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-gray-600">{review.review}</p>
+                      
+                      {/* Show review images if available */}
+                      {review.images && review.images.length > 0 && (
+                        <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+                          {review.images.map((img, idx) => (
+                            <img 
+                              key={idx} 
+                              src={img} 
+                              alt={`Review ${idx+1}`}
+                              className="h-16 w-16 object-cover rounded-md"
                             />
                           ))}
                         </div>
-                      </div>
+                      )}
+                      
+                      {/* Show artisan response if available */}
+                      {review.response && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="font-medium text-sm text-gray-700">Artisan Response:</p>
+                          <p className="text-gray-600 text-sm mt-1">{review.response}</p>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-gray-600">
-                      This product exceeded my expectations. The craftsmanship is outstanding and it arrived quickly. I'll definitely be ordering more items from Handix.
-                    </p>
-                  </div>
-                ))
+                  ))
               ) : (
                 <p className="text-gray-500">No reviews yet. Be the first to review this product!</p>
               )}
             </div>
+            
+            {/* Show "View All Reviews" button if there are more than 3 reviews */}
+            {product.reviewCount > 3 && (
+              <div className="text-center mt-6">
+                <Link 
+                  to={`/products/${product.id}/reviews`} 
+                  className="inline-flex items-center px-4 py-2 border border-primary text-primary rounded-md hover:bg-primary hover:text-white transition-colors"
+                >
+                  View all {product.reviewCount} reviews
+                  <ChevronRight size={16} className="ml-1" />
+                </Link>
+              </div>
+            )}
           </div>
           
           <div>

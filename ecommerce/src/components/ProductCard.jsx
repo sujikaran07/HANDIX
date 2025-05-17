@@ -9,12 +9,13 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const navigate = useNavigate();
   
-  // Debug the product object
-  console.log('ProductCard received:', {
+  // Enhanced debugging for rating information
+  console.log('ProductCard received product with ratings:', {
     id: product?.id, 
     name: product?.name,
-    price: product?.price,
-    priceType: typeof product?.price
+    rating: product?.rating,
+    reviewCount: product?.reviewCount,
+    ratingType: typeof product?.rating
   });
 
   // Check if product is valid
@@ -86,6 +87,12 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
 
   // Make sure price is a number for display
   const displayPrice = Number(product.price || 0).toLocaleString();
+  
+  // Properly parse rating and review count to ensure they're numbers
+  const rating = parseFloat(product.rating || 0);
+  const reviewCount = parseInt(product.reviewCount || 0);
+  // Determine if this product has any ratings
+  const hasRatings = !isNaN(rating) && rating > 0 && !isNaN(reviewCount) && reviewCount > 0;
 
   return (
     <Link to={`/products/${product.id}`} className="group">
@@ -110,6 +117,13 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
           </button>
         )}
         
+        {/* Top Rated Badge */}
+        {hasRatings && rating >= 4.5 && (
+          <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">
+            Top Rated
+          </div>
+        )}
+        
         {/* Product Image */}
         <div className="aspect-square overflow-hidden">
           <img
@@ -125,11 +139,16 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
           
           <div className="flex items-center mb-1.5">
             <div className="flex items-center">
-              <Star size={14} fill="#FBBF24" stroke="none" />
-              <span className="ml-1 text-xs">{(product.rating || 0).toFixed(1)}</span>
+              <Star 
+                size={14} 
+                className={hasRatings ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}
+              />
+              <span className="ml-1 text-xs">
+                {hasRatings ? rating.toFixed(1) : "0.0"}
+              </span>
             </div>
             <span className="mx-1.5 text-gray-300">|</span>
-            <span className="text-xs text-gray-500">{product.reviewCount || 0} reviews</span>
+            <span className="text-xs text-gray-500">{reviewCount} reviews</span>
           </div>
           
           <div className="flex justify-between items-center">

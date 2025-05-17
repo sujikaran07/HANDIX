@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createReview, getArtisanReviews, respondToReview, getReviewsByStatus } = require('../../controllers/reviews/reviewController');
+const { createReview, getArtisanReviews, respondToReview, getReviewsByStatus, getApprovedProductReviews } = require('../../controllers/reviews/reviewController');
 const { upload } = require('../../utils/cloudinaryConfig');
 
 // POST /api/reviews - Create a new review
@@ -11,5 +11,7 @@ router.get('/', getArtisanReviews);
 router.post('/respond', respondToReview);
 // GET /api/reviews/filtered?status=...&e_id=... - Get reviews filtered by status
 router.get('/filtered', getReviewsByStatus);
+// GET /api/reviews/product?product_id=... - Get only approved reviews for a product
+router.get('/product', getApprovedProductReviews);
 
 module.exports = router;

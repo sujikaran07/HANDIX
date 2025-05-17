@@ -468,3 +468,90 @@ exports.getReviewsByStatus = async (req, res) => {
     });
   }
 };
+
+// Add this new method to get only approved reviews for public display
+exports.getApprovedProductReviews = async (req, res) => {
+  try {
+    const { product_id } = req.query;
+    
+    if (!product_id) {
+      return res.status(400).json({ message: 'product_id is required' });
+    }
+    
+    // Find only approved reviews for this product
+    const reviews = await Review.findAll({
+      where: { 
+        product_id: product_id,
+        status: 'Approved'  // Only get approved reviews
+      },
+      include: [
+        { 
+          model: ReviewImage, 
+          as: 'reviewImages' 
+        },
+        { 
+          model: Customer, 
+          as: 'customer',
+          attributes: ['c_id', 'firstName', 'lastName'] 
+        },
+        {
+          model: Order,
+          as: 'orderInfo',
+          attributes: ['order_id', 'orderDate', 'customerName']
+        }
+      ],
+      order: [['review_date', 'DESC']] // Most recent first
+    });
+    
+    // Calculate average rating with more precision
+    let avgRating = 0;
+    if (reviews.length > 0) {
+      const sum = reviews.reduce((total, review) => total + review.rating, 0);
+      avgRating = sum / reviews.length;
+    }
+    
+    // Calculate the count of each rating
+    const ratingCounts = {
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0
+    };
+    
+    reviews.forEach(review => {
+      if (review.rating >= 1 && review.rating <= 5) {
+        ratingCounts[review.rating]++;
+      }
+    });
+    
+    const formattedReviews = reviews.map(review => {
+      const customerFirstName = review.customer?.firstName || review.orderInfo?.customerName?.split(' ')[0] || 'Anonymous';
+      const customerLastName = review.customer?.lastName || review.orderInfo?.customerName?.split(' ')[1] || '';
+      
+      return {
+        id: review.review_id,
+        customer: `${customerFirstName} ${customerLastName}`.trim(),
+        rating: review.rating,
+        review: review.review_text,
+        date: review.review_date,
+        images: review.reviewImages ? review.reviewImages.map(img => img.image_url) : [],
+        response: review.response // Include artisan response if any
+      };
+    });
+    
+    return res.json({
+      product_id,
+      avgRating: parseFloat(avgRating.toFixed(1)),
+      reviewCount: reviews.length,
+      ratingCounts: ratingCounts,
+      reviews: formattedReviews
+    });
+  } catch (error) {
+    console.error('Error fetching approved product reviews:', error);
+    return res.status(500).json({ 
+      message: 'Failed to fetch reviews', 
+      error: error.message
+    });
+  }
+};
