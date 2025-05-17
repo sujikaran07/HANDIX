@@ -87,12 +87,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           status = 'To Pay';
         }
         
-        // For customized orders with assigned artisans, ensure they show with Review status
-        const assignedArtisan = order.assignedArtisan || order.assigned_artisan || 'Not Assigned';
-        if (customized === 'Yes' && assignedArtisan !== 'Not Assigned') {
-          status = 'Review';
-        }
-        
         // Keep the complete order object for the view form
         return {
           id: order.order_id || order.id,
@@ -100,7 +94,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           orderDate,
           totalAmount: `${totalAmount}`,  
           customized,
-          assignedArtisan: assignedArtisan,
+          assignedArtisan: order.assignedArtisan || order.assigned_artisan || 'Not Assigned',
           status,
           items: order.items || [],
           customerEmail: order.customerEmail || order.customerInfo?.email,
@@ -334,9 +328,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                   currentOrders.map(order => {
                     // Ensure status is always up to date before rendering
                     let displayStatus = order.status;
-                    if (order.customized === 'Yes' && order.assignedArtisan && order.assignedArtisan !== 'Not Assigned') {
-                      displayStatus = 'Review';
-                    }
                     
                     // Determine if we should disable the assign artisan option
                     const artisanAlreadyAssigned = order.assignedArtisan && order.assignedArtisan !== 'Not Assigned';

@@ -405,7 +405,11 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
                     <div className="col-md-6">
                       <label className="text-muted small mb-1">Delivery Date</label>
                       <div className="bg-light p-2 rounded" style={{height: "36px", lineHeight: "20px", fontSize: "14px"}}>
-                        {order.deliveryDate ? formatDate(order.deliveryDate) : 'To be determined'}
+                        {order.deliveryEndDate
+                          ? new Date(order.deliveryEndDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                          : order.deliveryStartDate
+                            ? new Date(order.deliveryStartDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                            : 'To be determined'}
                       </div>
                     </div>
                     

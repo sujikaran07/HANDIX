@@ -41,13 +41,7 @@ const Order = sequelize.define('Order', {
   },
   orderDate: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
     field: 'order_date',
-  },
-  deliveryDate: {
-    type: DataTypes.DATE,
-    allowNull: true,
-    field: 'delivery_date',
   },
   customerName: {
     type: DataTypes.STRING,
@@ -68,6 +62,16 @@ const Order = sequelize.define('Order', {
     type: DataTypes.STRING,
     allowNull: true,
     field: 'assigned_artisan',
+  },
+  deliveryStartDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    field: 'delivery_start_date',
+  },
+  deliveryEndDate: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+    field: 'delivery_end_date',
   },
 }, {
   tableName: 'Orders',

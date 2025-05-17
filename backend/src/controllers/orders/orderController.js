@@ -272,6 +272,70 @@ const updateOrder = async (req, res) => {
       assignedArtisanId: assignedArtisanId || order.assignedArtisanId
     }, { transaction });
     
+    // Send email notification to customer for key status changes
+    if (order.customerInfo?.email && ['Processing', 'Completed', 'Shipped', 'Delivered'].includes(newStatus)) {
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          secure: false,
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASSWORD
+          },
+          tls: {
+            rejectUnauthorized: false
+          }
+        });
+        let subject = '';
+        let statusMessage = '';
+        switch(newStatus) {
+          case 'Processing':
+            subject = `Your Handix Crafts Order #${order.order_id} is now being processed!`;
+            statusMessage = 'Your order is now being processed by our team.';
+            break;
+          case 'Completed':
+            subject = `Your Handix Crafts Order #${order.order_id} is ready!`;
+            statusMessage = 'Your order has been completed and is ready to be shipped.';
+            break;
+          case 'Shipped':
+            subject = `Your Handix Crafts Order #${order.order_id} has been shipped!`;
+            statusMessage = 'Your order is on its way to you!';
+            break;
+          case 'Delivered':
+            subject = `Your Handix Crafts Order #${order.order_id} has been delivered!`;
+            statusMessage = 'Your order has been delivered. We hope you enjoy your purchase!';
+            break;
+        }
+        transporter.sendMail({
+          from: `"Handix Crafts" <${process.env.EMAIL_USER}>`,
+          to: order.customerInfo.email,
+          subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #0c4a6e;">Order Status Update</h2>
+              <p>Dear ${order.customerInfo.firstName || 'Valued Customer'},</p>
+              <p>${statusMessage}</p>
+              <div style="background-color: #f5f5f5; padding: 15px; margin-top: 20px;">
+                <h3 style="margin-top: 0;">Order Details</h3>
+                <p><strong>Order Number:</strong> ${order.order_id}</p>
+                <p><strong>Status:</strong> ${newStatus}</p>
+              </div>
+              <p>If you have any questions about your order, please contact us.</p>
+              <p>Thank you for shopping with Handix Crafts!</p>
+            </div>
+          `
+        }).then(info => {
+          console.log(`Email sent to customer for order ${order.order_id}: ${info.messageId}`);
+        }).catch(err => {
+          console.error(`Error sending status update email: ${err}`);
+        });
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+      }
+    }
+    
     await transaction.commit();
     
     res.status(200).json({ 

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { FaArrowLeft, FaCheck, FaCalendarAlt } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
+
+const isCustomizedOrder = (customized) =>
+  customized === 'Yes' || customized === 'yes' || customized === true || customized === 'true';
 
 const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
   const [orderStatus, setOrderStatus] = useState(order?.status || 'Pending');
@@ -10,38 +13,142 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     endDate: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     if (order) {
-      console.log("Order data received in update form:", order);
       setOrderStatus(order.status || 'Pending');
-      
-      // Set delivery range if available
-      if (order.deliveryStartDate) {
-        const startDate = new Date(order.deliveryStartDate);
-        setEstimatedDeliveryRange(prev => ({
-          ...prev,
-          startDate: startDate.toISOString().split('T')[0]
-        }));
-      }
-      
-      if (order.deliveryEndDate) {
-        const endDate = new Date(order.deliveryEndDate);
-        setEstimatedDeliveryRange(prev => ({
-          ...prev,
-          endDate: endDate.toISOString().split('T')[0]
-        }));
-      }
+      setEstimatedDeliveryRange({
+        startDate: order.deliveryStartDate
+          ? new Date(order.deliveryStartDate).toISOString().split('T')[0]
+          : '',
+        endDate: order.deliveryEndDate
+          ? new Date(order.deliveryEndDate).toISOString().split('T')[0]
+          : ''
+      });
     }
   }, [order]);
 
+  const handleSubmit = async (status) => {
+    if (!order?.o_id) {
+      alert("Order ID is missing");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('artisanToken');
+      if (!token) {
+        alert("You are not authorized. Please log in again.");
+        return;
+      }
+      const response = await axios.put(
+        `http://localhost:5000/api/orders/${order.o_id}/status`,
+        {
+          status,
+          notes,
+          deliveryStartDate: estimatedDeliveryRange.startDate || null,
+          deliveryEndDate: estimatedDeliveryRange.endDate || null
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.status === 200) {
+        alert("Order status updated successfully!");
+        if (onStatusUpdate) {
+          onStatusUpdate(order.o_id, status);
+        }
+        window.location.href = '/artisan/assignorders';
+      }
+    } catch (error) {
+      console.error("Failed to update order status:", error);
+      alert(`Failed to update order status: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleStartDateChange = (e) => {
+    const newStartDate = e.target.value;
+    setEstimatedDeliveryRange(prev => ({
+      ...prev,
+      startDate: newStartDate
+    }));
+    if (estimatedDeliveryRange.endDate && newStartDate > estimatedDeliveryRange.endDate) {
+      setEstimatedDeliveryRange(prev => ({
+        ...prev,
+        endDate: newStartDate
+      }));
+    }
+  };
+
+  const handleEndDateChange = (e) => {
+    const newEndDate = e.target.value;
+    setEstimatedDeliveryRange(prev => ({
+      ...prev,
+      endDate: newEndDate
+    }));
+  };
+
+  const handleBackClick = () => {
+    window.location.href = '/artisan/assignorders';
+  };
+
+  // Button rendering logic
+  const customized = isCustomizedOrder(order.customized);
+  let actionButtons = null;
+  if (customized) {
+    switch (order.status) {
+      case 'Review':
+        actionButtons = (
+          <>
+            <button className="btn btn-success me-2" disabled={submitting || !estimatedDeliveryRange.startDate || !estimatedDeliveryRange.endDate} onClick={() => handleSubmit('Processing')}>Confirm</button>
+            <button className="btn btn-danger" disabled={submitting} onClick={() => handleSubmit('Cancelled')}>Cancel Order</button>
+          </>
+        );
+        break;
+      case 'Processing':
+        actionButtons = (
+          <button className="btn btn-success" disabled={submitting} onClick={() => handleSubmit('Completed')}>Mark as Completed</button>
+        );
+        break;
+      case 'Completed':
+        actionButtons = (
+          <button className="btn btn-primary" disabled={submitting} onClick={() => handleSubmit('Shipped')}>Mark as Shipped</button>
+        );
+        break;
+      case 'Shipped':
+        actionButtons = (
+          <button className="btn btn-primary" disabled={submitting} onClick={() => handleSubmit('Delivered')}>Mark as Delivered</button>
+        );
+        break;
+      default:
+        actionButtons = null;
+    }
+  } else {
+    switch (order.status) {
+      case 'Processing':
+        actionButtons = (
+          <button className="btn btn-success" disabled={submitting} onClick={() => handleSubmit('Completed')}>Mark as Completed</button>
+        );
+        break;
+      case 'Completed':
+        actionButtons = (
+          <button className="btn btn-primary" disabled={submitting} onClick={() => handleSubmit('Shipped')}>Mark as Shipped</button>
+        );
+        break;
+      case 'Shipped':
+        actionButtons = (
+          <button className="btn btn-primary" disabled={submitting} onClick={() => handleSubmit('Delivered')}>Mark as Delivered</button>
+        );
+        break;
+      default:
+        actionButtons = null;
+    }
+  }
+
   // Format date for display with fallback options
   const formatOrderDate = (order) => {
-    // Try different possible date field names
     const dateValue = order?.orderDate || order?.date || order?.order_date || order?.createdAt;
-    
     if (!dateValue) return 'N/A';
-    
     try {
       return new Date(dateValue).toLocaleString('en-US', {
         year: 'numeric',
@@ -51,51 +158,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
         minute: '2-digit'
       });
     } catch (e) {
-      console.error("Error formatting date:", e);
       return 'Invalid Date';
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!order?.o_id) {
-      alert("Order ID is missing");
-      return;
-    }
-    
-    setSubmitting(true);
-    
-    try {
-      const token = localStorage.getItem('artisanToken');
-      if (!token) {
-        alert("You are not authorized. Please log in again.");
-        return;
-      }
-      
-      const response = await axios.put(
-        `http://localhost:5000/api/orders/${order.o_id}/status`,
-        { 
-          status: orderStatus, 
-          notes,
-          deliveryStartDate: estimatedDeliveryRange.startDate || null,
-          deliveryEndDate: estimatedDeliveryRange.endDate || null
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      if (response.status === 200) {
-        alert("Order status updated successfully!");
-        if (onStatusUpdate) {
-          onStatusUpdate(order.o_id, orderStatus);
-        }
-        onBack();
-      }
-    } catch (error) {
-      console.error("Failed to update order status:", error);
-      alert(`Failed to update order status: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -111,48 +174,16 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     }
   };
 
-  // Handle change for the start date of the delivery range
-  const handleStartDateChange = (e) => {
-    const newStartDate = e.target.value;
-    setEstimatedDeliveryRange(prev => ({ 
-      ...prev, 
-      startDate: newStartDate 
-    }));
-    
-    // If end date is before start date, update end date
-    if (estimatedDeliveryRange.endDate && newStartDate > estimatedDeliveryRange.endDate) {
-      setEstimatedDeliveryRange(prev => ({ 
-        ...prev, 
-        endDate: newStartDate 
-      }));
+  // Helper to format delivery dates for display
+  const formatDeliveryRange = (start, end) => {
+    if (start && end) {
+      return `Assigned Delivery: ${new Date(start).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} to ${new Date(end).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
+    } else if (start) {
+      return `Assigned Delivery Start: ${new Date(start).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
+    } else if (end) {
+      return `Assigned Delivery End: ${new Date(end).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
     }
-  };
-
-  // Handle change for the end date of the delivery range
-  const handleEndDateChange = (e) => {
-    const newEndDate = e.target.value;
-    setEstimatedDeliveryRange(prev => ({ 
-      ...prev, 
-      endDate: newEndDate 
-    }));
-  };
-
-  // Fixed back button handler with proper fallback
-  const handleBackClick = () => {
-    try {
-      // First try using the provided onBack function
-      if (typeof onBack === 'function') {
-        onBack();
-      } else {
-        console.warn("onBack is not a function, using fallback navigation");
-        // Use window.history.back() as fallback
-        window.history.back();
-      }
-    } catch (error) {
-      console.error("Navigation error:", error);
-      // Last resort fallback - direct URL navigation
-      window.location.href = '/artisan/assignorders';
-    }
+    return '';
   };
 
   return (
@@ -169,7 +200,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
               <div 
-                onClick={handleBackClick} // Use our debug function instead
+                onClick={handleBackClick}
                 className="me-2 d-flex align-items-center justify-content-center"
                 style={{
                   cursor: 'pointer',
@@ -222,6 +253,12 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
                         {order?.status || 'Pending'}
                       </div>
                     </div>
+                    <div className="col-md-3">
+                      <label className="text-muted small mb-1" style={{fontSize: "14px"}}>Delivery Date</label>
+                      <div className="bg-light p-2 rounded input-group-sm" style={{height: "38px", lineHeight: "24px", fontSize: "15px", overflow: "hidden", textOverflow: "ellipsis", paddingTop: "6px"}}>
+                        {order?.deliveryEndDate ? new Date(order.deliveryEndDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -230,40 +267,17 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
             <div className="col-12">
               <div className="card border-0 shadow-sm">
                 <div className="card-body p-2">
-                  <form onSubmit={handleSubmit} className="row g-2">
-                    <div className="col-md-6">
-                      <label htmlFor="orderStatus" className="form-label text-muted small mb-1" style={{fontSize: "14px"}}>New Status</label>
-                      <select 
-                        id="orderStatus"
-                        className="form-select" 
-                        value={orderStatus}
-                        onChange={(e) => setOrderStatus(e.target.value)}
-                        disabled={submitting}
-                        style={{fontSize: "15px", height: "38px"}}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Shipped">Shipped</option>
-                        <option value="Delivered">Delivered</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                      {orderStatus === 'Cancelled' && (
-                        <div className="text-danger small mt-1">
-                          <strong>Warning:</strong> Cancelling an order cannot be undone.
-                        </div>
-                      )}
-                      {(orderStatus === 'Completed' || orderStatus === 'Shipped' || orderStatus === 'Delivered') && (
-                        <div className="text-success small mt-1">
-                          <strong>Note:</strong> This will update the customer about their order status.
-                        </div>
-                      )}
-                    </div>
-                    
+                  <form className="row g-2">
                     <div className="col-md-6">
                       <label className="form-label text-muted small mb-1 d-flex align-items-center" style={{fontSize: "14px"}}>
                         <FaCalendarAlt className="me-1" size={14} /> 
                         Delivery Range
                       </label>
+                      {formatDeliveryRange(order.deliveryStartDate, order.deliveryEndDate) && (
+                        <div className="mb-2 text-primary small">
+                          {formatDeliveryRange(order.deliveryStartDate, order.deliveryEndDate)}
+                        </div>
+                      )}
                       <div className="input-group">
                         <input
                           type="date"
@@ -295,8 +309,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
                         />
                       </div>
                     </div>
-                    
-                    <div className="col-12">
+                    <div className="col-md-6">
                       <label htmlFor="notes" className="form-label text-muted small mb-1" style={{fontSize: "14px"}}>Notes (optional)</label>
                       <textarea
                         id="notes"
@@ -314,17 +327,11 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
               </div>
             </div>
           </div>
-          
           <div className="mt-auto d-flex justify-content-end pt-2 border-top" style={{ marginBottom: '15px' }}>
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              onClick={handleSubmit}
-              disabled={submitting}
-              style={{fontSize: "15px", height: "38px", padding: "6px 16px"}}
-            >
-              {submitting ? "Updating..." : "Update Status"}
-            </button>
+            {validationError && (
+              <div className="text-danger me-3 align-self-center">{validationError}</div>
+            )}
+            {actionButtons}
           </div>
         </div>
       </div>

@@ -128,13 +128,13 @@ const getAssignedOrders = async (req, res) => {
         customer_first_name: customer ? customer.firstName : 'Unknown', // Only showing first name
         customer_email: customer ? customer.email : null,
         customized: formattedCustomized, // Formatted as "Yes" or "No"
-        // quantity removed
         status: order.orderStatus,
         order_date: order.orderDate, // Renamed from assigned_date to order_date
-        // due_date removed
         total_amount: order.totalAmount, // Added Total Amount field
         payment_status: order.paymentStatus,
-        assigned_artisan: order.assignedArtisan
+        assigned_artisan: order.assignedArtisan,
+        deliveryStartDate: order.deliveryStartDate || null,
+        deliveryEndDate: order.deliveryEndDate || null
       };
     }));
 
@@ -170,21 +170,17 @@ const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    // Check if the status change is valid
-    const validStatusTransitions = {
-      'Pending': ['In Production', 'Cancelled'],
-      'In Production': ['Completed', 'Cancelled'],
-      'Completed': ['Shipped', 'Delivered'],
-      'Shipped': ['Delivered']
-      // Delivered and Cancelled are terminal states
+    // Only allow the next valid status for customized orders
+    const validNextStatus = {
+      'Review': ['Processing', 'Cancelled'],
+      'Processing': ['Completed', 'Cancelled'],
+      'Completed': ['Shipped'],
+      'Shipped': ['Delivered'],
+      'Delivered': [],
+      'Cancelled': []
     };
-
     const currentStatus = order.orderStatus;
-    
-    if (currentStatus !== status && 
-        currentStatus !== 'Delivered' && 
-        currentStatus !== 'Cancelled' && 
-        (!validStatusTransitions[currentStatus] || !validStatusTransitions[currentStatus].includes(status))) {
+    if (!validNextStatus[currentStatus] || !validNextStatus[currentStatus].includes(status)) {
       return res.status(400).json({
         error: `Cannot change order status from ${currentStatus} to ${status}`
       });
@@ -198,16 +194,10 @@ const updateOrderStatus = async (req, res) => {
       deliveryEndDate: deliveryEndDate || order.deliveryEndDate
     });
 
-    // Send email notification to customer if status changes to important states
-    if (order.customerInfo?.email && 
-        ['Completed', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
-      
+    // Send email notification to customer for every status change
+    if (order.customerInfo?.email) {
       try {
-        // This would be implemented with your email service, 
-        // like the example below using nodemailer
         const nodemailer = require('nodemailer');
-        
-        // Configure transporter
         const transporter = nodemailer.createTransport({
           host: process.env.EMAIL_HOST,
           port: process.env.EMAIL_PORT,
@@ -220,12 +210,13 @@ const updateOrderStatus = async (req, res) => {
             rejectUnauthorized: false
           }
         });
-        
-        // Customize email based on status
         let subject = '';
         let statusMessage = '';
-        
         switch(status) {
+          case 'Processing':
+            subject = `Your Handix Crafts Order #${order.order_id} is now being processed!`;
+            statusMessage = 'Your order is now being processed by our artisan.';
+            break;
           case 'Completed':
             subject = `Your Handix Crafts Order #${order.order_id} is ready!`;
             statusMessage = 'Your order has been completed and is ready to be shipped.';
@@ -242,9 +233,10 @@ const updateOrderStatus = async (req, res) => {
             subject = `Your Handix Crafts Order #${order.order_id} has been cancelled`;
             statusMessage = 'Your order has been cancelled.';
             break;
+          default:
+            subject = `Update on your Handix Crafts Order #${order.order_id}`;
+            statusMessage = `Your order status has been updated to ${status}.`;
         }
-        
-        // Send the email
         transporter.sendMail({
           from: `"Handix Crafts" <${process.env.EMAIL_USER}>`,
           to: order.customerInfo.email,
@@ -254,7 +246,6 @@ const updateOrderStatus = async (req, res) => {
               <h2 style="color: #0c4a6e;">Order Status Update</h2>
               <p>Dear ${order.customerInfo.firstName || 'Valued Customer'},</p>
               <p>${statusMessage}</p>
-              
               <div style="background-color: #f5f5f5; padding: 15px; margin-top: 20px;">
                 <h3 style="margin-top: 0;">Order Details</h3>
                 <p><strong>Order Number:</strong> ${order.order_id}</p>
@@ -264,7 +255,6 @@ const updateOrderStatus = async (req, res) => {
                   `<p><strong>Estimated Delivery:</strong> ${new Date(deliveryStartDate).toLocaleDateString()} - ${new Date(deliveryEndDate).toLocaleDateString()}</p>` 
                   : ''}
               </div>
-              
               <p>If you have any questions about your order, please contact us.</p>
               <p>Thank you for shopping with Handix Crafts!</p>
             </div>
@@ -278,7 +268,6 @@ const updateOrderStatus = async (req, res) => {
         console.error('Failed to send email notification:', emailError);
       }
     }
-    
     return res.status(200).json({ 
       message: 'Order status updated successfully',
       order: {
@@ -363,6 +352,8 @@ const getOrderDetails = async (req, res) => {
       shippingFee: order.shippingFee || 350, // Set default shipping fee if not present
       shipping_fee: order.shippingFee || 350, // Include alternative name for compatibility
       shippingCost: order.shippingCost || 350, // Include another alternative name
+      deliveryStartDate: order.deliveryStartDate || null,
+      deliveryEndDate: order.deliveryEndDate || null
     };
 
     return res.status(200).json(formattedOrder);
