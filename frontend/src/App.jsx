@@ -55,10 +55,11 @@ function App() {
           <Route path="/admin/logout" element={<AdminLogout />} /> 
           {/* <Route path="/admin/pricing" element={<AdminPricing />} /> */}
           <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="/artisan/dashboard" element={<ArtisanDashboard />} /> 
+          <Route path="/artisan/dashboard" element={<ArtisanDashboard />} />      
           <Route path="/artisan/products" element={<ArtisanProducts />} />
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
-          <Route path="/artisan/reports" element={<ArtisanReports />} />
+          {/* Route hidden - reports feature to be implemented in the future */}
+          {/* <Route path="/artisan/reports" element={<ArtisanReports />} /> */}
           <Route path="/artisan/notification" element={<ArtisanNotification />} />
           <Route path="/artisan/chat" element={<ArtisanChat />} />         
            <Route path="/artisan/reviews" element={<ArtisanReviews />} />

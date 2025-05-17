@@ -43,17 +43,18 @@ const ArtisanSidebar = () => {
             <Link to="/artisan/products" onClick={() => handleLinkClick('/artisan/products')}>
               <FaBox /> Products Update
             </Link>
-          </li>
-          <li className={activeLink === '/artisan/assignorders' ? 'artisan-active' : ''}>
+          </li>          <li className={activeLink === '/artisan/assignorders' ? 'artisan-active' : ''}>
             <Link to="/artisan/assignorders" onClick={() => handleLinkClick('/artisan/assignorders')}>
               <FaRegListAlt /> Assigned Orders
             </Link>
           </li>
+          {/* Reports section hidden - to be implemented in the future 
           <li className={activeLink === '/artisan/reports' ? 'artisan-active' : ''}>
             <Link to="/artisan/reports" onClick={() => handleLinkClick('/artisan/reports')}>
               <FaFileAlt /> Reports
             </Link>
           </li>
+          */}
           <li className={activeLink === '/artisan/notification' ? 'artisan-active' : ''}>
             <Link to="/artisan/notification" onClick={() => handleLinkClick('/artisan/notification')}>
               <FaComments /> Notification
