@@ -379,31 +379,36 @@ const assignOrderToArtisan = async (req, res) => {
     const artisanFullName = `${artisan.firstName} ${artisan.lastName}`;
     console.log(`Assigning order ${orderId} to artisan: ${artisanFullName} (${artisanId})`);
     
-    // Check order model to determine the correct field names
-    console.log('Order model fields:', Object.keys(order.dataValues));
+    // Determine new status based on order type and current status
+    let newStatus = order.orderStatus;
+    const isCustomized = order.customized === 'Yes' || order.customized === 'yes' || order.customized === true || order.customized === 'true';
+    const isFirstAssignment = !order.assignedArtisan && !order.assigned_artisan;
+    if (isCustomized && isFirstAssignment) {
+      newStatus = 'Review';
+    } else if (!isCustomized && order.orderStatus === 'Processing') {
+      newStatus = 'Processing'; // Keep as processing for normal orders
+    }
+    // Otherwise, keep the current status
     
-    // Try to update using the correct field names based on the model
+    // Prepare update fields
     let updateFields = {};
-    
-    // Check which fields exist in the model
     if ('assigned_artisan' in order.dataValues) {
       updateFields.assigned_artisan = artisanFullName;
-      console.log('Using field: assigned_artisan');
     } 
-    
     if ('assignedArtisan' in order.dataValues) {
       updateFields.assignedArtisan = artisanFullName;
-      console.log('Using field: assignedArtisan');
     }
-    
+    if ('assignedArtisanId' in order.dataValues) {
+      updateFields.assignedArtisanId = artisanId;
+    }
+    if ('assigned_artisan_id' in order.dataValues) {
+      updateFields.assigned_artisan_id = artisanId;
+    }
     if ('order_status' in order.dataValues) {
       updateFields.order_status = newStatus;
-      console.log('Using field: order_status');
     } 
-    
     if ('orderStatus' in order.dataValues) {
       updateFields.orderStatus = newStatus;
-      console.log('Using field: orderStatus');
     }
     
     // Update the order with the determined fields

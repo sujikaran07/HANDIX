@@ -256,9 +256,13 @@ const updateOrder = async (req, res) => {
     // If this is a customized order and we're assigning an artisan for the first time,
     // automatically set the status to "Review"
     let newStatus = orderStatus || order.orderStatus;
-    
-    if (order.customized === 'Yes' && !order.assignedArtisan && assignedArtisan) {
+
+    const isCustomized = order.customized === 'Yes' || order.customized === 'yes' || order.customized === true || order.customized === 'true';
+    const isFirstAssignment = !order.assignedArtisan && assignedArtisan;
+    if (isCustomized && isFirstAssignment) {
       newStatus = 'Review';
+    } else if (!isCustomized && order.orderStatus === 'Processing' && assignedArtisan) {
+      newStatus = 'Processing'; // Keep as processing for normal orders
     }
     
     const updatedOrder = await order.update({
