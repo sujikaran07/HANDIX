@@ -23,9 +23,14 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
   useEffect(() => {
     // Fetch artisans
     const fetchArtisans = async () => {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+      if (!token || token.length < 10) {
+        alert('Session expired or invalid. Please log in again.');
+        window.location.href = '/login';
+        return;
+      }
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/employees', {
+        const response = await fetch('http://localhost:5000/api/artisan', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -33,36 +38,28 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
         
         if (response.ok) {
           const data = await response.json();
-          // Filter for artisans only (role ID 2)
-          const artisanEmployees = data.filter(employee => 
-            employee.roleId === 2 || employee.roleId === '2'
-          );
-          
-          if (artisanEmployees.length > 0) {
-            const formattedArtisans = artisanEmployees.map(employee => ({
-              id: employee.eId,
-              name: `${employee.firstName} ${employee.lastName}`
-            }));
-            setArtisans(formattedArtisans);
-          } else {
-            setArtisans([]);
-            console.log('No artisans found in the response');
-          }
+          // The backend already returns { id, name, ... }
+          setArtisans(data);
         } else {
-          console.error('Failed to fetch artisans');
           setArtisans([]);
+          console.error('Failed to fetch artisans');
         }
       } catch (error) {
-        console.error('Error fetching artisans:', error);
         setArtisans([]);
+        console.error('Error fetching artisans:', error);
       }
     };
     
     // Fetch product images
     const fetchProductImages = async () => {
       if (product && product.product_id) {
+        const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+        if (!token || token.length < 10) {
+          alert('Session expired or invalid. Please log in again.');
+          window.location.href = '/login';
+          return;
+        }
         try {
-          const token = localStorage.getItem('token');
           const response = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -165,10 +162,13 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     
     // Check if this product already has a pending restock assignment
     const checkExistingAssignments = async () => {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+      if (!token || token.length < 10) {
+        alert('Session expired or invalid. Please log in again.');
+        window.location.href = '/login';
+        return;
+      }
       try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
         const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/restock-orders`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -247,8 +247,15 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     
     setLoading(true);
     
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+    if (!token || token.length < 10) {
+      alert('Session expired or invalid. Please log in again.');
+      window.location.href = '/login';
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/restock-request`, {
         method: 'POST',
         headers: {
@@ -293,8 +300,13 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
   };
 
   const handleCancelAssignment = async () => {
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+    if (!token || token.length < 10) {
+      alert('Session expired or invalid. Please log in again.');
+      window.location.href = '/login';
+      return;
+    }
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`http://localhost:5000/api/inventory/${product.product_id}/cancel-restock`, {
         method: 'PUT',
         headers: {
