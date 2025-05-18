@@ -49,6 +49,8 @@ const artisanReportRoutes = require('./routes/artisan/artisanReportRoutes');
 const Review = require('./models/reviewModel');
 const ReviewImage = require('./models/reviewImageModel');
 const notificationsRoutes = require('./routes/notifications');
+const Conversation = require('./models/conversationModel');
+const Message = require('./models/messageModel');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 // Change the alias to match what we set in the Review model
@@ -116,6 +118,15 @@ Review.belongsTo(Inventory, { foreignKey: 'product_id', as: 'product' });
 Review.hasMany(ReviewImage, { foreignKey: 'review_id', as: 'reviewImages' });
 ReviewImage.belongsTo(Review, { foreignKey: 'review_id', as: 'review' });
 
+// Set up conversation and message associations directly here
+Conversation.hasMany(Message, { foreignKey: 'conversation_id', as: 'conversationMessages' });
+Message.belongsTo(Conversation, { foreignKey: 'conversation_id', as: 'conversation' });
+
+// Set up relationships with existing models
+Conversation.belongsTo(Order, { foreignKey: 'order_id', as: 'order' });
+Conversation.belongsTo(Customer, { foreignKey: 'customer_id', as: 'customer' });
+Conversation.belongsTo(Employee, { foreignKey: 'artisan_id', as: 'artisan' });
+
 dotenv.config();
 
 const app = express();
@@ -160,6 +171,8 @@ app.use('/api/artisan-dashboard', artisanDashboardRoutes);
 app.use('/api/reports', reportRoutes); 
 app.use('/api/artisan/reports', artisanReportRoutes); 
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/conversations', require('./routes/conversations/conversationRoutes')); // Add this line
+app.use('/api/messages', require('./routes/conversations/messageRoutes')); // Add this line
 
 // Register artisan routes
 app.use('/api/artisan', artisanRoutes);
