@@ -45,32 +45,16 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
             }));
             setArtisans(formattedArtisans);
           } else {
-            // Fallback to dummy data
-            setArtisans([
-              { id: 'E002', name: 'John Doe' },
-              { id: 'E003', name: 'Jane Smith' },
-              { id: 'E004', name: 'Alex Johnson' },
-              { id: 'E005', name: 'Maria Garcia' }
-            ]);
+            setArtisans([]);
+            console.log('No artisans found in the response');
           }
         } else {
-          // Fallback to dummy data
-          setArtisans([
-            { id: 'E002', name: 'John Doe' },
-            { id: 'E003', name: 'Jane Smith' },
-            { id: 'E004', name: 'Alex Johnson' },
-            { id: 'E005', name: 'Maria Garcia' }
-          ]);
+          console.error('Failed to fetch artisans');
+          setArtisans([]);
         }
       } catch (error) {
         console.error('Error fetching artisans:', error);
-        // Fallback to dummy data
-        setArtisans([
-          { id: 'E002', name: 'John Doe' },
-          { id: 'E003', name: 'Jane Smith' },
-          { id: 'E004', name: 'Alex Johnson' },
-          { id: 'E005', name: 'Maria Garcia' }
-        ]);
+        setArtisans([]);
       }
     };
     
@@ -87,15 +71,94 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           
           if (response.ok) {
             const data = await response.json();
+            
+            // Initialize an array to store all image objects
+            let allImages = [];
+            
+            // First add the default image if it exists
+            if (product.default_image_url) {
+              allImages.push({
+                image_id: 'default',
+                product_id: product.product_id,
+                image_url: product.default_image_url,
+                is_default: true
+              });
+            }
+            
+            // Then add additional images from the API response
             if (data.images && data.images.length > 0) {
               console.log(`Fetched ${data.images.length} images for product ${product.product_id}`);
-              setProductImages(data.images);
+              
+              // Add any non-default images from the API response
+              data.images.forEach(img => {
+                // Avoid duplicates by checking if the image URL already exists in allImages
+                if (!allImages.some(existingImg => existingImg.image_url === img.image_url)) {
+                  allImages.push(img);
+                }
+              });
+            } else if (product.images && product.images.length > 0) {
+              // If the API doesn't return images but the product object has images array
+              console.log(`Using ${product.images.length} images from product object`);
+              
+              // Add images from the product object
+              product.images.forEach((imageUrl, index) => {
+                if (typeof imageUrl === 'string' && 
+                    !allImages.some(existingImg => existingImg.image_url === imageUrl)) {
+                  allImages.push({
+                    image_id: `img-${index}`,
+                    product_id: product.product_id,
+                    image_url: imageUrl,
+                    is_default: false
+                  });
+                }
+              });
             }
+            
+            // If we still have no images, check if product has a single image URL
+            if (allImages.length === 0 && product.image_url) {
+              allImages.push({
+                image_id: 'single',
+                product_id: product.product_id,
+                image_url: product.image_url,
+                is_default: true
+              });
+            }
+            
+            console.log(`Total of ${allImages.length} unique images collected for display`);
+            setProductImages(allImages);
           } else {
             console.error('Failed to fetch product images');
+            
+            // Fallback to images from product object if available
+            if (product.images && product.images.length > 0) {
+              const formattedImages = product.images.map((url, index) => ({
+                image_id: `img-${index}`,
+                product_id: product.product_id,
+                image_url: url,
+                is_default: index === 0
+              }));
+              setProductImages(formattedImages);
+            } else if (product.image_url) {
+              setProductImages([{
+                image_id: 'single',
+                product_id: product.product_id,
+                image_url: product.image_url,
+                is_default: true
+              }]);
+            }
           }
         } catch (error) {
           console.error('Error fetching product images:', error);
+          // Fallback to images from product object if available
+          if (product.images && product.images.length > 0) {
+            const formattedImages = product.images.map((url, index) => ({
+              image_id: `img-${index}`,
+              product_id: product.product_id,
+              image_url: url,
+              is_default: index === 0
+            }));
+            setProductImages(formattedImages);
+          }
         }
       }
     };
@@ -281,6 +344,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
                           objectFit: 'contain'
                         }}
                         onError={(e) => {
+                          console.log(`Failed to load image: ${productImages[currentImageIndex].image_url}`);
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/150?text=No+Image';
                         }}
