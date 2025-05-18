@@ -46,11 +46,6 @@ const adminDashboardRoutes = require('./routes/admin/adminDashboardRoutes');
 const artisanDashboardRoutes = require('./routes/artisan/artisanDashboardRoutes');
 const reportRoutes = require('./routes/reports/reportRoutes'); 
 const artisanReportRoutes = require('./routes/artisan/artisanReportRoutes');
-const discountRoutes = require('./routes/discounts/discountRoutes');
-const { Discount } = require('./models/discountModel');
-const RetailShippingSettings = require('./models/retailShippingSettingsModel');
-const DistrictShippingRates = require('./models/districtShippingRatesModel');
-const PurchaseLimit = require('./models/purchaseLimitsModel');
 const Review = require('./models/reviewModel');
 const ReviewImage = require('./models/reviewImageModel');
 const notificationsRoutes = require('./routes/notifications');
@@ -106,18 +101,6 @@ Order.hasMany(Transaction, { foreignKey: 'order_id', as: 'transactions' });
 // Associate Order with ShippingMethod
 Order.belongsTo(ShippingMethod, { foreignKey: 'shippingMethodId', as: 'shippingMethod' });
 ShippingMethod.hasMany(Order, { foreignKey: 'shippingMethodId', as: 'orders' });
-
-// Add association between Customer and Discount
-Customer.hasMany(Discount, { foreignKey: 'c_id', as: 'discounts', onDelete: 'CASCADE' });
-Discount.belongsTo(Customer, { foreignKey: 'c_id', as: 'customer' });
-
-// Associate Inventory with Discount
-Inventory.hasMany(Discount, { foreignKey: 'productId', as: 'discounts', sourceKey: 'product_id' });
-Discount.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id', as: 'inventory' });
-
-// Associate Inventory with PurchaseLimit
-Inventory.hasOne(PurchaseLimit, { foreignKey: 'productId', as: 'purchaseLimit', sourceKey: 'product_id' });
-PurchaseLimit.belongsTo(Inventory, { foreignKey: 'productId', targetKey: 'product_id', as: 'inventory' });
 
 // Remove this if statement if it's causing issues, and use direct associations instead
 // Register associations for reviews
@@ -176,7 +159,6 @@ app.use('/api/dashboard', adminDashboardRoutes);
 app.use('/api/artisan-dashboard', artisanDashboardRoutes);
 app.use('/api/reports', reportRoutes); 
 app.use('/api/artisan/reports', artisanReportRoutes); 
-app.use('/api/discounts', discountRoutes);
 app.use('/api/notifications', notificationsRoutes);
 
 // Register artisan routes
