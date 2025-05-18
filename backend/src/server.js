@@ -53,6 +53,7 @@ const DistrictShippingRates = require('./models/districtShippingRatesModel');
 const PurchaseLimit = require('./models/purchaseLimitsModel');
 const Review = require('./models/reviewModel');
 const ReviewImage = require('./models/reviewImageModel');
+const notificationsRoutes = require('./routes/notifications');
 
 Order.hasMany(OrderDetail, { foreignKey: 'order_id', as: 'orderDetails' });
 // Change the alias to match what we set in the Review model
@@ -176,6 +177,7 @@ app.use('/api/artisan-dashboard', artisanDashboardRoutes);
 app.use('/api/reports', reportRoutes); 
 app.use('/api/artisan/reports', artisanReportRoutes); 
 app.use('/api/discounts', discountRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Register artisan routes
 app.use('/api/artisan', artisanRoutes);

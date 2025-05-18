@@ -275,3 +275,246 @@
 .artisan-notification-page .action-btn:hover {
   transform: translateY(-1px);
 }
+
+/* Modern, beautiful notification card styles */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  padding: 1.5rem 2rem;
+  gap: 1.5rem;
+  border-left: 6px solid #e0e7ff;
+  transition: box-shadow 0.2s, transform 0.2s;
+  min-height: 90px;
+}
+
+.notification-item:hover {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.13);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.notification-item.card-restock {
+  background: #f0f5ff;
+  border-left: 5px solid #0d6efd;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.notification-item.card-entry {
+  background: #e0f7fa;
+  border-left: 5px solid #00bcd4;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.notification-item.card-order {
+  background: #e6fcf5;
+  border-left: 5px solid #20c997;
+  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
+}
+
+.notification-item.card-restock:hover {
+  border-left: 8px solid #0a58ca;
+  background: #e3eefd;
+  box-shadow: 0 4px 18px rgba(13,110,253,0.10);
+  transform: translateY(-2px) scale(1.01);
+}
+.notification-item.card-entry:hover {
+  border-left: 8px solid #008ba3;
+  background: #b2ebf2;
+  box-shadow: 0 4px 18px rgba(0,188,212,0.10);
+  transform: translateY(-2px) scale(1.01);
+}
+.notification-item.card-order:hover {
+  border-left: 8px solid #169c7b;
+  background: #d1faea;
+  box-shadow: 0 4px 18px rgba(32,201,151,0.10);
+  transform: translateY(-2px) scale(1.01);
+}
+
+.notification-icon-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  background: #f1f5f9;
+  border-radius: 50%;
+  font-size: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.notification-item.card-restock .notification-icon-container { background: #6366f1; color: #fff; }
+.notification-item.card-entry .notification-icon-container { background: #0ea5e9; color: #fff; }
+.notification-item.card-order .notification-icon-container { background: #22c55e; color: #fff; }
+
+.notification-content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.notification-message {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.2rem;
+}
+
+.notification-time {
+  font-size: 0.95rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 0.2rem;
+  align-self: flex-end;
+}
+
+/* Simple, clean, minimal notification card style */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.2rem;
+  gap: 1rem;
+  min-height: 60px;
+  transition: background 0.15s;
+}
+
+.notification-item:hover {
+  background: #f3f4f6;
+}
+
+.notification-icon-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  background: #f1f5f9;
+}
+
+.notification-item.card-restock .notification-icon-container { background: #eef2ff; color: #6366f1; }
+.notification-item.card-entry .notification-icon-container { background: #e0f2fe; color: #0ea5e9; }
+.notification-item.card-order .notification-icon-container { background: #dcfce7; color: #22c55e; }
+
+.notification-content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.notification-message {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #22223b;
+}
+
+.notification-time {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  font-style: normal;
+  margin-top: 0.1rem;
+}
+
+/* Clean, grouped-by-date, modern notification UI styles */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.notification-date-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 1.2rem 0 0.5rem 0.5rem;
+  letter-spacing: 0.01em;
+}
+
+.notification-item.notification-card-row {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  gap: 1rem;
+  min-height: 60px;
+  margin-bottom: 0.3rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #e5e7eb;
+}
+
+.notification-icon-container {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  background: #e0e7ef;
+  color: #6366f1;
+}
+
+.notification-content-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.notification-message {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #22223b;
+  line-height: 1.4;
+}
+
+.notification-time {
+  font-size: 0.92rem;
+  color: #94a3b8;
+  font-style: normal;
+  margin-left: auto;
+  min-width: 60px;
+  text-align: right;
+}
+
+.notification-item.notification-highlight-blue {
+  background: #e8f1fd;
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-item.notification-highlight-red {
+  background: #fde8e8;
+  border-left: 4px solid #ef4444;
+}
+
+.notification-notes {
+  font-size: 0.97rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+  font-style: normal;
+  font-weight: 400;
+}
