@@ -70,6 +70,39 @@ const sendInvoiceEmail = async (orderData) => {
   }
 };
 
+// Generic function to send status change email (activation/deactivation)
+const sendStatusChangeEmail = async ({ to, name, role, status }) => {
+  try {
+    const statusText = status === 'active' || status === 'Approved' ? 'Activated' : 'Deactivated';
+    const subject = `Your Account Has Been ${statusText}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+        <h2 style="color: #0c4a6e; text-align: center;">Account Status Notification</h2>
+        <p>Dear ${name || 'User'},</p>
+        <p>We would like to inform you that your account has been <b>${statusText}</b> by the <strong>Administrator</strong> of Handix.</p>
+        <p>If you have any questions or require further assistance, please do not hesitate to contact our support team.</p>
+        <br>
+        <p style="color: #888; font-size: 13px;">Best regards,<br>The Handix Team</p>
+      </div>
+    `;
+    await transporter.sendMail({
+      from: `"${process.env.EMAIL_SENDER_NAME || 'Handix'}" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html
+    });
+    return true;
+  } catch (error) {
+    console.error('Error sending status change email:', error);
+    return false;
+  }
+};
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 function generateInvoiceHTML(orderData) {
   const currentYear = new Date().getFullYear();
   
@@ -396,5 +429,6 @@ function generateMobileResponsiveStyles() {
 }
 
 module.exports = {
-  sendInvoiceEmail
+  sendInvoiceEmail,
+  sendStatusChangeEmail
 };

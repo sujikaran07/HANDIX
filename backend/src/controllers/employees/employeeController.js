@@ -2,6 +2,7 @@ const { Sequelize, DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { sequelize } = require('../../config/db');
 const { Employee } = require('../../models/employeeModel'); 
+const { sendStatusChangeEmail } = require('../../utils/emailService');
 
 Employee.prototype.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
@@ -84,6 +85,13 @@ const toggleEmployeeStatus = async (req, res) => {
     const newStatus = employee.status === 'active' ? 'deactivated' : 'active';
     employee.status = newStatus;
     await employee.save();
+    // Send status change email
+    await sendStatusChangeEmail({
+      to: employee.email,
+      name: employee.firstName,
+      role: 'employee',
+      status: newStatus
+    });
     res.status(200).json(employee);
   } catch (error) {
     res.status(500).json({ message: 'Error toggling employee status', error: error.message });

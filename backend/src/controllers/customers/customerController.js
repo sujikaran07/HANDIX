@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt'); 
+const { sendStatusChangeEmail } = require('../../utils/emailService');
 
 const getAllCustomers = async (req, res) => {
   try {
@@ -641,6 +642,13 @@ const toggleCustomerStatus = async (req, res) => {
     }
     customer.accountStatus = newStatus;
     await customer.save();
+    // Send status change email
+    await sendStatusChangeEmail({
+      to: customer.email,
+      name: customer.first_name || customer.firstName,
+      role: 'customer',
+      status: newStatus
+    });
     res.status(200).json(customer);
   } catch (error) {
     res.status(500).json({ message: 'Error toggling customer status', error: error.message });
