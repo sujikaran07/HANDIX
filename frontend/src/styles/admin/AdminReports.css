@@ -218,6 +218,11 @@
   border-bottom-right-radius: 5px;
 }
 
+.ar-reports-page .ar-search-bar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
 .ar-reports-page .ar-search-bar .ar-input-group {
   display: flex;
   align-items: center;

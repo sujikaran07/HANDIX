@@ -45,27 +45,74 @@ body {
     margin-top: 0px;
 }
 
-.artisan-products-page .search-bar .input-group,
+/* --- Modern Search Bar Styles (Copied from AdminCustomer) --- */
+.artisan-products-page .search-bar {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.artisan-products-page .search-bar .input-group {
+  border: 1.5px solid #222;
+  border-radius: 30px;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 0.2s;
+  padding: 2px 10px;
+  align-items: center;
+  display: flex;
+}
+
+.artisan-products-page .search-bar .input-group:focus-within,
+.artisan-products-page .search-bar .input-group:hover {
+  border-color: #3e87c3;
+}
+
+.artisan-products-page .search-bar .input-group .input-group-text {
+  background: none !important;
+  border: none;
+  color: #3e87c3;
+  font-size: 1.1rem;
+  padding-left: 4px;
+  box-shadow: none !important;
+}
+
+.artisan-products-page .search-bar .form-control {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 30px;
+  font-size: 1rem;
+  padding: 6px 8px 6px 0;
+}
+
+.artisan-products-page .search-bar .form-control:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* --- Modern Filter Dropdown Styles (Rectangular, No Border Radius) --- */
 .artisan-products-page .filter-dropdown .input-group {
-    display: flex;
-    align-items: center;
-    background-color: #f4f6fc;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 2px;
+  border: 1.5px solid #222;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
+  transition: border-color 0.2s;
+  padding: 2px 10px;
+  align-items: center;
+  display: flex;
 }
 
-.artisan-products-page .search-bar .form-control,
-.artisan-products-page .filter-dropdown .form-select {
-    border: none;
-    background-color: transparent;
-    padding-left: 10px;
+.artisan-products-page .filter-dropdown .input-group:focus-within,
+.artisan-products-page .filter-dropdown .input-group:hover {
+  border-color: #3e87c3;
 }
 
 .artisan-products-page .filter-dropdown .form-select {
-    height: 30px; 
-    width: 110px;
-    padding: 0 10px; 
+  border: none;
+  background: transparent;
+  border-radius: 0;
+  font-size: 1rem;
+  padding-left: 10px;
 }
 
 .artisan-products-page .product-table {

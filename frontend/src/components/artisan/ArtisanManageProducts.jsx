@@ -329,122 +329,62 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        <div className="manage-products-header d-flex justify-content-between align-items-center mb-3">
+          <div className="title-section">
+            <div className="icon-and-title">
+              <FaBox className="product-icon" />
+              <div className="text-section">
+                <h2>Products</h2>
+                <p>Manage your product entries</p>
+              </div>
+            </div>
+          </div>
+          <div className="d-flex align-items-center">
+            <button className="export-btn" style={{ marginRight: '12px' }}>
+              <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
+            </button>
+            <button className="btn btn-primary" onClick={onAddProductClick}>
+              <FaPlus style={{ marginRight: '5px' }} /> Add Product
+            </button>
+          </div>
+        </div>
+        <div className="d-flex align-items-center mb-3 justify-content-end">
+          <div className="search-bar me-2">
+            <div className="input-group">
+              <span className="input-group-text bg-light border-0">
+                <FontAwesomeIcon icon={faSearch} />
+              </span>
+              <input
+                type="text"
+                className="form-control border-0"
+                placeholder="Search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                style={{ boxShadow: 'none' }}
+              />
+            </div>
+          </div>
+          <div className="filter-dropdown">
+            <div className="input-group">
+              <span className="input-group-text bg-light border-0">
+                <FontAwesomeIcon icon={faFilter} />
+              </span>
+              <select
+                className="form-select border-0"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option value="All">All</option>
+                <option value="Approved">Approved</option>
+                <option value="Pending">Pending</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         {viewMode === 'table' && (
           <>
-            <div className="manage-products-header d-flex justify-content-between align-items-center mb-3">
-              <div className="title-section">
-                <div className="icon-and-title">
-                  <FaBox className="product-icon" />
-                  <div className="text-section">
-                    <h2>Products</h2>
-                    <p>Manage your product entries</p>
-                  </div>
-                </div>
-              </div>
-              <div className="d-flex align-items-center">
-                <button className="export-btn btn btn-light" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                  <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
-                </button>
-                <button className="btn btn-primary ms-2" onClick={onAddProductClick}>
-                  <FaPlus style={{ marginRight: '5px' }} /> Add Product
-                </button>
-              </div>
-            </div>
-
-            <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
-              <div className="d-flex">
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="carryGoodsCheckbox"
-                    value="Carry Goods"
-                    checked={selectedCategories.includes('Carry Goods')}
-                    onChange={() => handleCategoryChange('Carry Goods')}
-                  />
-                  <label className="form-check-label" htmlFor="carryGoodsCheckbox">Carry Goods</label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="accessoriesCheckbox"
-                    value="Accessories"
-                    checked={selectedCategories.includes('Accessories')}
-                    onChange={() => handleCategoryChange('Accessories')}
-                  />
-                  <label className="form-check-label" htmlFor="accessoriesCheckbox">Accessories</label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="clothingCheckbox"
-                    value="Clothing"
-                    checked={selectedCategories.includes('Clothing')}
-                    onChange={() => handleCategoryChange('Clothing')}
-                  />
-                  <label className="form-check-label" htmlFor="clothingCheckbox">Clothing</label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="craftsCheckbox"
-                    value="Crafts"
-                    checked={selectedCategories.includes('Crafts')}
-                    onChange={() => handleCategoryChange('Crafts')}
-                  />
-                  <label className="form-check-label" htmlFor="craftsCheckbox">Crafts</label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="artistryCheckbox"
-                    value="Artistry"
-                    checked={selectedCategories.includes('Artistry')}
-                    onChange={() => handleCategoryChange('Artistry')}
-                  />
-                  <label className="form-check-label" htmlFor="artistryCheckbox">Artistry</label>
-                </div>
-              </div>
-              <div className="d-flex align-items-center">
-                <div className="filter-dropdown me-2">
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-0">
-                      <FontAwesomeIcon icon={faFilter} />
-                    </span>
-                    <select
-                      className="form-select border-0"
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
-                    >
-                      <option value="All">All</option>
-                      <option value="Approved">Approved</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Rejected">Rejected</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="search-bar" style={{ width: '200px' }}>
-                  <div className="input-group">
-                    <span className="input-group-text bg-light border-0">
-                      <FontAwesomeIcon icon={faSearch} />
-                    </span>
-                    <input
-                      type="text"
-                      className="form-control border-0"
-                      placeholder="Search"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      style={{ boxShadow: 'none' }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
             <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
               <table className="table table-bordered table-striped product-table">
                 <thead>

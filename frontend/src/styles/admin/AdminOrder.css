@@ -38,27 +38,60 @@ body {
     margin-top: 0px;
 }
 
-.admin-order-page .search-bar .input-group,
-.admin-order-page .filter-dropdown .input-group {
-    display: flex;
+.admin-order-page .search-bar .input-group {
+    border: 1.5px solid #222;
+    border-radius: 30px;
+    background: #fff;
+    box-shadow: none;
+    transition: border-color 0.2s;
+    padding: 2px 10px;
     align-items: center;
-    background-color: #f4f6fc;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 5px;
 }
 
-.admin-order-page .search-bar .form-control,
+.admin-order-page .search-bar .input-group:hover,
+.admin-order-page .search-bar .input-group:focus-within {
+    border-color: #3e87c3;
+}
+
+.admin-order-page .search-bar .form-control {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    border-radius: 30px;
+    font-size: 1rem;
+    padding: 6px 8px 6px 0;
+}
+
+.admin-order-page .search-bar .input-group .input-group-text {
+    background: none !important;
+    border: none;
+    color: #3e87c3;
+    font-size: 1.1rem;
+    padding-left: 4px;
+    box-shadow: none !important;
+}
+
+.admin-order-page .filter-dropdown .input-group {
+    border: 1.5px solid #222;
+    border-radius: 0;
+    background: #fff;
+    box-shadow: none;
+    transition: border-color 0.2s;
+    padding: 2px 10px;
+    align-items: center;
+}
+
+.admin-order-page .filter-dropdown .input-group:hover,
+.admin-order-page .filter-dropdown .input-group:focus-within {
+    border-color: #3e87c3;
+}
+
 .admin-order-page .filter-dropdown .form-select {
     border: none;
-    background-color: transparent;
+    background: transparent;
+    border-radius: 0;
+    font-size: 1rem;
     padding-left: 10px;
-}
-
-.admin-order-page .filter-dropdown .form-select {
-    height: 30px; 
-    width: 120px;
-    padding: 0 10px; 
 }
 
 .admin-order-page .order-table {
@@ -254,12 +287,12 @@ body {
     text-align: center;
     border-color: #6c757d;
     color: #6c757d;
-    background-color: transparent;
+    background-color: #fff;
 }
 
 .export-btn:hover {
-    background-color: #6c757d;
-    color: #ffffff;
+    background-color: #f0f0f0;
+    color: #000;
 }
 
 .order-pagination {

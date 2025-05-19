@@ -218,7 +218,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                 </div>
               </div>
               <div className="button-section">
-                <button className="export-btn btn btn-light me-2">
+                <button className="export-btn">
                   <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
                 </button>
                 <button className="add-employee-btn btn btn-primary" onClick={handleAddEmployeeClick}>

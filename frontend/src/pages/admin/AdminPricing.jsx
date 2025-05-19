@@ -28,7 +28,7 @@ const AdminPricingPage = () => {
                 </div>
               </div>
               <div>
-                <button className="export-btn btn btn-light" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+                <button className="export-btn">
                   <FontAwesomeIcon icon={faDownload} /> Export Data
                 </button>
               </div>

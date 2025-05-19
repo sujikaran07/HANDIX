@@ -156,3 +156,9 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Remove background from .search-bar parent */
+.pricing-page .search-bar {
+  background: transparent !important;
+  box-shadow: none !important;
+}

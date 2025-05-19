@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch, faFilter, faCloudDownloadAlt } from '@fortawesome/free-solid-svg-icons';
+import { faSearch, faFilter, faCloudDownloadAlt, faDownload } from '@fortawesome/free-solid-svg-icons';
 import { FaWarehouse } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
@@ -236,7 +236,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
             </div>
           </div>
           <div className="d-flex align-items-center">
-            <button className="export-btn btn btn-light me-2" style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <button className="export-btn" style={{ marginRight: '12px' }}>
               <FontAwesomeIcon icon={faCloudDownloadAlt} /> Export
             </button>
             <button 
