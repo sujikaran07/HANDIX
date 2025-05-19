@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ArtisanSidebar from '../../components/artisan/ArtisanSidebar';
 import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
-import { FaComments, FaPaperPlane, FaUser } from 'react-icons/fa';
+import { FaComments, FaPaperPlane, FaUser, FaPaperclip } from 'react-icons/fa';
 import '../../styles/artisan/ArtisanDashboard.css';
 import '../../styles/artisan/ArtisanChat.css';
 import axios from 'axios';
@@ -18,6 +18,7 @@ const ArtisanChat = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [attachments, setAttachments] = useState([]);
 
   // Get artisanId and token from localStorage
   const artisanId = localStorage.getItem('artisanId');
@@ -99,24 +100,34 @@ const ArtisanChat = () => {
     setSelectedOrder(order);
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    // Limit to 5 files, 5MB each
+    const validFiles = files.filter(f => f.size <= 5 * 1024 * 1024).slice(0, 5);
+    setAttachments(validFiles);
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !conversation) return;
+    if (!newMessage.trim() && attachments.length === 0) return;
+    if (!conversation) return;
     setSending(true);
     setError(null);
     try {
+      const formData = new FormData();
+      formData.append('conversation_id', conversation.conversations_id);
+      formData.append('sender_id', artisanId);
+      formData.append('sender_role', 'artisan');
+      formData.append('message_text', newMessage.trim());
+      attachments.forEach(file => formData.append('attachments', file));
       const res = await axios.post(
         `${BACKEND_URL}/api/messages/`,
-        {
-          conversation_id: conversation.conversations_id,
-          sender_id: artisanId,
-          sender_role: 'artisan',
-          message_text: newMessage.trim(),
-        },
+        formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessages((prev) => [...prev, res.data]);
       setNewMessage('');
+      setAttachments([]);
     } catch (err) {
       setError('Failed to send message.');
     } finally {
@@ -244,41 +255,97 @@ const ArtisanChat = () => {
                           <div className="text-center my-4 text-muted">No messages yet.</div>
                         ) : (
                           messages.map(message => (
-                            <div
-                              key={message.message_id}
-                              className={`message-row ${message.sender_role === 'artisan' ? 'artisan' : 'customer'}`}
-                            >
-                              <div
-                                style={{
-                                  background: message.sender_role === 'artisan' ? '#3e87c3' : '#fff',
-                                  color: message.sender_role === 'artisan' ? '#fff' : '#222',
-                                  borderRadius: '16px',
-                                  padding: '12px 18px',
-                                  marginBottom: '12px',
-                                  maxWidth: '70%',
-                                  marginLeft: message.sender_role === 'artisan' ? 'auto' : undefined,
-                                  marginRight: message.sender_role === 'artisan' ? undefined : 'auto',
-                                  boxShadow: '0 2px 8px rgba(44,62,80,0.04)',
-                                  border: message.sender_role === 'artisan' ? 'none' : '1px solid #ececec',
-                                  textAlign: 'left',
-                                }}
-                              >
-                                <div className="flex items-center mb-1">
-                                  <span className="text-xs font-medium">
-                                    {message.sender_role === 'artisan' ? 'You' : 'Customer'}
-                                  </span>
+                            <React.Fragment key={message.message_id}>
+                              {/* Text bubble if present */}
+                              {message.message_text && message.message_text.trim() && (
+                                <div
+                                  className={`message-row ${message.sender_role === 'artisan' ? 'artisan' : 'customer'}`}
+                                >
+                                  <div
+                                    style={{
+                                      background: message.sender_role === 'artisan' ? '#3e87c3' : '#fff',
+                                      color: message.sender_role === 'artisan' ? '#fff' : '#222',
+                                      borderRadius: '16px',
+                                      padding: '12px 18px',
+                                      marginBottom: '12px',
+                                      maxWidth: '70%',
+                                      marginLeft: message.sender_role === 'artisan' ? 'auto' : undefined,
+                                      marginRight: message.sender_role === 'artisan' ? undefined : 'auto',
+                                      boxShadow: '0 2px 8px rgba(44,62,80,0.04)',
+                                      border: message.sender_role === 'artisan' ? 'none' : '1px solid #ececec',
+                                      textAlign: 'left',
+                                    }}
+                                  >
+                                    <div className="flex items-center mb-1">
+                                      <span className="text-xs font-medium">
+                                        {message.sender_role === 'artisan' ? 'You' : 'Customer'}
+                                      </span>
+                                    </div>
+                                    <p>{message.message_text}</p>
+                                    <div className="message-meta">
+                                      {formatDate(message.sent_at)}
+                                    </div>
+                                  </div>
                                 </div>
-                                <p>{message.message_text}</p>
-                                <div className="message-meta">
-                                  {formatDate(message.sent_at)}
+                              )}
+                              {/* Each attachment in its own bubble */}
+                              {message.attachments && message.attachments.length > 0 && message.attachments.map(att => (
+                                <div
+                                  key={att.attachment_id}
+                                  className={`message-row ${message.sender_role === 'artisan' ? 'artisan' : 'customer'}`}
+                                >
+                                  <div
+                                    style={{
+                                      background: message.sender_role === 'artisan' ? '#3e87c3' : '#fff',
+                                      color: message.sender_role === 'artisan' ? '#fff' : '#222',
+                                      borderRadius: '16px',
+                                      padding: '12px 18px',
+                                      marginBottom: '12px',
+                                      maxWidth: '70%',
+                                      marginLeft: message.sender_role === 'artisan' ? 'auto' : undefined,
+                                      marginRight: message.sender_role === 'artisan' ? undefined : 'auto',
+                                      boxShadow: '0 2px 8px rgba(44,62,80,0.04)',
+                                      border: message.sender_role === 'artisan' ? 'none' : '1px solid #ececec',
+                                      textAlign: 'left',
+                                    }}
+                                  >
+                                    {att.file_type.startsWith('image/') ? (
+                                      <img
+                                        src={att.file_path}
+                                        alt="attachment"
+                                        style={{ maxWidth: 180, maxHeight: 180, borderRadius: 8, marginBottom: 8, cursor: 'pointer' }}
+                                        onClick={() => {
+                                          window.open(att.file_path, '_blank');
+                                        }}
+                                      />
+                                    ) : (
+                                      <a href={att.file_path} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginRight: 8 }}>
+                                        {att.file_type.startsWith('application/pdf') ? 'PDF' : 'File'}: {att.file_path.split('/').pop()}
+                                      </a>
+                                    )}
+                                    <div className="message-meta">
+                                      {formatDate(message.sent_at)}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
+                              ))}
+                            </React.Fragment>
                           ))
                         )}
                       </div>
                       <div className="message-input-container p-3 border-top">
-                        <form onSubmit={handleSendMessage} className="d-flex">
+                        <form onSubmit={handleSendMessage} className="d-flex align-items-center" encType="multipart/form-data">
+                          <label htmlFor="file-input" className="me-2" style={{ cursor: 'pointer' }}>
+                            <FaPaperclip size={18} />
+                            <input
+                              id="file-input"
+                              type="file"
+                              multiple
+                              style={{ display: 'none' }}
+                              onChange={handleFileChange}
+                              accept="*"
+                            />
+                          </label>
                           <input
                             type="text"
                             className="form-control me-2"
@@ -290,12 +357,19 @@ const ArtisanChat = () => {
                           <button
                             className="btn btn-primary send-message-btn"
                             type="submit"
-                            disabled={!newMessage.trim() || sending}
+                            disabled={(!newMessage.trim() && attachments.length === 0) || sending}
                           >
                             <FaPaperPlane />
                             <span className="d-none d-md-inline ms-2">Send</span>
                           </button>
                         </form>
+                        {attachments.length > 0 && (
+                          <div className="mb-2">
+                            {attachments.map((file, idx) => (
+                              <span key={idx} className="badge bg-secondary me-1">{file.name}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

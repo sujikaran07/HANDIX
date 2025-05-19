@@ -9,10 +9,15 @@ cloudinary.config({
 });
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'handix_categories', // Change folder for better organization
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 800, height: 800, crop: 'limit' }]
+  params: (req, file) => {
+    const isImage = file.mimetype && file.mimetype.startsWith('image/');
+    const isPdf = file.mimetype === 'application/pdf';
+    return {
+      folder: 'handix_categories', // Change folder for better organization
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+      ...(isImage && { transformation: [{ width: 800, height: 800, crop: 'limit' }] }),
+      ...(isPdf && { resource_type: 'raw' })
+    };
   }
 });
 const upload = multer({ 
