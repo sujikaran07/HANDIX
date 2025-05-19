@@ -27,6 +27,6 @@ router.get('/', authMiddleware, async (req, res) => {
 router.get('/eids', getEmployeeEIds);
 router.post('/', addEmployee); 
 router.put('/:id', updateEmployee); 
-router.delete('/:id', deleteEmployee);
+router.put('/:id/status', require('../../controllers/employees/employeeController').toggleEmployeeStatus);
 
 module.exports = router;

@@ -74,17 +74,19 @@ const updateEmployee = async (req, res) => {
   }
 };
 
-const deleteEmployee = async (req, res) => {
+const toggleEmployeeStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await Employee.destroy({ where: { eId: id } });
-    if (deleted) {
-      res.status(204).json();
-    } else {
-      res.status(404).json({ message: 'Employee not found' });
+    const employee = await Employee.findOne({ where: { eId: id } });
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
     }
+    const newStatus = employee.status === 'active' ? 'deactivated' : 'active';
+    employee.status = newStatus;
+    await employee.save();
+    res.status(200).json(employee);
   } catch (error) {
-    res.status(500).json({ message: 'Error deleting employee' });
+    res.status(500).json({ message: 'Error toggling employee status', error: error.message });
   }
 };
 
@@ -93,5 +95,5 @@ module.exports = {
   getEmployeeEIds,
   addEmployee,
   updateEmployee,
-  deleteEmployee,
+  toggleEmployeeStatus,
 };

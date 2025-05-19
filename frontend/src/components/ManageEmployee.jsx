@@ -16,8 +16,6 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
   const [showEditEmployeeForm, setShowEditEmployeeForm] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false); 
-  const [employeeToDelete, setEmployeeToDelete] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const employeesPerPage = 7;
@@ -79,40 +77,22 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     fetchEmployees();
   }, []);
 
-  const handleDelete = async () => {
+  const handleToggleStatus = async (employee) => {
     try {
       const token = localStorage.getItem('adminToken');
-      
       if (!token) {
-        console.error('No admin token found in localStorage');
         alert('Authentication required. Please login again.');
         return;
       }
-      
-      await axios.delete(`http://localhost:5000/api/employees/${employeeToDelete.eId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
-      
-      setEmployees(employees.filter(emp => emp.eId !== employeeToDelete.eId));
-      console.log(`Employee with E-ID ${employeeToDelete.eId} deleted successfully.`);
-      setShowDeleteModal(false);
-      setEmployeeToDelete(null);
+      const response = await axios.put(
+        `http://localhost:5000/api/employees/${employee.eId}/status`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setEmployees(employees.map(emp => emp.eId === employee.eId ? response.data : emp));
     } catch (error) {
-      console.error('Error deleting employee:', error);
-      alert('Failed to delete employee. Please try again.');
+      alert('Failed to update employee status. Please try again.');
     }
-  };
-
-  const confirmDelete = (employee) => {
-    setEmployeeToDelete(employee); 
-    setShowDeleteModal(true); 
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false); 
-    setEmployeeToDelete(null); 
   };
 
   const handleEdit = (eId) => {
@@ -278,6 +258,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                       <th>Email</th>
                       <th>Phone Number</th>
                       <th>Role</th>
+                      <th>Status</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -290,6 +271,11 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                           <td>{employee.email}</td>
                           <td>{employee.phone || 'N/A'}</td>
                           <td>{employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other'}</td>
+                          <td>
+                            <span style={{ color: employee.status === 'active' ? 'green' : 'red' }}>
+                              {employee.status === 'active' ? 'Active' : 'Deactivated'}
+                            </span>
+                          </td>
                           <td className="action-buttons">
                             <div className="dropdown">
                               <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
@@ -302,8 +288,8 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                                   </button>
                                 </li>
                                 <li>
-                                  <button className="dropdown-item" onClick={() => confirmDelete(employee)}>
-                                    Delete
+                                  <button className="dropdown-item" onClick={() => handleToggleStatus(employee)}>
+                                    {employee.status === 'active' ? 'Deactivate' : 'Activate'}
                                   </button>
                                 </li>
                               </ul>
@@ -313,7 +299,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="text-center">No users available</td>
+                        <td colSpan="7" className="text-center">No users available</td>
                       </tr>
                     )}
                   </tbody>
@@ -325,19 +311,6 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
           </>
         )}
       </div>
-
-      
-      {showDeleteModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h5>Are you sure you want to delete this employee?</h5>
-            <div className="modal-actions">
-              <button className="btn btn-danger me-2" onClick={handleDelete}>Delete</button>
-              <button className="btn btn-secondary" onClick={handleCancelDelete}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

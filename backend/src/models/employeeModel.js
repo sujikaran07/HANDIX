@@ -52,6 +52,11 @@ const Employee = sequelize.define('Employee', {
     type: DataTypes.DATE, 
     defaultValue: DataTypes.NOW,
     field: 'updated_at' 
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'active',
   }
 }, {
   hooks: {
