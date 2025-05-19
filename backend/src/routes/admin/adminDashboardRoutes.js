@@ -12,22 +12,22 @@ const { QueryTypes } = require('sequelize');
 // Get sales trend data
 router.get('/sales-trend', async (req, res) => {
   try {
-    console.log('Fetching sales trend data...');
-    const salesData = await Transaction.findAll({
+    console.log('Fetching sales trend data (Delivered Orders)...');
+    const salesData = await Order.findAll({
       attributes: [
-        [sequelize.fn('DATE', sequelize.col('transaction_date')), 'date'],
-        [sequelize.fn('SUM', sequelize.col('amount')), 'total_amount']
+        [sequelize.fn('DATE', sequelize.col('order_date')), 'date'],
+        [sequelize.fn('SUM', sequelize.col('total_amount')), 'total_amount']
       ],
       where: {
-        transactionStatus: 'completed',
-        transactionDate: {
+        orderStatus: 'Delivered',
+        orderDate: {
           [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30))
         }
       },
-      group: [sequelize.fn('DATE', sequelize.col('transaction_date'))],
-      order: [[sequelize.fn('DATE', sequelize.col('transaction_date')), 'ASC']]
+      group: [sequelize.fn('DATE', sequelize.col('order_date'))],
+      order: [[sequelize.fn('DATE', sequelize.col('order_date')), 'ASC']]
     });
-    console.log('Sales trend data:', salesData);
+    console.log('Sales trend data (Delivered Orders):', salesData);
     res.json(salesData);
   } catch (error) {
     console.error('Error in sales trend:', error);
@@ -40,16 +40,16 @@ router.get('/summary', async (req, res) => {
   try {
     console.log('Fetching dashboard summary data...');
     
-    // Total Revenue
-    const totalRevenue = await Transaction.sum('amount', {
+    // Total Revenue (from Orders with status Delivered in last 30 days)
+    const totalRevenue = await Order.sum('totalAmount', {
       where: {
-        transactionStatus: 'completed',
-        transactionDate: {
+        orderStatus: 'Delivered',
+        orderDate: {
           [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30))
         }
       }
     });
-    console.log('Total Revenue:', totalRevenue);
+    console.log('Total Revenue (Delivered Orders):', totalRevenue);
 
     // Total Orders
     const totalOrders = await Order.count({

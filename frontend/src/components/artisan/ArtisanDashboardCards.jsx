@@ -100,7 +100,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
           boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
           backgroundColor: '#fff',
         }}>
-          <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Products</h4>
+          <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Units</h4>
           <div className="spinner-border spinner-border-sm text-primary" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
@@ -141,7 +141,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
         transition: 'transform 0.2s',
         cursor: 'pointer'
       }}>
-        <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Products</h4>
+        <h4 style={{ color: '#666', marginBottom: '15px' }}>Total Units</h4>
         <p style={{ 
           fontSize: '24px', 
           fontWeight: 'bold', 

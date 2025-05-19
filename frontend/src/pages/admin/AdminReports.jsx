@@ -392,7 +392,7 @@ const renderSummaryCards = () => {
     totalSales: 'Total Sales',
     orderCount: 'Order Count',
     averageOrderValue: 'Avg. Order Value',
-    totalProducts: 'Total Products',
+    totalProducts: 'Total Units',
     productsOutOfStock: 'Out of Stock',
     productsLowStock: 'Low Stock',
     totalCustomers: 'Total Customers',

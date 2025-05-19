@@ -103,7 +103,7 @@ const ProductsTrend = () => {
       <Col md={4} className="mb-4">
         <Card className="h-100 shadow-sm">
           <Card.Body className="text-center">
-            <h6 className="text-muted mb-2">Total Products</h6>
+            <h6 className="text-muted mb-2">Total Units</h6>
             <h2 className="mb-0 text-primary">{displayQuantity}</h2>
             <small className="text-muted">All product items</small>
           </Card.Body>
