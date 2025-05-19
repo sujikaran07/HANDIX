@@ -39,12 +39,18 @@ const getCustomerById = async (req, res) => {
       customer.registrationDate = customer.createdAt;
 
       const orders = await Order.findAll({ 
-        where: { c_id: req.params.c_id },
-        attributes: ['total_amount']
+        where: { 
+          c_id: req.params.c_id,
+          [Op.or]: [
+            { orderStatus: 'Delivered' },
+            { paymentStatus: 'Paid' }
+          ]
+        },
+        attributes: ['totalAmount']
       });
 
       const totalOrders = orders.length; 
-      const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+      const totalSpent = orders.reduce((sum, order) => sum + parseFloat(order.totalAmount || 0), 0);
 
       customer.dataValues.total_spent = totalSpent.toFixed(2);
       customer.dataValues.totalSpent = totalSpent.toFixed(2);
@@ -57,8 +63,14 @@ const getCustomerById = async (req, res) => {
 
       if (orders.length > 0) {
         const lastOrder = await Order.findOne({
-          where: { c_id: req.params.c_id },
-          order: [['order_date', 'DESC']]
+          where: {
+            c_id: req.params.c_id,
+            [Op.or]: [
+              { orderStatus: 'Delivered' },
+              { paymentStatus: 'Paid' }
+            ]
+          },
+          order: [['orderDate', 'DESC']]
         });
         
         if (lastOrder) {
