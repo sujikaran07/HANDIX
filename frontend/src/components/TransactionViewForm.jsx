@@ -91,162 +91,144 @@ const TransactionViewForm = ({ transaction, onBack }) => {
   };
 
   return (
-    <div className="container mt-4">
-      <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff' }}>
-        <div className="mb-4">
-          <div className="d-flex align-items-center justify-content-between">
+    <div className="container mt-4" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
+      <div className="card transaction-view-card" style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        <div className="card-body p-4 d-flex flex-column">
+          <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
-              <button className="btn btn-light me-3" onClick={onBack} style={{ boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
-                <FontAwesomeIcon icon={faArrowLeft} /> Back
-              </button>
-              <h3 className="mb-0">Transaction Details</h3>
+              <div 
+                onClick={onBack} 
+                className="me-3 d-flex align-items-center justify-content-center"
+                style={{
+                  cursor: 'pointer',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  backgroundColor: '#f8f9fa',
+                  transition: 'background-color 0.3s'
+                }}
+                onMouseOver={e => e.currentTarget.style.backgroundColor = '#e9ecef'}
+                onMouseOut={e => e.currentTarget.style.backgroundColor = '#f8f9fa'}
+                title="Back"
+              >
+                <FontAwesomeIcon icon={faArrowLeft} />
+              </div>
+              <h5 className="mb-0">Transaction Details</h5>
             </div>
-            
-            {transaction.transactionStatus === 'Completed' && (
-              <div>
-                <button 
-                  className="btn btn-danger"
-                  onClick={handleRefund}
-                >
-                  <FontAwesomeIcon icon={faCreditCard} className="me-2" />
-                  Process Refund
-                </button>
+            <span className={`badge ${getStatusClass(transaction.transactionStatus)}`} style={{ fontSize: '0.9rem', padding: '5px 10px', textTransform: 'capitalize', backgroundColor: '#e6f2ff', color: '#3e87c3' }}>
+              {transaction.transactionStatus || 'N/A'}
+            </span>
+          </div>
+
+          <div className="row g-3 custom-scrollbar" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 160px)', paddingRight: '5px' }}>
+            {/* Basic Transaction Information */}
+            <div className="col-12">
+              <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
+                <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Basic Transaction Information</div>
+                <div className="p-3">
+                  <div className="row g-2">
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Transaction ID</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.transaction_id || 'N/A'}</div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Order ID</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.order_id || 'N/A'}</div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Transaction Date</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{formatDate(transaction.transactionDate)}</div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Amount</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{formatCurrency(transaction.amount)}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Information */}
+            <div className="col-12">
+              <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
+                <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Customer Information</div>
+                <div className="p-3">
+                  <div className="row g-2">
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Customer ID</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.c_id || 'N/A'}</div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Name</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>
+                        {transaction.customer ? `${transaction.customer.firstName} ${transaction.customer.lastName}` : transaction.customerName || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Email</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                        {transaction.customer?.email || transaction.customerEmail || 'N/A'}
+                      </div>
+                    </div>
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Phone</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>
+                        {transaction.customer?.phone || transaction.customerPhone || 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="col-12">
+              <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
+                <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Payment Information</div>
+                <div className="p-3">
+                  <div className="row g-2">
+                    <div className="col-md-6 mb-2">
+                      <label className="text-muted small mb-1">Payment Method</label>
+                      <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.paymentMethod || 'N/A'}</div>
+                    </div>
+                    {transaction.paymentGateway && (
+                      <div className="col-md-6 mb-2">
+                        <label className="text-muted small mb-1">Payment Gateway</label>
+                        <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.paymentGateway}</div>
+                      </div>
+                    )}
+                    {transaction.gatewayTransactionId && (
+                      <div className="col-md-6 mb-2">
+                        <label className="text-muted small mb-1">Gateway Transaction ID</label>
+                        <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.gatewayTransactionId}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Information (if available) */}
+            {(transaction.Order || transaction.orderStatus || transaction.orderTotal) && (
+              <div className="col-12">
+                <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
+                  <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Order Information</div>
+                  <div className="p-3">
+                    <div className="row g-2">
+                      <div className="col-md-6 mb-2">
+                        <label className="text-muted small mb-1">Order Status</label>
+                        <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.Order?.order_status || transaction.orderStatus || 'N/A'}</div>
+                      </div>
+                      <div className="col-md-6 mb-2">
+                        <label className="text-muted small mb-1">Order Total</label>
+                        <div className="bg-light p-2 rounded" style={{height: '36px', fontSize: '14px'}}>{transaction.Order?.total_price ? formatCurrency(transaction.Order.total_price) : transaction.orderTotal ? formatCurrency(transaction.orderTotal) : 'N/A'}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
-        </div>
-
-        <div className="transaction-details">
-          <div className="row mb-4">
-            <div className="col-md-6">
-              <div className="detail-card mb-3 p-3">
-                <h5 className="detail-header">
-                  <FontAwesomeIcon icon={faTag} className="me-2" />
-                  Transaction Info
-                </h5>
-                <div className="detail-row">
-                  <span className="detail-label">Transaction ID:</span>
-                  <span className="detail-value">{transaction.transaction_id}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Status:</span>
-                  <span className={`detail-value status-badge ${getStatusClass(transaction.transactionStatus)}`}>
-                    {transaction.transactionStatus || 'N/A'}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Date & Time:</span>
-                  <span className="detail-value">
-                    {formatDate(transaction.transactionDate)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="detail-card mb-3 p-3">
-                <h5 className="detail-header">
-                  <FontAwesomeIcon icon={faUser} className="me-2" />
-                  Customer Info
-                </h5>
-                <div className="detail-row">
-                  <span className="detail-label">Customer ID:</span>
-                  <span className="detail-value">{transaction.c_id || 'N/A'}</span>
-                </div>
-                {transaction.Customer && (
-                  <>
-                    <div className="detail-row">
-                      <span className="detail-label">Name:</span>
-                      <span className="detail-value">{transaction.Customer.name || 'N/A'}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Email:</span>
-                      <span className="detail-value">{transaction.Customer.email || 'N/A'}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Phone:</span>
-                      <span className="detail-value">{transaction.Customer.phone || 'N/A'}</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="detail-card mb-3 p-3">
-                <h5 className="detail-header">
-                  <FontAwesomeIcon icon={faMoneyBillWave} className="me-2" />
-                  Payment Info
-                </h5>
-                <div className="detail-row">
-                  <span className="detail-label">Amount:</span>
-                  <span className="detail-value fw-bold">
-                    {formatCurrency(transaction.amount)}
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Payment Method:</span>
-                  <span className="detail-value">{transaction.paymentMethod || 'N/A'}</span>
-                </div>
-                {transaction.paymentGateway && (
-                  <div className="detail-row">
-                    <span className="detail-label">Payment Gateway:</span>
-                    <span className="detail-value">{transaction.paymentGateway}</span>
-                  </div>
-                )}
-                {transaction.gatewayTransactionId && (
-                  <div className="detail-row">
-                    <span className="detail-label">Gateway Transaction ID:</span>
-                    <span className="detail-value">{transaction.gatewayTransactionId}</span>
-                  </div>
-                )}
-                {transaction.currency && (
-                  <div className="detail-row">
-                    <span className="detail-label">Currency:</span>
-                    <span className="detail-value">{transaction.currency}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="detail-card mb-3 p-3">
-                <h5 className="detail-header">
-                  <FontAwesomeIcon icon={faShoppingCart} className="me-2" />
-                  Order Info
-                </h5>
-                <div className="detail-row">
-                  <span className="detail-label">Order ID:</span>
-                  <span className="detail-value">{transaction.order_id || 'N/A'}</span>
-                </div>
-                {transaction.Order && (
-                  <>
-                    <div className="detail-row">
-                      <span className="detail-label">Order Status:</span>
-                      <span className="detail-value">{transaction.Order.order_status || 'N/A'}</span>
-                    </div>
-                    <div className="detail-row">
-                      <span className="detail-label">Order Total:</span>
-                      <span className="detail-value">
-                        {transaction.Order.total_price 
-                          ? formatCurrency(transaction.Order.total_price) 
-                          : 'N/A'}
-                      </span>
-                    </div>
-                  </>
-                )}
-                {/* View Order Details button */}
-                <div className="mt-2">
-                  <button className="btn btn-outline-primary btn-sm">
-                    View Order Details
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {transaction.notes && (
-            <div className="detail-card p-3">
-              <h5 className="detail-header">Notes</h5>
-              <p className="detail-notes">{transaction.notes}</p>
-            </div>
-          )}
         </div>
       </div>
     </div>

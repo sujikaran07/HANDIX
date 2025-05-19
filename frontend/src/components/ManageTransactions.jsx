@@ -497,47 +497,6 @@ const ManageTransactions = ({ onViewTransaction }) => {
                                   View
                                 </button>
                               </li>
-                              {/* Only show refund options if payment was successful (completed) */}
-                              {(item.transactionStatus === 'completed' || item.transactionStatus === 'Completed') && (
-                                <>
-                                  {/* Full refund if canceled before confirmation - only applies if order status is pending */}
-                                  {item.order?.status === 'pending' && (
-                                    <li>
-                                      <button 
-                                        className="dropdown-item" 
-                                        onClick={() => handleRefund({...item, refundReason: 'canceled_before_confirmation'})}
-                                        title="Full refund available before order confirmation"
-                                      >
-                                        Refund (Pre-confirmation)
-                                      </button>
-                                    </li>
-                                  )}
-                                  
-                                  {/* No refund if canceled after confirmation - we don't show this option */}
-                                  
-                                  {/* Admin-initiated cancellation always allows refund */}
-                                  <li>
-                                    <button 
-                                      className="dropdown-item" 
-                                      onClick={() => handleRefund({...item, canceledBy: 'admin', refundReason: 'admin_cancellation'})}
-                                      title="Admin-initiated refund"
-                                    >
-                                      Admin Refund
-                                    </button>
-                                  </li>
-                                  
-                                  {/* Artisan-initiated cancellation always allows refund */}
-                                  <li>
-                                    <button 
-                                      className="dropdown-item" 
-                                      onClick={() => handleRefund({...item, canceledBy: 'artisan', refundReason: 'artisan_cancellation'})}
-                                      title="Artisan-initiated refund"
-                                    >
-                                      Artisan Refund
-                                    </button>
-                                  </li>
-                                </>
-                              )}
                             </ul>
                           </div>
                         </td>
