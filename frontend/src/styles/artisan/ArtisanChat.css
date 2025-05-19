@@ -84,16 +84,16 @@
 }
 
 .artisan-chat-page .contacts-list::-webkit-scrollbar {
-  width: 4px;
+  width: 8px;
 }
 
 .artisan-chat-page .contacts-list::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 3px;
+  background-color: #b3c6e0;
+  border-radius: 6px;
 }
 
 .artisan-chat-page .contacts-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f4f6fc;
 }
 
 .artisan-chat-page .contact-item {

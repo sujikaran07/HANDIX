@@ -4,6 +4,7 @@ const { OrderDetail } = require('../../models/orderDetailModel');
 const { Sequelize, Op } = require('sequelize');
 const Inventory = require('../../models/inventoryModel');
 const ProductImage = require('../../models/productImageModel');
+const { Employee } = require('../../models/employeeModel');
 
 // Get orders assigned to a specific artisan
 const getAssignedOrders = async (req, res) => {
@@ -423,10 +424,73 @@ const getOrderItems = async (req, res) => {
   }
 };
 
+// Get orders assigned to a specific artisan by e_id
+const getAssignedOrdersByEID = async (req, res) => {
+  try {
+    const { artisanId } = req.params;
+    if (!artisanId) {
+      return res.status(400).json({ error: 'Artisan ID is required' });
+    }
+    // 1. Find the first and last name for this eId
+    const employee = await Employee.findOne({
+      where: { eId: artisanId },
+      attributes: ['firstName', 'lastName']
+    });
+    if (!employee) {
+      return res.status(404).json({ error: 'Artisan not found' });
+    }
+    // 2. Combine first and last name
+    const artisanName = `${employee.firstName} ${employee.lastName}`.trim();
+    // 3. Fetch orders where assignedArtisan matches this name (case-insensitive)
+    const orders = await Order.findAll({
+      where: {
+        assignedArtisan: {
+          [Op.iLike]: artisanName
+        }
+      },
+      include: [
+        {
+          model: Customer,
+          as: 'customerInfo',
+          attributes: ['c_id', 'firstName', 'lastName', 'email']
+        },
+        {
+          model: OrderDetail,
+          as: 'orderDetails',
+          attributes: ['order_detail_id', 'product_id', 'quantity']
+        }
+      ],
+      order: [['orderDate', 'DESC']]
+    });
+    // 4. Format and return the orders
+    const formattedOrders = orders.map(order => {
+      const customer = order.customerInfo;
+      return {
+        order_id: order.order_id,
+        customerId: customer ? customer.c_id : null,
+        customerName: customer ? `${customer.firstName} ${customer.lastName}` : 'Unknown',
+        customized: order.customized,
+        status: order.orderStatus,
+        orderDate: order.orderDate,
+        totalAmount: order.totalAmount,
+        paymentStatus: order.paymentStatus,
+        assignedArtisan: order.assignedArtisan,
+        deliveryStartDate: order.deliveryStartDate || null,
+        deliveryEndDate: order.deliveryEndDate || null
+      };
+    });
+    return res.status(200).json({ orders: formattedOrders });
+  } catch (error) {
+    console.error('Error fetching assigned orders by e_id:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 // Export the controller functions
 module.exports = {
   getAssignedOrders,
   updateOrderStatus,
   getOrderDetails,
-  getOrderItems
+  getOrderItems,
+  getAssignedOrdersByEID
 };

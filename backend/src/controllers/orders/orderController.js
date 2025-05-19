@@ -817,6 +817,44 @@ const getAssignableOrders = async (req, res) => {
   }
 };
 
+// Simple function: fetch all orders for a customer by c_id, no joins, no processing
+const getSimpleCustomerOrders = async (req, res) => {
+  try {
+    const customerId = req.query.customerId;
+    if (!customerId) {
+      return res.status(400).json({ message: 'Customer ID is required' });
+    }
+    const orders = await Order.findAll({
+      where: {
+        c_id: customerId,
+        assignedArtisan: { [Sequelize.Op.ne]: null },
+        // Also exclude empty string
+        [Sequelize.Op.and]: [
+          Sequelize.where(Sequelize.fn('length', Sequelize.col('assigned_artisan')), '>', 0)
+        ]
+      },
+      order: [['orderDate', 'DESC']]
+    });
+    console.log('getSimpleCustomerOrders for customerId:', customerId, 'orders:', orders);
+    // Add assignedArtisanId to each order by looking up Employee table
+    for (const order of orders) {
+      if (order.assignedArtisan) {
+        // Split the name (assumes "FirstName LastName")
+        const [firstName, ...lastNameParts] = order.assignedArtisan.split(' ');
+        const lastName = lastNameParts.join(' ');
+        const artisan = await Employee.findOne({ where: { firstName, lastName } });
+        order.dataValues.assignedArtisanId = artisan ? artisan.eId : null;
+      } else {
+        order.dataValues.assignedArtisanId = null;
+      }
+    }
+    res.status(200).json({ orders });
+  } catch (error) {
+    console.error('Error fetching simple customer orders:', error);
+    res.status(500).json({ message: 'Error fetching orders', error: error.message });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
@@ -827,5 +865,6 @@ module.exports = {
   getCustomerOrders,
   confirmOrder,
   cancelOrder,
-  getAssignableOrders  // Add this line to export the function
+  getAssignableOrders,
+  getSimpleCustomerOrders
 };
