@@ -13,7 +13,7 @@ const RegisterPage = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: 'retail', 
+    accountType: 'personal', 
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -92,7 +92,7 @@ const RegisterPage = () => {
           email: formData.email,
           // Always send password as a string
           password: String(trimmedPassword),
-          accountType: formData.accountType === 'retail' ? 'Retail' : 'Wholesale',
+          accountType: formData.accountType === 'personal' ? 'Personal' : 'Business',
           phone: '',
           accountStatus: 'Pending',
           country: '',
@@ -241,28 +241,28 @@ const RegisterPage = () => {
                     <input
                       type="radio"
                       name="accountType"
-                      value="retail"
-                      checked={formData.accountType === 'retail'}
+                      value="personal"
+                      checked={formData.accountType === 'personal'}
                       onChange={handleChange}
                       className="mr-2 accent-primary h-4 w-4"
                     />
                     <div className="flex items-center">
                       <ShoppingBag size={16} className="mr-1 text-primary" />
-                      <span>Retail</span>
+                      <span>Personal</span>
                     </div>
                   </label>
                   <label className="flex items-center">
                     <input
                       type="radio"
                       name="accountType"
-                      value="wholesale"
-                      checked={formData.accountType === 'wholesale'}
+                      value="business"
+                      checked={formData.accountType === 'business'}
                       onChange={handleChange}
                       className="mr-2 accent-primary h-4 w-4"
                     />
                     <div className="flex items-center">
                       <Building2 size={16} className="mr-1 text-primary" />
-                      <span>Wholesale</span>
+                      <span>Business</span>
                     </div>
                   </label>
                 </div>

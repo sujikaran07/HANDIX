@@ -171,7 +171,7 @@ const CheckoutPage = () => {
     let finalAmount = subtotal + customizationTotal + shippingCost;
     
     // Apply wholesale discount if applicable
-    if (user && user.accountType === 'Wholesale') {
+    if (user && user.accountType === 'Business') {
       // Apply 5% discount to subtotal + customization (not shipping)
       const discountAmount = (subtotal + customizationTotal) * 0.05;
       finalAmount = finalAmount - discountAmount;
@@ -434,7 +434,7 @@ const CheckoutPage = () => {
       }
       
       // Apply wholesale discount if applicable
-      const isWholesaleCustomer = user && user.accountType === 'Wholesale';
+      const isWholesaleCustomer = user && user.accountType === 'Business';
       
       // Calculate shipping fee
       const shippingFee = calculateShippingCost();
@@ -453,7 +453,7 @@ const CheckoutPage = () => {
           email: user?.email,
           phone: formData.phone,
           isGuest: false,
-          accountType: user?.accountType || 'Retail' // Include account type
+          accountType: user?.accountType || 'Personal' // Include account type
         },
         shippingAddress: {
           street: formData.address,
@@ -857,7 +857,7 @@ const CheckoutPage = () => {
                           <span>LKR {calculateShippingCost().toLocaleString()}</span>
                         )}
                       </div>
-                      {user && user.accountType === 'Wholesale' && (
+                      {user && user.accountType === 'Business' && (
                         <div className="flex justify-between text-green-600">
                           <span>Wholesale Discount (5%)</span>
                           <span>-LKR {((subtotal + customizationTotal) * 0.05).toLocaleString()}</span>

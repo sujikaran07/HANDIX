@@ -1048,8 +1048,8 @@ const renderSummaryCards = () => {
                           style={{ borderColor: filters.customerType ? reportColor : '' }}
                         >
                           <option value="">All Types</option>
-                          <option value="Retail">Retail</option>
-                          <option value="Wholesale">Wholesale</option>
+                          <option value="Personal">Personal</option>
+                          <option value="Business">Business</option>
                         </select>
                       </div>
                     </div>

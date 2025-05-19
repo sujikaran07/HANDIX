@@ -17,18 +17,18 @@ const PoliciesPage = () => {
               <h2 className="text-2xl font-bold mb-4 text-primary">Shipping Policy</h2>
               
               <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Wholesale Customers:</h3>
+                <h3 className="font-bold text-lg mb-2">Business Customers:</h3>
                 <p className="text-gray-700 mb-4">
-                  Shipping fees for wholesale accounts are based on the customer's delivery district (e.g., Colombo, Kandy, Jaffna). 
+                  Shipping fees for business accounts are based on the customer's delivery district (e.g., Colombo, Kandy, Jaffna). 
                   These district-specific rates are fixed and managed by our administration team. Shipping charges will be applied 
                   during checkout accordingly.
                 </p>
               </div>
 
               <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Retail Customers:</h3>
+                <h3 className="font-bold text-lg mb-2">Personal Customers:</h3>
                 <p className="text-gray-700 mb-4">
-                  Retail customers will not see shipping fees during checkout. However, additional shipping charges may apply 
+                  Personal customers will not see shipping fees during checkout. However, additional shipping charges may apply 
                   after delivery based on the actual weight of the package, following Sri Lankan courier service rates. 
                   We will notify you via email or SMS if any additional fees are incurred.
                 </p>
@@ -47,15 +47,15 @@ const PoliciesPage = () => {
               <h2 className="text-2xl font-bold mb-4 text-primary">Payment Policy</h2>
               
               <div className="mb-6">
-                <h3 className="font-bold text-lg mb-2">Wholesale Accounts:</h3>
+                <h3 className="font-bold text-lg mb-2">Business Accounts:</h3>
                 <p className="text-gray-700 mb-4">
-                  Wholesale customers may use Cash on Delivery (COD) with extended payment terms. Payment must be settled 
+                  Business customers may use Cash on Delivery (COD) with extended payment terms. Payment must be settled 
                   within the timeframe agreed upon by our administration.
                 </p>
               </div>
 
               <div className="mb-2">
-                <h3 className="font-bold text-lg mb-2">Retail Accounts:</h3>
+                <h3 className="font-bold text-lg mb-2">Personal Accounts:</h3>
                 <p className="text-gray-700 mb-4">
                   Cash on Delivery is subject to availability and restrictions set by the administration. 
                   Please verify at checkout.
@@ -67,7 +67,7 @@ const PoliciesPage = () => {
             <div className="mb-10 bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold mb-4 text-primary">Purchase Limits</h2>
               <p className="text-gray-700 mb-4">
-                Retail customers may be subject to purchase quantity restrictions on certain products, as enforced by the 
+                Personal customers may be subject to purchase quantity restrictions on certain products, as enforced by the 
                 administration to ensure fair access.
               </p>
             </div>

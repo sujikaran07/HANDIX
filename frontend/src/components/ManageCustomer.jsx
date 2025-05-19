@@ -187,7 +187,7 @@ const ManageCustomer = ({
                         <td>{customer.c_id}</td>
                         <td>{`${customer.firstName} ${customer.lastName}`}</td>
                         <td>{customer.email}</td>
-                        <td>{customer.accountType}</td>
+                        <td>{['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType) ? 'Personal' : 'Business'}</td>
                         <td className={`status ${customer.accountStatus.toLowerCase()}`}>{customer.accountStatus}</td>
                         <td className="action-buttons">
                           <div className="dropdown">

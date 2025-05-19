@@ -10,7 +10,7 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
   const [cId, setCId] = useState(selectedCustomer ? selectedCustomer.c_id : '');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');  
-  const [accountType, setAccountType] = useState('Retail');
+  const [accountType, setAccountType] = useState('Personal');
   const [password, setPassword] = useState(uuidv4().slice(0, 8));
   const [registrationDate, setRegistrationDate] = useState(new Date().toLocaleDateString());
   const [error, setError] = useState('');
@@ -25,7 +25,7 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
       accountType,
       password,
       registrationDate,
-      accountStatus: accountType === 'Retail' ? 'Approved' : 'Pending', 
+      accountStatus: accountType === 'Personal' ? 'Approved' : 'Pending', 
     };
     try {
       console.log('Saving customer with data:', newCustomer); 
@@ -49,7 +49,7 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
     setCId(uuidv4());
     setEmail('');
     setPhoneNumber('');
-    setAccountType('Retail');
+    setAccountType('Personal');
     setPassword(uuidv4().slice(0, 8));
     setRegistrationDate(new Date().toLocaleDateString());
   };
@@ -122,8 +122,8 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
               value={accountType}
               onChange={(e) => setAccountType(e.target.value)}
             >
-              <option value="Retail">Retail</option>
-              <option value="Wholesale">Wholesale</option>
+              <option value="Personal">Personal</option>
+              <option value="Business">Business</option>
             </select>
           </div>
         </div>

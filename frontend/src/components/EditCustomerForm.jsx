@@ -113,8 +113,8 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
               >
-                <option value="Retail">Retail</option>
-                <option value="Wholesale">Wholesale</option>
+                <option value="Personal">Personal</option>
+                <option value="Business">Business</option>
               </select>
             </div>
           </div>

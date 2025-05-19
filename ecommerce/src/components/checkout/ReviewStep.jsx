@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { getShippingFeeByDistrict } from '../../data/shippingZones';
 
 const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) => {
-  const [wholesaleDiscount, setWholesaleDiscount] = useState(null);
+  const [businessDiscount, setBusinessDiscount] = useState(null);
   const [discountedTotal, setDiscountedTotal] = useState(total);
   const [shippingFee, setShippingFee] = useState(0);
 
@@ -22,16 +22,16 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
     const fee = calculateShippingFee();
     setShippingFee(fee);
     
-    // Check if user is logged in and is a wholesale customer
+    // Check if user is logged in and is a business customer
     const userJson = localStorage.getItem('user');
     if (userJson) {
       try {
         const userData = JSON.parse(userJson);
-        if (userData.accountType === 'Wholesale') {
+        if (userData.accountType === 'Business') {
           // Calculate 5% discount on subtotal + customization (not shipping)
           const baseAmount = subtotal + customizationTotal;
           const discount = Math.round((baseAmount * 0.05) * 100) / 100;
-          setWholesaleDiscount(discount);
+          setBusinessDiscount(discount);
           
           // Calculate new total with discount
           const newTotal = subtotal + customizationTotal + fee - discount;
@@ -41,7 +41,7 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
           setDiscountedTotal(subtotal + customizationTotal + fee);
         }
       } catch (error) {
-        console.error('Error checking wholesale status:', error);
+        console.error('Error checking business status:', error);
         setDiscountedTotal(subtotal + customizationTotal + fee);
       }
     } else {
@@ -229,10 +229,10 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
                 <span>LKR {shippingFee.toLocaleString()}</span>
               )}
             </div>
-            {wholesaleDiscount > 0 && (
+            {businessDiscount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Wholesale Discount (5%)</span>
-                <span>-LKR {wholesaleDiscount.toLocaleString()}</span>
+                <span>Business Discount (5%)</span>
+                <span>-LKR {businessDiscount.toLocaleString()}</span>
               </div>
             )}
             <div className="flex justify-between font-semibold text-lg border-t pt-2 mt-2">
