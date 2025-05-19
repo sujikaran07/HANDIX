@@ -61,9 +61,7 @@ const AdminReportsPage = () => {
   });
   const [filters, setFilters] = useState({
     categories: [],
-    stockStatus: '',
     customerType: '',
-    minLifetimeValue: '',
     productivityLevel: '',
     compareWithPrevious: false,
     includeGraphs: true,
@@ -191,32 +189,11 @@ const AdminReportsPage = () => {
       });
     }
     
-    // Add stock status for products
-    if (filters.stockStatus) {
-      const stockLabels = {
-        'in-stock': 'In Stock',
-        'low-stock': 'Low Stock',
-        'out-of-stock': 'Out of Stock'
-      };
-      newAppliedFilters.push({
-        key: 'stockStatus',
-        label: `Stock: ${stockLabels[filters.stockStatus]}`
-      });
-    }
-    
     // Add customer type for customers
     if (filters.customerType) {
       newAppliedFilters.push({
         key: 'customerType',
         label: `Customer Type: ${filters.customerType}`
-      });
-    }
-    
-    // Add min lifetime value for customers
-    if (filters.minLifetimeValue) {
-      newAppliedFilters.push({
-        key: 'minLifetimeValue',
-        label: `Min Lifetime Value: Rs ${filters.minLifetimeValue}`
       });
     }
     
@@ -268,25 +245,12 @@ const handleGenerateReport = async () => {
     switch (currentReport) {
       case 'products':
         // Product-specific filters
-        if (filters.stockStatus) {
-          requestData.stockStatus = filters.stockStatus;
-        }
-        if (filters.customizableOnly) {
-          requestData.customizableOnly = true;
-        }
-        if (filters.bestSellers) {
-          requestData.bestSellers = true;
-        }
         break;
         
       case 'customers':
         // Customer-specific filters
         if (filters.customerType) {
           requestData.customerType = filters.customerType;
-        }
-        if (filters.minLifetimeValue) {
-          // Ensure this is a number, not a string
-          requestData.minLifetimeValue = Number(filters.minLifetimeValue);
         }
         break;
         
@@ -884,9 +848,7 @@ const renderSummaryCards = () => {
       console.log("Applied filters:", {
         reportType: currentReport,
         categories: filters.categories,
-        stockStatus: filters.stockStatus,
         customerType: filters.customerType,
-        minLifetimeValue: filters.minLifetimeValue, 
         productivityLevel: filters.productivityLevel,
         includeGraphs: filters.includeGraphs // Log this specifically
       });
@@ -961,84 +923,12 @@ const renderSummaryCards = () => {
                 </div>
               </div>
               
-              {/* Product Report Specific Filters */}
-              {currentReport === 'products' && (
-                <div className="filter-section">
-                  <h6 style={{ color: reportColor, borderBottom: `2px solid ${reportColor}30`, paddingBottom: '8px' }}>Product Filters</h6>
-                  <div className="form-group mb-3">
-                    <label className="form-label" style={{ color: reportColor }}>Stock Status</label>
-                    <select 
-                      className="form-select"
-                      value={filters.stockStatus}
-                      onChange={(e) => setFilters({...filters, stockStatus: e.target.value})}
-                      style={{ 
-                        borderColor: filters.stockStatus ? reportColor : '', 
-                        boxShadow: filters.stockStatus ? `0 0 0 0.2rem ${reportColor}40` : ''
-                      }}
-                    >
-                      <option value="">All Stock Status</option>
-                      <option value="in-stock">In Stock</option>
-                      <option value="low-stock">Low Stock</option>
-                      <option value="out-of-stock">Out of Stock</option>
-                    </select>
-                  </div>
-                  <div className="form-check mb-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="customizableOnly"
-                      checked={filters.customizableOnly || false}
-                      onChange={(e) => setFilters({...filters, customizableOnly: e.target.checked})}
-                      style={{ 
-                        borderColor: filters.customizableOnly ? reportColor : '',
-                        backgroundColor: filters.customizableOnly ? reportColor : '',
-                        boxShadow: filters.customizableOnly ? `0 0 0 0.2rem ${reportColor}40` : ''
-                      }}
-                    />
-                    <label 
-                      className="form-check-label" 
-                      htmlFor="customizableOnly"
-                      style={{
-                        fontWeight: filters.customizableOnly ? '500' : 'normal',
-                        color: filters.customizableOnly ? reportColor : ''
-                      }}
-                    >
-                      Show customizable products only
-                    </label>
-                  </div>
-                  <div className="form-check mb-2">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="bestSellers"
-                      checked={filters.bestSellers || false}
-                      onChange={(e) => setFilters({...filters, bestSellers: e.target.checked})}
-                      style={{ 
-                        borderColor: filters.bestSellers ? reportColor : '',
-                        backgroundColor: filters.bestSellers ? reportColor : '',
-                        boxShadow: filters.bestSellers ? `0 0 0 0.2rem ${reportColor}40` : ''
-                      }}
-                    />
-                    <label 
-                      className="form-check-label" 
-                      htmlFor="bestSellers"
-                      style={{
-                        fontWeight: filters.bestSellers ? '500' : 'normal',
-                        color: filters.bestSellers ? reportColor : ''
-                      }}
-                    >
-                      Show best selling products only
-                    </label>
-                  </div>
-                </div>
-              )}
-              
               {/* Customer Report Specific Filters */}
               {currentReport === 'customers' && (
                 <div className="filter-section">
                   <h6 style={{ color: reportColor }}>Customer Filters</h6>
                   <div className="row">
-                    <div className="col-md-6">
+                    <div className="col-md-12">
                       <div className="form-group mb-3">
                         <label className="form-label">Customer Type</label>
                         <select 
@@ -1051,19 +941,6 @@ const renderSummaryCards = () => {
                           <option value="Personal">Personal</option>
                           <option value="Business">Business</option>
                         </select>
-                      </div>
-                    </div>
-                    <div className="col-md-6">
-                      <div className="form-group mb-3">
-                        <label className="form-label">Min. Lifetime Value</label>
-                        <input 
-                          type="number" 
-                          className="form-control"
-                          placeholder="Min value"
-                          value={filters.minLifetimeValue || ''}
-                          onChange={(e) => setFilters({...filters, minLifetimeValue: e.target.value})}
-                          style={{ borderColor: filters.minLifetimeValue ? reportColor : '' }}
-                        />
                       </div>
                     </div>
                   </div>
@@ -1136,13 +1013,8 @@ const renderSummaryCards = () => {
                     };
                     
                     // Add report-specific default values
-                    if (currentReport === 'products') {
-                      defaultFilters.stockStatus = '';
-                      defaultFilters.customizableOnly = false;
-                      defaultFilters.bestSellers = false;
-                    } else if (currentReport === 'customers') {
+                    if (currentReport === 'customers') {
                       defaultFilters.customerType = '';
-                      defaultFilters.minLifetimeValue = '';
                     } else if (currentReport === 'artisans') {
                       defaultFilters.productivityLevel = '';
                     } else if (currentReport === 'sales') {

@@ -100,7 +100,7 @@ router.post('/sales', async (req, res) => {
       LEFT JOIN "OrderDetails" od ON o.order_id = od.order_id
       LEFT JOIN "Inventory" i ON od.product_id = i.product_id
       LEFT JOIN "Customers" c ON o.c_id = c.c_id
-      WHERE o.order_status != 'Cancelled'
+      WHERE o.order_status = 'Delivered'
       ${dateFilter}
       ${categoryFilter}
     `;
@@ -127,7 +127,7 @@ router.post('/sales', async (req, res) => {
       FROM "Orders" o
       LEFT JOIN "OrderDetails" od ON o.order_id = od.order_id
       LEFT JOIN "Inventory" i ON od.product_id = i.product_id
-      WHERE o.order_status != 'Cancelled'
+      WHERE o.order_status = 'Delivered'
       ${dateFilter}
       ${categoryFilter}
       GROUP BY period
@@ -145,7 +145,7 @@ router.post('/sales', async (req, res) => {
       JOIN "OrderDetails" od ON o.order_id = od.order_id
       JOIN "Inventory" i ON od.product_id = i.product_id
       JOIN "Categories" c ON i.category_id = c.category_id
-      WHERE o.order_status != 'Cancelled'
+      WHERE o.order_status = 'Delivered'
       ${dateFilter}
       GROUP BY c.category_name
       ORDER BY sales_amount DESC
@@ -170,7 +170,7 @@ router.post('/sales', async (req, res) => {
       LEFT JOIN "Inventory" i ON od.product_id = i.product_id
       LEFT JOIN "Categories" cat ON i.category_id = cat.category_id
       LEFT JOIN "Customers" c ON o.c_id = c.c_id
-      WHERE o.order_status != 'Cancelled'
+      WHERE o.order_status = 'Delivered'
       ${dateFilter}
       ${categoryFilter}
       GROUP BY o.order_id, o.order_date, o.total_amount, i.product_name, cat.category_name, 
@@ -290,14 +290,14 @@ router.post('/products', async (req, res) => {
         i.quantity as stock_level,
         cat.category_name,
         i.customization_available,
-        COUNT(DISTINCT od.order_id) as order_count,
-        SUM(od.quantity) as total_sold,
-        SUM(od.price_at_purchase * od.quantity) as total_revenue
+        COUNT(DISTINCT CASE WHEN o.order_status = 'Delivered' THEN od.order_id END) as order_count,
+        SUM(CASE WHEN o.order_status = 'Delivered' THEN od.quantity ELSE 0 END) as total_sold,
+        SUM(CASE WHEN o.order_status = 'Delivered' THEN od.price_at_purchase * od.quantity ELSE 0 END) as total_revenue
       FROM "Inventory" i
       LEFT JOIN "Categories" cat ON i.category_id = cat.category_id
       LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
       LEFT JOIN "Orders" o ON od.order_id = o.order_id
-      WHERE (o.order_status != 'Cancelled' OR o.order_status IS NULL)
+      WHERE 1=1
       ${dateFilter}
       ${categoryFilter}
       ${stockFilter}
@@ -399,8 +399,13 @@ router.post('/products', async (req, res) => {
 router.post('/customers', async (req, res) => {
   try {
     console.log('Received customers report request with filters:', req.body);
-    const { startDate, endDate, customerType = '', minLifetimeValue = 0 } = req.body;
+    const { startDate, endDate, customerType = '' } = req.body;
     
+    // Map UI customerType to DB account_type (ENUM expects 'Personal' or 'Business')
+    let mappedAccountType = '';
+    if (customerType === 'Personal') mappedAccountType = 'Personal';
+    else if (customerType === 'Business') mappedAccountType = 'Business';
+
     // Build the WHERE clause for date filtering
     let dateFilter = '';
     if (startDate && endDate) {
@@ -409,8 +414,8 @@ router.post('/customers', async (req, res) => {
 
     // Build the WHERE clause for customer type filtering
     let customerTypeFilter = '';
-    if (customerType) {
-      customerTypeFilter = `AND c.account_type = '${customerType}'`;
+    if (mappedAccountType) {
+      customerTypeFilter = `AND c.account_type = '${mappedAccountType}'`;
     }
 
     // Query to get summary data
@@ -425,6 +430,19 @@ router.post('/customers', async (req, res) => {
       ${customerTypeFilter}
     `;
 
+    // Query to get new customers per day (trend line)
+    const newCustomerTimeSeriesQuery = `
+      SELECT
+        DATE(c.registration_date) AS period,
+        COUNT(*) AS new_customers
+      FROM "Customers" c
+      WHERE c.account_status = 'Approved'
+        ${customerTypeFilter}
+        AND c.registration_date BETWEEN '${startDate}' AND '${endDate}'
+      GROUP BY period
+      ORDER BY period
+    `;
+
     // Query to get detailed customer data
     const detailQuery = `
       SELECT 
@@ -432,7 +450,7 @@ router.post('/customers', async (req, res) => {
         CONCAT(c.first_name, ' ', c.last_name) as customer_name,
         c.email,
         COUNT(o.order_id) as order_count,
-        SUM(o.total_amount) as total_spent,
+        SUM(CASE WHEN o.order_status = 'Delivered' OR o.payment_status = 'Paid' THEN o.total_amount ELSE 0 END) as total_spent,
         MAX(o.order_date) as last_order_date
       FROM "Customers" c
       LEFT JOIN "Orders" o ON c.c_id = o.c_id AND o.order_status != 'Cancelled'
@@ -440,7 +458,6 @@ router.post('/customers', async (req, res) => {
       ${customerTypeFilter}
       ${dateFilter}
       GROUP BY c.c_id, c.first_name, c.last_name, c.email
-      HAVING SUM(o.total_amount) >= ${minLifetimeValue || 0} OR SUM(o.total_amount) IS NULL
       ORDER BY total_spent DESC NULLS LAST
       LIMIT 100
     `;
@@ -449,7 +466,8 @@ router.post('/customers', async (req, res) => {
     try {
       const summaryResults = await sequelize.query(summaryQuery, { type: QueryTypes.SELECT });
       const detailResults = await sequelize.query(detailQuery, { type: QueryTypes.SELECT });
-    
+      const newCustomerTimeSeriesResults = await sequelize.query(newCustomerTimeSeriesQuery, { type: QueryTypes.SELECT });
+
       // Format summary data with empty default values if no data found
       const summary = {
         totalCustomers: parseInt(summaryResults[0]?.totalcustomers || 0) || 0,
@@ -468,6 +486,7 @@ router.post('/customers', async (req, res) => {
         success: true,
         summary,
         data: formattedData || [],
+        timeSeries: newCustomerTimeSeriesResults || [],
         isMockData: false
       });
     } catch (sqlError) {
@@ -536,14 +555,14 @@ router.post('/artisans', async (req, res) => {
         LEFT JOIN "Inventory" i ON e.e_id = i.e_id
         LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
         LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled'
-        WHERE e.role_id = 2
+        WHERE e.role_id = 2 AND e.status != 'deactivated'
         ${dateFilter}
         GROUP BY e.e_id, e.first_name, e.last_name
         ${productivityFilter}
       )
       SELECT 
         COUNT(DISTINCT e.e_id) as totalArtisans,
-        COUNT(DISTINCT CASE WHEN i.product_id IS NOT NULL THEN e.e_id END) as activeArtisans,
+        COUNT(DISTINCT CASE WHEN (o.order_status = 'Delivered' OR i.product_id IS NOT NULL) THEN e.e_id END) as activeArtisans,
         (
           SELECT artisan_name
           FROM artisan_stats
@@ -553,7 +572,9 @@ router.post('/artisans', async (req, res) => {
         ) as topPerformer
       FROM "Employees" e
       LEFT JOIN "Inventory" i ON e.e_id = i.e_id
-      WHERE e.role_id = 2
+      LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
+      LEFT JOIN "Orders" o ON od.order_id = o.order_id
+      WHERE e.role_id = 2 AND e.status != 'deactivated'
     `;
 
     // Query to get detailed artisan data - no change needed here
@@ -566,15 +587,14 @@ router.post('/artisans', async (req, res) => {
         COALESCE(SUM(od.quantity * od.price_at_purchase), 0) as total_sales,
         CASE 
           WHEN COUNT(DISTINCT o.order_id) > 0 
-          THEN COALESCE(SUM(od.quantity * od.price_at_purchase), 0) / COUNT(DISTINCT o.order_id)
+          THEN COALESCE(SUM(od.quantity * od.price_at_purchase), 0) / COUNT(DISTINCT o.order_id)    
           ELSE 0
         END as avg_product_value
       FROM "Employees" e
       LEFT JOIN "Inventory" i ON e.e_id = i.e_id
       LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
-      LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled'
+      LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled' AND o.order_date BETWEEN '${startDate}' AND '${endDate}'
       WHERE e.role_id = 2
-      ${dateFilter}
       GROUP BY e.e_id, e.first_name, e.last_name
       ${productivityFilter}
       ORDER BY total_sales DESC

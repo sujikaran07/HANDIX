@@ -771,12 +771,6 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
               <h4 className="mb-0" style={{ color: reportColors.primary }}>{getReportTitle()}</h4>
               <p className="text-muted mb-0 small">
                 {formatDate(dateRange?.startDate)} - {formatDate(dateRange?.endDate)}
-                {reportData?.appliedFilters?.customizableOnly && 
-                  <Badge bg="info" className="ms-2" pill>Customizable Only</Badge>
-                }
-                {reportData?.appliedFilters?.bestSellers && 
-                  <Badge bg="success" className="ms-2" pill>Best Selling</Badge>
-                }
               </p>
             </div>
           </div>
@@ -869,26 +863,6 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       {activeTab === 'dashboard' && (
         <>
           <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Summary</h5>
-          
-          {/* Display filter info */}
-          {reportType === 'products' && (
-            <>
-              
-              {reportData?.appliedFilters?.customizableOnly && (
-                <Alert variant="info" className="mb-4">
-                  <div className="d-flex align-items-center">
-                    <div className="me-3">
-                      <FontAwesomeIcon icon={faInfoCircle} size="lg" />
-                    </div>
-                    <div>
-                      <h5 className="alert-heading mb-1">Customizable Products Filter Applied</h5>
-                      <p className="mb-0">Showing only products that can be customized.</p>
-                    </div>
-                  </div>
-                </Alert>
-              )}
-            </>
-          )}
           
           {chartConfig.showSummary && renderSummaryCards()}
           

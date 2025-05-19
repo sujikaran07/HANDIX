@@ -508,7 +508,11 @@ export const prepareLineChartData = (reportType, reportData, isArtisan = false) 
 // Helper function to format date strings
 const formatDate = (dateString) => {
   try {
-    const date = new Date(dateString);
+    // If already a Date object, use it directly
+    const date = typeof dateString === 'string'
+      ? new Date(dateString.replace(/-/g, '/')) // Replace dashes with slashes for Safari compatibility
+      : dateString;
+    if (isNaN(date)) return dateString;
     return date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric' 
