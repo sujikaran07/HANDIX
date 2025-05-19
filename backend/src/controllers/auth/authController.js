@@ -31,16 +31,22 @@ exports.login = async (req, res) => {
       });
     }
     
-    if (customer.accountType === 'Wholesale' && customer.accountStatus !== 'Approved') {
-      console.log(`Login failed: Wholesale account ${email} not approved yet`);
+    if (customer.accountStatus && customer.accountStatus.toLowerCase() === 'deactivated') {
+      return res.status(403).json({
+        message: 'Your account is deactivated. Please contact support.',
+        reason: 'deactivated'
+      });
+    }
+    
+    if (['Business', 'business', 'Wholesale', 'wholesale'].includes(customer.accountType) && customer.accountStatus !== 'Approved') {
+      console.log(`Login failed: ${customer.accountType} account ${email} not approved yet`);
       return res.status(403).json({
         message: 'Your account is pending approval',
         reason: 'pending',
         accountStatus: customer.accountStatus
       });
     }
-    
-    if (customer.accountType === 'Retail' && customer.accountStatus !== 'Approved') {
+    if (['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType) && customer.accountStatus !== 'Approved') {
       customer.accountStatus = 'Approved';
       await customer.save();
     }

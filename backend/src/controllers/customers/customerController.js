@@ -355,9 +355,10 @@ const verifyOTP = async (req, res) => {
     }
 
     customer.isEmailVerified = true;
-
-    if (customer.accountType === 'Retail') {
+    if (['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType)) {
       customer.accountStatus = 'Approved';
+    } else {
+      customer.accountStatus = 'Pending';
     }
   
     customer.verificationToken = null;
@@ -625,6 +626,27 @@ const resendOTP = async (req, res) => {
   }
 };
 
+const toggleCustomerStatus = async (req, res) => {
+  try {
+    const { c_id } = req.params;
+    const customer = await Customer.findByPk(c_id);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    let newStatus;
+    if (customer.accountStatus === 'Approved' || customer.accountStatus === 'Active') {
+      newStatus = 'Deactivated';
+    } else {
+      newStatus = 'Approved';
+    }
+    customer.accountStatus = newStatus;
+    await customer.save();
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(500).json({ message: 'Error toggling customer status', error: error.message });
+  }
+};
+
 module.exports = {
   getAllCustomers,
   getCustomerById,
@@ -639,4 +661,5 @@ module.exports = {
   resendOTP,
   verifyManually,
   createCustomerByAdmin,
+  toggleCustomerStatus,
 };

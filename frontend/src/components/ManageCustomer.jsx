@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -32,6 +32,9 @@ const ManageCustomer = ({
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
   const [customerToDelete, setCustomerToDelete] = useState(null); 
   const customersPerPage = 7;
+  const [customerList, setCustomerList] = useState(customers);
+
+  useEffect(() => { setCustomerList(customers); }, [customers]);
 
   console.log('Customers passed to ManageCustomer:', customers);
 
@@ -82,7 +85,25 @@ const ManageCustomer = ({
     setViewingCustomer(null);
   };
 
-  const filteredCustomers = customers.filter((customer) => {
+  const handleToggleStatus = async (customer) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        alert('Authentication required. Please login again.');
+        return;
+      }
+      const response = await axios.put(
+        `http://localhost:5000/api/customers/${customer.c_id}/status`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setCustomerList(customerList.map(c => c.c_id === customer.c_id ? response.data : c));
+    } catch (error) {
+      alert('Failed to update customer status. Please try again.');
+    }
+  };
+
+  const filteredCustomers = customerList.filter((customer) => {
     return (
       (filterStatus === 'All' || customer.accountStatus === filterStatus) &&
       (customer.c_id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -188,26 +209,58 @@ const ManageCustomer = ({
                         <td>{`${customer.firstName} ${customer.lastName}`}</td>
                         <td>{customer.email}</td>
                         <td>{['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType) ? 'Personal' : 'Business'}</td>
-                        <td className={`status ${customer.accountStatus.toLowerCase()}`}>{customer.accountStatus}</td>
+                        <td>
+                          <span style={{
+                            color:
+                              (['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType) && customer.accountStatus === 'Approved') ||
+                                (['Business', 'business', 'Wholesale', 'wholesale'].includes(customer.accountType) && (customer.accountStatus === 'Active' || customer.accountStatus === 'Approved'))
+                                ? 'green'
+                                : ['Rejected', 'Deactivated', 'deactivated'].includes(customer.accountStatus)
+                                ? 'red'
+                                : 'inherit'
+                          }}>
+                            {['Personal', 'personal', 'Retail', 'retail'].includes(customer.accountType)
+                              ? (customer.accountStatus === 'Approved' ? 'Active' : customer.accountStatus)
+                              : ((customer.accountStatus === 'Active' || customer.accountStatus === 'Approved') ? 'Active'
+                                : customer.accountStatus === 'Deactivated' ? 'Deactivated'
+                                : customer.accountStatus === 'Pending' ? 'Pending'
+                                : customer.accountStatus === 'Rejected' ? 'Rejected'
+                                : (() => {console.log('Unknown status:', customer.accountStatus, customer); return customer.accountStatus;})())}
+                          </span>
+                        </td>
                         <td className="action-buttons">
                           <div className="dropdown">
                             <button className="btn dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                               Actions
                             </button>
                             <ul className="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                              {customer.accountType !== 'Retail' && (
-                                <>
-                                  <li>
-                                    <button className="dropdown-item" onClick={() => handleApprove(customer.c_id)}>
-                                      Approve
-                                    </button>
-                                  </li>
-                                  <li>
-                                    <button className="dropdown-item" onClick={() => handleReject(customer.c_id)}>
-                                      Reject
-                                    </button>
-                                  </li>
-                                </>
+                              {(customer.accountStatus === 'Active' || customer.accountStatus === 'Approved') && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleToggleStatus(customer)}>
+                                    Deactivate
+                                  </button>
+                                </li>
+                              )}
+                              {customer.accountStatus === 'Deactivated' && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleToggleStatus(customer)}>
+                                    Activate
+                                  </button>
+                                </li>
+                              )}
+                              {(['Business', 'business', 'Wholesale', 'wholesale'].includes(customer.accountType)) && (customer.accountStatus === 'Pending' || customer.accountStatus === 'Rejected') && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleApprove(customer.c_id)}>
+                                    Approve
+                                  </button>
+                                </li>
+                              )}
+                              {(['Business', 'business', 'Wholesale', 'wholesale'].includes(customer.accountType)) && customer.accountStatus === 'Pending' && (
+                                <li>
+                                  <button className="dropdown-item" onClick={() => handleReject(customer.c_id)}>
+                                    Reject
+                                  </button>
+                                </li>
                               )}
                               <li>
                                 <button className="dropdown-item" onClick={() => handleViewCustomer(customer)}>
@@ -217,11 +270,6 @@ const ManageCustomer = ({
                               <li>
                                 <button className="dropdown-item" onClick={() => handleEdit(customer)}>
                                   Edit
-                                </button>
-                              </li>
-                              <li>
-                                <button className="dropdown-item" onClick={() => confirmDelete(customer)}>
-                                  Delete
                                 </button>
                               </li>
                             </ul>

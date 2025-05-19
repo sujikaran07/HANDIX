@@ -12,7 +12,8 @@ const {
   verifyOTP,
   resendOTP,
   verifyManually,
-  createCustomerByAdmin
+  createCustomerByAdmin,
+  toggleCustomerStatus
 } = require('../../controllers/customers/customerController');
 const router = express.Router();
 
@@ -29,5 +30,6 @@ router.delete('/:c_id', deleteCustomer);
 router.put('/:c_id/approve', approveCustomer);  
 router.put('/:c_id/reject', rejectCustomer);  
 router.post('/admin/create', createCustomerByAdmin);
+router.put('/:c_id/status', toggleCustomerStatus);
 
 module.exports = router;

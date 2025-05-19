@@ -42,7 +42,7 @@ const Customer = sequelize.define('Customer', {
   },
   accountStatus: {
     type: DataTypes.ENUM({
-      values: ['Pending', 'Approved', 'Rejected'],
+      values: ['Pending', 'Approved', 'Rejected', 'Deactivated', 'Active'],
       name: 'enum_Customers_account_status'
     }),
     defaultValue: 'Pending',
@@ -147,7 +147,7 @@ const Customer = sequelize.define('Customer', {
           console.error('Password hashing error:', e);
         }
       }
-      if (customer.get('isEmailVerified') && customer.get('accountType') === 'Personal') {
+      if (customer.get('isEmailVerified') && ['Personal', 'personal', 'Retail', 'retail'].includes(customer.get('accountType'))) {
         customer.accountStatus = 'Approved';
       }
     },
