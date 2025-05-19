@@ -6,6 +6,7 @@ import { FaUserTie, FaPlus } from 'react-icons/fa';
 import Pagination from './Pagination';
 import AddEmployeeForm from './AddEmployeeForm';
 import EditEmployeeForm from './EditEmployeeForm';
+import ConfirmationModal from './ui/ConfirmationModal';
 import axios from 'axios';
 
 const ManageEmployee = ({ onAddEmployeeClick }) => {
@@ -18,6 +19,9 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusAction, setStatusAction] = useState(null);
+  const [selectedEmployeeForStatus, setSelectedEmployeeForStatus] = useState(null);
   const employeesPerPage = 7;
 
   useEffect(() => {
@@ -77,22 +81,44 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     fetchEmployees();
   }, []);
 
-  const handleToggleStatus = async (employee) => {
+  const handleToggleStatus = (employee) => {
+    const action = employee.status === 'Active' ? 'deactivate' : 'activate';
+    setStatusAction(action);
+    setSelectedEmployeeForStatus(employee);
+    setShowStatusModal(true);
+  };
+
+  const handleConfirmStatusChange = async () => {
     try {
       const token = localStorage.getItem('adminToken');
       if (!token) {
         alert('Authentication required. Please login again.');
         return;
       }
+      const employee = selectedEmployeeForStatus;
+      const action = statusAction;
       const response = await axios.put(
         `http://localhost:5000/api/employees/${employee.eId}/status`,
-        {},
+        {
+          action,
+          email: employee.email,
+          name: `${employee.firstName} ${employee.lastName}`
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setEmployees(employees.map(emp => emp.eId === employee.eId ? response.data : emp));
+      setEmployees(employees.map(emp => emp.eId === employee.eId ? response.data.data || response.data : emp));
+      setShowStatusModal(false);
+      setSelectedEmployeeForStatus(null);
+      setStatusAction(null);
     } catch (error) {
       alert('Failed to update employee status. Please try again.');
     }
+  };
+
+  const handleCancelStatusChange = () => {
+    setShowStatusModal(false);
+    setSelectedEmployeeForStatus(null);
+    setStatusAction(null);
   };
 
   const handleEdit = (eId) => {
@@ -311,6 +337,15 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
           </>
         )}
       </div>
+      {showStatusModal && (
+        <ConfirmationModal
+          isOpen={showStatusModal}
+          title={`Confirm ${statusAction === 'activate' ? 'Activation' : 'Deactivation'}`}
+          message={`Are you sure you want to ${statusAction} this employee's account?`}
+          onConfirm={handleConfirmStatusChange}
+          onCancel={handleCancelStatusChange}
+        />
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import Pagination from './Pagination';
 import AddCustomerForm from './AddCustomerForm';
 import EditCustomerForm from './EditCustomerForm';
 import CustomerViewForm from './CustomerViewForm';
+import ConfirmationModal from './ui/ConfirmationModal';
 import axios from 'axios';
 
 const ManageCustomer = ({
@@ -30,7 +31,10 @@ const ManageCustomer = ({
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [viewingCustomer, setViewingCustomer] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false); 
-  const [customerToDelete, setCustomerToDelete] = useState(null); 
+  const [customerToDelete, setCustomerToDelete] = useState(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusAction, setStatusAction] = useState(null);
+  const [selectedCustomerForStatus, setSelectedCustomerForStatus] = useState(null);
   const customersPerPage = 7;
   const [customerList, setCustomerList] = useState(customers);
 
@@ -86,21 +90,54 @@ const ManageCustomer = ({
   };
 
   const handleToggleStatus = async (customer) => {
+    const action = customer.accountStatus === 'Active' || customer.accountStatus === 'Approved' 
+      ? 'deactivate' 
+      : 'activate';
+    
+    setStatusAction(action);
+    setSelectedCustomerForStatus(customer);
+    setShowStatusModal(true);
+  };
+
+  const handleConfirmStatusChange = async () => {
     try {
       const token = localStorage.getItem('adminToken');
       if (!token) {
         alert('Authentication required. Please login again.');
         return;
       }
+
+      const customer = selectedCustomerForStatus;
+      const action = statusAction;
+
       const response = await axios.put(
         `http://localhost:5000/api/customers/${customer.c_id}/status`,
-        {},
+        {
+          action,
+          email: customer.email,
+          name: `${customer.firstName} ${customer.lastName}`
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setCustomerList(customerList.map(c => c.c_id === customer.c_id ? response.data : c));
+
+      setCustomerList(customerList.map(c => 
+        c.c_id === customer.c_id ? response.data : c
+      ));
+
+      setShowStatusModal(false);
+      setSelectedCustomerForStatus(null);
+      setStatusAction(null);
+
     } catch (error) {
+      console.error('Error updating status:', error);
       alert('Failed to update customer status. Please try again.');
     }
+  };
+
+  const handleCancelStatusChange = () => {
+    setShowStatusModal(false);
+    setSelectedCustomerForStatus(null);
+    setStatusAction(null);
   };
 
   const filteredCustomers = customerList.filter((customer) => {
@@ -290,6 +327,15 @@ const ManageCustomer = ({
           </>
         )}
       </div>
+      {showStatusModal && (
+        <ConfirmationModal
+          isOpen={showStatusModal}
+          title={`Confirm ${statusAction === 'activate' ? 'Activation' : 'Deactivation'}`}
+          message={`Are you sure you want to ${statusAction} this customer's account?`}
+          onConfirm={handleConfirmStatusChange}
+          onCancel={handleCancelStatusChange}
+        />
+      )}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal-content">
