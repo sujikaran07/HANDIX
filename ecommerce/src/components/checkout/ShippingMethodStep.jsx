@@ -1,8 +1,18 @@
 import React from 'react';
 import { getShippingFeeByDistrict } from '../../data/shippingZones';
 
-const ShippingMethodStep = ({ formData, errors, handleChange }) => {
-  const districtShippingFee = formData.district ? getShippingFeeByDistrict(formData.district) : null;
+const ShippingMethodStep = ({ formData, errors, handleChange, user }) => {
+  const isBusinessAccount = user && (user.accountType === 'Business' || user.accountType === 'business');
+  let shippingFeeDisplay = null;
+  if (formData.district) {
+    if (user && (user.accountType === 'Personal' || user.accountType === 'personal')) {
+      shippingFeeDisplay = 500;
+    } else if (isBusinessAccount) {
+      shippingFeeDisplay = getShippingFeeByDistrict(formData.district, 'Business');
+    } else {
+      shippingFeeDisplay = getShippingFeeByDistrict(formData.district);
+    }
+  }
   
   const pickupLocations = [
     { id: 'mullaitivu-store', name: 'Mullaitivu Branch', address: '15 Main Street, Mullaitivu' },
@@ -35,8 +45,13 @@ const ShippingMethodStep = ({ formData, errors, handleChange }) => {
                 <div>
                   <p className="font-medium mb-1">Shipping to {formData.district}</p>
                   <p className="text-sm text-gray-600">
-                    Shipping Fee: <span className="font-medium">LKR {districtShippingFee.toLocaleString()}</span>
+                    Shipping Fee: <span className="font-medium">LKR {shippingFeeDisplay ? shippingFeeDisplay.toLocaleString() : ''}</span>
                   </p>
+                  {user && (user.accountType === 'Personal' || user.accountType === 'personal') && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Additional charges may apply based on package weight and courier service.
+                    </p>
+                  )}
                   <p className="text-sm text-gray-600 mt-1">
                     Estimated delivery: 2-4 business days
                   </p>

@@ -3,7 +3,8 @@ import { Check, MapPin, Truck, CreditCard, Banknote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getShippingFeeByDistrict } from '../../data/shippingZones';
 
-const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) => {
+const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user }) => {
+  const isBusinessAccount = user && (user.accountType === 'Business' || user.accountType === 'business');
   const [businessDiscount, setBusinessDiscount] = useState(null);
   const [discountedTotal, setDiscountedTotal] = useState(total);
   const [shippingFee, setShippingFee] = useState(0);
@@ -13,41 +14,29 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
     const calculateShippingFee = () => {
       if (formData.shippingMethod === 'pickup') {
         return 0; // No shipping fee for pickup
+      } else if (user && (user.accountType === 'Personal' || user.accountType === 'personal')) {
+        return 500; // Always 500 for personal accounts
+      } else if (formData.district) {
+        return getShippingFeeByDistrict(formData.district, isBusinessAccount ? 'Business' : undefined);
       } else {
-        // Get district-specific shipping fee
-        return formData.district ? getShippingFeeByDistrict(formData.district) : 350;
+        return 350;
       }
     };
-    
     const fee = calculateShippingFee();
     setShippingFee(fee);
-    
-    // Check if user is logged in and is a business customer
-    const userJson = localStorage.getItem('user');
-    if (userJson) {
-      try {
-        const userData = JSON.parse(userJson);
-        if (userData.accountType === 'Business') {
-          // Calculate 5% discount on subtotal + customization (not shipping)
-          const baseAmount = subtotal + customizationTotal;
-          const discount = Math.round((baseAmount * 0.05) * 100) / 100;
-          setBusinessDiscount(discount);
-          
-          // Calculate new total with discount
-          const newTotal = subtotal + customizationTotal + fee - discount;
-          setDiscountedTotal(newTotal);
-        } else {
-          // Regular customer - total is just subtotal + customization + shipping
-          setDiscountedTotal(subtotal + customizationTotal + fee);
-        }
-      } catch (error) {
-        console.error('Error checking business status:', error);
-        setDiscountedTotal(subtotal + customizationTotal + fee);
-      }
+    if (isBusinessAccount) {
+      // Calculate 10% discount on subtotal + customization + shipping
+      const baseAmount = subtotal + customizationTotal + fee;
+      const discount = Math.round((baseAmount * 0.10) * 100) / 100;
+      setBusinessDiscount(discount);
+      // Calculate new total with discount
+      const newTotal = baseAmount - discount;
+      setDiscountedTotal(newTotal);
     } else {
+      // Regular customer - total is just subtotal + customization + shipping
       setDiscountedTotal(subtotal + customizationTotal + fee);
     }
-  }, [formData.shippingMethod, formData.district, subtotal, customizationTotal, total]);
+  }, [formData.shippingMethod, formData.district, subtotal, customizationTotal, total, isBusinessAccount, user]);
 
   // Function to render the payment method icon and name
   const renderPaymentMethod = () => {
@@ -100,22 +89,6 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
     }
   };
 
-  // Get user information from localStorage to display in summary
-  const getUserInfo = () => {
-    try {
-      const userJson = localStorage.getItem('user');
-      if (userJson) {
-        return JSON.parse(userJson);
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      return null;
-    }
-  };
-  
-  const user = getUserInfo();
-  
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Review your order</h2>
@@ -229,9 +202,15 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total }) =>
                 <span>LKR {shippingFee.toLocaleString()}</span>
               )}
             </div>
+            {/* Additional message for personal accounts with district selected */}
+            {user && (user.accountType === 'Personal' || user.accountType === 'personal') && formData.district && (
+              <div className="text-xs text-amber-600 mt-1">
+                Additional charges may apply based on package weight and courier service.
+              </div>
+            )}
             {businessDiscount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Business Discount (5%)</span>
+                <span>Business Discount (10%)</span>
                 <span>-LKR {businessDiscount.toLocaleString()}</span>
               </div>
             )}

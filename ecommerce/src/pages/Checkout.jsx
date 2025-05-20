@@ -155,14 +155,14 @@ const CheckoutPage = () => {
       return 0; // Free for pickup
     } else if (formData.district) {
       // Use the shipping fee function from shippingZones
-      return getShippingFeeByDistrict(formData.district);
+      return getShippingFeeByDistrict(formData.district, user && (user.accountType === 'Business' || user.accountType === 'business') ? 'Business' : undefined);
     } else {
       // Default shipping rate if no district selected
       return 350;
     }
   };
 
-  // Calculate final total with shipping and wholesale discount if applicable
+  // Calculate final total with shipping and business discount if applicable
   const getFinalTotal = () => {
     // First calculate shipping cost
     const shippingCost = calculateShippingCost();
@@ -170,8 +170,8 @@ const CheckoutPage = () => {
     // Base amount
     let finalAmount = subtotal + customizationTotal + shippingCost;
     
-    // Apply wholesale discount if applicable
-    if (user && user.accountType === 'Business') {
+    // Apply business discount if applicable
+    if (user && (user.accountType === 'Business' || user.accountType === 'business')) {
       // Apply 5% discount to subtotal + customization (not shipping)
       const discountAmount = (subtotal + customizationTotal) * 0.05;
       finalAmount = finalAmount - discountAmount;
@@ -433,14 +433,14 @@ const CheckoutPage = () => {
         return;
       }
       
-      // Apply wholesale discount if applicable
-      const isWholesaleCustomer = user && user.accountType === 'Business';
+      // Apply business discount if applicable
+      const isBusinessCustomer = user && (user.accountType === 'Business' || user.accountType === 'business');
       
       // Calculate shipping fee
       const shippingFee = calculateShippingCost();
       
-      // Calculate the final amounts with wholesale discount if applicable
-      const discountAmount = isWholesaleCustomer ? (subtotal + customizationTotal) * 0.05 : 0;
+      // Calculate the final amounts with business discount if applicable
+      const discountAmount = isBusinessCustomer ? (subtotal + customizationTotal) * 0.05 : 0;
       const calcTotal = subtotal + customizationTotal + shippingFee - discountAmount;
       
       // Prepare order data - use user data from the logged-in user
@@ -476,8 +476,8 @@ const CheckoutPage = () => {
             customizationFee = parseFloat(item.product.customizationFee);
           }
           
-          // Apply wholesale discount to product price if applicable
-          const productPrice = isWholesaleCustomer ? 
+          // Apply business discount to product price if applicable
+          const productPrice = isBusinessCustomer ? 
             item.product.price * 0.95 : 
             item.product.price;
           
@@ -488,7 +488,7 @@ const CheckoutPage = () => {
             originalPrice: item.product.price,
             customization: item.customization || null,
             customizationFee: customizationFee,
-            wholesaleDiscount: isWholesaleCustomer
+            businessDiscount: isBusinessCustomer
           };
         }),
         paymentInfo: {
@@ -503,8 +503,8 @@ const CheckoutPage = () => {
           subtotal: subtotal,
           customizationTotal,
           shippingFee: shippingFee,
-          wholesaleDiscount: discountAmount,
-          isWholesaleCustomer,
+          businessDiscount: discountAmount,
+          isBusinessCustomer,
           total: calcTotal
         },
         shippingMethod: formData.shippingMethod,
@@ -687,6 +687,7 @@ const CheckoutPage = () => {
             formData={formData}
             errors={errors}
             handleChange={handleChange}
+            user={user}
           />
         );
       case 3:
@@ -714,6 +715,7 @@ const CheckoutPage = () => {
             customizationTotal={customizationTotal}
             total={total}
             shippingFee={calculateShippingCost()}
+            user={user}
           />
         );
       case 6:
@@ -857,9 +859,9 @@ const CheckoutPage = () => {
                           <span>LKR {calculateShippingCost().toLocaleString()}</span>
                         )}
                       </div>
-                      {user && user.accountType === 'Business' && (
+                      {user && (user.accountType === 'Business' || user.accountType === 'business') && (
                         <div className="flex justify-between text-green-600">
-                          <span>Wholesale Discount (5%)</span>
+                          <span>Business Discount (5%)</span>
                           <span>-LKR {((subtotal + customizationTotal) * 0.05).toLocaleString()}</span>
                         </div>
                       )}

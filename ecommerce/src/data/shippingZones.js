@@ -1,46 +1,46 @@
 export const sriLankaZones = {
     'Zone A': [
-        { district: 'Colombo', postalCodes: ['00100', '01500'], shippingFee: 500 },
-        { district: 'Gampaha', postalCodes: ['11000', '11600'], shippingFee: 500 },
-        { district: 'Kalutara', postalCodes: ['12000', '12200'], shippingFee: 500 }
+        { district: 'Colombo', postalCodes: ['00100', '01500'], shippingFee: 3000 },
+        { district: 'Gampaha', postalCodes: ['11000', '11600'], shippingFee: 3000 },
+        { district: 'Kalutara', postalCodes: ['12000', '12200'], shippingFee: 3000 }
     ],
     'Zone B': [
-        { district: 'Galle', postalCodes: ['80000', '80800'], shippingFee: 600 },
-        { district: 'Matara', postalCodes: ['81000', '81800'], shippingFee: 600 },
-        { district: 'Hambantota', postalCodes: ['82000', '82800'], shippingFee: 600 }
+        { district: 'Galle', postalCodes: ['80000', '80800'], shippingFee: 3000 },
+        { district: 'Matara', postalCodes: ['81000', '81800'], shippingFee: 3000 },
+        { district: 'Hambantota', postalCodes: ['82000', '82800'], shippingFee: 3000 }
     ],
     'Zone C': [
-        { district: 'Kandy', postalCodes: ['20000', '20500'], shippingFee: 500 },
-        { district: 'Matale', postalCodes: ['21000', '21300'], shippingFee: 500 },
-        { district: 'Nuwara Eliya', postalCodes: ['22200', '22300'], shippingFee: 500 }
+        { district: 'Kandy', postalCodes: ['20000', '20500'], shippingFee: 3000 },
+        { district: 'Matale', postalCodes: ['21000', '21300'], shippingFee: 3000 },
+        { district: 'Nuwara Eliya', postalCodes: ['22200', '22300'], shippingFee: 3000 }
     ],
     'Zone D': [
-        { district: 'Kurunegala', postalCodes: ['60000', '60500'], shippingFee: 600 },
-        { district: 'Puttalam', postalCodes: ['61300', '61400'], shippingFee: 600 }
+        { district: 'Kurunegala', postalCodes: ['60000', '60500'], shippingFee: 2500 },
+        { district: 'Puttalam', postalCodes: ['61300', '61400'], shippingFee: 2500 }
     ],
     'Zone E': [
-        { district: 'Jaffna', postalCodes: ['40000', '40900'], shippingFee: 300 },
-        { district: 'Kilinochchi', postalCodes: ['43000', '43100'], shippingFee: 300 },
-        { district: 'Mannar', postalCodes: ['41000', '41200'], shippingFee: 400 },
-        { district: 'Mullaitivu', postalCodes: ['42000', '42100'], shippingFee: 250 },
-        { district: 'Vavuniya', postalCodes: ['43000', '43200'], shippingFee: 300 }
+        { district: 'Jaffna', postalCodes: ['40000', '40900'], shippingFee: 2000 },
+        { district: 'Kilinochchi', postalCodes: ['43000', '43100'], shippingFee: 2000 },
+        { district: 'Mannar', postalCodes: ['41000', '41200'], shippingFee: 2000 },
+        { district: 'Mullaitivu', postalCodes: ['42000', '42100'], shippingFee: 2000 },
+        { district: 'Vavuniya', postalCodes: ['43000', '43200'], shippingFee: 2000 }
     ],
     'Zone F': [
-        { district: 'Trincomalee', postalCodes: ['31000', '31200'], shippingFee: 700 },
-        { district: 'Batticaloa', postalCodes: ['30000', '30300'], shippingFee: 700 },
-        { district: 'Ampara', postalCodes: ['40000', '40300'], shippingFee: 700 }
+        { district: 'Trincomalee', postalCodes: ['31000', '31200'], shippingFee: 2100 },
+        { district: 'Batticaloa', postalCodes: ['30000', '30300'], shippingFee: 2100 },
+        { district: 'Ampara', postalCodes: ['40000', '40300'], shippingFee: 2100 }
     ],
     'Zone G': [
-        { district: 'Badulla', postalCodes: ['90000', '90500'], shippingFee: 700 },
-        { district: 'Monaragala', postalCodes: ['91000', '91300'], shippingFee: 700 }
+        { district: 'Badulla', postalCodes: ['90000', '90500'], shippingFee: 2000 },
+        { district: 'Monaragala', postalCodes: ['91000', '91300'], shippingFee: 2000 }
     ],
     'Zone H': [
-        { district: 'Ratnapura', postalCodes: ['70000', '70500'], shippingFee: 650 },
-        { district: 'Kegalle', postalCodes: ['71000', '71300'], shippingFee: 650 }
+        { district: 'Ratnapura', postalCodes: ['70000', '70500'], shippingFee: 2400 },
+        { district: 'Kegalle', postalCodes: ['71000', '71300'], shippingFee: 2400 }
     ],
     'Zone I': [
-        { district: 'Anuradhapura', postalCodes: ['50000', '50700'], shippingFee: 600 },
-        { district: 'Polonnaruwa', postalCodes: ['51000', '51300'], shippingFee: 600 }
+        { district: 'Anuradhapura', postalCodes: ['50000', '50700'], shippingFee: 2500 },
+        { district: 'Polonnaruwa', postalCodes: ['51000', '51300'], shippingFee: 2500 }
     ]
 };
 
@@ -81,31 +81,31 @@ export const sriLankaDistricts = [
 
 // Define shipping fees for each district
 const districtShippingFees = {
-  'Colombo': 250,
-  'Gampaha': 300,
-  'Kalutara': 350,
-  'Kandy': 400,
-  'Matale': 450,
-  'Nuwara Eliya': 450,
-  'Galle': 400,
-  'Matara': 450,
-  'Hambantota': 500,
-  'Jaffna': 600,
-  'Kilinochchi': 650,
-  'Mannar': 650,
-  'Vavuniya': 600,
-  'Mullaitivu': 650,
-  'Batticaloa': 550,
-  'Ampara': 550,
-  'Trincomalee': 550,
-  'Kurunegala': 400,
-  'Puttalam': 450,
-  'Anuradhapura': 500,
-  'Polonnaruwa': 500,
-  'Badulla': 500,
-  'Monaragala': 550,
-  'Ratnapura': 450,
-  'Kegalle': 400
+  'Colombo': 3000,
+  'Gampaha': 3000,
+  'Kalutara': 3000,
+  'Kandy': 3000,
+  'Matale': 3000,
+  'Nuwara Eliya': 3000,
+  'Galle': 3000,
+  'Matara': 3000,
+  'Hambantota': 3000,
+  'Jaffna': 2000,
+  'Kilinochchi': 2000,
+  'Mannar': 2000,
+  'Vavuniya': 2000,
+  'Mullaitivu': 2000,
+  'Batticaloa': 2100,
+  'Ampara': 2100,
+  'Trincomalee': 2100,
+  'Kurunegala': 2500,
+  'Puttalam': 2500,
+  'Anuradhapura': 2500,
+  'Polonnaruwa': 2500,
+  'Badulla': 2000,
+  'Monaragala': 2000,
+  'Ratnapura': 2400,
+  'Kegalle': 2400
 };
 
 // Function to get shipping fee by district - KEPT only this declaration
@@ -129,18 +129,7 @@ export const shippingZones = {
   'Sabaragamuwa': ['Ratnapura', 'Kegalle']
 };
 
-// Shipping costs by zone (for reference)
-export const zoneShippingCosts = {
-  'Western': 300,
-  'Central': 400,
-  'Southern': 450,
-  'Northern': 650,
-  'Eastern': 550,
-  'North Western': 450,
-  'North Central': 500,
-  'Uva': 550,
-  'Sabaragamuwa': 450
-};
+
 
 // Function to get zone by district
 export const getZoneByDistrict = (district) => {
@@ -152,20 +141,15 @@ export const getZoneByDistrict = (district) => {
   return null;
 };
 
-// Export standard shipping rates
-export const shippingRates = {
-  standard: 350,
-  express: 500
-};
 
 // Export delivery time estimates by district
 export const deliveryTimeEstimates = {
-  'Colombo': '1-2 days',
-  'Gampaha': '1-2 days',
-  'Kalutara': '2-3 days',
-  'Kandy': '2-3 days',
-  'Matale': '2-3 days',
-  'Nuwara Eliya': '2-3 days',
+  'Colombo': '3-5 days',
+  'Gampaha': '3-5 days',
+  'Kalutara': '3-5 days',
+  'Kandy': '3-5 days',
+  'Matale': '3-5 days',
+  'Nuwara Eliya': '3-5 days',
   'Galle': '2-3 days',
   'Matara': '2-3 days',
   'Hambantota': '2-3 days',
