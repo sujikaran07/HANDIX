@@ -66,10 +66,6 @@ const ManageTransactions = ({ onViewTransaction }) => {
               console.log(`Received ${data.transactions.length} transactions`);
               // Set transactions with the retrieved data
               setTransactions(data.transactions);
-              if (data.transactions.length === 0) {
-                console.log('No transactions found in the response');
-                setError('No transactions found. Try creating some transactions first.');
-              }
             } else {
               console.error('Invalid transaction data format:', data);
               setError('Received invalid data format from server');
@@ -425,20 +421,6 @@ const ManageTransactions = ({ onViewTransaction }) => {
             </div>
           ) : error ? (
             <ErrorDisplay message={error} />
-          ) : transactions.length === 0 ? (
-            <div className="text-center py-5">
-              <div className="mb-3">
-                <FontAwesomeIcon icon={faExclamationTriangle} size="3x" style={{ color: '#ffc107' }} />
-              </div>
-              <h5>No Transactions Found</h5>
-              <p className="text-muted">There are no transactions in the system yet.</p>
-              <button 
-                className="btn btn-primary mt-2" 
-                onClick={() => setRefreshKey(key => key + 1)}
-              >
-                Refresh
-              </button>
-            </div>
           ) : (
             <table className="table product-table" style={{ 
               marginBottom: 0,

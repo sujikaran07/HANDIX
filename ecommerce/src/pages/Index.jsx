@@ -168,7 +168,7 @@ const HomePage = () => {
       <main className="flex-grow">
         {/* Hero Section - Simple Banner */}
         <section className="hero-banner relative h-[500px] flex items-center justify-center"
-          style={{ backgroundImage: "url(https://stateless.woolpatterns.com/2024/05/d90c3ef2-how-to-crochet-4.jpg)", backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          style={{ backgroundImage: "url(/images/Hero4.png)", backgroundSize: 'cover', backgroundPosition: 'center' }}>
           <div className="hero-overlay absolute inset-0 bg-black bg-opacity-40"></div>
           <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%] hero-content relative z-10 text-center text-white">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Discover Unique Handcrafted Treasures</h1>
