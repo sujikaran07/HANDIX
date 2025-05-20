@@ -27,15 +27,25 @@ router.get('/', async (req, res) => {
     console.log('artisan_id:', artisan_id, 'artisan_name:', artisan_name);
     // Orders: hardcode for debug
     let orders = [];
-    orders = await Order.findAll({
-      where: {
-        assignedArtisan: { [Op.iLike]: '%Arunan karunakaran%' }
-      },
-      limit: 10,
-      order: [
-        ['orderDate', 'DESC']
-      ]
-    });
+    if (artisan_name) {
+      orders = await Order.findAll({
+        where: { assignedArtisan: { [Op.iLike]: `%${artisan_name}%` } },
+        limit: 10,
+        order: [['orderDate', 'DESC']]
+      });
+    } else if (artisan_id) {
+      // Fallback: look up artisan's full name from Employee table
+      const { Employee } = require('../models/employeeModel');
+      const emp = await Employee.findOne({ where: { eId: artisan_id } });
+      if (emp) {
+        const fullName = `${emp.firstName} ${emp.lastName}`.trim();
+        orders = await Order.findAll({
+          where: { assignedArtisan: { [Op.iLike]: `%${fullName}%` } },
+          limit: 10,
+          order: [['orderDate', 'DESC']]
+        });
+      }
+    }
     console.log('Orders found:', orders.length);
     orders.forEach(o => console.log('Order:', o.order_id, 'assignedArtisan:', o.assignedArtisan));
 
@@ -81,4 +91,4 @@ router.get('/', async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;
