@@ -712,6 +712,7 @@ const CheckoutPage = () => {
             formData={formData}
             errors={errors}
             handleChange={handleChange}
+            user={user}
           />
         );
       case 5:

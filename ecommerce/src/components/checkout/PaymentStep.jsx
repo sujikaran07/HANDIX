@@ -15,11 +15,14 @@ const formatExpiry = (value) => {
   return cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4);
 };
 
-const PaymentStep = ({ formData, errors, handleChange }) => {
+const PaymentStep = ({ formData, errors, handleChange, user }) => {
   const { total } = useCart();
-  const codDisabled = total > 5000;
+  // Determine if user is business or personal
+  const isBusinessAccount = user && (user.accountType === 'Business' || user.accountType === 'business');
+  // COD is disabled only for personal accounts over 2,000 LKR
+  const codDisabled = !isBusinessAccount && total > 2000;
 
-  // If COD was selected but total is over limit, switch to card payment
+  // If COD was selected but total is over limit (for personal), switch to card payment
   React.useEffect(() => {
     if (codDisabled && formData.paymentMethod === 'cod') {
       handleChange({
@@ -80,8 +83,8 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
     <div>
       <h2 className="text-xl font-bold mb-4">Payment Method</h2>
 
-      {/* COD warning for orders over 2000 */}
-      {codDisabled && (
+      {/* COD warning for personal accounts over 2,000 LKR only */}
+      {!isBusinessAccount && codDisabled && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 flex items-center">
           <FaExclamationTriangle className="text-yellow-500 mr-3" size={20} />
           <span className="text-sm text-yellow-700">
