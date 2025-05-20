@@ -334,6 +334,7 @@ exports.placeOrder = async (req, res) => {
     
     let customerId = null;
     let user = null;
+    let accountType = null;
     
     const authHeader = req.headers.authorization;
     if (authHeader) {
@@ -368,151 +369,37 @@ exports.placeOrder = async (req, res) => {
       }
     }
     
-    let shippingAddressId = null;
-    
-    const allShippingAddresses = await Address.findAll({
-      where: {
-        c_id: customerId,
-        addressType: 'shipping'
-      },
-      order: [['createdAt', 'DESC']]
-    });
-    
-    const matchingShippingAddress = allShippingAddresses.find(addr => 
-      addr.street_address === shippingAddress.street &&
-      addr.city === shippingAddress.city &&
-      addr.district === shippingAddress.district &&
-      addr.postalCode === shippingAddress.postalCode
-    );
-    
-    if (matchingShippingAddress) {
-      shippingAddressId = matchingShippingAddress.address_id;
-      console.log(`Using existing shipping address ID ${shippingAddressId} for order`);
+    // --- Fetch account type for business logic ---
+    if (customerId) {
+      const customer = await Customer.findByPk(customerId);
+      if (customer && customer.accountType) {
+        accountType = customer.accountType;
+      }
+    }
+    // --- Calculate shipping fee and discount for business accounts ---
+    let shippingFee = 0;
+    if (shippingMethod === 'pickup') {
+      shippingFee = 0;
+    } else if (accountType === 'Business') {
+      shippingFee = getBusinessShippingFeeByDistrict(shippingAddress.district);
     } else {
-      const newShippingAddress = await Address.create({
-        c_id: customerId,
-        addressType: 'shipping',
-        street_address: shippingAddress.street,
-        city: shippingAddress.city,
-        district: shippingAddress.district,
-        postalCode: shippingAddress.postalCode,
-        country: shippingAddress.country || 'Sri Lanka'
-      }, { transaction });
-      
-      shippingAddressId = newShippingAddress.address_id;
-      console.log(`Created new shipping address ID ${shippingAddressId} for order - no match found`);
+      shippingFee = calculateShippingCost(shippingAddress.district);
     }
-    
-    let billingAddressId = null;
-    
-    const sameAsShipping = !billingAddress;
-    
-    if (sameAsShipping) {
-      const matchingBillingAddress = await Address.findOne({
-        where: {
-          c_id: customerId,
-          addressType: 'billing',
-          street_address: matchingShippingAddress?.street_address || shippingAddress.street,
-          city: matchingShippingAddress?.city || shippingAddress.city,
-          district: matchingShippingAddress?.district || shippingAddress.district,
-          postalCode: matchingShippingAddress?.postalCode || shippingAddress.postalCode
-        }
-      });
-      
-      if (matchingBillingAddress) {
-        billingAddressId = matchingBillingAddress.address_id;
-        console.log(`Using existing billing address ID ${billingAddressId} that matches shipping address`);
-      } else {
-        const newBillingAddress = await Address.create({
-          c_id: customerId,
-          addressType: 'billing',
-          street_address: matchingShippingAddress?.street_address || shippingAddress.street,
-          city: matchingShippingAddress?.city || shippingAddress.city,
-          district: matchingShippingAddress?.district || shippingAddress.district,
-          postalCode: matchingShippingAddress?.postalCode || shippingAddress.postalCode,
-          country: shippingAddress.country || 'Sri Lanka'
-        }, { transaction });
-        
-        billingAddressId = newBillingAddress.address_id;
-        console.log(`Created new billing address ID ${billingAddressId} copied from shipping address`);
-      }
-    } else {
-      const allBillingAddresses = await Address.findAll({
-        where: {
-          c_id: customerId,
-          addressType: 'billing'
-        },
-        order: [['createdAt', 'DESC']]
-      });
-      
-      const matchingBillingAddress = allBillingAddresses.find(addr => 
-        addr.street_address === billingAddress.street &&
-        addr.city === billingAddress.city &&
-        addr.district === billingAddress.district &&
-        addr.postalCode === billingAddress.postalCode
-      );
-      
-      if (matchingBillingAddress) {
-        billingAddressId = matchingBillingAddress.address_id;
-        console.log(`Using existing billing address ID ${billingAddressId}`);
-      } else {
-        const newBillingAddress = await Address.create({
-          c_id: customerId,
-          addressType: 'billing',
-          street_address: billingAddress.street,
-          city: billingAddress.city,
-          district: billingAddress.district,
-          postalCode: billingAddress.postalCode,
-          country: billingAddress.country || 'Sri Lanka'
-        }, { transaction });
-        
-        billingAddressId = newBillingAddress.address_id;
-        console.log(`Created new billing address ID ${billingAddressId} - no match found`);
-      }
+    // Calculate subtotal and customization total
+    let subtotal = 0;
+    let customizationTotal = 0;
+    for (const item of orderItems) {
+      subtotal += (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 1);
+      customizationTotal += (parseFloat(item.customizationFee) || 0) * (parseInt(item.quantity) || 1);
     }
-    
-    let orderId;
-    
-    try {
-      const latestOrder = await Order.findOne({
-        where: {
-          order_id: {
-            [Sequelize.Op.like]: 'O%'
-          }
-        },
-        order: [['order_id', 'DESC']]
-      });
-      
-      if (latestOrder) {
-        const numericPart = parseInt(latestOrder.order_id.substring(1), 10);
-        orderId = `O${(numericPart + 1).toString().padStart(3, '0')}`;
-      } else {
-        orderId = 'O001';
-      }
-    } catch (error) {
-      console.error('Error generating sequential order ID:', error);
-      const num = Math.floor(Math.random() * 999) + 1;
-      orderId = `O${num.toString().padStart(3, '0')}`;
+    let baseTotal = subtotal + customizationTotal + shippingFee;
+    let businessDiscount = 0;
+    if (accountType === 'Business') {
+      businessDiscount = Math.round((baseTotal * 0.10) * 100) / 100;
     }
+    let finalTotal = baseTotal - businessDiscount;
     
-    const existingOrder = await Order.findByPk(orderId);
-    if (existingOrder) {
-      const timestamp = new Date().getTime().toString().slice(-3);
-      orderId = `O${timestamp}`;
-    }
-    
-    const customerName = customerInfo ? 
-      `${customerInfo.firstName || ''} ${customerInfo.lastName || ''}`.trim() : 
-      user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 
-      'Guest Customer';
-    
-    const isWholesaleCustomer = customerInfo?.accountType === 'Wholesale';
-    
-    let finalTotal = parseFloat(orderSummary.total);
-    if (isWholesaleCustomer) {
-      console.log('Processing wholesale customer order - applying 5% discount');
-    }
-    
+    // Use finalTotal for order totalAmount
     const newOrder = await Order.create({
       order_id: orderId,
       c_id: customerId,
@@ -524,7 +411,7 @@ exports.placeOrder = async (req, res) => {
       customerName: customerName,
       customized: orderItems.some(item => item.customization) ? 'yes' : 'no',
       paymentMethod: paymentInfo.method,
-      wholesaleDiscount: isWholesaleCustomer ? 'yes' : 'no'
+      wholesaleDiscount: accountType === 'Business' ? 'yes' : 'no'
     }, { transaction });
     
     for (const item of orderItems) {
@@ -807,7 +694,9 @@ exports.placeOrder = async (req, res) => {
       orderId,
       paymentUrl,
       message: 'Order placed successfully',
-      wholesaleDiscount: isWholesaleCustomer
+      wholesaleDiscount: accountType === 'Business' ? 'yes' : 'no',
+      shippingFee,
+      businessDiscount
     });
     
   } catch (error) {
@@ -839,6 +728,38 @@ function calculateShippingCost(district) {
   if (!district) return standardRate;
   
   return highRateDistricts.includes(district) ? standardRate + 100 : standardRate;
+}
+
+// --- Business shipping fee logic ---
+const businessDistrictShippingFees = {
+  'Colombo': 3000,
+  'Gampaha': 3000,
+  'Kalutara': 3000,
+  'Kandy': 3000,
+  'Matale': 3000,
+  'Nuwara Eliya': 3000,
+  'Galle': 3000,
+  'Matara': 3000,
+  'Hambantota': 3000,
+  'Jaffna': 2000,
+  'Kilinochchi': 2000,
+  'Mannar': 2000,
+  'Vavuniya': 2000,
+  'Mullaitivu': 2000,
+  'Batticaloa': 2100,
+  'Ampara': 2100,
+  'Trincomalee': 2100,
+  'Kurunegala': 2500,
+  'Puttalam': 2500,
+  'Anuradhapura': 2500,
+  'Polonnaruwa': 2500,
+  'Badulla': 2000,
+  'Monaragala': 2000,
+  'Ratnapura': 2400,
+  'Kegalle': 2400
+};
+function getBusinessShippingFeeByDistrict(district) {
+  return businessDistrictShippingFees[district] || 350;
 }
 
 exports.getOrderById = async (req, res) => {

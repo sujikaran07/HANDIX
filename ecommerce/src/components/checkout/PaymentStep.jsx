@@ -80,12 +80,12 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
     <div>
       <h2 className="text-xl font-bold mb-4">Payment Method</h2>
 
-      {/* COD warning for orders over 5000 */}
+      {/* COD warning for orders over 2000 */}
       {codDisabled && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 flex items-center">
           <FaExclamationTriangle className="text-yellow-500 mr-3" size={20} />
           <span className="text-sm text-yellow-700">
-            Cash on Delivery is only available for orders under LKR 5,000. Please use card payment for this order.
+            Cash on Delivery is only available for orders under LKR 2,000. Please use card payment for this order.
           </span>
         </div>
       )}

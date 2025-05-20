@@ -143,6 +143,10 @@ const CheckoutPage = () => {
     cardCvc: '',
   });
   
+  // State to store backend-calculated values after order placement
+  const [backendShippingFee, setBackendShippingFee] = useState(null);
+  const [backendBusinessDiscount, setBackendBusinessDiscount] = useState(null);
+  
   // Define shipping rates
   const shippingRates = {
     standard: 350,
@@ -151,6 +155,9 @@ const CheckoutPage = () => {
 
   // Calculate shipping cost based on method and district
   const calculateShippingCost = () => {
+    if (user && (user.accountType === 'Business' || user.accountType === 'business') && backendShippingFee !== null) {
+      return backendShippingFee;
+    }
     if (formData.shippingMethod === 'pickup') {
       return 0; // Free for pickup
     } else if (formData.district) {
@@ -176,9 +183,12 @@ const CheckoutPage = () => {
     
     // Apply business discount if applicable
     if (user && (user.accountType === 'Business' || user.accountType === 'business')) {
-      // Apply 5% discount to subtotal + customization (not shipping)
-      const discountAmount = (subtotal + customizationTotal) * 0.05;
-      finalAmount = finalAmount - discountAmount;
+      if (backendBusinessDiscount !== null) {
+        finalAmount = subtotal + customizationTotal + shippingCost - backendBusinessDiscount;
+      } else {
+        const discountAmount = (subtotal + customizationTotal + shippingCost) * 0.10;
+        finalAmount = subtotal + customizationTotal + shippingCost - discountAmount;
+      }
     }
     
     return finalAmount;
@@ -442,8 +452,23 @@ const CheckoutPage = () => {
         return;
       }
       
-      // Apply business discount if applicable
+      // COD limit logic: business = no limit, personal = 2,000
       const isBusinessCustomer = user && (user.accountType === 'Business' || user.accountType === 'business');
+      const codLimit = isBusinessCustomer ? Infinity : 2000;
+      if (formData.paymentMethod === 'cod' && getFinalTotal() > codLimit) {
+        toast({
+          title: "COD Limit Exceeded",
+          description: isBusinessCustomer
+            ? "Business accounts have no COD limit."
+            : "Cash on Delivery is only available for orders under LKR 2,000 for personal accounts. Please choose another payment method.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Apply business discount if applicable
+      // const isBusinessCustomer = user && (user.accountType === 'Business' || user.accountType === 'business');
       
       // Calculate shipping fee
       const shippingFee = calculateShippingCost();
@@ -534,6 +559,15 @@ const CheckoutPage = () => {
         orderData, 
         config
       );
+      
+      // Save backend-calculated values for business accounts
+      if (user && (user.accountType === 'Business' || user.accountType === 'business')) {
+        setBackendShippingFee(response.data.shippingFee);
+        setBackendBusinessDiscount(response.data.businessDiscount);
+      } else {
+        setBackendShippingFee(null);
+        setBackendBusinessDiscount(null);
+      }
       
       // Handle successful order creation
       const generatedOrderId = response.data.orderId || 'ORD-' + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -827,7 +861,9 @@ const CheckoutPage = () => {
                       )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Shipping</span>
-                        {formData.shippingMethod === 'pickup' ? (
+                        {user && (user.accountType === 'Business' || user.accountType === 'business') && backendShippingFee !== null ? (
+                          <span>LKR {backendShippingFee.toLocaleString()}</span>
+                        ) : formData.shippingMethod === 'pickup' ? (
                           <span className="text-green-600">Free (Pickup)</span>
                         ) : (
                           <span>LKR {calculateShippingCost().toLocaleString()}</span>
@@ -835,8 +871,8 @@ const CheckoutPage = () => {
                       </div>
                       {user && (user.accountType === 'Business' || user.accountType === 'business') && (
                         <div className="flex justify-between text-green-600">
-                          <span>Business Discount (5%)</span>
-                          <span>-LKR {((subtotal + customizationTotal) * 0.05).toLocaleString()}</span>
+                          <span>Business Discount (10%)</span>
+                          <span>-LKR {(backendBusinessDiscount !== null ? backendBusinessDiscount : ((subtotal + customizationTotal + calculateShippingCost()) * 0.10)).toLocaleString()}</span>
                         </div>
                       )}
                       <div className="border-t pt-2 flex justify-between font-bold">
