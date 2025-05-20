@@ -106,15 +106,14 @@ export const getChartConfig = (reportType, reportData) => {
     
     case 'artisans':
       return {
-        showBarChart: true, // Top artisans by sales
-        showPieChart: true, // Artisan contribution to total sales
+        showBarChart: true, // Orders completed by artisan
+        showPieChart: true, // Show productivity pie chart for artisans
         showLineChart: false,
         showAreaChart: false,
         showTables: true,
         showSummary: true,
-        barChartTitle: 'Top Artisans by Sales',
-        pieChartTitle: 'Artisan Sales Distribution',
-        // For artisans, show both available charts
+        barChartTitle: 'Orders Completed by Artisan',
+        pieChartTitle: 'Productivity by Artisan (Units Uploaded)',
         dashboardCharts: ['barChart', 'pieChart']
       };
     
@@ -198,31 +197,19 @@ export const getArtisanChartConfig = (reportType, reportData) => {
 
 /**
  * Prepares data for a bar chart based on report type
+ * For artisans, use completed_orders or units_uploaded as metric
  * @param {string} reportType - The type of report
  * @param {Array} data - The report data
- * @param {boolean} isArtisan - Whether this is for artisan view
- * @returns {Object} Formatted data for bar chart
+ * @param {string} artisanMetric - For artisans: 'completed_orders' or 'units_uploaded'
+ * @returns {Object} Bar chart data
  */
-export const prepareBarChartData = (reportType, data, isArtisan = false) => {
+export const prepareBarChartData = (reportType, data, artisanMetric = 'completed_orders') => {
   if (!data || data.length === 0) return { labels: [], values: [], isCurrency: false };
-  
   let labels = [];
   let values = [];
   let isCurrency = false;
-  let lowStockCount = 0; // Add counter for low stock products
-  const colors = getReportColors(reportType).palette; // Get color palette for this report type
-  
-  // Special handling for artisan order reports
-  if (isArtisan && reportType === 'orders' && data.charts && data.charts.productDistribution) {
-    const productData = data.charts.productDistribution;
-    return {
-      labels: productData.map(item => item.label),
-      values: productData.map(item => item.value),
-      title: 'Top Products by Sales Value',
-      isCurrency: true
-    };
-  }
-
+  let lowStockCount = 0;
+  const colors = getReportColors(reportType).palette;
   switch (reportType) {
     case 'sales':
       // Group by product_name and sum total_amount
@@ -272,14 +259,18 @@ export const prepareBarChartData = (reportType, data, isArtisan = false) => {
       break;
       
     case 'artisans':
-      // Sort artisans by sales and take top 6
-      const sortedArtisans = [...data]
-        .sort((a, b) => b.total_sales - a.total_sales)
-        .slice(0, 6);
-        
-      labels = sortedArtisans.map(item => item.artisan_name);
-      values = sortedArtisans.map(item => item.total_sales);
-      isCurrency = true; // This indicates values are monetary
+      // Use new artisan metrics
+      if (artisanMetric === 'completed_orders') {
+        const sorted = [...data].sort((a, b) => b.completed_orders - a.completed_orders).slice(0, 10);
+        labels = sorted.map(item => item.artisan_name);
+        values = sorted.map(item => item.completed_orders);
+        isCurrency = false;
+      } else if (artisanMetric === 'units_uploaded') {
+        const sorted = [...data].sort((a, b) => b.units_uploaded - a.units_uploaded).slice(0, 10);
+        labels = sorted.map(item => item.artisan_name);
+        values = sorted.map(item => item.units_uploaded);
+        isCurrency = false;
+      }
       break;
       
     default:
@@ -329,8 +320,8 @@ export const preparePieChartData = (reportType, data, isArtisan = false) => {
       labelField = 'customer_type';
       break;
     case 'artisans':
-      field = 'total_sales';
-      labelField = 'artisan_type';
+      field = 'units_uploaded';
+      labelField = 'artisan_name';
       break;
     default:
       return [];

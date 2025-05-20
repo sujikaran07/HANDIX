@@ -62,7 +62,6 @@ const AdminReportsPage = () => {
   const [filters, setFilters] = useState({
     categories: [],
     customerType: '',
-    productivityLevel: '',
     compareWithPrevious: false,
     includeGraphs: true,
     dataPointsLimit: 10,
@@ -197,19 +196,6 @@ const AdminReportsPage = () => {
       });
     }
     
-    // Add productivity level for artisans
-    if (filters.productivityLevel) {
-      const productivityLabels = {
-        'high': 'High Performers',
-        'medium': 'Average Performers',
-        'low': 'Low Performers'
-      };
-      newAppliedFilters.push({
-        key: 'productivityLevel',
-        label: `Productivity: ${productivityLabels[filters.productivityLevel]}`
-      });
-    }
-    
     setAppliedFilters(newAppliedFilters);
   }, [filters, metadata.categories]);
 
@@ -256,9 +242,6 @@ const handleGenerateReport = async () => {
         
       case 'artisans':
         // Artisan-specific filters
-        if (filters.productivityLevel) {
-          requestData.productivityLevel = filters.productivityLevel;
-        }
         break;
         
       case 'sales':
@@ -355,7 +338,6 @@ const renderSummaryCards = () => {
   const displayLabels = {
     totalSales: 'Total Sales',
     orderCount: 'Order Count',
-    averageOrderValue: 'Avg. Order Value',
     totalProducts: 'Total Units',
     productsOutOfStock: 'Out of Stock',
     productsLowStock: 'Low Stock',
@@ -364,7 +346,8 @@ const renderSummaryCards = () => {
     returningCustomers: 'Returning Customers',
     totalArtisans: 'Total Artisans',
     activeArtisans: 'Active Artisans',
-    topPerformer: 'Top Performer'
+    topPerformer: 'Top Performer',
+    mostSoldProduct: 'Most Sold Product'
   };
   
   // If all summary values are zero, show a message
@@ -380,388 +363,41 @@ const renderSummaryCards = () => {
   
   return (
     <div className="row mb-3 g-2">
-      {Object.keys(summary).map((key, index) => (
-        <div className="col-md-4 col-sm-6" key={index}>
-          <div className="card h-100 summary-card">
-            <div className="card-body p-3 text-center">
-              <h5 className="fw-bold text-primary mb-1">
-                {typeof summary[key] === 'number' && isCurrencyField(key)
-                  ? formatCurrency(summary[key])
-                  : typeof summary[key] === 'number'
-                    ? formatNumber(summary[key])
-                    : summary[key].toString()}
-              </h5>
-              <p className="mb-0 small text-muted">{displayLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</p>
+      {Object.keys(summary).map((key, index) => {
+        if (key === 'mostSoldProduct') {
+          return (
+            <div className="col-md-4 col-sm-6" key={index}>
+              <div className="card h-100 summary-card">
+                <div className="card-body p-3 text-center">
+                  <h5 className="fw-bold text-primary mb-1">
+                    {summary.mostSoldProduct}
+                  </h5>
+                  <p className="mb-0 small text-muted">Most Sold Product</p>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="col-md-4 col-sm-6" key={index}>
+            <div className="card h-100 summary-card">
+              <div className="card-body p-3 text-center">
+                <h5 className="fw-bold text-primary mb-1">
+                  {typeof summary[key] === 'number' && isCurrencyField(key)
+                    ? formatCurrency(summary[key])
+                    : typeof summary[key] === 'number'
+                      ? formatNumber(summary[key])
+                      : summary[key].toString()}
+                </h5>
+                <p className="mb-0 small text-muted">{displayLabels[key] || key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</p>
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
-
-  // Render bar chart with real data
-  const renderBarChart = () => {
-    if (!reportData || !reportData.data || reportData.data.length === 0) {
-      return renderBarChartPlaceholder();
-    }
-  
-    // Calculate data for bar chart based on current report type
-    const chartData = calculateChartData(reportData.data);
-    
-    return (
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">{getReportTitle()} Overview</h5>
-        </div>
-        <div className="card-body chart-container">
-          <div className="bar-chart-placeholder">
-            {chartData.map((item, index) => (
-              <div 
-                className="chart-bar" 
-                key={index} 
-                style={{
-                  height: `${Math.max(10, item.percentage)}%`,
-                  backgroundColor: getBarColor(index, chartData.length)
-                }}
-                title={`${item.label}: ${item.value}`}
-              >
-                <div className="chart-label">{truncateLabel(item.label)}</div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center text-muted mt-3">
-            <small>{getChartDescription()}</small>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Render bar chart placeholder when no data is available
-  const renderBarChartPlaceholder = () => {
-    return (
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">{getReportTitle()} Overview</h5>
-        </div>
-        <div className="card-body chart-container">
-          <div className="bar-chart-placeholder">
-            <div className="chart-bar" style={{height: '60%'}}><div className="chart-label">Jan</div></div>
-            <div className="chart-bar" style={{height: '75%'}}><div className="chart-label">Feb</div></div>
-            <div className="chart-bar" style={{height: '45%'}}><div className="chart-label">Mar</div></div>
-            <div className="chart-bar" style={{height: '90%'}}><div className="chart-label">Apr</div></div>
-            <div className="chart-bar" style={{height: '65%'}}><div className="chart-label">May</div></div>
-            <div className="chart-bar" style={{height: '80%'}}><div className="chart-label">Jun</div></div>
-          </div>
-          <div className="text-center text-muted mt-3">
-            <small>No data available for chart visualization</small>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Helper function to calculate chart data from report data
-  const calculateChartData = (data) => {
-    if (!data || data.length === 0) return [];
-    
-    // Limit to 6 data points for better visualization
-    let chartData = [];
-    
-    switch (currentReport) {
-      case 'sales':
-        // Group by product_name and sum total_amount
-        const salesByProduct = {};
-        data.forEach(item => {
-          if (!salesByProduct[item.product_name]) {
-            salesByProduct[item.product_name] = 0;
-          }
-          salesByProduct[item.product_name] += parseFloat(item.total_amount);
-        });
-        
-        chartData = Object.keys(salesByProduct)
-          .map(product => ({
-            label: product,
-            value: salesByProduct[product]
-          }))
-          .sort((a, b) => b.value - a.value)
-          .slice(0, 6);
-        break;
-      
-      case 'products':
-        // Use total_sold from product report
-        chartData = data
-          .sort((a, b) => b.total_sold - a.total_sold)
-          .slice(0, 6)
-          .map(item => ({
-            label: item.product_name,
-            value: item.total_sold
-          }));
-        break;
-      
-      case 'customers':
-        // Use order_count from customer report
-        chartData = data
-          .sort((a, b) => b.order_count - a.order_count)
-          .slice(0, 6)
-          .map(item => ({
-            label: item.customer_name,
-            value: item.order_count
-          }));
-        break;
-      
-      case 'artisans':
-        // Use total_sales from artisan report
-        chartData = data
-          .sort((a, b) => b.total_sales - a.total_sales)
-          .slice(0, 6)
-          .map(item => ({
-            label: item.artisan_name,
-            value: item.total_sales
-          }));
-        break;
-      
-      default:
-        return [];
-    }
-    
-    // Calculate percentages for bar heights
-    if (chartData.length > 0) {
-      const maxValue = Math.max(...chartData.map(item => item.value));
-      chartData = chartData.map(item => ({
-        ...item,
-        percentage: (item.value / maxValue) * 90 // Max 90% height to keep labels visible
-      }));
-    }
-    
-    return chartData;
-  };
-  
-  // Get different colors for bars
-  const getBarColor = (index, total) => {
-    const colors = getReportColors(currentReport).palette;
-    return colors[index % colors.length];
-  };
-  
-  // Truncate long product/customer names for labels
-  const truncateLabel = (label) => {
-    if (!label) return '';
-    return label.length > 8 ? label.substring(0, 7) + '…' : label;
-  };
-  
-  // Get description for chart based on report type
-  const getChartDescription = () => {
-    switch (currentReport) {
-      case 'sales':
-        return 'Top 6 Products by Sales Value';
-      case 'products':
-        return 'Top 6 Products by Units Sold';
-      case 'customers':
-        return 'Top 6 Customers by Order Count';
-      case 'artisans':
-        return 'Top 6 Artisans by Sales Value';
-      default:
-        return '';
-    }
-  };
-  
-  // Render pie chart with real data
-  const renderPieChart = () => {
-    if (!reportData || !reportData.data || reportData.data.length === 0) {
-      return renderPieChartPlaceholder();
-    }
-    
-    // Calculate data for pie chart
-    const pieData = calculatePieChartData();
-    
-    return (
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">Distribution Analysis</h5>
-        </div>
-        <div className="card-body chart-container">
-          <div className="pie-chart-container">
-            <svg viewBox="0 0 100 100" className="pie-chart">
-              {renderPieSegments(pieData)}
-            </svg>
-          </div>
-          <div className="pie-chart-legend">
-            {pieData.map((segment, index) => (
-              <div className="legend-item" key={index}>
-                <span 
-                  className="legend-color" 
-                  style={{backgroundColor: segment.color}}
-                ></span>
-                {segment.label} ({segment.percentage.toFixed(0)}%)
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Render pie chart placeholder when no data
-  const renderPieChartPlaceholder = () => {
-    return (
-      <div className="card mb-4">
-        <div className="card-header">
-          <h5 className="mb-0">Distribution Analysis</h5>
-        </div>
-        <div className="card-body chart-container">
-          <div className="pie-chart-placeholder">
-            <div className="pie-segment segment-1"></div>
-            <div className="pie-segment segment-2"></div>
-            <div className="pie-segment segment-3"></div>
-            <div className="pie-segment segment-4"></div>
-          </div>
-          <div className="pie-chart-legend">
-            <div className="legend-item"><span className="legend-color legend-1"></span> Category 1 (35%)</div>
-            <div className="legend-item"><span className="legend-color legend-2"></span> Category 2 (25%)</div>
-            <div className="legend-item"><span className="legend-color legend-3"></span> Category 3 (20%)</div>
-            <div className="legend-item"><span className="legend-color legend-4"></span> Other (20%)</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Calculate pie chart data based on report type
-  const calculatePieChartData = () => {
-    if (!reportData || !reportData.data || reportData.data.length === 0) {
-      return [];
-    }
-    
-    let groupedData = {};
-    let total = 0;
-    let field, labelField;
-    
-    switch (currentReport) {
-      case 'sales':
-        field = 'total_amount';
-        labelField = 'category_name';
-        break;
-      case 'products':
-        field = 'total_revenue';
-        labelField = 'category_name';
-        break;
-      case 'customers':
-        field = 'total_spent';
-        labelField = 'email';
-        break;
-      case 'artisans':
-        field = 'total_sales';
-        labelField = 'artisan_name';
-        break;
-      default:
-        return [];
-    }
-    
-    // Group by label field
-    reportData.data.forEach(item => {
-      const label = item[labelField] || 'Unknown';
-      const value = parseFloat(item[field]) || 0;
-      
-      if (!groupedData[label]) {
-        groupedData[label] = 0;
-      }
-      
-      groupedData[label] += value;
-      total += value;
-    });
-    
-    // Convert to array and calculate percentages
-    let pieData = Object.keys(groupedData)
-      .map(label => ({
-        label,
-        value: groupedData[label],
-        percentage: (groupedData[label] / total) * 100
-      }))
-      .sort((a, b) => b.value - a.value);
-    
-    // Limit to top 4 categories + "Others" if needed
-    if (pieData.length > 4) {
-      const topCategories = pieData.slice(0, 3);
-      const otherCategories = pieData.slice(3);
-      
-      const otherValue = otherCategories.reduce((sum, item) => sum + item.value, 0);
-      const otherPercentage = (otherValue / total) * 100;
-      
-      pieData = [
-        ...topCategories,
-        {
-          label: 'Other',
-          value: otherValue,
-          percentage: otherPercentage
-        }
-      ];
-    }
-    
-    // Add colors based on report type
-    const pieColors = getReportColors(currentReport).palette;
-    pieData = pieData.map((item, index) => ({
-      ...item,
-      color: pieColors[index % pieColors.length]
-    }));
-    
-    // Calculate start and end angles for SVG
-    let currentAngle = 0;
-    
-    pieData = pieData.map(segment => {
-      const startAngle = currentAngle;
-      const angleSize = (segment.percentage / 100) * 360;
-      const endAngle = startAngle + angleSize;
-      
-      currentAngle = endAngle;
-      
-      return {
-        ...segment,
-        startAngle,
-        endAngle
-      };
-    });
-    
-    return pieData;
-  };
-  
-  // Render SVG pie segments
-  const renderPieSegments = (data) => {
-    const center = { x: 50, y: 50 };
-    const radius = 40;
-    
-    return data.map((segment, index) => {
-      const startAngleRad = (segment.startAngle - 90) * Math.PI / 180;
-      const endAngleRad = (segment.endAngle - 90) * Math.PI / 180;
-      
-      // Calculate the two points on the arc
-      const startX = center.x + radius * Math.cos(startAngleRad);
-      const startY = center.y + radius * Math.sin(startAngleRad);
-      const endX = center.x + radius * Math.cos(endAngleRad);
-      const endY = center.y + radius * Math.sin(endAngleRad);
-      
-      // Determine if the arc should be drawn as a large arc
-      const largeArc = segment.endAngle - segment.startAngle > 180 ? 1 : 0;
-      
-      // Create the SVG path for the pie segment
-      const path = `
-        M ${center.x} ${center.y}
-        L ${startX} ${startY}
-        A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY}
-        Z
-      `;
-      
-      return (
-        <path
-          key={index}
-          d={path}
-          fill={segment.color}
-          stroke="#fff"
-          strokeWidth="1"
-        />
-      );
-    });
-  };
 
   // Render report table with actual data or empty message
   const renderReportTable = () => {
@@ -849,7 +485,6 @@ const renderSummaryCards = () => {
         reportType: currentReport,
         categories: filters.categories,
         customerType: filters.customerType,
-        productivityLevel: filters.productivityLevel,
         includeGraphs: filters.includeGraphs // Log this specifically
       });
       
@@ -947,27 +582,6 @@ const renderSummaryCards = () => {
                 </div>
               )}
               
-              {/* Artisan Report Specific Filters */}
-              {currentReport === 'artisans' && (
-                <div className="filter-section">
-                  <h6 style={{ color: reportColor }}>Artisan Filters</h6>
-                  <div className="form-group mb-3">
-                    <label className="form-label">Productivity Level</label>
-                    <select 
-                      className="form-select"
-                      value={filters.productivityLevel || ''}
-                      onChange={(e) => setFilters({...filters, productivityLevel: e.target.value})}
-                      style={{ borderColor: filters.productivityLevel ? reportColor : '' }}
-                    >
-                      <option value="">All Levels</option>
-                      <option value="high">High Performers</option>
-                      <option value="medium">Average Performers</option>
-                      <option value="low">Low Performers</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-              
               {/* Display Options - make this available for all reports */}
               <div className="filter-section">
                 <h6 style={{ color: reportColor, borderBottom: `2px solid ${reportColor}30`, paddingBottom: '8px' }}>Display Options</h6>
@@ -1015,9 +629,6 @@ const renderSummaryCards = () => {
                     // Add report-specific default values
                     if (currentReport === 'customers') {
                       defaultFilters.customerType = '';
-                    } else if (currentReport === 'artisans') {
-                      defaultFilters.productivityLevel = '';
-                    } else if (currentReport === 'sales') {
                     }
                     
                     setFilters(defaultFilters);
@@ -1288,6 +899,177 @@ const renderDateSelector = () => {
         </button>
       </div>
     </div>
+  );
+};
+
+// Render bar chart for completed orders by artisan
+const renderCompletedOrdersBarChart = () => {
+  if (!reportData || !reportData.data || reportData.data.length === 0) {
+    return renderBarChartPlaceholder();
+  }
+  const chartData = reportData.data
+    .sort((a, b) => b.completed_orders - a.completed_orders)
+    .slice(0, 10)
+    .map(item => ({
+      label: item.artisan_name,
+      value: item.completed_orders
+    }));
+  const maxValue = Math.max(...chartData.map(item => item.value), 1);
+  return (
+    <div className="card mb-4">
+      <div className="card-header">
+        <h5 className="mb-0">Orders Completed by Artisan</h5>
+      </div>
+      <div className="card-body chart-container">
+        <div className="bar-chart-placeholder">
+          {chartData.map((item, index) => (
+            <div
+              className="chart-bar"
+              key={index}
+              style={{
+                height: `${(item.value / maxValue) * 90}%`,
+                backgroundColor: getBarColor(index, chartData.length)
+              }}
+              title={`${item.label}: ${item.value}`}
+            >
+              <div className="chart-label">{truncateLabel(item.label)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-muted mt-3">
+          <small>Number of completed orders (Delivered, Completed, Shipped) per artisan</small>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Render bar chart for productivity (units uploaded) by artisan
+const renderProductivityBarChart = () => {
+  if (!reportData || !reportData.data || reportData.data.length === 0) {
+    return renderBarChartPlaceholder();
+  }
+  const chartData = reportData.data
+    .sort((a, b) => b.units_uploaded - a.units_uploaded)
+    .slice(0, 10)
+    .map(item => ({
+      label: item.artisan_name,
+      value: item.units_uploaded
+    }));
+  const maxValue = Math.max(...chartData.map(item => item.value), 1);
+  return (
+    <div className="card mb-4">
+      <div className="card-header">
+        <h5 className="mb-0">Productivity by Artisan (Units Uploaded)</h5>
+      </div>
+      <div className="card-body chart-container">
+        <div className="bar-chart-placeholder">
+          {chartData.map((item, index) => (
+            <div
+              className="chart-bar"
+              key={index}
+              style={{
+                height: `${(item.value / maxValue) * 90}%`,
+                backgroundColor: getBarColor(index, chartData.length)
+              }}
+              title={`${item.label}: ${item.value}`}
+            >
+              <div className="chart-label">{truncateLabel(item.label)}</div>
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-muted mt-3">
+          <small>Total units uploaded by each artisan</small>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Render pie chart for productivity by artisan (units uploaded)
+const renderProductivityPieChart = () => {
+  if (!reportData || !reportData.data || reportData.data.length === 0) return null;
+  // Prepare pie chart data: each slice is an artisan, value is units_uploaded
+  const total = reportData.data.reduce((sum, item) => sum + (item.units_uploaded || 0), 0);
+  if (total === 0) return null;
+  const pieData = reportData.data
+    .filter(item => item.units_uploaded > 0)
+    .map((item, i) => ({
+      label: item.artisan_name,
+      value: item.units_uploaded,
+      percentage: (item.units_uploaded / total) * 100,
+      color: getBarColor(i, reportData.data.length)
+    }));
+  let currentAngle = 0;
+  const pieSegments = pieData.map((segment, i) => {
+    const startAngle = currentAngle;
+    const angleSize = (segment.percentage / 100) * 360;
+    const endAngle = startAngle + angleSize;
+    currentAngle = endAngle;
+    // Convert angles to radians
+    const startRad = (startAngle - 90) * Math.PI / 180;
+    const endRad = (endAngle - 90) * Math.PI / 180;
+    const radius = 40;
+    const center = { x: 50, y: 50 };
+    const startX = center.x + radius * Math.cos(startRad);
+    const startY = center.y + radius * Math.sin(startRad);
+    const endX = center.x + radius * Math.cos(endRad);
+    const endY = center.y + radius * Math.sin(endRad);
+    const largeArc = angleSize > 180 ? 1 : 0;
+    const path = `M ${center.x} ${center.y} L ${startX} ${startY} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z`;
+    return (
+      <path
+        key={i}
+        d={path}
+        fill={segment.color}
+        stroke="#fff"
+        strokeWidth="1"
+      />
+    );
+  });
+  return (
+    <div className="card mb-4">
+      <div className="card-header">
+        <h5 className="mb-0">Productivity by Artisan (Units Uploaded)</h5>
+      </div>
+      <div className="card-body chart-container">
+        <div className="pie-chart-container">
+          <svg viewBox="0 0 100 100" className="pie-chart">
+            {pieSegments}
+          </svg>
+        </div>
+        <div className="pie-chart-legend">
+          {pieData.map((segment, i) => (
+            <div className="legend-item" key={i}>
+              <span className="legend-color" style={{backgroundColor: segment.color}}></span>
+              {segment.label} ({segment.value})
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Render artisan report charts
+const renderArtisanCharts = () => {
+  if (currentReport !== 'artisans') return null;
+  return (
+    <>
+      <div className="row">
+        <div className="col-md-6">
+          {renderCompletedOrdersBarChart()}
+        </div>
+        <div className="col-md-6">
+          {renderProductivityBarChart()}
+        </div>
+      </div>
+      <div className="row">
+        <div className="col-12">
+          {renderProductivityPieChart()}
+        </div>
+      </div>
+    </>
   );
 };
 

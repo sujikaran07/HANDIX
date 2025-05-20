@@ -89,10 +89,6 @@ router.post('/sales', async (req, res) => {
       SELECT 
         COUNT(DISTINCT o.order_id) as orderCount,
         SUM(o.total_amount) as totalSales,
-        CASE WHEN COUNT(DISTINCT o.order_id) > 0 
-          THEN SUM(o.total_amount) / COUNT(DISTINCT o.order_id) 
-          ELSE 0 
-        END as averageOrderValue,
         COUNT(DISTINCT o.c_id) as uniqueCustomers,
         SUM(od.quantity) as totalQuantity,
         COUNT(DISTINCT i.product_id) as uniqueProducts
@@ -179,21 +175,37 @@ router.post('/sales', async (req, res) => {
       LIMIT 100
     `;
 
+    // Query to get most sold product
+    const mostSoldProductQuery = `
+      SELECT 
+        i.product_name,
+        SUM(od.quantity) as total_units
+      FROM "Orders" o
+      JOIN "OrderDetails" od ON o.order_id = od.order_id
+      JOIN "Inventory" i ON od.product_id = i.product_id
+      WHERE o.order_status = 'Delivered'
+        ${dateFilter}
+      GROUP BY i.product_name
+      ORDER BY total_units DESC
+      LIMIT 1
+    `;
+
     // Execute queries with error handling
     try {
       const summaryResults = await sequelize.query(summaryQuery, { type: QueryTypes.SELECT });
       const timeSeriesResults = await sequelize.query(timeSeriesQuery, { type: QueryTypes.SELECT });
       const categoryResults = await sequelize.query(categoryQuery, { type: QueryTypes.SELECT });
       const detailResults = await sequelize.query(detailQuery, { type: QueryTypes.SELECT });
+      const mostSoldProductResults = await sequelize.query(mostSoldProductQuery, { type: QueryTypes.SELECT });
 
       // Format summary data with AliExpress style metrics
       const summary = {
         totalSales: parseFloat(summaryResults[0]?.totalsales || 0) || 0,
         orderCount: parseInt(summaryResults[0]?.ordercount || 0) || 0,
-        averageOrderValue: parseFloat(summaryResults[0]?.averageordervalue || 0) || 0,
         uniqueCustomers: parseInt(summaryResults[0]?.uniquecustomers || 0) || 0,
         totalQuantity: parseInt(summaryResults[0]?.totalquantity || 0) || 0,
-        uniqueProducts: parseInt(summaryResults[0]?.uniqueproducts || 0) || 0
+        uniqueProducts: parseInt(summaryResults[0]?.uniqueproducts || 0) || 0,
+        mostSoldProduct: mostSoldProductResults[0]?.product_name || 'N/A'
       };
 
       return res.json({
@@ -522,24 +534,42 @@ router.post('/artisans', async (req, res) => {
       dateFilter = `AND o.order_date BETWEEN '${startDate}' AND '${endDate}'`;
     }
 
-    // Modify the productivityLevel HAVING clause application
-    // Build the WHERE clause for productivity level filtering
+    // Productivity Level filter logic
     let productivityFilter = '';
-    let topPerformerFilter = ''; // New filter for the top performer query
-    
+    let topPerformerFilter = '';
     if (productivityLevel) {
-      if (productivityLevel === 'high') {
-        console.log('Applying HIGH performer filter (> 10 products)');
-        productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) > 10';
-        topPerformerFilter = 'WHERE product_count > 10'; // Add constraint to top performer query
-      } else if (productivityLevel === 'medium') {
-        console.log('Applying MEDIUM performer filter (5-10 products)');
-        productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) BETWEEN 5 AND 10';
-        topPerformerFilter = 'WHERE product_count BETWEEN 5 AND 10'; // Add constraint to top performer query
+      if (productivityLevel === 'top') {
+        // Top Performer: highest total units uploaded
+        topPerformerFilter = `WHERE total_units = (SELECT MAX(total_units) FROM (
+          SELECT e.e_id, COALESCE(SUM(pe.quantity), 0) AS total_units
+          FROM "Employees" e
+          LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
+          WHERE e.role_id = 2 AND e.status != 'deactivated'
+          GROUP BY e.e_id
+        ) AS all_units)`;
       } else if (productivityLevel === 'low') {
-        console.log('Applying LOW performer filter (< 5 products)');
-        productivityFilter = 'HAVING COUNT(DISTINCT i.product_id) < 5';
-        topPerformerFilter = 'WHERE product_count < 5'; // Add constraint to top performer query
+        // Low Performer: lowest total units, earliest created_at
+        topPerformerFilter = `WHERE total_units = (SELECT MIN(total_units) FROM (
+          SELECT e.e_id, COALESCE(SUM(pe.quantity), 0) AS total_units
+          FROM "Employees" e
+          LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
+          WHERE e.role_id = 2 AND e.status != 'deactivated'
+          GROUP BY e.e_id
+        ) AS all_units)
+        AND created_at = (SELECT MIN(created_at) FROM (
+          SELECT e.e_id, e.created_at, COALESCE(SUM(pe.quantity), 0) AS total_units
+          FROM "Employees" e
+          LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
+          WHERE e.role_id = 2 AND e.status != 'deactivated'
+          GROUP BY e.e_id, e.created_at
+          HAVING COALESCE(SUM(pe.quantity), 0) = (SELECT MIN(total_units) FROM (
+            SELECT e.e_id, COALESCE(SUM(pe.quantity), 0) AS total_units
+            FROM "Employees" e
+            LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
+            WHERE e.role_id = 2 AND e.status != 'deactivated'
+            GROUP BY e.e_id
+          ) AS all_units)
+        )`;
       }
     }
     
@@ -550,59 +580,74 @@ router.post('/artisans', async (req, res) => {
           e.e_id,
           CONCAT(e.first_name, ' ', e.last_name) AS artisan_name,
           COUNT(DISTINCT i.product_id) AS product_count,
-          SUM(od.quantity * od.price_at_purchase) AS total_sales
+          COALESCE(SUM(pe.quantity), 0) AS total_units,
+          SUM(od.quantity * od.price_at_purchase) AS total_sales,
+          e.created_at
         FROM "Employees" e
         LEFT JOIN "Inventory" i ON e.e_id = i.e_id
         LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
         LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled'
+        LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
         WHERE e.role_id = 2 AND e.status != 'deactivated'
-        ${dateFilter}
-        GROUP BY e.e_id, e.first_name, e.last_name
-        ${productivityFilter}
+        GROUP BY e.e_id, e.first_name, e.last_name, e.created_at
       )
       SELECT 
         COUNT(DISTINCT e.e_id) as totalArtisans,
-        COUNT(DISTINCT CASE WHEN (o.order_status = 'Delivered' OR i.product_id IS NOT NULL) THEN e.e_id END) as activeArtisans,
+        (
+          SELECT COUNT(DISTINCT active_e_id) FROM (
+            SELECT e1.e_id as active_e_id
+            FROM "Employees" e1
+            LEFT JOIN "Inventory" i1 ON e1.e_id = i1.e_id
+            LEFT JOIN "OrderDetails" od1 ON i1.product_id = od1.product_id
+            LEFT JOIN "Orders" o1 ON od1.order_id = o1.order_id
+            WHERE e1.role_id = 2 AND e1.status != 'deactivated' AND o1.order_status IN ('Delivered', 'Completed', 'Shipped', 'Processing')
+            UNION
+            SELECT e2.e_id as active_e_id
+            FROM "Employees" e2
+            JOIN "ProductEntries" pe2 ON e2.e_id = pe2.e_id
+            WHERE e2.role_id = 2 AND e2.status != 'deactivated'
+          ) AS active_artisans
+        ) as activeArtisans,
         (
           SELECT artisan_name
           FROM artisan_stats
-          ${topPerformerFilter}
+          WHERE total_units = (
+            SELECT MAX(total_units) FROM artisan_stats
+          )
           ORDER BY total_sales DESC
           LIMIT 1
-        ) as topPerformer
+        ) as topPerformer,
+        (
+          SELECT artisan_name
+          FROM artisan_stats
+          WHERE total_units = (
+            SELECT MIN(total_units) FROM artisan_stats
+          )
+          ORDER BY created_at ASC, total_sales ASC
+          LIMIT 1
+        ) as lowPerformer
       FROM "Employees" e
-      LEFT JOIN "Inventory" i ON e.e_id = i.e_id
-      LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
-      LEFT JOIN "Orders" o ON od.order_id = o.order_id
-      WHERE e.role_id = 2 AND e.status != 'deactivated'
+      WHERE e.role_id = 2 AND e.status != 'deactivated';
     `;
 
-    // Query to get detailed artisan data - no change needed here
+    // Query to get detailed artisan data for comparison charts (case-insensitive approved units)
     const detailQuery = `
-      SELECT 
+      SELECT
         e.e_id,
-        CONCAT(e.first_name, ' ', e.last_name) as artisan_name,
-        COUNT(DISTINCT i.product_id) as product_count,
-        COUNT(DISTINCT o.order_id) as order_count,
-        COALESCE(SUM(od.quantity * od.price_at_purchase), 0) as total_sales,
-        CASE 
-          WHEN COUNT(DISTINCT o.order_id) > 0 
-          THEN COALESCE(SUM(od.quantity * od.price_at_purchase), 0) / COUNT(DISTINCT o.order_id)    
-          ELSE 0
-        END as avg_product_value
+        CONCAT(e.first_name, ' ', e.last_name) AS artisan_name,
+        COALESCE(SUM(CASE WHEN LOWER(pe.status) = 'approved' THEN pe.quantity ELSE 0 END), 0) AS units_uploaded,
+        (
+          SELECT COUNT(DISTINCT o2.order_id)
+          FROM "Orders" o2
+          WHERE o2.assigned_artisan = CONCAT(e.first_name, ' ', e.last_name)
+            AND o2.order_status IN ('Delivered', 'Completed', 'Shipped')
+        ) AS completed_orders
       FROM "Employees" e
-      LEFT JOIN "Inventory" i ON e.e_id = i.e_id
-      LEFT JOIN "OrderDetails" od ON i.product_id = od.product_id
-      LEFT JOIN "Orders" o ON od.order_id = o.order_id AND o.order_status != 'Cancelled' AND o.order_date BETWEEN '${startDate}' AND '${endDate}'
-      WHERE e.role_id = 2
+      LEFT JOIN "ProductEntries" pe ON e.e_id = pe.e_id
+      WHERE e.role_id = 2 AND e.status != 'deactivated'
       GROUP BY e.e_id, e.first_name, e.last_name
-      ${productivityFilter}
-      ORDER BY total_sales DESC
-      LIMIT 100
+      ORDER BY artisan_name;
     `;
-
-    // Log the SQL query for debugging
-    console.log(`Artisan detail query with ${productivityLevel} filter:\n${detailQuery}`);
 
     // Execute queries
     try {
