@@ -185,6 +185,7 @@ router.post('/sales', async (req, res) => {
       JOIN "Inventory" i ON od.product_id = i.product_id
       WHERE o.order_status = 'Delivered'
         ${dateFilter}
+        ${categoryFilter}
       GROUP BY i.product_name
       ORDER BY total_units DESC
       LIMIT 1
