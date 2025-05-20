@@ -7,12 +7,10 @@ import { FaExchangeAlt } from 'react-icons/fa';
 import Pagination from './Pagination';
 import '../styles/admin/AdminTransaction.css';
 
-const paymentMethodsList = ['cod', 'card', 'paypal', 'gpay'];
+const paymentMethodsList = ['cod', 'card'];
 const paymentMethodsDisplay = {
   'cod': 'Cash on Delivery',
-  'card': 'Credit Card',
-  'paypal': 'PayPal',
-  'gpay': 'GPay'
+  'card': 'Credit Card'
 };
 
 const ManageTransactions = ({ onViewTransaction }) => {
@@ -421,12 +419,8 @@ const ManageTransactions = ({ onViewTransaction }) => {
             </div>
           ) : error ? (
             <ErrorDisplay message={error} />
-<<<<<<< HEAD
-=======
           ) : transactions.length === 0 ? (
-            // Removed "No Transactions Found" alert and message
             null
->>>>>>> 12903fd3ca1c2a0642cbaa774ceeaa055c6aa614
           ) : (
             <table className="table product-table" style={{ 
               marginBottom: 0,

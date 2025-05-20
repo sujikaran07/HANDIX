@@ -154,7 +154,11 @@ const CheckoutPage = () => {
     if (formData.shippingMethod === 'pickup') {
       return 0; // Free for pickup
     } else if (formData.district) {
-      // Use the shipping fee function from shippingZones
+      // For personal accounts, always return flat fee (e.g., 500)
+      if (user && (user.accountType === 'Personal' || user.accountType === 'personal')) {
+        return 500;
+      }
+      // Use the shipping fee function from shippingZones for business accounts
       return getShippingFeeByDistrict(formData.district, user && (user.accountType === 'Business' || user.accountType === 'business') ? 'Business' : undefined);
     } else {
       // Default shipping rate if no district selected
@@ -376,10 +380,12 @@ const CheckoutPage = () => {
       case 1: // Shipping Address
         // Remove validation for firstName, lastName, email
         if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+        else if (!/^\d{10}$/.test(formData.phone.trim())) newErrors.phone = 'Phone number must be exactly 10 digits';
         if (!formData.address.trim()) newErrors.address = 'Address is required';
         if (!formData.city.trim()) newErrors.city = 'City is required';
         if (!formData.district) newErrors.district = 'District is required';
         if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
+        else if (!/^\d+$/.test(formData.postalCode.trim())) newErrors.postalCode = 'Postal code must be numeric';
         break;
         
       case 2: // Shipping Method
@@ -540,45 +546,10 @@ const CheckoutPage = () => {
       });
       
       // Handle payment redirects based on payment method
-      switch (formData.paymentMethod) {
-        case 'paypal':
-          // Save order details first
-          localStorage.setItem('pendingOrder', JSON.stringify({
-            orderId: generatedOrderId,
-            email: formData.email
-          }));
-          
-          clearCart(); // Clear cart before redirecting
-          
-          // Force navigation to PayPal using direct browser redirection
-          setTimeout(() => {
-            window.location.href = response.data.paymentUrl || "https://www.paypal.com/checkout";
-          }, 1500);
-          return;
-          
-        case 'gpay':
-          // Save order details first
-          localStorage.setItem('pendingOrder', JSON.stringify({
-            orderId: generatedOrderId,
-            email: formData.email
-          }));
-          
-          clearCart(); // Clear cart before redirecting
-          
-          // Force navigation to Google Pay
-          setTimeout(() => {
-            window.location.href = response.data.paymentUrl || "https://pay.google.com";
-          }, 1500);
-          return;
-          
-        default:
-          // For card and COD payments, proceed directly to confirmation
-          setOrderCompleted(true);
-          setCurrentStep(6);
-          clearCart();
-          break;
-      }
-      
+      // Only support card and COD payments
+      setOrderCompleted(true);
+      setCurrentStep(6);
+      clearCart();
     } catch (error) {
       console.error('Error placing order:', error);
       console.error('Error response:', error.response?.data);

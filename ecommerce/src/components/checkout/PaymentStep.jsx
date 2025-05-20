@@ -1,11 +1,24 @@
 import React from 'react';
-import { CreditCard, DollarSign, AlertTriangle } from 'lucide-react';
+import { FaRegCreditCard, FaRegMoneyBillAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { useCart } from '../../contexts/CartContext';
+
+const formatCardNumber = (value) => {
+  // Remove all non-digits, then group into 4s
+  return value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+};
+
+const formatExpiry = (value) => {
+  // Remove all non-digits, add slash after 2 digits
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length === 0) return '';
+  if (cleaned.length <= 2) return cleaned;
+  return cleaned.slice(0, 2) + '/' + cleaned.slice(2, 4);
+};
 
 const PaymentStep = ({ formData, errors, handleChange }) => {
   const { total } = useCart();
   const codDisabled = total > 5000;
-  
+
   // If COD was selected but total is over limit, switch to card payment
   React.useEffect(() => {
     if (codDisabled && formData.paymentMethod === 'cod') {
@@ -18,27 +31,69 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
     }
   }, [codDisabled, formData.paymentMethod]);
 
+  // Custom change handler for card number formatting
+  const handleCardNumberChange = (e) => {
+    const formatted = formatCardNumber(e.target.value);
+    handleChange({
+      target: {
+        name: 'cardNumber',
+        value: formatted
+      }
+    });
+  };
+
+  // Custom change handler for expiry formatting and restriction (no auto-correction, just input prevention)
+  const handleCardExpiryChange = (e) => {
+    let value = e.target.value.replace(/[^\d]/g, '');
+    let prev = formData.cardExpiry || '';
+
+    // Only allow up to 4 digits (MMYY)
+    if (value.length > 4) value = value.slice(0, 4);
+
+    let month = value.slice(0, 2);
+    let year = value.slice(2, 4);
+
+    // Prevent invalid month
+    if (month.length === 2 && (parseInt(month, 10) < 1 || parseInt(month, 10) > 12)) {
+      // Don't update if invalid
+      return;
+    }
+    // Prevent invalid year
+    if (year.length === 2 && parseInt(year, 10) > 40) {
+      // Don't update if invalid
+      return;
+    }
+
+    let formatted = month;
+    if (year.length) {
+      formatted += '/' + year;
+    }
+    handleChange({
+      target: {
+        name: 'cardExpiry',
+        value: formatted
+      }
+    });
+  };
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Payment Method</h2>
-      
+
       {/* COD warning for orders over 5000 */}
       {codDisabled && (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-          <div className="flex items-start">
-            <AlertTriangle size={20} className="text-yellow-500 mr-2 mt-0.5" />
-            <p className="text-sm text-yellow-700">
-              Cash on Delivery is only available for orders under LKR 5,000.
-              Please use online payment for this order.
-            </p>
-          </div>
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 flex items-center">
+          <FaExclamationTriangle className="text-yellow-500 mr-3" size={20} />
+          <span className="text-sm text-yellow-700">
+            Cash on Delivery is only available for orders under LKR 5,000. Please use card payment for this order.
+          </span>
         </div>
       )}
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <label className={`
-          border rounded-lg p-4 cursor-pointer flex items-center
-          ${formData.paymentMethod === 'card' ? 'border-primary bg-blue-50' : 'border-gray-300'}
+          border rounded-lg p-4 cursor-pointer flex items-center transition
+          ${formData.paymentMethod === 'card' ? 'border-primary bg-blue-50' : 'border-gray-300 hover:border-primary'}
         `}>
           <input
             type="radio"
@@ -49,17 +104,17 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
             className="sr-only"
           />
           <div className="flex items-center">
-            <CreditCard className="h-5 w-5 text-gray-500 mr-3" />
+            <FaRegCreditCard className="h-6 w-6 text-gray-600 mr-3" />
             <div>
               <span className="font-medium">Credit/Debit Card</span>
-              <p className="text-sm text-gray-500">Visa, Mastercard, etc.</p>
+              <p className="text-xs text-gray-500">Visa, Mastercard, etc.</p>
             </div>
           </div>
         </label>
-        
+
         <label className={`
-          border rounded-lg p-4 cursor-pointer flex items-center
-          ${formData.paymentMethod === 'cod' ? 'border-primary bg-blue-50' : 'border-gray-300'}
+          border rounded-lg p-4 cursor-pointer flex items-center transition
+          ${formData.paymentMethod === 'cod' ? 'border-primary bg-blue-50' : 'border-gray-300 hover:border-primary'}
           ${codDisabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}>
           <input
@@ -72,69 +127,19 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
             className="sr-only"
           />
           <div className="flex items-center">
-            <DollarSign className="h-5 w-5 text-gray-500 mr-3" />
+            <FaRegMoneyBillAlt className="h-6 w-6 text-gray-600 mr-3" />
             <div>
               <span className="font-medium">Cash on Delivery</span>
-              <p className="text-sm text-gray-500">Pay when you receive</p>
-            </div>
-          </div>
-        </label>
-        
-        <label className={`
-          border rounded-lg p-4 cursor-pointer flex items-center
-          ${formData.paymentMethod === 'paypal' ? 'border-primary bg-blue-50' : 'border-gray-300'}
-        `}>
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="paypal"
-            checked={formData.paymentMethod === 'paypal'}
-            onChange={handleChange}
-            className="sr-only"
-          />
-          <div className="flex items-center">
-            {/* PayPal SVG logo instead of LogoPaypal component */}
-            <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="#0070BA">
-              <path d="M20.067 8.478c.492.315.844.823.844 1.462 0 1.871-1.712 3.513-3.865 3.513h-1.95c-.2 0-.378.12-.437.291l-.668 3.295-.767 3.787c-.059.171-.237.291-.437.291h-2.874c-.15 0-.243-.132-.214-.262.719-3.312 2.144-9.899 2.144-9.899.079-.363.419-.631.814-.631h4.607c.983 0 2.339.273 2.803.153z"></path>
-              <path d="M21.563 5.443c0 2.011-1.843 3.704-4.101 3.704h-2.904c-.244 0-.458.146-.53.354l-1.812 8.937c-.075.207-.289.354-.533.354h-1.73c-.244 0-.458.146-.53.354l-1.067 5.272c-.056.169-.229.287-.426.287H3.517c-.151 0-.245-.131-.216-.262.717-3.312 4.42-20.167 4.42-20.167.075-.207.289-.353.533-.353h6.292c2.259 0 4.101 1.693 4.101 3.705v.477c.446.468.916 1.208.916 1.892z" fillRule="evenodd"></path>
-            </svg>
-            <div>
-              <span className="font-medium">PayPal</span>
-              <p className="text-sm text-gray-500">Pay with your PayPal account</p>
-            </div>
-          </div>
-        </label>
-        
-        <label className={`
-          border rounded-lg p-4 cursor-pointer flex items-center
-          ${formData.paymentMethod === 'gpay' ? 'border-primary bg-blue-50' : 'border-gray-300'}
-        `}>
-          <input
-            type="radio"
-            name="paymentMethod"
-            value="gpay"
-            checked={formData.paymentMethod === 'gpay'}
-            onChange={handleChange}
-            className="sr-only"
-          />
-          <div className="flex items-center">
-            <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none">
-              <path d="M22.5 12c0-5.799-4.701-10.5-10.5-10.5S1.5 6.201 1.5 12c0 5.799 4.701 10.5 10.5 10.5S22.5 17.799 22.5 12z" fill="#5F6368"/>
-              <path d="M12.75 10.811v2.689h4.256c-.167 1.122-1.241 3.294-4.256 3.294-2.568 0-4.662-2.126-4.662-4.745s2.094-4.75 4.662-4.75c1.45 0 2.423.623 2.983 1.16l2.035-1.962c-1.315-1.228-3.016-1.981-5.018-1.981C7.75 4.5 4.5 7.75 4.5 12s3.25 7.5 7.5 7.5c4.33 0 7.207-3.048 7.207-7.331 0-.498-.067-.878-.156-1.262l-7.05.004z" fill="#fff"/>
-            </svg>
-            <div>
-              <span className="font-medium">Google Pay</span>
-              <p className="text-sm text-gray-500">Fast checkout with Google</p>
+              <p className="text-xs text-gray-500">Pay when you receive</p>
             </div>
           </div>
         </label>
       </div>
-      
-      {/* Conditional card payment form */}
+
+      {/* Card payment form */}
       {formData.paymentMethod === 'card' && (
         <div className="mt-6 border border-gray-200 rounded-lg p-4">
           <h3 className="text-lg font-medium mb-4">Card Details</h3>
-          
           <div className="space-y-4">
             <div>
               <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700 mb-1">
@@ -146,14 +151,18 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
                 name="cardNumber"
                 placeholder="1234 5678 9012 3456"
                 value={formData.cardNumber}
-                onChange={handleChange}
+                onChange={handleCardNumberChange}
+                inputMode="numeric"
+                pattern="(?:\\d{4} ?){4}"
+                maxLength={19}
                 className={`input-field ${errors.cardNumber ? 'border-red-500' : ''}`}
+                autoComplete="cc-number"
               />
+              <p className="text-xs text-gray-400 mt-1">16 digits, numbers only</p>
               {errors.cardNumber && (
                 <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>
               )}
             </div>
-            
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="cardExpiry" className="block text-sm font-medium text-gray-700 mb-1">
@@ -165,9 +174,14 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
                   name="cardExpiry"
                   placeholder="MM/YY"
                   value={formData.cardExpiry}
-                  onChange={handleChange}
+                  onChange={handleCardExpiryChange}
+                  inputMode="numeric"
+                  pattern="(0[1-9]|1[0-2])/(\\d{2})"
+                  maxLength={5}
                   className={`input-field ${errors.cardExpiry ? 'border-red-500' : ''}`}
+                  autoComplete="cc-exp"
                 />
+                <p className="text-xs text-gray-400 mt-1">Format: MM/YY</p>
                 {errors.cardExpiry && (
                   <p className="text-red-500 text-sm mt-1">{errors.cardExpiry}</p>
                 )}
@@ -183,8 +197,13 @@ const PaymentStep = ({ formData, errors, handleChange }) => {
                   placeholder="123"
                   value={formData.cardCvc}
                   onChange={handleChange}
+                  inputMode="numeric"
+                  pattern="\d{3}"
+                  maxLength={3}
                   className={`input-field ${errors.cardCvc ? 'border-red-500' : ''}`}
+                  autoComplete="cc-csc"
                 />
+                <p className="text-xs text-gray-400 mt-1">3 digits</p>
                 {errors.cardCvc && (
                   <p className="text-red-500 text-sm mt-1">{errors.cardCvc}</p>
                 )}

@@ -95,14 +95,10 @@ const ConfirmationStep = ({ orderId, email }) => {
   // Get payment method display name
   const getPaymentMethodName = () => {
     if (!orderDetails) return 'Processing';
-    
     const method = orderDetails.paymentMethod || 'card';
-    
     switch (method.toLowerCase()) {
       case 'cod': return 'Cash on Delivery';
       case 'card': return 'Credit/Debit Card';
-      case 'paypal': return 'PayPal';
-      case 'gpay': return 'Google Pay';
       default: return method;
     }
   };

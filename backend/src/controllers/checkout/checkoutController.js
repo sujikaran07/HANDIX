@@ -649,10 +649,7 @@ exports.placeOrder = async (req, res) => {
         paymentMethod: paymentInfo.method,
         transactionDate: new Date(),
         transactionStatus: paymentInfo.method === 'cod' ? 'pending' : 'awaiting_payment',
-        paymentGateway: paymentInfo.method === 'card' ? 'stripe' : 
-                      paymentInfo.method === 'paypal' ? 'paypal' : 
-                      paymentInfo.method === 'gpay' ? 'google_pay' : 
-                      'manual',
+        paymentGateway: paymentInfo.method === 'card' ? 'stripe' : 'manual',
         gatewayTransactionId: null,
         currency: 'LKR',
         notes: `Order placed via website. ${paymentInfo.method === 'cod' ? 'Cash on Delivery payment.' : ''}`
@@ -756,11 +753,6 @@ exports.placeOrder = async (req, res) => {
     }
     
     let paymentUrl = null;
-    if (paymentInfo.method === 'paypal') {
-      paymentUrl = `https://www.paypal.com/checkoutnow?token=${orderId}`;
-    } else if (paymentInfo.method === 'gpay') {
-      paymentUrl = `https://pay.google.com/checkout?orderid=${orderId}`;
-    }
     
     await transaction.commit();
     

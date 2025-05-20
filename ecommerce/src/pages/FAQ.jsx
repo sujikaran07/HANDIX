@@ -17,7 +17,7 @@ const FAQPage = () => {
         {
           id: 'payment-methods',
           question: 'What payment methods do you accept?',
-          answer: 'We accept Visa, Mastercard, American Express credit/debit cards, PayPal, and bank transfers for international customers. All payments are processed securely. For details on Cash on Delivery and payment terms, please see our Terms & Policies page.'
+          answer: 'We accept Visa, Mastercard, and American Express credit/debit cards for online payments. Cash on Delivery is available for eligible orders. All payments are processed securely. For details on Cash on Delivery and payment terms, please see our Terms & Policies page.'
         },
         {
           id: 'order-confirmation',

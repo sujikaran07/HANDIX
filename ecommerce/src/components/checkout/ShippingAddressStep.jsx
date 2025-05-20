@@ -32,6 +32,9 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             value={formData.phone}
             onChange={handleChange}
             placeholder="Enter your phone number"
+            inputMode="numeric"
+            pattern="\\d{10}"
+            maxLength={10}
             className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.phone ? 'border-red-500' : 'border-gray-300'
             }`}
@@ -114,10 +117,13 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             name="postalCode"
             value={formData.postalCode}
             onChange={handleChange}
+            placeholder="Postal Code"
+            inputMode="numeric"
+            pattern="\\d*"
+            maxLength={10}
             className={`w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary ${
               errors.postalCode ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Postal Code"
           />
           {errors.postalCode && (
             <p className="text-red-500 text-sm mt-1">{errors.postalCode}</p>

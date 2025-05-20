@@ -90,6 +90,9 @@ const BillingAddressStep = ({ formData, errors, handleChange }) => {
                 value={formData.billingPostalCode}
                 onChange={handleChange}
                 placeholder="10100"
+                inputMode="numeric"
+                pattern="\\d*"
+                maxLength={10}
                 className={`w-full px-4 py-2.5 rounded-md border ${errors.billingPostalCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-primary'} focus:outline-none focus:ring-2`}
               />
               {errors.billingPostalCode && <p className="text-red-500 text-sm mt-1">{errors.billingPostalCode}</p>}
