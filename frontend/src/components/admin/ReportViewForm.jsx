@@ -781,29 +781,6 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
             <Button variant="outline-secondary" size="sm" className="me-2" onClick={handlePrint}>
               <FontAwesomeIcon icon={faPrint} className="me-1" /> Print
             </Button>
-            <Dropdown className="d-inline-block">
-              <Dropdown.Toggle 
-                variant="primary"
-                size="sm"
-                style={{
-                  backgroundColor: reportColors.primary,
-                  borderColor: reportColors.primary
-                }}
-              >
-                <FontAwesomeIcon icon={faFileDownload} className="me-1" /> Export
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item onClick={() => setShowPdfOptions(true)}>
-                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> PDF (Advanced)
-                </Dropdown.Item>
-                <Dropdown.Item onClick={handleExportPDF}>
-                  <FontAwesomeIcon icon={faFilePdf} className="me-2" /> Quick PDF
-                </Dropdown.Item>
-                <Dropdown.Item onClick={handleDownload}>
-                  <FontAwesomeIcon icon={faFileCode} className="me-2" /> Raw Data (JSON)
-                </Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
           </div>
         </Card.Header>
       </Card>
