@@ -135,7 +135,7 @@ const CheckoutPage = () => {
     billingPostalCode: '',
     
     // Payment
-    paymentMethod: 'card', // 'card', 'cod', 'paypal', 'gpay'
+    paymentMethod: 'card', // Only 'card' and 'cod' now
     
     // For card payments (simplified, in production would use a payment processor)
     cardNumber: '',
@@ -400,8 +400,11 @@ const CheckoutPage = () => {
       case 4: // Payment
         if (formData.paymentMethod === 'card') {
           if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required';
+          else if (!/^\d{16}$/.test(formData.cardNumber)) newErrors.cardNumber = 'Card number must be 16 digits';
           if (!formData.cardExpiry) newErrors.cardExpiry = 'Expiry date is required';
+          else if (!/^(0[1-9]|1[0-2])\/(\d{2})$/.test(formData.cardExpiry)) newErrors.cardExpiry = 'Expiry must be MM/YY';
           if (!formData.cardCvc) newErrors.cardCvc = 'CVC is required';
+          else if (!/^\d{3}$/.test(formData.cardCvc)) newErrors.cardCvc = 'CVC must be 3 digits';
         }
         break;
         
