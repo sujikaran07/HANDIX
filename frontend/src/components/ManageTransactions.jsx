@@ -421,6 +421,12 @@ const ManageTransactions = ({ onViewTransaction }) => {
             </div>
           ) : error ? (
             <ErrorDisplay message={error} />
+<<<<<<< HEAD
+=======
+          ) : transactions.length === 0 ? (
+            // Removed "No Transactions Found" alert and message
+            null
+>>>>>>> 12903fd3ca1c2a0642cbaa774ceeaa055c6aa614
           ) : (
             <table className="table product-table" style={{ 
               marginBottom: 0,
@@ -509,4 +515,4 @@ const ManageTransactions = ({ onViewTransaction }) => {
   );
 };
 
-export default ManageTransactions; 
+export default ManageTransactions;
