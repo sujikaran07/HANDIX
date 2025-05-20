@@ -14,8 +14,38 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
   const [password, setPassword] = useState(uuidv4().slice(0, 8));
   const [registrationDate, setRegistrationDate] = useState(new Date().toLocaleDateString());
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+
+  const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
   const handleSave = async () => {
+    let valid = true;
+    setFirstNameError('');
+    setLastNameError('');
+    setEmailError('');
+    setPhoneError('');
+    if (!validateName(firstName)) {
+      setFirstNameError('First name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateName(lastName)) {
+      setLastNameError('Last name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address.');
+      valid = false;
+    }
+    if (!validatePhone(phoneNumber)) {
+      setPhoneError('Phone number must be exactly 10 digits.');
+      valid = false;
+    }
+    if (!valid) return;
     const newCustomer = {
       c_id: cId,
       firstName, 
@@ -67,8 +97,10 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
               className="form-control"
               id="firstName"
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={(e) => setFirstName(e.target.value.replace(/[^A-Za-z ]/g, ''))}
+              pattern="[A-Za-z ]*"
             />
+            {firstNameError && <div className="text-danger small">{firstNameError}</div>}
           </div>
           <div className="col-md-6">
             <label htmlFor="lastName" className="form-label">Last Name</label>
@@ -77,8 +109,10 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
               className="form-control"
               id="lastName"
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={(e) => setLastName(e.target.value.replace(/[^A-Za-z ]/g, ''))}
+              pattern="[A-Za-z ]*"
             />
+            {lastNameError && <div className="text-danger small">{lastNameError}</div>}
           </div>
         </div>
         <div className="row mb-3 form-group">
@@ -101,18 +135,22 @@ const AddCustomerForm = ({ onSave, onCancel, selectedCustomer }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
+            {emailError && <div className="text-danger small">{emailError}</div>}
           </div>
         </div>
         <div className="row mb-3 form-group">
           <div className="col-md-6">
             <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
             <input
-              type="text"
+              type="tel"
               className="form-control"
               id="phoneNumber"
               value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, '').slice(0, 10))}
+              inputMode="numeric"
+              pattern="[0-9]{10}"
             />
+            {phoneError && <div className="text-danger small">{phoneError}</div>}
           </div>
           <div className="col-md-6">
             <label htmlFor="accountType" className="form-label">Account Type</label>

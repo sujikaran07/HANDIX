@@ -32,6 +32,10 @@ const ManageSettings = ({ onViewSetting }) => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const fileInputRef = useRef(null);
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   // Fetch user profile data on component mount
   useEffect(() => {
@@ -96,9 +100,20 @@ const ManageSettings = ({ onViewSetting }) => {
     }
   };
 
+  const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
+  const validatePassword = (password) => password.length >= 8;
+
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    setProfile({ ...profile, [name]: value });
+    let filteredValue = value;
+    if (name === 'firstName' || name === 'lastName') {
+      filteredValue = value.replace(/[^A-Za-z ]/g, '');
+    }
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
+    setProfile({ ...profile, [name]: filteredValue });
   };
 
   const handleFileChange = async (e) => {
@@ -149,6 +164,29 @@ const ManageSettings = ({ onViewSetting }) => {
   };
 
   const handleSaveChanges = async () => {
+    setFirstNameError('');
+    setLastNameError('');
+    setPhoneError('');
+    setPasswordError('');
+    let valid = true;
+    if (!validateName(profile.firstName)) {
+      setFirstNameError('First name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateName(profile.lastName)) {
+      setLastNameError('Last name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validatePhone(profile.phone)) {
+      setPhoneError('Phone number must be exactly 10 digits.');
+      valid = false;
+    }
+    if (profile.newPassword && !validatePassword(profile.newPassword)) {
+      setPasswordError('Password must be at least 8 characters.');
+      valid = false;
+    }
+    if (!valid) return;
+    
     // If password fields are filled, validate them first
     if (profile.newPassword || profile.confirmNewPassword || profile.currentPassword) {
       if (profile.newPassword !== profile.confirmNewPassword) {
@@ -444,10 +482,12 @@ const ManageSettings = ({ onViewSetting }) => {
                   <div className="col-md-6">
                     <label htmlFor="firstName" className="form-label">First Name</label>
                     <input type="text" className="form-control" id="firstName" name="firstName" value={profile.firstName} onChange={handleProfileChange} />
+                    {firstNameError && <div className="text-danger small">{firstNameError}</div>}
                   </div>
                   <div className="col-md-6">
                     <label htmlFor="lastName" className="form-label">Last Name</label>
                     <input type="text" className="form-control" id="lastName" name="lastName" value={profile.lastName} onChange={handleProfileChange} />
+                    {lastNameError && <div className="text-danger small">{lastNameError}</div>}
                   </div>
                 </div>
                 <div className="row mb-3">
@@ -458,6 +498,7 @@ const ManageSettings = ({ onViewSetting }) => {
                   <div className="col-md-6">
                     <label htmlFor="phone" className="form-label">Phone Number</label>
                     <input type="text" className="form-control" id="phone" name="phone" value={profile.phone} onChange={handleProfileChange} />
+                    {phoneError && <div className="text-danger small">{phoneError}</div>}
                   </div>
                 </div>
               </div>
@@ -508,6 +549,7 @@ const ManageSettings = ({ onViewSetting }) => {
                     {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                   </span>
                 </div>
+                {passwordError && <div className="text-danger small">{passwordError}</div>}
               </div>
               <div className="col-md-4">
                 <label htmlFor="confirmNewPassword" className="form-label">Confirm New Password</label>

@@ -12,6 +12,10 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
   const [accountType, setAccountType] = useState('');
   const [password, setPassword] = useState('');
   const [registrationDate, setRegistrationDate] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
     if (customer) {
@@ -26,7 +30,33 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
     }
   }, [customer]);
 
+  const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
+
   const handleSave = async () => {
+    let valid = true;
+    setFirstNameError('');
+    setLastNameError('');
+    setEmailError('');
+    setPhoneError('');
+    if (!validateName(firstName)) {
+      setFirstNameError('First name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateName(lastName)) {
+      setLastNameError('Last name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address.');
+      valid = false;
+    }
+    if (!validatePhone(phoneNumber)) {
+      setPhoneError('Phone number must be exactly 10 digits.');
+      valid = false;
+    }
+    if (!valid) return;
     const updatedCustomer = {
       c_id: userId,
       firstName,
@@ -59,7 +89,9 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
                 id="firstName"
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                pattern="[A-Za-z ]*"
               />
+              {firstNameError && <div className="text-danger small">{firstNameError}</div>}
             </div>
             <div className="col-md-6">
               <label htmlFor="lastName" className="form-label">Last Name</label>
@@ -69,7 +101,9 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
                 id="lastName"
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                pattern="[A-Za-z ]*"
               />
+              {lastNameError && <div className="text-danger small">{lastNameError}</div>}
             </div>
           </div>
           <div className="row mb-3">
@@ -91,19 +125,24 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                readOnly
               />
+              {emailError && <div className="text-danger small">{emailError}</div>}
             </div>
           </div>
           <div className="row mb-3">
             <div className="col-md-6">
               <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
               <input
-                type="text"
+                type="tel"
                 className="form-control"
                 id="phoneNumber"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
+                inputMode="numeric"
+                pattern="[0-9]{10}"
               />
+              {phoneError && <div className="text-danger small">{phoneError}</div>}
             </div>
             <div className="col-md-6">
               <label htmlFor="accountType" className="form-label">Account Type</label>

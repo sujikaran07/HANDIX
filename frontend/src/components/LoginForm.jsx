@@ -154,9 +154,6 @@ const LoginForm = ({ onLoginSuccess }) => {
         </Button>
 
         <div className="form-footer">
-          <p>
-            Forgot your password? <a href="#">Click Here</a>
-          </p>
         </div>
       </Form>
     </div>

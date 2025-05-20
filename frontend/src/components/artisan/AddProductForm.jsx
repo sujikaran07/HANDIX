@@ -23,6 +23,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   const [showAdditionalPrice, setShowAdditionalPrice] = useState(false); 
   const [isLoading, setIsLoading] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+  const [productNameError, setProductNameError] = useState('');
 
   const fetchProductSuggestions = async (name) => {
     try {
@@ -299,13 +300,19 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
   const handleNameChange = (e) => {
     const { value } = e.target;
+    // Allow only letters, numbers, spaces, and hyphens
+    const filteredValue = value.replace(/[^A-Za-z0-9\- ]/g, '');
     setFormData((prevProduct) => ({
       ...prevProduct,
-      product_name: value,
+      product_name: filteredValue,
     }));
-
-    if (value.length > 1) {
-      fetchProductSuggestions(value);
+    if (/[^A-Za-z0-9\- ]/.test(value)) {
+      setProductNameError('Only letters, numbers, spaces, and hyphens are allowed.');
+    } else {
+      setProductNameError('');
+    }
+    if (filteredValue.length > 1) {
+      fetchProductSuggestions(filteredValue);
     } else {
       setSuggestions([]);
     }
@@ -562,7 +569,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                   </div>
                 )}
               </div>
-              {errors.product_name && <div className="text-danger small">{errors.product_name}</div>}
+              {productNameError && <div className="text-danger small">{productNameError}</div>}
             </div>
             <div className="col-md-4">
               <label className="form-label">Category<span className="text-danger">*</span></label>
