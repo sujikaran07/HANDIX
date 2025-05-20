@@ -25,9 +25,17 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
+  const validateEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+  const validatePassword = (password) => password.length >= 8;
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let filteredValue = value;
+    if (name === 'firstName' || name === 'lastName') {
+      filteredValue = value.replace(/[^A-Za-z ]/g, '');
+    }
+    setFormData(prev => ({ ...prev, [name]: filteredValue }));
     
     // Clear error when field is edited
     if (errors[name]) {
@@ -43,18 +51,20 @@ const RegisterPage = () => {
     const newErrors = {};
     
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    else if (!validateName(formData.firstName)) newErrors.firstName = 'First name can only contain letters and spaces.';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    else if (!validateName(formData.lastName)) newErrors.lastName = 'Last name can only contain letters and spaces.';
     
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!validateEmail(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
     
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
     
     if (formData.password !== formData.confirmPassword) {

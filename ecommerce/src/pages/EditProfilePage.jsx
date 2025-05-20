@@ -36,6 +36,15 @@ const EditProfilePage = () => {
   const [profilePicture, setProfilePicture] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   
+  const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
+  const validatePhone = (phone) => /^\d{10}$/.test(phone);
+  const validatePassword = (password) => password.length === 0 || password.length >= 8;
+
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  
   // Load user data from localStorage and fetch address from API
   useEffect(() => {
     const fetchUserData = async () => {
@@ -133,9 +142,16 @@ const EditProfilePage = () => {
   
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let filteredValue = value;
+    if (name === 'firstName' || name === 'lastName') {
+      filteredValue = value.replace(/[^A-Za-z ]/g, '');
+    }
+    if (name === 'phone') {
+      filteredValue = value.replace(/[^0-9]/g, '').slice(0, 10);
+    }
     setFormData(prevState => ({
       ...prevState,
-      [name]: value
+      [name]: filteredValue
     }));
   };
   
@@ -180,6 +196,24 @@ const EditProfilePage = () => {
   
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFirstNameError('');
+    setLastNameError('');
+    setPhoneError('');
+    setPasswordError('');
+    let valid = true;
+    if (!validateName(formData.firstName)) {
+      setFirstNameError('First name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (!validateName(formData.lastName)) {
+      setLastNameError('Last name can only contain letters and spaces.');
+      valid = false;
+    }
+    if (formData.phone && !validatePhone(formData.phone)) {
+      setPhoneError('Phone number must be exactly 10 digits.');
+      valid = false;
+    }
+    if (!valid) return;
     
     try {
       console.log('Submitting form data:', formData);
@@ -432,6 +466,7 @@ const EditProfilePage = () => {
                         className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary"
                         required
                       />
+                      {firstNameError && <div className="text-danger small">{firstNameError}</div>}
                     </div>
                     
                     <div>
@@ -445,6 +480,7 @@ const EditProfilePage = () => {
                         className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary"
                         required
                       />
+                      {lastNameError && <div className="text-danger small">{lastNameError}</div>}
                     </div>
                     
                     <div>
@@ -472,6 +508,7 @@ const EditProfilePage = () => {
                         onChange={handleChange}
                         className="block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-primary focus:border-primary"
                       />
+                      {phoneError && <div className="text-danger small">{phoneError}</div>}
                     </div>
                     
                     <div className="md:col-span-2">
