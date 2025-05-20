@@ -11,6 +11,7 @@ import Chart from 'chart.js/auto';
 import { getChartConfig, prepareBarChartData, preparePieChartData, prepareLineChartData, getReportColors } from '../../utils/reportChartHelper';
 import '../../styles/admin/ReportViewForm.css';
 import axios from 'axios';
+import { API_BASE_URL } from '../../utils/environment';
 
 
 const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, appliedFilters = [] }) => {
@@ -35,6 +36,11 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
   const barChartInstance = useRef(null);
   const pieChartInstance = useRef(null);
   const lineChartInstance = useRef(null);
+
+  // Add hidden container for PDF export
+  const pdfDashboardRef = useRef(null);
+  const pdfChartsRef = useRef(null);
+  const pdfTableRef = useRef(null);
 
   // Get report title based on type
   const getReportTitle = () => {
@@ -518,19 +524,41 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     try {
       setIsLoading(true);
       setError(null);
-      
+
+      // Wait for DOM and charts to be ready
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Capture chart images
+      const charts = [];
+      if (barChartRef.current) charts.push(barChartRef.current.toDataURL());
+      if (pieChartRef.current) charts.push(pieChartRef.current.toDataURL());
+      if (lineChartRef.current) charts.push(lineChartRef.current.toDataURL());
+
+      // Capture HTML sections from hidden container
+      const dashboardHTML = pdfDashboardRef.current ? pdfDashboardRef.current.innerHTML : '';
+      const chartsHTML = pdfChartsRef.current ? pdfChartsRef.current.innerHTML : '';
+      const tableHTML = pdfTableRef.current ? pdfTableRef.current.innerHTML : '';
+
+      // Debug logging
+      console.log('dashboardHTML:', dashboardHTML);
+      console.log('chartsHTML:', chartsHTML);
+      console.log('tableHTML:', tableHTML);
+
       // Prepare the export data with all necessary information
       const exportData = {
-        reportData: reportData,
+        reportData: {
+          ...reportData,
+          dashboardHTML,
+          chartsHTML,
+          tableHTML,
+          charts,
+        },
         reportType: reportType,
         dateRange: dateRange,
         filters: {
-          // Pass all applied filters
           ...(reportData.appliedFilters || {}),
-          // Ensure we pass the current view state
           includeGraphs: true // Always include graphs in PDF exports
         },
-        // Add PDF formatting options
         pdfOptions: {
           paperSize: 'a4', // Default to A4
           orientation: 'portrait',
@@ -747,227 +775,139 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
   };
 
   return (
-    <div className="report-view-form pb-4" style={{
-      overflowY: 'auto',
-      scrollbarWidth: 'none', /* Firefox */
-      msOverflowStyle: 'none', /* IE and Edge */
-      height: '100%'
-    }}>
-      {/* Hide scrollbar for Chrome, Safari and Opera */}
-      <style jsx="true">{`
-        .report-view-form::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-      
-      {/* Report Header */}
-      <Card className="mb-4 shadow-sm">
-        <Card.Header className="d-flex justify-content-between align-items-center bg-white py-3">
-          <div className="d-flex align-items-center">
-            <div className="report-icon me-3" style={{ color: reportColors.primary }}>
-              <FontAwesomeIcon icon={getReportIcon()} size="2x" />
-            </div>
-            <div>
-              <h4 className="mb-0" style={{ color: reportColors.primary }}>{getReportTitle()}</h4>
-              <p className="text-muted mb-0 small">
-                {formatDate(dateRange?.startDate)} - {formatDate(dateRange?.endDate)}
-              </p>
-            </div>
-          </div>
-          <div>
-            <Button variant="outline-secondary" size="sm" className="me-2" onClick={onBackClick}>
-              Back
-            </Button>
-            <Button variant="outline-secondary" size="sm" className="me-2" onClick={handlePrint}>
-              <FontAwesomeIcon icon={faPrint} className="me-1" /> Print
-            </Button>
-          </div>
-        </Card.Header>
-      </Card>
-      
-      {/* Error Alert */}
-      {error && (
-        <Alert variant="danger" className="mb-4">
-          <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
-          {error}
-        </Alert>
-      )}
-      
-      {/* Report Navigation */}
-      <div className="nav nav-tabs mb-4">
-        <div className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-            style={activeTab === 'dashboard' ? {
-              borderBottom: `3px solid ${reportColors.primary}`,
-              color: reportColors.primary
-            } : {}}
-          >
-            <FontAwesomeIcon icon={faChartPie} className="me-2" />
-            Dashboard
-          </button>
-        </div>
-        <div className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'charts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('charts')}
-            style={activeTab === 'charts' ? {
-              borderBottom: `3px solid ${reportColors.primary}`,
-              color: reportColors.primary
-            } : {}}
-          >
-            <FontAwesomeIcon icon={faChartBar} className="me-2" />
-            Charts
-          </button>
-        </div>
-        <div className="nav-item">
-          <button 
-            className={`nav-link ${activeTab === 'data' ? 'active' : ''}`}
-            onClick={() => setActiveTab('data')}
-            style={activeTab === 'data' ? {
-              borderBottom: `3px solid ${reportColors.primary}`,
-              color: reportColors.primary
-            } : {}}
-          >
-            <FontAwesomeIcon icon={faTable} className="me-2" />
-            Data Table
-          </button>
-        </div>
-      </div>
-      
-      {/* Dashboard Tab */}
-      {activeTab === 'dashboard' && (
-        <>
-          <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Summary</h5>
-          
+    <>
+      {/* Hidden PDF export container */}
+      <div style={{ display: 'none' }}>
+        <div id="pdf-dashboard-section" ref={pdfDashboardRef}>
           {chartConfig.showSummary && renderSummaryCards()}
-          
           {reportType === 'products' && reportData && 'lowStockCount' in reportData && (
             <LowStockAlert count={reportData.lowStockCount} />
           )}
-          
+        </div>
+        <div id="pdf-charts-section" ref={pdfChartsRef}>
           {shouldShowGraphs() && (
-            <Row className="mb-4">
-              {dashboardCharts.includes('lineChart') && chartConfig.showLineChart && (
-                <Col md={dashboardCharts.length > 1 ? 6 : 12}>
-                  <Card className="h-100 shadow-sm">
-                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
-                      <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.lineChartTitle || 'Time Analysis'}</h5>
-                    </Card.Header>
-                    <Card.Body>
-                      {isLoading ? (
-                        <div className="text-center py-5">
-                          <Spinner animation="border" style={{ color: reportColors.primary }} />
-                        </div>
-                      ) : (
-                        <div style={{height: '300px'}}>
-                          <canvas ref={lineChartRef}></canvas>
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </Col>
-              )}
-              
-              {dashboardCharts.includes('pieChart') && chartConfig.showPieChart && (
-                <Col md={dashboardCharts.length > 1 ? 6 : 12}>
-                  <Card className="h-100 shadow-sm">
-                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
-                      <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.pieChartTitle || 'Distribution Analysis'}</h5>
-                    </Card.Header>
-                    <Card.Body>
-                      {isLoading ? (
-                        <div className="text-center py-5">
-                          <Spinner animation="border" style={{ color: reportColors.primary }} />
-                        </div>
-                      ) : (
-                        <div style={{height: '300px'}}>
-                          <canvas ref={pieChartRef}></canvas>
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </Col>
-              )}
-
-              {dashboardCharts.includes('barChart') && chartConfig.showBarChart && (
-                <Col md={dashboardCharts.length > 1 ? 6 : 12} className={dashboardCharts.length > 1 && dashboardCharts.indexOf('barChart') > 0 ? 'mt-4 mt-md-0' : ''}>
-                  <Card className="h-100 shadow-sm">
-                    <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
-                      <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.barChartTitle || 'Top Items'}</h5>
-                    </Card.Header>
-                    <Card.Body>
-                      {isLoading ? (
-                        <div className="text-center py-5">
-                          <Spinner animation="border" style={{ color: reportColors.primary }} />
-                        </div>
-                      ) : (
-                        <div style={{height: '300px'}}>
-                          <canvas ref={barChartRef}></canvas>
-                        </div>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </Col>
-              )}
-
-              {dashboardCharts.length === 0 && (
-                <Col>
-                  <Alert variant="info">
-                    <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-                    No charts available for this report type.
-                  </Alert>
-                </Col>
-              )}
-            </Row>
-          )}
-          
-          {!shouldShowGraphs() && (
-            <Alert variant="info" className="mb-4">
-              <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-              Graphs are hidden based on your report settings. You can enable graphs in the Advanced Options.
-            </Alert>
-          )}
-        </>
-      )}
-      
-      {/* Charts Tab */}
-      {activeTab === 'charts' && (
-        <>
-          {!shouldShowGraphs() ? (
-            <Alert variant="info" className="mb-4">
-              <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-              Charts are hidden based on your report settings. You can enable graphs in the Advanced Options.
-            </Alert>
-          ) : (
             <>
-              {chartConfig.showBarChart && (
-                <Row className="mb-4">
-                  <Col>
-                    <Card className="shadow-sm">
-                      <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
-                        <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.barChartTitle || 'Top Items'}</h5>
-                      </Card.Header>
-                      <Card.Body>
-                        {isLoading ? (
-                          <div className="text-center py-5">
-                            <Spinner animation="border" style={{ color: reportColors.primary }} />
-                          </div>
-                        ) : (
-                          <div style={{height: '400px'}}>
-                            <canvas ref={barChartRef}></canvas>
-                          </div>
-                        )}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
+              {dashboardCharts.includes('lineChart') && chartConfig.showLineChart && lineChartRef.current && (
+                <img src={lineChartRef.current.toDataURL()} alt="Line Chart" style={{ maxWidth: '100%', marginBottom: 16 }} />
               )}
-              
+              {dashboardCharts.includes('pieChart') && chartConfig.showPieChart && pieChartRef.current && (
+                <img src={pieChartRef.current.toDataURL()} alt="Pie Chart" style={{ maxWidth: '100%', marginBottom: 16 }} />
+              )}
+              {dashboardCharts.includes('barChart') && chartConfig.showBarChart && barChartRef.current && (
+                <img src={barChartRef.current.toDataURL()} alt="Bar Chart" style={{ maxWidth: '100%', marginBottom: 16 }} />
+              )}
+            </>
+          )}
+        </div>
+        <div id="pdf-table-section" ref={pdfTableRef}>
+          {renderDataTable()}
+        </div>
+      </div>
+      <div className="report-view-form pb-4" style={{
+        overflowY: 'auto',
+        scrollbarWidth: 'none', /* Firefox */
+        msOverflowStyle: 'none', /* IE and Edge */
+        height: '100%'
+      }}>
+        {/* Hide scrollbar for Chrome, Safari and Opera */}
+        <style jsx="true">{`
+          .report-view-form::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        
+        {/* Report Header */}
+        <Card className="mb-4 shadow-sm">
+          <Card.Header className="d-flex justify-content-between align-items-center bg-white py-3">
+            <div className="d-flex align-items-center">
+              <div className="report-icon me-3" style={{ color: reportColors.primary }}>
+                <FontAwesomeIcon icon={getReportIcon()} size="2x" />
+              </div>
+              <div>
+                <h4 className="mb-0" style={{ color: reportColors.primary }}>{getReportTitle()}</h4>
+                <p className="text-muted mb-0 small">
+                  {formatDate(dateRange?.startDate)} - {formatDate(dateRange?.endDate)}
+                </p>
+              </div>
+            </div>
+            <div>
+              <Button variant="outline-secondary" size="sm" className="me-2" onClick={onBackClick}>
+                Back
+              </Button>
+              <Button variant="outline-primary" size="sm" className="me-2" onClick={handleExportPDF} disabled={isLoading}>
+                <FontAwesomeIcon icon={faFilePdf} className="me-1" />
+                {isLoading ? 'Exporting...' : 'Download as PDF'}
+              </Button>
+            </div>
+          </Card.Header>
+        </Card>
+        
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
+            {error}
+          </Alert>
+        )}
+        
+        {/* Report Navigation */}
+        <div className="nav nav-tabs mb-4">
+          <div className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dashboard')}
+              style={activeTab === 'dashboard' ? {
+                borderBottom: `3px solid ${reportColors.primary}`,
+                color: reportColors.primary
+              } : {}}
+            >
+              <FontAwesomeIcon icon={faChartPie} className="me-2" />
+              Dashboard
+            </button>
+          </div>
+          <div className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'charts' ? 'active' : ''}`}
+              onClick={() => setActiveTab('charts')}
+              style={activeTab === 'charts' ? {
+                borderBottom: `3px solid ${reportColors.primary}`,
+                color: reportColors.primary
+              } : {}}
+            >
+              <FontAwesomeIcon icon={faChartBar} className="me-2" />
+              Charts
+            </button>
+          </div>
+          <div className="nav-item">
+            <button 
+              className={`nav-link ${activeTab === 'data' ? 'active' : ''}`}
+              onClick={() => setActiveTab('data')}
+              style={activeTab === 'data' ? {
+                borderBottom: `3px solid ${reportColors.primary}`,
+                color: reportColors.primary
+              } : {}}
+            >
+              <FontAwesomeIcon icon={faTable} className="me-2" />
+              Data Table
+            </button>
+          </div>
+        </div>
+        
+        {/* Dashboard Tab */}
+        {activeTab === 'dashboard' && (
+          <>
+            <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Summary</h5>
+            
+            {chartConfig.showSummary && renderSummaryCards()}
+            
+            {reportType === 'products' && reportData && 'lowStockCount' in reportData && (
+              <LowStockAlert count={reportData.lowStockCount} />
+            )}
+            
+            {shouldShowGraphs() && (
               <Row className="mb-4">
-                {chartConfig.showLineChart && (
-                  <Col md={chartConfig.showPieChart ? 6 : 12}>
+                {dashboardCharts.includes('lineChart') && chartConfig.showLineChart && (
+                  <Col md={dashboardCharts.length > 1 ? 6 : 12}>
                     <Card className="h-100 shadow-sm">
                       <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
                         <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.lineChartTitle || 'Time Analysis'}</h5>
@@ -987,8 +927,8 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
                   </Col>
                 )}
                 
-                {chartConfig.showPieChart && (
-                  <Col md={chartConfig.showLineChart ? 6 : 12}>
+                {dashboardCharts.includes('pieChart') && chartConfig.showPieChart && (
+                  <Col md={dashboardCharts.length > 1 ? 6 : 12}>
                     <Card className="h-100 shadow-sm">
                       <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
                         <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.pieChartTitle || 'Distribution Analysis'}</h5>
@@ -1007,48 +947,166 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
                     </Card>
                   </Col>
                 )}
+
+                {dashboardCharts.includes('barChart') && chartConfig.showBarChart && (
+                  <Col md={dashboardCharts.length > 1 ? 6 : 12} className={dashboardCharts.length > 1 && dashboardCharts.indexOf('barChart') > 0 ? 'mt-4 mt-md-0' : ''}>
+                    <Card className="h-100 shadow-sm">
+                      <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
+                        <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.barChartTitle || 'Top Items'}</h5>
+                      </Card.Header>
+                      <Card.Body>
+                        {isLoading ? (
+                          <div className="text-center py-5">
+                            <Spinner animation="border" style={{ color: reportColors.primary }} />
+                          </div>
+                        ) : (
+                          <div style={{height: '300px'}}>
+                            <canvas ref={barChartRef}></canvas>
+                          </div>
+                        )}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                )}
+
+                {dashboardCharts.length === 0 && (
+                  <Col>
+                    <Alert variant="info">
+                      <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                      No charts available for this report type.
+                    </Alert>
+                  </Col>
+                )}
               </Row>
-              
-              {!chartConfig.showBarChart && !chartConfig.showLineChart && !chartConfig.showPieChart && (
-                <Alert variant="info">
-                  <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
-                  No charts are configured for this report type.
-                </Alert>
-              )}
-            </>
-          )}
-        </>
-      )}
-      
-      {/* Data Tab */}
-      {activeTab === 'data' && (
-        <>
-          <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Data</h5>
-          <Card className="shadow-sm">
-            <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
-              <h5 className="mb-0" style={{ color: reportColors.primary }}>{getReportTitle()} - Detailed Data</h5>
-            </Card.Header>
-            <Card.Body className="p-0">
-              {isLoading ? (
-                <div className="text-center py-5">
-                  <Spinner animation="border" style={{ color: reportColors.primary }} />
-                </div>
-              ) : (
-                renderDataTable()
-              )}
-            </Card.Body>
-          </Card>
-        </>
-      )}
-      
-      {/* Footer Info */}
-      <div className="text-muted small text-center mt-4">
-        <p>Report generated on {formatDate(new Date(), true)}</p>
+            )}
+            
+            {!shouldShowGraphs() && (
+              <Alert variant="info" className="mb-4">
+                <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                Graphs are hidden based on your report settings. You can enable graphs in the Advanced Options.
+              </Alert>
+            )}
+          </>
+        )}
+        
+        {/* Charts Tab */}
+        {activeTab === 'charts' && (
+          <>
+            {!shouldShowGraphs() ? (
+              <Alert variant="info" className="mb-4">
+                <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                Charts are hidden based on your report settings. You can enable graphs in the Advanced Options.
+              </Alert>
+            ) : (
+              <>
+                {chartConfig.showBarChart && (
+                  <Row className="mb-4">
+                    <Col>
+                      <Card className="shadow-sm">
+                        <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
+                          <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.barChartTitle || 'Top Items'}</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          {isLoading ? (
+                            <div className="text-center py-5">
+                              <Spinner animation="border" style={{ color: reportColors.primary }} />
+                            </div>
+                          ) : (
+                            <div style={{height: '400px'}}>
+                              <canvas ref={barChartRef}></canvas>
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  </Row>
+                )}
+                
+                <Row className="mb-4">
+                  {chartConfig.showLineChart && (
+                    <Col md={chartConfig.showPieChart ? 6 : 12}>
+                      <Card className="h-100 shadow-sm">
+                        <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
+                          <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.lineChartTitle || 'Time Analysis'}</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          {isLoading ? (
+                            <div className="text-center py-5">
+                              <Spinner animation="border" style={{ color: reportColors.primary }} />
+                            </div>
+                          ) : (
+                            <div style={{height: '300px'}}>
+                              <canvas ref={lineChartRef}></canvas>
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  )}
+                  
+                  {chartConfig.showPieChart && (
+                    <Col md={chartConfig.showLineChart ? 6 : 12}>
+                      <Card className="h-100 shadow-sm">
+                        <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
+                          <h5 className="mb-0" style={{ color: reportColors.primary }}>{chartConfig.pieChartTitle || 'Distribution Analysis'}</h5>
+                        </Card.Header>
+                        <Card.Body>
+                          {isLoading ? (
+                            <div className="text-center py-5">
+                              <Spinner animation="border" style={{ color: reportColors.primary }} />
+                            </div>
+                          ) : (
+                            <div style={{height: '300px'}}>
+                              <canvas ref={pieChartRef}></canvas>
+                            </div>
+                          )}
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  )}
+                </Row>
+                
+                {!chartConfig.showBarChart && !chartConfig.showLineChart && !chartConfig.showPieChart && (
+                  <Alert variant="info">
+                    <FontAwesomeIcon icon={faInfoCircle} className="me-2" />
+                    No charts are configured for this report type.
+                  </Alert>
+                )}
+              </>
+            )}
+          </>
+        )}
+        
+        {/* Data Tab */}
+        {activeTab === 'data' && (
+          <>
+            <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Data</h5>
+            <Card className="shadow-sm">
+              <Card.Header className="bg-white" style={{ borderBottom: `2px solid ${reportColors.primary}20` }}>
+                <h5 className="mb-0" style={{ color: reportColors.primary }}>{getReportTitle()} - Detailed Data</h5>
+              </Card.Header>
+              <Card.Body className="p-0">
+                {isLoading ? (
+                  <div className="text-center py-5">
+                    <Spinner animation="border" style={{ color: reportColors.primary }} />
+                  </div>
+                ) : (
+                  renderDataTable()
+                )}
+              </Card.Body>
+            </Card>
+          </>
+        )}
+        
+        {/* Footer Info */}
+        <div className="text-muted small text-center mt-4">
+          <p>Report generated on {formatDate(new Date(), true)}</p>
+        </div>
+        
+        {/* PDF Options Modal */}
+        {renderPdfOptionsModal()}
       </div>
-      
-      {/* PDF Options Modal */}
-      {renderPdfOptionsModal()}
-    </div>
+    </>
   );
 };
 

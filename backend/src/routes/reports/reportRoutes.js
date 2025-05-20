@@ -12,6 +12,7 @@ const { Customer } = require('../../models/customerModel');
 const Inventory = require('../../models/inventoryModel');
 const { Employee } = require('../../models/employeeModel');
 const { OrderDetail } = require('../../models/orderDetailModel');
+const puppeteer = require('puppeteer');
 
 // Clean up temporary files older than 1 hour
 const cleanupTempFiles = () => {
@@ -733,9 +734,10 @@ router.get('/metadata', async (req, res) => {
   }
 });
 
-// Generate PDF report
+// Generate PDF report using Puppeteer and HTML from frontend
 router.post('/export/pdf', async (req, res) => {
   try {
+    console.log('PDF export request body:', JSON.stringify(req.body, null, 2));
     const { reportData, reportType, dateRange } = req.body;
 
     if (!reportData || !reportType) {
@@ -745,27 +747,59 @@ router.post('/export/pdf', async (req, res) => {
       });
     }
 
-    const options = {
-      title: getReportTitle(reportType),
-      summary: reportData.summary || {},
-      data: reportData.data || [],
-      type: reportType,
-      filters: {
-        startDate: dateRange?.startDate,
-        endDate: dateRange?.endDate,
-        ...req.body.filters
-      }
-    };
+    // Compose the HTML using the HTML sections sent from the frontend
+    const html = `
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 24px; }
+            h2 { color: #0d6efd; }
+            .section { margin-bottom: 32px; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ccc; padding: 8px; }
+            th { background: #f5f5f5; }
+            img { max-width: 100%; margin-bottom: 16px; }
+          </style>
+        </head>
+        <body>
+          <h2>${reportType} Report</h2>
+          <div class="section">
+            <h3>Dashboard</h3>
+            <div>${reportData.dashboardHTML || ''}</div>
+          </div>
+          <div class="section">
+            <h3>Charts</h3>
+            <div>${reportData.chartsHTML || ''}</div>
+          </div>
+          <div class="section">
+            <h3>Data Table</h3>
+            <div>${reportData.tableHTML || ''}</div>
+          </div>
+        </body>
+      </html>
+    `;
 
-    const pdfFilePath = await generatePDFReport(options);
-    
-    return res.json({
-      success: true,
-      filePath: pdfFilePath,
-      fileName: path.basename(pdfFilePath)
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: 'networkidle0' });
+
+    const pdfBuffer = await page.pdf({ format: 'A4' });
+
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="report.pdf"',
+    });
+    res.send(pdfBuffer);
   } catch (error) {
     console.error('Error generating PDF report:', error);
+    if (error && error.stack) {
+      console.error(error.stack);
+    }
     return res.status(500).json({
       success: false,
       message: 'Failed to generate PDF report',
