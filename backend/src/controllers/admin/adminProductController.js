@@ -1,5 +1,7 @@
 const ProductEntry = require('../../models/productEntryModel');
 const { Op } = require('sequelize');
+const Inventory = require('../../models/inventoryModel');
+const Category = require('../../models/categoryModel');
 
 const getAllAdminProducts = async (req, res) => {
   try {
@@ -39,8 +41,34 @@ const updateAdminProductStatus = async (req, res) => {
     await product.save();
 
     if (status === 'Approved') {   
-      
-     }
+      // Update inventory
+      let inventoryRecord = await Inventory.findOne({ where: { product_id: product.product_id } });
+      if (inventoryRecord) {
+        await inventoryRecord.update({
+          product_name: product.product_name,
+          description: product.description || inventoryRecord.description,
+          unit_price: product.unit_price,
+          quantity: inventoryRecord.quantity + product.quantity,
+          customization_available: product.customization_available
+        });
+        console.log('Updated existing inventory record with actual quantity');
+      }
+      // Update category stock level
+      if (product.category_id) {
+        try {
+          const categoryRecord = await Category.findByPk(product.category_id);
+          if (categoryRecord && typeof categoryRecord.stock_level !== 'undefined') {
+            console.log(`Updating category stock level by adding ${product.quantity} units`);
+            await categoryRecord.update({
+              stock_level: (categoryRecord.stock_level || 0) + product.quantity
+            });
+            console.log(`Updated category stock level to ${categoryRecord.stock_level}`);
+          }
+        } catch (categoryError) {
+          console.error('Error updating category stock level:', categoryError);
+        }
+      }
+    }
 
     res.status(200).json({ 
       message: 'Product status updated successfully', 

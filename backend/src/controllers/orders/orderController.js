@@ -92,6 +92,11 @@ const getAllOrders = async (req, res) => {
         orderData.customerPhone = orderData.customerInfo.phone;
         orderData.customer_id = orderData.customerInfo.c_id;
       }
+      // Add isRefundable field (support multiple card types, case-insensitive)
+      const cardMethods = ['card', 'Credit Card', 'Debit Card'];
+      orderData.isRefundable = (orderData.orderStatus === 'Cancelled') &&
+        (orderData.paymentStatus === 'Paid') &&
+        (orderData.paymentMethod && cardMethods.includes(orderData.paymentMethod.toLowerCase()));
       
       return orderData;
     }));
@@ -150,6 +155,12 @@ const getOrderById = async (req, res) => {
         }
       }
     }
+    
+    // Add isRefundable field (support multiple card types, case-insensitive)
+    const cardMethods = ['card', 'credit card', 'debit card'];
+    orderData.isRefundable = (orderData.orderStatus === 'Cancelled') &&
+      (orderData.paymentStatus === 'Paid') &&
+      (orderData.paymentMethod && cardMethods.includes(orderData.paymentMethod.toLowerCase()));
     
     res.status(200).json(orderData);
   } catch (error) {
@@ -679,9 +690,9 @@ const cancelOrder = async (req, res) => {
         });
         
         if (inventory) {
-          // Return items to stock
+          // Return items to stock (use correct field name 'quantity')
           await inventory.update({
-            stock_quantity: inventory.stock_quantity + detail.quantity
+            quantity: inventory.quantity + detail.quantity
           }, { transaction });
         }
       }

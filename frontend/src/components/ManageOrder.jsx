@@ -108,7 +108,8 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           shippingCost: order.shippingFee,
           subtotal: order.subtotal,
           notes: order.notes,
-          deliveryDate: order.deliveryDate
+          deliveryDate: order.deliveryDate,
+          isRefundable: order.isRefundable || false
         };
       });
       
@@ -381,6 +382,15 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                               {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
                                 <li>
                                   <button className="dropdown-item" onClick={() => showCancelModal(order)}>Cancel</button>
+                                </li>
+                              )}
+                              
+                              {/* Refund option for refundable orders */}
+                              {order.isRefundable && (
+                                <li>
+                                  <button className="dropdown-item text-primary" onClick={() => alert('Refund initiated!')}>
+                                    Refund
+                                  </button>
                                 </li>
                               )}
                             </ul>
