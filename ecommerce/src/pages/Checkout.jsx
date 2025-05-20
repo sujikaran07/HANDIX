@@ -585,13 +585,23 @@ const CheckoutPage = () => {
       setCurrentStep(6);
       clearCart();
     } catch (error) {
+      // Enhanced error logging for debugging
       console.error('Error placing order:', error);
-      console.error('Error response:', error.response?.data);
-      toast({
-        title: "Error Placing Order",
-        description: error.response?.data?.message || "There was an error processing your order. Please try again.",
-        variant: "destructive",
-      });
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+        // Show all error details in the toast for debugging
+        toast({
+          title: 'Error Placing Order',
+          description: error.response.data?.message || JSON.stringify(error.response.data, null, 2) || 'There was an error processing your order. Please try again.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error Placing Order',
+          description: error.message || 'There was an error processing your order. Please try again.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -741,7 +751,7 @@ const CheckoutPage = () => {
   
   // Navigation buttons for each step
   const renderNavButtons = () => {
-    if (currentStep === 6) return null; // No navigation on confirmation
+    if (currentStep === 6) return null; 
 
     return (
       <div className="flex mt-8 pt-6 border-t justify-between">

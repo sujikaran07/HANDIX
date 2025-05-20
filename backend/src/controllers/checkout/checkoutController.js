@@ -325,17 +325,13 @@ exports.placeOrder = async (req, res) => {
       pickupLocation 
     } = req.body;
     
-    if (paymentInfo.method === 'cod' && parseFloat(orderSummary.total) > 5000) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Cash on Delivery is only available for orders under LKR 5,000. Please choose another payment method.'
-      });
-    }
-    
     let customerId = null;
     let user = null;
     let accountType = null;
-    
+    let orderId = null;
+    let customerName = '';
+
+    // --- Fetch account type for business logic (move this up before COD check) ---
     const authHeader = req.headers.authorization;
     if (authHeader) {
       const token = authHeader.split(' ')[1];
@@ -344,12 +340,10 @@ exports.placeOrder = async (req, res) => {
         customerId = user.c_id;
       }
     }
-    
     if (!customerId && customerInfo) {
       let customer = await Customer.findOne({ 
         where: { email: customerInfo.email }
       });
-      
       if (customer) {
         customerId = customer.c_id;
       } else {
@@ -364,18 +358,26 @@ exports.placeOrder = async (req, res) => {
           accountType: 'Retail',
           accountStatus: 'Pending'
         }, { transaction });
-        
         customerId = guestId;
       }
     }
-    
-    // --- Fetch account type for business logic ---
     if (customerId) {
       const customer = await Customer.findByPk(customerId);
       if (customer && customer.accountType) {
         accountType = customer.accountType;
       }
     }
+    // Only apply COD limit for non-business accounts
+    if (paymentInfo.method === 'cod' && accountType !== 'Business' && parseFloat(orderSummary.total) > 5000) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Cash on Delivery is only available for orders under LKR 5,000 for personal accounts. Please choose another payment method.'
+      });
+    }
+    
+    // Generate a unique orderId
+    orderId = 'ORD-' + Date.now();
+    
     // --- Calculate shipping fee and discount for business accounts ---
     let shippingFee = 0;
     if (shippingMethod === 'pickup') {
