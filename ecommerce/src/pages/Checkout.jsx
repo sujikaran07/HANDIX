@@ -416,7 +416,7 @@ const CheckoutPage = () => {
       case 4: // Payment
         if (formData.paymentMethod === 'card') {
           if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required';
-          else if (!/^\d{16}$/.test(formData.cardNumber)) newErrors.cardNumber = 'Card number must be 16 digits';
+          else if (!/^\d{16}$/.test(formData.cardNumber.replace(/\s/g, ''))) newErrors.cardNumber = 'Card number must be 16 digits';
           if (!formData.cardExpiry) newErrors.cardExpiry = 'Expiry date is required';
           else if (!/^(0[1-9]|1[0-2])\/(\d{2})$/.test(formData.cardExpiry)) newErrors.cardExpiry = 'Expiry must be MM/YY';
           if (!formData.cardCvc) newErrors.cardCvc = 'CVC is required';

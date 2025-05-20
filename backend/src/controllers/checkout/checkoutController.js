@@ -375,8 +375,22 @@ exports.placeOrder = async (req, res) => {
       });
     }
     
-    // Generate a unique orderId
-    orderId = 'ORD-' + Date.now();
+    // --- Generate a unique orderId in O001, O002, ... format ---
+    let isIdUnique = false;
+    let attempts = 0;
+    while (!isIdUnique && attempts < 10) {
+      const num = Math.floor(Math.random() * 999) + 1;
+      orderId = `O${num.toString().padStart(3, '0')}`;
+      const existingOrder = await Order.findByPk(orderId);
+      if (!existingOrder) {
+        isIdUnique = true;
+      }
+      attempts++;
+    }
+    if (!isIdUnique) {
+      const timestamp = new Date().getTime().toString().slice(-3);
+      orderId = `O${timestamp}`;
+    }
     
     // --- Calculate shipping fee and discount for business accounts ---
     let shippingFee = 0;
