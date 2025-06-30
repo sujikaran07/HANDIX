@@ -9,7 +9,6 @@ import EditEmployeeForm from './EditEmployeeForm';
 import ConfirmationModal from './ui/ConfirmationModal';
 import axios from 'axios';
 
-// Employee management table with search, filter, add, edit, and status toggle
 const ManageEmployee = ({ onAddEmployeeClick }) => {
   // State variables for employees, search/filter, pagination, forms, and status modals
   const [employees, setEmployees] = useState([]);
