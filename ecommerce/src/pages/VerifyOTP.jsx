@@ -7,23 +7,22 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
 const VerifyOTP = () => {
+  // State for OTP, email, loading, resend, and verification status
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // State for handling OTP input
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [verificationStatus, setVerificationStatus] = useState(null); // null, success, error
-  
-  // Reference for input fields
+  const [verificationStatus, setVerificationStatus] = useState(null);
+
+  // Ref for OTP input fields
   const otpInputs = useRef([]);
-  
-  // Initialize from location state (if available)
+
+  // Initialize email from location state
   useEffect(() => {
     if (location.state?.email) {
       setEmail(location.state.email);
@@ -34,8 +33,8 @@ const VerifyOTP = () => {
       otpInputs.current[0].focus();
     }
   }, [location.state]);
-  
-  // Handle countdown for resend cooldown
+
+  // Countdown for resend code
   useEffect(() => {
     let timer;
     if (countdown > 0) {
@@ -48,8 +47,8 @@ const VerifyOTP = () => {
     
     return () => clearInterval(timer);
   }, [countdown, resendDisabled]);
-  
-  // Auto-redirect on success after delay
+
+  // Redirect on successful verification
   useEffect(() => {
     let timer;
     if (verificationStatus === 'success') {
@@ -62,8 +61,8 @@ const VerifyOTP = () => {
     
     return () => clearTimeout(timer);
   }, [verificationStatus, navigate]);
-  
-  // Handle input change
+
+  // Handle OTP input change
   const handleChange = (index, e) => {
     const value = e.target.value;
     
@@ -100,6 +99,7 @@ const VerifyOTP = () => {
     }
   };
   
+  // Verify OTP
   const handleVerify = async () => {
     // Check if OTP is complete
     if (otp.some(digit => !digit)) {
@@ -142,6 +142,7 @@ const VerifyOTP = () => {
     }
   };
   
+  // Resend OTP
   const handleResendOTP = async () => {
     if (!email) {
       toast({

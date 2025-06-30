@@ -3,6 +3,7 @@ import * as ResizablePrimitive from "react-resizable-panels"
 
 import { cn } from "@/lib/utils"
 
+// Panel group for resizable layout
 const ResizablePanelGroup = ({
   className,
   ...props
@@ -18,6 +19,7 @@ const ResizablePanelGroup = ({
 
 const ResizablePanel = ResizablePrimitive.Panel
 
+// Handle for resizing panels, optionally shows grip icon
 const ResizableHandle = ({
   withHandle,
   className,

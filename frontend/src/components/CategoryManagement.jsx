@@ -5,6 +5,7 @@ import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
 
 const CategoryManagement = ({ onBackToInventory }) => {
+  // State management for categories and form handling
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,7 +16,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const categoriesPerPage = 7;
   
-  // New state for managing the right panel mode
+  // State for managing right panel modes (add/edit/view)
   const [rightPanelMode, setRightPanelMode] = useState('add'); 
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -26,7 +27,6 @@ const CategoryManagement = ({ onBackToInventory }) => {
         const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         
         if (!token) {
-          console.error('No token found in localStorage');
           setError('Authentication required. Please login again.');
           setLoading(false);
           return;
@@ -40,14 +40,8 @@ const CategoryManagement = ({ onBackToInventory }) => {
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched categories data:', data);
-          // Sort categories by ID in ascending order
+          // Sort categories by ID and include product count
           const sortedCategories = (data.data || []).sort((a, b) => a.category_id - b.category_id);
-          
-          // Log to verify product_count is included
-          if (sortedCategories.length > 0) {
-            console.log('First category product_count:', sortedCategories[0].product_count);
-          }
           
           setCategories(sortedCategories);
           setLoading(false);
@@ -59,7 +53,6 @@ const CategoryManagement = ({ onBackToInventory }) => {
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching categories:', error);
         setError('An error occurred while fetching categories data.');
         setLoading(false);
       }
@@ -82,7 +75,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
     if (file) {
       setCategoryImage(file);
       
-      // Create preview URL
+      // Create image preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -91,6 +84,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
     }
   };
 
+  // Handle form submission for creating/updating categories
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -103,9 +97,8 @@ const CategoryManagement = ({ onBackToInventory }) => {
         return;
       }
 
-      // Different handling for add vs edit
       if (rightPanelMode === 'add') {
-        // Create form data for new category
+        // Create new category
         const formData = new FormData();
         formData.append('category_name', newCategory.category_name);
         formData.append('description', newCategory.description);
@@ -113,12 +106,6 @@ const CategoryManagement = ({ onBackToInventory }) => {
         if (categoryImage) {
           formData.append('category_image', categoryImage);
         }
-
-        console.log('Adding new category:', {
-          name: newCategory.category_name,
-          description: newCategory.description,
-          hasImage: !!categoryImage
-        });
 
         const response = await fetch('http://localhost:5000/api/admin/categories', {
           method: 'POST',
@@ -130,9 +117,8 @@ const CategoryManagement = ({ onBackToInventory }) => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Category created successfully:', data);
           
-          // Update categories list with the new category
+          // Update categories list with new category
           setCategories(prev => {
             const newList = [...prev, data.category].sort((a, b) => a.category_id - b.category_id);
             return newList;
@@ -144,11 +130,10 @@ const CategoryManagement = ({ onBackToInventory }) => {
           alert('Category added successfully!');
         } else {
           const errorData = await response.json();
-          console.error('Failed to add category:', errorData);
           alert(`Failed to add category: ${errorData.message || response.statusText}`);
         }
       } else if (rightPanelMode === 'edit') {
-        // Create form data for updating existing category
+        // Update existing category
         const formData = new FormData();
         formData.append('category_name', selectedCategory.category_name);
         formData.append('description', selectedCategory.description);
@@ -157,14 +142,6 @@ const CategoryManagement = ({ onBackToInventory }) => {
           formData.append('category_image', categoryImage);
         }
 
-        console.log('Updating category:', {
-          id: selectedCategory.category_id,
-          name: selectedCategory.category_name,
-          description: selectedCategory.description,
-          hasImage: !!categoryImage
-        });
-
-        // Send PUT request to update existing category
         const response = await fetch(`http://localhost:5000/api/admin/categories/${selectedCategory.category_id}`, {
           method: 'PUT',
           headers: {
@@ -175,26 +152,22 @@ const CategoryManagement = ({ onBackToInventory }) => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Category updated successfully:', data);
           
-          // Update the category in the state
+          // Update category in state
           setCategories(prev => 
             prev.map(cat => cat.category_id === selectedCategory.category_id ? data.category : cat)
           );
           
-          // Return to add mode
           resetForm();
           alert('Category updated successfully!');
         } else {
           const errorData = await response.json();
-          console.error('Failed to update category:', errorData);
           alert(`Failed to update category: ${errorData.message || response.statusText}`);
         }
       }
       
       setImageUploading(false);
     } catch (error) {
-      console.error('Error submitting category:', error);
       alert('An error occurred while processing the category. Please try again.');
       setImageUploading(false);
     }
@@ -212,11 +185,10 @@ const CategoryManagement = ({ onBackToInventory }) => {
     setCurrentPage(pageNumber);
   };
 
+  // Set category for editing mode
   const handleEditCategory = (category) => {
-    // Set the selected category for editing
     setSelectedCategory(category);
     
-    // If category has an image, set the preview
     if (category.category_image_url) {
       setImagePreview(category.category_image_url);
     } else {
@@ -226,15 +198,13 @@ const CategoryManagement = ({ onBackToInventory }) => {
     setRightPanelMode('edit');
   };
 
+  // Set category for view mode
   const handleViewCategory = async (category) => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
       
-      // If you have a separate API endpoint for getting category details, use it
-      // Otherwise, we'll use the data we already have
       setSelectedCategory(category);
       
-      // If category has an image, set the preview
       if (category.category_image_url) {
         setImagePreview(category.category_image_url);
       } else {
@@ -243,11 +213,11 @@ const CategoryManagement = ({ onBackToInventory }) => {
       
       setRightPanelMode('view');
     } catch (error) {
-      console.error("Error fetching category details:", error);
       alert('Failed to fetch category details. Please try again.');
     }
   };
 
+  // Handle category deletion with confirmation
   const handleDeleteCategory = async (category) => {
     if (window.confirm(`Are you sure you want to delete category: ${category.category_name}?`)) {
       try {
@@ -266,7 +236,6 @@ const CategoryManagement = ({ onBackToInventory }) => {
         });
 
         if (response.ok) {
-          // Remove the category from the state
           setCategories(prev => prev.filter(cat => cat.category_id !== category.category_id));
           alert(`Category ${category.category_name} deleted successfully`);
         } else {
@@ -274,13 +243,12 @@ const CategoryManagement = ({ onBackToInventory }) => {
           alert(`Failed to delete category: ${errorData.message || response.statusText}`);
         }
       } catch (error) {
-        console.error('Error deleting category:', error);
         alert('Failed to delete category. Please try again.');
       }
     }
   };
 
-  // Render dropdown actions for categories
+  // Render action dropdown menu for each category
   const renderActionMenu = (category) => {
     const hasProducts = category.product_count > 0;
     
@@ -300,7 +268,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
               Edit
             </button>
           </li>
-          {/* Only show delete option if category doesn't have any products */}
+          {/* Only allow deletion if category has no products */}
           {!hasProducts && (
             <li>
               <button className="dropdown-item" onClick={() => handleDeleteCategory(category)}>
@@ -313,13 +281,13 @@ const CategoryManagement = ({ onBackToInventory }) => {
     );
   };
 
-  // Calculate current categories to display
+  // Pagination calculations
   const indexOfLastCategory = currentPage * categoriesPerPage;
   const indexOfFirstCategory = indexOfLastCategory - categoriesPerPage;
   const currentCategories = categories.slice(indexOfFirstCategory, indexOfLastCategory);
   const totalPages = Math.ceil(categories.length / categoriesPerPage);
 
-  // Render the right panel based on mode
+  // Render right panel based on current mode
   const renderRightPanel = () => {
     const panelTitle = 
       rightPanelMode === 'add' ? 'Add New Category' :
@@ -327,7 +295,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
     
     const isViewMode = rightPanelMode === 'view';
     
-    // Different layout for view mode
+    // View mode layout
     if (isViewMode) {
       return (
         <div className="col-md-4">
@@ -409,7 +377,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
       );
     }
     
-    // Regular form layout for add/edit modes
+    // Add/Edit mode layout
     return (
       <div className="col-md-4">
         <div className="d-flex justify-content-between align-items-center mb-3">
@@ -431,10 +399,9 @@ const CategoryManagement = ({ onBackToInventory }) => {
     );
   };
 
-  // Regular form layout for add/edit modes
+  // Form layout for add/edit modes
   const renderAddEditForm = () => {
     const isEditMode = rightPanelMode === 'edit';
-    // Check if we're editing a category with products
     const hasProducts = isEditMode && selectedCategory && selectedCategory.product_count > 0;
     
     return (
@@ -452,7 +419,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
             value={rightPanelMode === 'add' ? newCategory.category_name : selectedCategory?.category_name || ''}
             onChange={handleInputChange}
             required
-            disabled={hasProducts} // Disable name field if category has products
+            disabled={hasProducts}
           />
         </div>
         
@@ -554,6 +521,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Header with back button */}
         <div className="d-flex align-items-center mb-4">
           <button 
             className="btn p-0 me-3" 
@@ -569,6 +537,7 @@ const CategoryManagement = ({ onBackToInventory }) => {
         </div>
 
         <div className="row">
+          {/* Categories table section */}
           <div className="col-md-8">
             <h5 className="mb-3">Available Categories</h5>
             {loading ? (

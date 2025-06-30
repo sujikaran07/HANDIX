@@ -6,7 +6,7 @@ const Inventory = require('../../models/inventoryModel');
 const ProductImage = require('../../models/productImageModel');
 const { Employee } = require('../../models/employeeModel');
 
-// Get orders assigned to a specific artisan
+// Get orders assigned to a specific artisan (by name, flexible search)
 const getAssignedOrders = async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -146,7 +146,7 @@ const getAssignedOrders = async (req, res) => {
   }
 };
 
-// Update the status of an order
+// Update the status of an order and notify customer
 const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;

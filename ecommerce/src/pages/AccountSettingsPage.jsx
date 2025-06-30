@@ -10,8 +10,8 @@ const AccountSettingsPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Parse the URL query parameters to set the initial active tab
+
+  // Set initial tab from URL query
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tabParam = params.get('tab');
@@ -19,8 +19,8 @@ const AccountSettingsPage = () => {
       setActiveTab(tabParam);
     }
   }, [location]);
-  
-  // Get user data from localStorage
+
+  // User data state
   const [userData, setUserData] = useState({
     name: '',
     firstName: '',
@@ -29,8 +29,8 @@ const AccountSettingsPage = () => {
     phone: '',
     c_id: ''
   });
-  
-  // Load user data
+
+  // Load user data from localStorage
   useEffect(() => {
     const loadUserData = async () => {
       setIsLoading(true);
@@ -52,10 +52,9 @@ const AccountSettingsPage = () => {
         setIsLoading(false);
       }
     };
-    
     loadUserData();
   }, []);
-  
+
   // Use actual user data for profile form
   const [profileForm, setProfileForm] = useState({
     firstName: '',
@@ -63,7 +62,7 @@ const AccountSettingsPage = () => {
     email: '',
     phone: ''
   });
-  
+
   // Update form when userData changes
   useEffect(() => {
     setProfileForm({
@@ -73,24 +72,24 @@ const AccountSettingsPage = () => {
       phone: userData.phone
     });
   }, [userData]);
-  
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   const [passwordErrors, setPasswordErrors] = useState({});
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  
+
   // Add state for password visibility
   const [showPasswords, setShowPasswords] = useState({
     currentPassword: false,
     newPassword: false,
     confirmPassword: false
   });
-  
+
   // Toggle password visibility function
   const togglePasswordVisibility = (field) => {
     setShowPasswords(prev => ({
@@ -98,7 +97,7 @@ const AccountSettingsPage = () => {
       [field]: !prev[field]
     }));
   };
-  
+
   // Initialize notification preferences state - FIXING DUPLICATE DECLARATION
   const [notificationPrefs, setNotificationPrefs] = useState({
     orders: true,
@@ -106,17 +105,17 @@ const AccountSettingsPage = () => {
     email: true,
     newsletter: true
   });
-  
+
   // Add state for notification messages
   const [notificationSuccess, setNotificationSuccess] = useState('');
   const [notificationError, setNotificationError] = useState('');
-  
+
   // Add privacy settings state
   const [privacySettings, setPrivacySettings] = useState({
     analytics: true,
     marketing: false
   });
-  
+
   // Add state for privacy settings messages
   const [privacySuccess, setPrivacySuccess] = useState('');
   const [privacyError, setPrivacyError] = useState('');
@@ -125,51 +124,23 @@ const AccountSettingsPage = () => {
   const handleSaveNotifications = async () => {
     setNotificationSuccess('');
     setNotificationError('');
-    
     try {
-      // Get token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         setNotificationError('You must be logged in to update notification preferences');
         return;
       }
-      
-      // In a real application, you would save these preferences to the backend
-      // For now, we'll just show a success message
-      
-      // Determine API URL (use import.meta.env for Vite)
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-      
-      // Placeholder for API implementation - would be something like:
-      /*
-      await axios.post(
-        `${baseUrl}/api/customers/${userData.c_id}/notifications`, 
-        notificationPrefs,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      */
-      
-      // For now, just simulate a successful API call
+      // Simulate API call and save to localStorage
       await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Store preferences in localStorage for persistence
       localStorage.setItem('notificationPrefs', JSON.stringify(notificationPrefs));
-      
-      // Show success message
       setNotificationSuccess('Notification preferences saved successfully');
-      
-      // Log for debugging
       console.log('Saved notification preferences:', notificationPrefs);
     } catch (error) {
       console.error('Error saving notification preferences:', error);
       setNotificationError('Failed to save notification preferences. Please try again.');
     }
   };
-  
+
   // Handle privacy setting changes
   const handlePrivacyChange = (setting) => {
     setPrivacySettings(prev => ({
@@ -177,37 +148,27 @@ const AccountSettingsPage = () => {
       [setting]: !prev[setting]
     }));
   };
-  
+
   // Handle saving privacy settings
   const handleSavePrivacySettings = async () => {
     setPrivacySuccess('');
     setPrivacyError('');
-    
     try {
-      // Get token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         setPrivacyError('You must be logged in to update privacy settings');
         return;
       }
-      
-      // In a real application, you would save these settings to the backend
-      // For now, we'll just show a success message
-      
-      // Store preferences in localStorage for persistence
+      // Simulate API call and save to localStorage
       localStorage.setItem('privacySettings', JSON.stringify(privacySettings));
-      
-      // Show success message
       setPrivacySuccess('Privacy settings updated successfully');
-      
-      // Log for debugging
       console.log('Saved privacy settings:', privacySettings);
     } catch (error) {
       console.error('Error saving privacy settings:', error);
       setPrivacyError('Failed to save privacy settings. Please try again.');
     }
   };
-  
+
   // Load saved privacy settings from localStorage
   useEffect(() => {
     try {
@@ -219,7 +180,7 @@ const AccountSettingsPage = () => {
       console.error('Error loading privacy settings:', error);
     }
   }, []);
-  
+
   // Load saved notification preferences from localStorage
   useEffect(() => {
     try {
@@ -231,21 +192,21 @@ const AccountSettingsPage = () => {
       console.error('Error loading notification preferences:', error);
     }
   }, []);
-  
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Get token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('You must be logged in to update your profile');
       }
-      
+
       // Determine API URL (use import.meta.env for Vite)
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       console.log('Updating profile using API:', `${baseUrl}/api/customers/${userData.c_id}`);
-      
+
       // Update user profile
       const response = await axios.put(
         `${baseUrl}/api/customers/${userData.c_id}`,
@@ -261,9 +222,9 @@ const AccountSettingsPage = () => {
           }
         }
       );
-      
+
       console.log('Profile update response:', response.data);
-      
+
       // Update localStorage with new data
       const updatedUser = {
         ...JSON.parse(localStorage.getItem('user')),
@@ -271,17 +232,17 @@ const AccountSettingsPage = () => {
         lastName: profileForm.lastName,
         phone: profileForm.phone
       };
-      
+
       localStorage.setItem('user', JSON.stringify(updatedUser));
-      
+
       alert('Profile updated successfully!');
-      
+
     } catch (error) {
       console.error('Profile update error:', error);
       alert('Failed to update profile. Please try again.');
     }
   };
-  
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordForm({
@@ -296,54 +257,54 @@ const AccountSettingsPage = () => {
       });
     }
   };
-  
+
   const validatePasswordForm = () => {
     const errors = {};
-    
+
     if (!passwordForm.currentPassword) {
       errors.currentPassword = 'Current password is required';
     }
-    
+
     if (!passwordForm.newPassword) {
       errors.newPassword = 'New password is required';
     } else if (passwordForm.newPassword.length < 8) {
       errors.newPassword = 'Password must be at least 8 characters';
     }
-    
+
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       errors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setPasswordSuccess(false);
-    
+
     // Validate passwords
     if (!validatePasswordForm()) {
       return;
     }
-    
+
     setIsChangingPassword(true);
-    
+
     try {
       // Get token from localStorage
       const token = localStorage.getItem('token');
       if (!token) {
         throw new Error('You must be logged in to change your password');
       }
-      
+
       // Get user data for email
       const userData = JSON.parse(localStorage.getItem('user'));
       const email = userData?.email;
-      
+
       // Determine API URL (use import.meta.env for Vite)
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       console.log('Changing password using API:', `${baseUrl}/api/auth/change-password`);
-      
+
       const response = await axios.post(
         `${baseUrl}/api/auth/change-password`,
         {
@@ -358,24 +319,24 @@ const AccountSettingsPage = () => {
           }
         }
       );
-      
+
       console.log('Password change response:', response.data);
-      
+
       // Clear the form
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
         confirmPassword: ''
       });
-      
+
       // Show success message
       setPasswordSuccess(true);
-      
+
       alert('Password changed successfully');
-      
+
     } catch (error) {
       console.error('Password change error:', error);
-      
+
       // Handle specific errors
       if (error.response) {
         if (error.response.status === 401) {
@@ -398,32 +359,32 @@ const AccountSettingsPage = () => {
   // Initialize addresses state
   const [addresses, setAddresses] = useState([]);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
-  
+
   // Initialize payment methods state - without mock data
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
-  
+
   // Better error handling for address operations
   const [addressError, setAddressError] = useState('');
   const [addressSuccess, setAddressSuccess] = useState('');
-  
+
   // Better function to fetch addresses with proper error handling
   const fetchAddresses = async () => {
     if (!userData.c_id) return;
-    
+
     setIsAddressLoading(true);
     setAddressError('');
-    
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.get(`${baseUrl}/api/addresses/customer/${userData.c_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       console.log('Fetched addresses:', response.data);
       setAddresses(response.data || []);
     } catch (error) {
@@ -440,7 +401,7 @@ const AccountSettingsPage = () => {
       fetchAddresses();
     }
   }, [activeTab, userData.c_id]);
-  
+
   // Load payment methods from API - modified to use real API when ready
   useEffect(() => {
     const fetchPaymentMethods = async () => {
@@ -450,11 +411,11 @@ const AccountSettingsPage = () => {
           // This will be replaced with real API call when payment API is ready
           const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
           const token = localStorage.getItem('token');
-          
+
           // Placeholder for future API implementation
           // const response = await axios.get(`${baseUrl}/api/payment-methods/customer/${userData.c_id}`);
           // setPaymentMethods(response.data || []);
-          
+
           // For now, just set empty array until API is implemented
           setPaymentMethods([]);
           setTimeout(() => {
@@ -467,7 +428,7 @@ const AccountSettingsPage = () => {
         }
       }
     };
-    
+
     fetchPaymentMethods();
   }, [activeTab, userData.c_id]);
 
@@ -481,10 +442,10 @@ const AccountSettingsPage = () => {
     country: 'Sri Lanka',
     addressType: 'shipping'
   });
-  
+
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [currentEditAddress, setCurrentEditAddress] = useState(null);
-  
+
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
     setNewAddress(prevState => ({
@@ -492,7 +453,7 @@ const AccountSettingsPage = () => {
       [name]: value
     }));
   };
-  
+
   const handleEditAddress = (address) => {
     setCurrentEditAddress(address);
     setNewAddress({
@@ -510,33 +471,33 @@ const AccountSettingsPage = () => {
   // Enhanced address submission with better feedback
   const handleAddressSubmit = async (e) => {
     e.preventDefault();
-    
+
     setAddressError('');
     setAddressSuccess('');
-    
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
-      
+
       if (!token) {
         setAddressError('You must be logged in to perform this action');
         return;
       }
-      
+
       const addressData = {
         ...newAddress,
         c_id: userData.c_id
       };
-      
+
       console.log('Updating address with data:', addressData);
-      
+
       let response;
-      
+
       if (currentEditAddress) {
         // Update existing address - Fix the API endpoint
         const addressId = currentEditAddress.address_id;
         console.log(`Updating address with ID ${addressId} at: ${baseUrl}/api/addresses/${addressId}`);
-        
+
         response = await axios.put(`${baseUrl}/api/addresses/${addressId}`, addressData, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -547,7 +508,7 @@ const AccountSettingsPage = () => {
       } else {
         // Create new address
         console.log(`Creating new address at: ${baseUrl}/api/addresses`);
-        
+
         response = await axios.post(`${baseUrl}/api/addresses`, addressData, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -556,12 +517,12 @@ const AccountSettingsPage = () => {
         });
         setAddressSuccess('Address added successfully');
       }
-      
+
       console.log('Address API response:', response.data);
-      
+
       // Refresh the addresses list
       await fetchAddresses();
-      
+
       // Reset form
       setNewAddress({
         name: '',
@@ -572,18 +533,18 @@ const AccountSettingsPage = () => {
         country: 'Sri Lanka',
         addressType: 'shipping'
       });
-      
+
       setShowAddressForm(false);
       setCurrentEditAddress(null);
     } catch (error) {
       console.error('Error saving address:', error);
       console.error('Error response:', error.response?.data);
       console.error('Error status:', error.response?.status);
-      
+
       // More informative error message
       const errorMsg = error.response?.data?.message 
         || `Failed to ${currentEditAddress ? 'update' : 'save'} address (${error.response?.status || 'unknown error'}). Please try again.`;
-      
+
       setAddressError(errorMsg);
     }
   };
@@ -591,22 +552,22 @@ const AccountSettingsPage = () => {
   // Enhanced delete address function with confirmation
   const handleDeleteAddress = async (addressId, addressName) => {
     if (!confirm(`Are you sure you want to delete the address "${addressName || 'selected'}"?`)) return;
-    
+
     setAddressError('');
     setAddressSuccess('');
-    
+
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
-      
+
       console.log(`Deleting address with ID ${addressId} at: ${baseUrl}/api/addresses/${addressId}`);
-      
+
       await axios.delete(`${baseUrl}/api/addresses/${addressId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       // Remove from state
       setAddresses(addresses.filter(addr => addr.address_id !== addressId));
       setAddressSuccess('Address deleted successfully');
@@ -615,25 +576,25 @@ const AccountSettingsPage = () => {
       setAddressError('Failed to delete address. Please try again.');
     }
   };
-  
+
   // Enhanced set default address functionality
   const handleSetDefaultAddress = async (addressId) => {
     try {
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const token = localStorage.getItem('token');
-      
+
       await axios.put(`${baseUrl}/api/addresses/${addressId}/default`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       // Update local state to reflect the change
       setAddresses(addresses.map(addr => ({
         ...addr,
         isDefault: addr.address_id === addressId
       })));
-      
+
       setAddressSuccess('Default address updated');
     } catch (error) {
       console.error('Error setting default address:', error);
@@ -650,12 +611,12 @@ const AccountSettingsPage = () => {
     cvv: '',
     isDefault: false
   });
-  
+
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [currentEditPaymentMethod, setCurrentEditPaymentMethod] = useState(null);
   const [paymentError, setPaymentError] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState('');
-  
+
   // Handle payment form change
   const handlePaymentChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -664,25 +625,25 @@ const AccountSettingsPage = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
   };
-  
+
   // Credit card number formatting (add spaces every 4 digits)
   const formatCardNumber = (value) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     const matches = v.match(/\d{4,16}/g);
     const match = matches && matches[0] || '';
     const parts = [];
-    
+
     for (let i = 0, len = match.length; i < len; i += 4) {
       parts.push(match.substring(i, i + 4));
     }
-    
+
     if (parts.length) {
       return parts.join(' ');
     } else {
       return value;
     }
   };
-  
+
   // Handle credit card number input with formatting
   const handleCardNumberChange = (e) => {
     const formattedValue = formatCardNumber(e.target.value);
@@ -691,39 +652,39 @@ const AccountSettingsPage = () => {
       cardNumber: formattedValue
     }));
   };
-  
+
   // Payment method submission placeholder
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    
+
     setPaymentError('');
     setPaymentSuccess('');
-    
+
     // Basic validation
     if (newPaymentMethod.cardNumber.replace(/\s/g, '').length < 16) {
       setPaymentError('Please enter a valid 16-digit card number');
       return;
     }
-    
+
     if (!newPaymentMethod.cardName.trim()) {
       setPaymentError('Please enter the cardholder name');
       return;
     }
-    
+
     if (!newPaymentMethod.expiryMonth || !newPaymentMethod.expiryYear) {
       setPaymentError('Please enter the card expiry date');
       return;
     }
-    
+
     if (!newPaymentMethod.cvv || newPaymentMethod.cvv.length < 3) {
       setPaymentError('Please enter a valid CVV');
       return;
     }
-    
+
     // In a real system, we'd send this to the payment API
     // For now, just show a message that this is coming soon
     setPaymentSuccess('Payment method successfully added!');
-    
+
     // Reset form and close it
     setNewPaymentMethod({
       cardNumber: '',
@@ -733,15 +694,15 @@ const AccountSettingsPage = () => {
       cvv: '',
       isDefault: false
     });
-    
+
     setShowPaymentForm(false);
     setCurrentEditPaymentMethod(null);
-    
+
     // For demo purposes, update payment methods list
     const last4 = newPaymentMethod.cardNumber.replace(/\s/g, '').slice(-4);
     const cardType = getCardType(newPaymentMethod.cardNumber);
     const expiry = `${newPaymentMethod.expiryMonth}/${newPaymentMethod.expiryYear.slice(-2)}`;
-    
+
     const newMethod = {
       id: `card-${Date.now()}`,
       type: cardType,
@@ -749,7 +710,7 @@ const AccountSettingsPage = () => {
       expiry: expiry,
       isDefault: newPaymentMethod.isDefault
     };
-    
+
     setPaymentMethods(prev => {
       // If setting this as default, remove default from others
       if (newMethod.isDefault) {
@@ -761,11 +722,11 @@ const AccountSettingsPage = () => {
       return [...prev, newMethod];
     });
   };
-  
+
   // Determine card type based on first digit
   const getCardType = (cardNumber) => {
     const firstDigit = cardNumber.replace(/\s/g, '').charAt(0);
-    
+
     switch (firstDigit) {
       case '4':
         return 'Visa';
@@ -779,15 +740,15 @@ const AccountSettingsPage = () => {
         return 'Card';
     }
   };
-  
+
   // Handle delete payment method
   const handleDeletePayment = (id) => {
     if (!confirm('Are you sure you want to delete this payment method?')) return;
-    
+
     setPaymentMethods(paymentMethods.filter(method => method.id !== id));
     setPaymentSuccess('Payment method removed successfully');
   };
-  
+
   // Handle set default payment method
   const handleSetDefaultPayment = (id) => {
     setPaymentMethods(paymentMethods.map(method => ({
@@ -1768,6 +1729,7 @@ const AccountSettingsPage = () => {
   };
 
   if (isLoading) {
+    // Loading spinner
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -1781,18 +1743,16 @@ const AccountSettingsPage = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow bg-gray-50 py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
-          
           <div className="bg-white shadow-sm rounded-lg overflow-hidden">
             <div className="grid md:grid-cols-4">
-              {/* Settings Sidebar */}
+              {/* Sidebar navigation for settings */}
               <div className="md:col-span-1 border-r">
                 <nav>
                   <button
@@ -1840,7 +1800,7 @@ const AccountSettingsPage = () => {
                 </nav>
               </div>
               
-              {/* Settings Content */}
+              {/* Main settings content */}
               <div className="md:col-span-3 p-6">
                 {renderTabContent()}
               </div>
@@ -1848,7 +1808,6 @@ const AccountSettingsPage = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

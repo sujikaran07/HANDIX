@@ -2,14 +2,10 @@
  * Helper functions for artisan report charts
  */
 
-/**
- * Get report colors based on report type
- * @param {string} reportType - Type of report (orders, products, performance)
- * @returns {Object} Object with color properties
- */
+// Get color schemes for different report types
 export const getArtisanReportColors = (reportType) => {
   switch (reportType) {
-    case 'orders':
+    case 'orders':bhgjgjfgjhtjfhgggfgdgd
       return {
         primary: '#0d6efd',
         secondary: '#6c757d',
@@ -64,11 +60,7 @@ export const getArtisanReportColors = (reportType) => {
   }
 };
 
-/**
- * Get chart configuration based on report type
- * @param {string} reportType - Type of report
- * @returns {Object} Chart configuration
- */
+// Get chart configuration based on report type
 export const getArtisanChartConfig = (reportType) => {
   const baseConfig = {
     showBarChart: true,
@@ -106,12 +98,7 @@ export const getArtisanChartConfig = (reportType) => {
   }
 };
 
-/**
- * Prepare data for a bar chart based on report type
- * @param {string} reportType - Type of report
- * @param {Array} data - The report data
- * @returns {Object} Prepared bar chart data
- */
+// Prepare bar chart data with sorting and aggregation
 export const prepareArtisanBarChartData = (reportType, data) => {
   const result = {
     labels: [],
@@ -126,7 +113,7 @@ export const prepareArtisanBarChartData = (reportType, data) => {
 
   switch (reportType) {
     case 'orders': {
-      // Group by product name and sum total amount
+      // Group orders by product and sum total amounts
       const ordersByProduct = {};
       data.forEach(order => {
         if (!ordersByProduct[order.product_name]) {
@@ -135,10 +122,10 @@ export const prepareArtisanBarChartData = (reportType, data) => {
         ordersByProduct[order.product_name] += parseFloat(order.total_amount || 0);
       });
 
-      // Convert to arrays and sort by value (descending)
+      // Sort by value and take top 7 products
       const sortedProducts = Object.entries(ordersByProduct)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 7); // Take top 7
+        .slice(0, 7);
 
       result.labels = sortedProducts.map(([name]) => name);
       result.values = sortedProducts.map(([_, value]) => value);
@@ -147,7 +134,7 @@ export const prepareArtisanBarChartData = (reportType, data) => {
       break;
     }
     case 'products': {
-      // Sort by stock level (descending)
+      // Sort products by stock level
       const sortedProducts = [...data]
         .sort((a, b) => b.stock_level - a.stock_level)
         .slice(0, 7);
@@ -172,12 +159,7 @@ export const prepareArtisanBarChartData = (reportType, data) => {
   return result;
 };
 
-/**
- * Prepare data for a pie chart based on report type
- * @param {string} reportType - Type of report
- * @param {Array} data - The report data
- * @returns {Array} Prepared pie chart data
- */
+// Prepare pie chart data with percentage calculations
 export const prepareArtisanPieChartData = (reportType, data) => {
   const result = [];
 
@@ -187,7 +169,7 @@ export const prepareArtisanPieChartData = (reportType, data) => {
 
   switch (reportType) {
     case 'orders': {
-      // Group by status
+      // Group orders by status and calculate percentages
       const statusCounts = {};
       let totalOrders = 0;
 
@@ -199,7 +181,6 @@ export const prepareArtisanPieChartData = (reportType, data) => {
         totalOrders++;
       });
 
-      // Convert to array format for Chart.js
       Object.entries(statusCounts).forEach(([status, count]) => {
         result.push({
           label: status,
@@ -210,7 +191,7 @@ export const prepareArtisanPieChartData = (reportType, data) => {
       break;
     }
     case 'products': {
-      // Group by category
+      // Group products by category
       const categoryCounts = {};
       let totalProducts = 0;
 
@@ -222,7 +203,6 @@ export const prepareArtisanPieChartData = (reportType, data) => {
         totalProducts++;
       });
 
-      // Convert to array format for Chart.js
       Object.entries(categoryCounts).forEach(([category, count]) => {
         result.push({
           label: category || 'Uncategorized',
@@ -233,7 +213,7 @@ export const prepareArtisanPieChartData = (reportType, data) => {
       break;
     }
     case 'performance': {
-      // Performance metrics distribution
+      // Performance delivery metrics distribution
       const metrics = {
         onTime: 0,
         late: 0,
@@ -274,12 +254,7 @@ export const prepareArtisanPieChartData = (reportType, data) => {
   return result;
 };
 
-/**
- * Prepare data for a line chart based on report type
- * @param {string} reportType - Type of report
- * @param {Object} reportData - The report data object
- * @returns {Object} Prepared line chart data
- */
+// Prepare line chart data with trend analysis
 export const prepareArtisanLineChartData = (reportType, reportData) => {
   const result = {
     labels: [],
@@ -296,10 +271,9 @@ export const prepareArtisanLineChartData = (reportType, reportData) => {
 
   switch (reportType) {
     case 'orders': {
-      // Group by date
+      // Group sales by date for trend analysis
       const salesByDate = {};
       
-      // First, collect all dates
       data.forEach(order => {
         if (order.date) {
           const dateStr = formatDate(order.date);
@@ -310,7 +284,7 @@ export const prepareArtisanLineChartData = (reportType, reportData) => {
         }
       });
       
-      // Sort dates chronologically
+      // Sort chronologically
       const sortedDates = Object.keys(salesByDate).sort((a, b) => new Date(a) - new Date(b));
       
       result.labels = sortedDates;
@@ -320,7 +294,7 @@ export const prepareArtisanLineChartData = (reportType, reportData) => {
       break;
     }
     case 'products': {
-      // Use mock sales_data field from product data
+      // Aggregate product sales data over time
       const aggregatedSales = {};
       
       data.forEach(product => {
@@ -343,7 +317,7 @@ export const prepareArtisanLineChartData = (reportType, reportData) => {
       break;
     }
     case 'performance': {
-      // Use period and rating for line chart
+      // Performance rating trend over time
       const sortedData = [...data].sort((a, b) => {
         return new Date(a.period) - new Date(b.period);
       });

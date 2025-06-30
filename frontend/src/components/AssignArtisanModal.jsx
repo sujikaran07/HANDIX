@@ -3,6 +3,7 @@ import axios from 'axios';
 import Pagination from './Pagination';
 
 const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => {
+  // State management for artisan assignment
   const [artisans, setArtisans] = useState([]);
   const [selectedArtisan, setSelectedArtisan] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,42 +19,43 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       fetchOrderDetails();
     }
   }, [show, orderId]);
+
+  // Fetch available artisans from database
   const fetchArtisans = async () => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/artisans');
-      console.log("Available artisans:", response.data);
       
-      // Make sure we process the response correctly regardless of whether it's an array or has a data property
+      // Process response data regardless of structure
       const artisanData = Array.isArray(response.data) ? response.data : [];
       
-      // Process each artisan to normalize the data structure
+      // Normalize artisan data structure
       const processedArtisans = artisanData.map(artisan => ({
         ...artisan,
         availability: artisan.availability || 'Available',
         ongoingOrders: artisan.ongoingOrders || '0 Orders'
       }));
       
-      console.log("Processed artisans:", processedArtisans);
       setArtisans(processedArtisans);
       setError(null);
     } catch (error) {
-      console.error("Failed to fetch artisans:", error);
       setError("Could not load artisans. Please try again later.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Check if order is customized to update status accordingly
   const fetchOrderDetails = async () => {
     try {
       const response = await axios.get(`http://localhost:5000/api/orders/${orderId}`);
       setIsCustomized(response.data.customized === 'Yes');
-      console.log("Order is customized:", response.data.customized === 'Yes');
     } catch (error) {
       console.error("Failed to fetch order details:", error);
     }
   };
+
+  // Assign selected artisan to the order
   const handleAssign = async () => {
     if (!selectedArtisan) {
       setError("Please select an artisan");
@@ -65,29 +67,24 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       
       // Find the selected artisan object
       const artisan = artisans.find(a => a.id === selectedArtisan);
-      console.log("Selected artisan data:", artisan);
       
       if (!artisan) {
         throw new Error('Selected artisan not found');
       }
       
-      // For customized orders, we'll explicitly set the status to Review
+      // Prepare assignment payload
       const payload = {
         assignedArtisan: artisan.name,
         assignedArtisanId: artisan.id
       };
       
+      // Set status to Review for customized orders
       if (isCustomized) {
         payload.orderStatus = 'Review';
-        console.log("Setting customized order status to Review");
       }
       
-      console.log("Sending update payload:", payload);
-      
-      // Make the API call to assign the artisan
+      // Make API call to assign artisan
       const response = await axios.put(`http://localhost:5000/api/orders/${orderId}`, payload);
-      
-      console.log("Artisan assigned:", response.data);
       
       if (isCustomized) {
         alert(`Artisan "${artisan.name}" has been assigned. The order status has been updated to "Review".`);
@@ -98,14 +95,13 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
       onAssignSuccess();
       handleClose();
     } catch (error) {
-      console.error("Failed to assign artisan:", error);
       setError("Failed to assign artisan. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Calculate pagination
+  // Pagination calculations
   const indexOfLastArtisan = currentPage * artisansPerPage;
   const indexOfFirstArtisan = indexOfLastArtisan - artisansPerPage;
   const currentArtisans = artisans.slice(indexOfFirstArtisan, indexOfLastArtisan);
@@ -128,6 +124,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
         flexDirection: 'column'
       }}>
         <div className="card-body p-4 d-flex flex-column">
+          {/* Header with back button */}
           <div className="d-flex justify-content-between align-items-center mb-4">
             <div className="d-flex align-items-center">
               <div 
@@ -168,6 +165,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                 </div>
               )}
               
+              {/* Special notice for customized orders */}
               {isCustomized && (
                 <div className="col-12 mb-3">
                   <div className="alert alert-info">
@@ -176,7 +174,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                 </div>
               )}
               
-              {/* Left Section - Artisans Table */}
+              {/* Artisans table section */}
               <div className="col-md-7">
                 <div className="card border-0 shadow-sm h-100">
                   <div className="card-header bg-light py-2 d-flex justify-content-between align-items-center">
@@ -199,7 +197,8 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                             currentArtisans.map(artisan => (
                               <tr 
                                 key={artisan.id} 
-                                className={selectedArtisan === artisan.id ? 'table-active' : ''}                                style={{
+                                className={selectedArtisan === artisan.id ? 'table-active' : ''}
+                                style={{
                                   cursor: artisan.availability === 'Busy' ? 'default' : 'pointer',
                                   opacity: artisan.availability === 'Busy' ? 0.7 : 1
                                 }}
@@ -208,7 +207,8 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                                     setSelectedArtisan(artisan.id);
                                   }
                                 }}
-                              >                                <td>{artisan.id}</td>
+                              >
+                                <td>{artisan.id}</td>
                                 <td>{artisan.name}</td>
                                 <td>{typeof artisan.ongoingOrders === 'string' ? artisan.ongoingOrders : `${artisan.ongoingOrders} Orders`}</td>
                                 <td>
@@ -227,7 +227,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                       </table>
                     </div>
                     
-                    {/* Fixed position pagination */}
+                    {/* Pagination section */}
                     <div className="border-top mt-auto py-3 px-3 bg-light" style={{ position: 'sticky', bottom: 0, marginTop: '10px' }}>
                       {artisans.length > artisansPerPage ? (
                         <Pagination 
@@ -237,16 +237,16 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                           size="sm"
                         />
                       ) : (
-                        <div style={{ height: '38px' }}></div> // Placeholder to maintain consistent spacing
+                        <div style={{ height: '38px' }}></div>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Right Section - Selection and Actions */}
+              {/* Selection and information section */}
               <div className="col-md-5">
-                {/* Artisan selection dropdown - reduced size */}
+                {/* Artisan selection dropdown */}
                 <div className="card border-0 shadow-sm mb-3">
                   <div className="card-header bg-light py-2">
                     <h6 className="mb-0" style={{fontSize: "14px"}}>Select Artisan</h6>
@@ -276,7 +276,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
                   </div>
                 </div>
                 
-                {/* Note section - more compact */}
+                {/* Information and notes */}
                 <div className="card border-0 shadow-sm mb-3">
                   <div className="card-header bg-light py-2">
                     <h6 className="mb-0" style={{fontSize: "14px"}}>Information</h6>
@@ -303,6 +303,7 @@ const AssignArtisanModal = ({ show, handleClose, orderId, onAssignSuccess }) => 
             </div>
           )}
           
+          {/* Action buttons */}
           <div className="d-flex justify-content-end mt-4 pt-3 border-top">
             <button 
               className="btn btn-secondary me-2" 

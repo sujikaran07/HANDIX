@@ -5,14 +5,15 @@ import '../styles/admin/AdminSettings.css';
 import axios from 'axios';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+// Component for managing admin profile settings and password changes
 const ManageSettings = ({ onViewSetting }) => {
-  // Add state variables for password
-  // Add state variables for password visibility
+  // Password visibility state management
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordForEdit, setShowPasswordForEdit] = useState(false);
   
+  // Profile data state
   const [profile, setProfile] = useState({
     profilePicture: '',
     firstName: '',
@@ -24,6 +25,7 @@ const ManageSettings = ({ onViewSetting }) => {
     confirmNewPassword: ''
   });
 
+  // UI state management
   const [previewImage, setPreviewImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [passwordForEdit, setPasswordForEdit] = useState('');
@@ -32,21 +34,22 @@ const ManageSettings = ({ onViewSetting }) => {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // Validation error states
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // Fetch user profile data on component mount
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  // Fetch admin profile data from server
   const fetchProfile = async () => {
     try {
       setLoading(true);
       
-      // Use adminToken instead of token
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
@@ -55,7 +58,7 @@ const ManageSettings = ({ onViewSetting }) => {
         return;
       }
       
-      // Ensure admin role before proceeding
+      // Fetch profile data and verify admin role
       try {
         const response = await axios.get('/api/employees/settings/profile', {
           headers: {
@@ -65,9 +68,8 @@ const ManageSettings = ({ onViewSetting }) => {
         
         if (response.data && response.data.success) {
           const userData = response.data.data;
-          console.log('Profile data received:', userData);
           
-          // Ensure user is an admin
+          // Verify admin role authorization
           if (userData.roleId !== 1) {
             setError('You are not authorized to access admin settings.');
             setLoading(false);
@@ -92,7 +94,6 @@ const ManageSettings = ({ onViewSetting }) => {
         }
         setError(null);
       } catch (err) {
-        console.error('Error fetching profile:', err);
         setError('Failed to load profile data. Please try again.');
       }
     } finally {
@@ -100,10 +101,12 @@ const ManageSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Input validation functions
   const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
   const validatePassword = (password) => password.length >= 8;
 
+  // Handle form input changes with validation
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     let filteredValue = value;
@@ -116,18 +119,19 @@ const ManageSettings = ({ onViewSetting }) => {
     setProfile({ ...profile, [name]: filteredValue });
   };
 
+  // Handle profile picture upload
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Preview the image locally
+    // Preview image locally
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewImage(reader.result);
     };
     reader.readAsDataURL(file);
     
-    // Upload the image to the server
+    // Upload to server
     try {
       const formData = new FormData();
       formData.append('profilePicture', file);
@@ -151,7 +155,6 @@ const ManageSettings = ({ onViewSetting }) => {
         setTimeout(() => setMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Error uploading image:', err);
       setError('Failed to upload image. Please try again.');
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -163,12 +166,15 @@ const ManageSettings = ({ onViewSetting }) => {
     fileInputRef.current.click();
   };
 
+  // Handle save changes with validation
   const handleSaveChanges = async () => {
     setFirstNameError('');
     setLastNameError('');
     setPhoneError('');
     setPasswordError('');
     let valid = true;
+    
+    // Validate all form fields
     if (!validateName(profile.firstName)) {
       setFirstNameError('First name can only contain letters and spaces.');
       valid = false;
@@ -187,7 +193,7 @@ const ManageSettings = ({ onViewSetting }) => {
     }
     if (!valid) return;
     
-    // If password fields are filled, validate them first
+    // Handle password change validation
     if (profile.newPassword || profile.confirmNewPassword || profile.currentPassword) {
       if (profile.newPassword !== profile.confirmNewPassword) {
         setError('New passwords do not match');
@@ -201,15 +207,15 @@ const ManageSettings = ({ onViewSetting }) => {
         return;
       }
       
-      // Show password confirmation popup
       setShowPasswordPopup(true);
       return;
     }
     
-    // If only profile info is changed, update without confirmation
+    // Update profile without password confirmation
     await updateProfile();
   };
 
+  // Update profile information
   const updateProfile = async () => {
     try {
       setLoading(true);
@@ -242,6 +248,7 @@ const ManageSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Handle password confirmation for security
   const handleConfirmPassword = async () => {
     if (!passwordForEdit) {
       setError('Please enter your password to confirm changes');
@@ -293,6 +300,7 @@ const ManageSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Remove profile picture
   const handleRemoveProfilePicture = async () => {
     try {
       setLoading(true);
@@ -338,12 +346,14 @@ const ManageSettings = ({ onViewSetting }) => {
     <>
       <div className="container mt-4 manage-settings-container">
         <div className="card p-4 manage-settings-card">
+          {/* Header section */}
           <div className="manage-settings-header d-flex justify-content-between align-items-center mb-3">
             <div className="title-section">
               <h4>Account Settings</h4>
             </div>
           </div>
 
+          {/* Loading spinner */}
           {loading && (
             <div className="text-center my-3">
               <div className="spinner-border text-primary" role="status">
@@ -352,6 +362,7 @@ const ManageSettings = ({ onViewSetting }) => {
             </div>
           )}
 
+          {/* Error and success messages */}
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
@@ -364,6 +375,7 @@ const ManageSettings = ({ onViewSetting }) => {
             </div>
           )}
 
+          {/* Profile information section */}
           <div className="profile-section mb-4">
             <h5>Profile Information</h5>
             <div className="row mb-3">
@@ -505,6 +517,7 @@ const ManageSettings = ({ onViewSetting }) => {
             </div>
           </div>
 
+          {/* Password change section */}
           <div className="password-section mb-4">
             <h5>Password</h5>
             <div className="row mb-3">
@@ -575,12 +588,14 @@ const ManageSettings = ({ onViewSetting }) => {
             </div>
           </div>
 
+          {/* Save button */}
           <div className="d-flex justify-content-end">
             <button className="btn btn-success" onClick={handleSaveChanges} disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
 
+          {/* Password confirmation modal */}
           {showPasswordPopup && (
             <div className="modal password-confirmation-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <div className="modal-dialog">

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import { Card, Row, Col } from 'react-bootstrap';
 
+// Component displaying artisan's product and order summary statistics
 const ProductsTrend = () => {
   const [summary, setSummary] = useState({
     totalProductQuantity: 0,
@@ -12,7 +13,7 @@ const ProductsTrend = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to extract artisan ID from token
+  // Extract artisan ID from JWT token
   const getArtisanIdFromToken = () => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -23,34 +24,31 @@ const ProductsTrend = () => {
       const decoded = jwtDecode(token);
       return decoded.id;
     } catch (error) {
-      console.error('Error decoding token:', error);
       return null;
     }
   };
 
   useEffect(() => {
+    // Fetch artisan dashboard summary data
     const fetchData = async () => {
       try {
         setLoading(true);
 
-        // Get artisan ID from token
         const artisanId = getArtisanIdFromToken();
         
         if (!artisanId) {
           throw new Error('Authentication error. Please log in again.');
         }
         
-        // Set authorization header with token
+        // Set authorization header
         const token = localStorage.getItem('artisanToken');
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         const response = await axios.get(`http://localhost:5000/api/artisan-dashboard/summary/${artisanId}`);
-        console.log('Artisan dashboard summary response:', response.data);
         
-        // Explicitly convert the quantity to a number
+        // Ensure quantity is properly converted to number
         const productQuantity = Number(response.data.totalProductQuantity) || 0;
         
-        // Make sure we're using the right property and it's a number
         const data = {
           ...response.data,
           totalProductQuantity: productQuantity
@@ -59,7 +57,6 @@ const ProductsTrend = () => {
         setSummary(data);        
         setError(null);
       } catch (error) {
-        console.error('Error fetching product summary data:', error);
         setError(error.message || 'Failed to load product data');
       } finally {
         setLoading(false);
@@ -69,6 +66,7 @@ const ProductsTrend = () => {
     fetchData();
   }, []);
 
+  // Loading state
   if (loading) {
     return (
       <div className="text-center my-4">
@@ -80,6 +78,7 @@ const ProductsTrend = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="alert alert-danger my-4">
@@ -95,11 +94,12 @@ const ProductsTrend = () => {
     );
   }
 
-  // Force quantity to be a number with || 0 fallback
+  // Ensure quantity displays as number with fallback
   const displayQuantity = Number(summary.totalProductQuantity) || 0;
 
   return (
     <Row className="mt-4">
+      {/* Total product units card */}
       <Col md={4} className="mb-4">
         <Card className="h-100 shadow-sm">
           <Card.Body className="text-center">
@@ -109,6 +109,8 @@ const ProductsTrend = () => {
           </Card.Body>
         </Card>
       </Col>
+      
+      {/* Active orders card */}
       <Col md={4} className="mb-4">
         <Card className="h-100 shadow-sm">
           <Card.Body className="text-center">
@@ -118,6 +120,8 @@ const ProductsTrend = () => {
           </Card.Body>
         </Card>
       </Col>
+      
+      {/* Completed orders card */}
       <Col md={4} className="mb-4">
         <Card className="h-100 shadow-sm">
           <Card.Body className="text-center">

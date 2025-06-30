@@ -8,6 +8,7 @@ const Category = require('../../models/categoryModel');
 const RestockOrder = require('../../models/restockOrderModel');
 const ProductImage = require('../../models/productImageModel');
 
+// Route: Get all inventory items (approved products only)
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const approvedProducts = await ProductEntry.findAll({
@@ -33,6 +34,7 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get public inventory (for frontend)
 router.get('/public', async (req, res) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5174');
   res.header('Access-Control-Allow-Methods', 'GET');
@@ -84,6 +86,7 @@ router.get('/public', async (req, res) => {
   }
 });
 
+// Route: Get inventory suggestions by search term
 router.get('/suggestions', authMiddleware, async (req, res) => {
   try {
     const { search } = req.query;
@@ -122,6 +125,7 @@ router.get('/suggestions', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get inventory item by product ID (public)
 router.get('/product/:id', async (req, res) => {
   try {
     const productId = req.params.id;
@@ -154,6 +158,7 @@ router.get('/product/:id', async (req, res) => {
   }
 });
 
+// Route: Get inventory item by product ID (protected)
 router.get('/:productId', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -199,6 +204,7 @@ router.get('/:productId', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get product images by product ID
 router.get('/:productId/images', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -222,6 +228,7 @@ router.get('/:productId/images', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get product variations by product ID
 router.get('/:productId/variations', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -245,6 +252,7 @@ router.get('/:productId/variations', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Disable a product in inventory
 router.put('/:productId/disable', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -285,6 +293,7 @@ router.put('/:productId/disable', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Enable a product in inventory
 router.put('/:productId/enable', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -332,6 +341,7 @@ router.put('/:productId/enable', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Restock a product (immediate)
 router.put('/:productId/restock', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -405,6 +415,7 @@ router.put('/:productId/restock', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Submit a restock request for a product
 router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -468,6 +479,7 @@ router.post('/:productId/restock-request', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get restock orders for a product
 router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;
@@ -507,6 +519,7 @@ router.get('/:productId/restock-orders', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Cancel a restock order for a product
 router.put('/:productId/cancel-restock', authMiddleware, async (req, res) => {
   try {
     const { productId } = req.params;

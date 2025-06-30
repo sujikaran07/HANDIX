@@ -1,7 +1,7 @@
 const { Discount } = require('../../models/discountModel');
 const { Customer } = require('../../models/customerModel');
 
-// Get all discounts
+// Get all discounts with customer info
 exports.getAllDiscounts = async (req, res) => {
   try {
     const discounts = await Discount.findAll({
@@ -14,7 +14,7 @@ exports.getAllDiscounts = async (req, res) => {
   }
 };
 
-// Get discount by ID
+// Get discount by ID with customer info
 exports.getDiscountById = async (req, res) => {
   try {
     const discount = await Discount.findByPk(req.params.id, {
@@ -32,7 +32,7 @@ exports.getDiscountById = async (req, res) => {
   }
 };
 
-// Get discounts by customer ID
+// Get all discounts for a specific customer
 exports.getDiscountsByCustomerId = async (req, res) => {
   try {
     const discounts = await Discount.findAll({
@@ -46,7 +46,7 @@ exports.getDiscountsByCustomerId = async (req, res) => {
   }
 };
 
-// Create new discount
+// Create a new discount for a customer
 exports.createDiscount = async (req, res) => {
   try {
     const { c_id, account_type, min_order_value, max_order_value, discount_percent, is_base_discount } = req.body;
@@ -73,7 +73,7 @@ exports.createDiscount = async (req, res) => {
   }
 };
 
-// Update discount
+// Update an existing discount
 exports.updateDiscount = async (req, res) => {
   try {
     const { min_order_value, max_order_value, discount_percent, is_base_discount } = req.body;
@@ -97,7 +97,7 @@ exports.updateDiscount = async (req, res) => {
   }
 };
 
-// Delete discount
+// Delete a discount by ID
 exports.deleteDiscount = async (req, res) => {
   try {
     const discount = await Discount.findByPk(req.params.id);

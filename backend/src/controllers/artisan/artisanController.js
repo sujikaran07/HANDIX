@@ -3,20 +3,16 @@ const { Order } = require('../../models/orderModel');
 const { Customer } = require('../../models/customerModel');
 const { Sequelize, Op } = require('sequelize');
 
-// Get all artisans (employees with roleId = 2)
+// Get all artisans and their workload/availability
 const getAllArtisans = async (req, res) => {
   try {
-    console.log('Fetching all artisans with role = 2');
-    
     // Find employees with role ID 2 (Artisan)
     const artisans = await Employee.findAll({
       where: {
-        roleId: 2  // Correct roleId for Artisan
+        roleId: 2
       },
       attributes: ['eId', 'firstName', 'lastName', 'email', 'phone']
     });
-    
-    console.log(`Found ${artisans.length} artisans`);
     
     // For each artisan, get their order info
     const artisansWithOrderInfo = await Promise.all(artisans.map(async (artisan) => {
@@ -161,8 +157,8 @@ const getAllArtisans = async (req, res) => {
           availability: availability,
           canAssign: availability === 'Available',
           actions: {
-            viewDetails: true,  // Always allow viewing details
-            assignOrder: availability === 'Available' // Only allow assigning if available
+            viewDetails: true,
+            assignOrder: availability === 'Available'
           }
         };
       } catch (err) {
@@ -180,7 +176,6 @@ const getAllArtisans = async (req, res) => {
       }
     }));
     
-    console.log('Returning artisans with order info');
     res.status(200).json(artisansWithOrderInfo);
   } catch (error) {
     console.error('Error fetching artisans:', error);
@@ -500,3 +495,4 @@ module.exports = {
   assignOrderToArtisan,
   getAssignableOrders
 };
+  

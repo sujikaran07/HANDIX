@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const FAQPage = () => {
-  // FAQ data
+  // FAQ categories and questions
   const faqCategories = [    {
       id: 'ordering',
       title: 'Ordering & Payment',
@@ -94,10 +94,10 @@ const FAQPage = () => {
     }
   ];
 
-  // State to track which FAQ is expanded
+  // State for expanded FAQ items
   const [expandedFaqs, setExpandedFaqs] = useState({});
 
-  // Toggle FAQ expansion
+  // Toggle expand/collapse for FAQ
   const toggleFaq = (categoryId, faqId) => {
     setExpandedFaqs(prev => {
       const key = `${categoryId}-${faqId}`;
@@ -111,29 +111,27 @@ const FAQPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-8">Frequently Asked Questions</h1>
-              <p className="text-gray-700 mb-8">
+            <p className="text-gray-700 mb-8">
               Find answers to the most common questions about our products, ordering process, shipping, and more.
               For detailed information on shipping, payment, refund policies and other terms, please visit our 
               <a href="/policies" className="text-primary hover:underline mx-1">Terms & Policies</a> page.
               If you can't find what you're looking for, please don't hesitate to <a href="/contact" className="text-primary hover:underline">contact us</a>.
             </p>
-            
+            {/* FAQ categories and questions */}
             <div className="space-y-8">
               {faqCategories.map(category => (
                 <div key={category.id} className="bg-white p-6 rounded-lg shadow-sm">
                   <h2 className="text-2xl font-bold mb-6">{category.title}</h2>
-                  
                   <div className="space-y-4">
                     {category.faqs.map(faq => {
                       const isExpanded = expandedFaqs[`${category.id}-${faq.id}`];
-                      
                       return (
                         <div key={faq.id} className="border-b border-gray-200 pb-4 last:border-b-0 last:pb-0">
+                          {/* FAQ question button */}
                           <button 
                             className="w-full text-left flex justify-between items-center py-2"
                             onClick={() => toggleFaq(category.id, faq.id)}
@@ -144,7 +142,7 @@ const FAQPage = () => {
                               <ChevronDown className="text-primary" size={20} />
                             }
                           </button>
-                          
+                          {/* FAQ answer */}
                           {isExpanded && (
                             <div className="mt-2 pl-2 text-gray-600">
                               <p>{faq.answer}</p>
@@ -157,7 +155,7 @@ const FAQPage = () => {
                 </div>
               ))}
             </div>
-            
+            {/* Contact prompt */}
             <div className="mt-12 bg-gray-100 p-6 rounded-lg">
               <h2 className="text-xl font-bold mb-4">Still have questions?</h2>
               <p className="mb-4">
@@ -173,7 +171,6 @@ const FAQPage = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

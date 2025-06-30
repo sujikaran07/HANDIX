@@ -4,6 +4,7 @@ import { Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Checkbox component using Radix UI, styled for app theme
 const Checkbox = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CheckboxPrimitive.Root
@@ -14,6 +15,7 @@ const Checkbox = React.forwardRef(
       )}
       {...props}
     >
+      {/* Checkmark indicator when checked */}
       <CheckboxPrimitive.Indicator
         className={cn("flex items-center justify-center text-current")}
       >

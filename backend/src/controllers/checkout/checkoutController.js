@@ -12,6 +12,7 @@ const ProductEntry = require('../../models/productEntryModel');
 const ProductVariation = require('../../models/productVariationModel');
 const jwt = require('jsonwebtoken');
 
+// Helper to verify JWT token
 function verifyToken(token) {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
@@ -20,6 +21,7 @@ function verifyToken(token) {
   }
 }
 
+// Save shipping address for customer (create or reuse)
 exports.saveShippingAddress = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -168,6 +170,7 @@ exports.saveShippingAddress = async (req, res) => {
   }
 };
 
+// Save billing address for customer (create or reuse)
 exports.saveBillingAddress = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -263,6 +266,7 @@ exports.saveBillingAddress = async (req, res) => {
   }
 };
 
+// Get all addresses for a customer
 exports.getCustomerAddresses = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -310,6 +314,7 @@ exports.getCustomerAddresses = async (req, res) => {
   }
 };
 
+// Place a new order (with inventory, payment, and email logic)
 exports.placeOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -726,6 +731,7 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+// Detect card brand from card number
 function detectCardBrand(cardNumber) {
   const cleanedNumber = cardNumber.replace(/\D/g, '');
   
@@ -737,6 +743,7 @@ function detectCardBrand(cardNumber) {
   return 'Unknown';
 }
 
+// Calculate shipping cost for a district
 function calculateShippingCost(district) {
   const standardRate = 350;
   const highRateDistricts = ['Colombo', 'Gampaha', 'Kalutara'];
@@ -778,6 +785,7 @@ function getBusinessShippingFeeByDistrict(district) {
   return businessDistrictShippingFees[district] || 350;
 }
 
+// Get order details by order ID
 exports.getOrderById = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -811,6 +819,7 @@ exports.getOrderById = async (req, res) => {
   }
 };
 
+// Update payment status for an order and transaction
 exports.updatePaymentStatus = async (req, res) => {
   const sqlTransaction = await sequelize.transaction();
   

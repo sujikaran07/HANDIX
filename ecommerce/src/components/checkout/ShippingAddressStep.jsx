@@ -2,7 +2,7 @@ import React from 'react';
 import { sriLankaDistricts } from '../../data/shippingZones';
 
 const ShippingAddressStep = ({ formData, errors, handleChange }) => {
-  // If shipping address is already loaded, show a helpful message
+  // Check if address fields are already filled (for pre-fill message)
   const hasExistingAddress = formData.address && formData.city && formData.district && formData.postalCode;
   
   return (
@@ -11,6 +11,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
         <h2 className="text-2xl font-bold mb-1">Shipping Address</h2>
         <p className="text-gray-600">Enter your shipping information</p>
         
+        {/* Show pre-fill note if address exists */}
         {hasExistingAddress && (
           <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-md">
             <p className="text-blue-700 text-sm">
@@ -22,6 +23,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
       </div>
       
       <div className="space-y-4">
+        {/* Phone Number */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Phone Number
@@ -44,6 +46,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
           )}
         </div>
         
+        {/* Street Address */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Street Address
@@ -64,6 +67,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* City */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               City
@@ -83,6 +87,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
             )}
           </div>
           
+          {/* District dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               District
@@ -108,6 +113,7 @@ const ShippingAddressStep = ({ formData, errors, handleChange }) => {
           </div>
         </div>
         
+        {/* Postal Code */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Postal Code

@@ -10,3 +10,6 @@ yarn-error.log*
 # Ignore system files
 .DS_Store
 Thumbs.db
+
+# Ignore environment files
+.env

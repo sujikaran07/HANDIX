@@ -5,6 +5,7 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const WriteReviewPage = () => {
+  // State for review form, product, and UI feedback
   const { orderId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,16 +24,17 @@ const WriteReviewPage = () => {
     if (location.state?.product) {
       setProduct(location.state.product);
     } else {
-      // No product info, redirect to purchases or show error
       setProduct(null);
     }
   }, [location, orderId]);
 
+  // Handle rating click
   const handleRatingClick = (value) => {
     setRating(value);
     setErrors({ ...errors, rating: false });
   };
 
+  // Handle photo upload
   const handlePhotoUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length > 0) {
@@ -44,10 +46,12 @@ const WriteReviewPage = () => {
     }
   };
 
+  // Remove photo from upload list
   const removePhoto = (index) => {
     setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Validate review form
   const validateForm = () => {
     const newErrors = {};
     if (rating === 0) newErrors.rating = 'Please select a rating';
@@ -56,6 +60,7 @@ const WriteReviewPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // Submit review
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
@@ -109,6 +114,7 @@ const WriteReviewPage = () => {
   };
 
   if (submitted) {
+    // Show thank you message after submit
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -140,7 +146,7 @@ const WriteReviewPage = () => {
   }
 
   if (!product) {
-    // Redirect or show error if no product context
+    // Show error if no product context
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />

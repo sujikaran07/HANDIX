@@ -1,8 +1,4 @@
-/**
- * Format a number as currency (LKR)
- * @param {number} value - The number to format
- * @returns {string} - Formatted currency string
- */
+// Format a number as currency (LKR)
 const formatCurrency = (value) => {
   if (value === null || value === undefined || isNaN(value)) {
     return 'Rs 0.00';
@@ -23,12 +19,7 @@ const formatCurrency = (value) => {
   })}`;
 };
 
-/**
- * Format a date string to a human-readable format
- * @param {string|Date} dateString - The date to format
- * @param {boolean} includeTime - Whether to include time in the output
- * @returns {string} - Formatted date string
- */
+// Format a date string to a human-readable format
 const formatDate = (dateString, includeTime = false) => {
   if (!dateString) return '';
   
@@ -51,12 +42,7 @@ const formatDate = (dateString, includeTime = false) => {
   }
 };
 
-/**
- * Format a number with appropriate separators
- * @param {number} value - The number to format
- * @param {number} decimals - Number of decimal places
- * @returns {string} - Formatted number
- */
+// Format a number with appropriate separators
 const formatNumber = (value, decimals = 0) => {
   if (value === null || value === undefined || isNaN(value)) {
     return '0';

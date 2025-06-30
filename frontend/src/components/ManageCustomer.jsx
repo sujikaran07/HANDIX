@@ -11,6 +11,7 @@ import CustomerViewForm from './CustomerViewForm';
 import ConfirmationModal from './ui/ConfirmationModal';
 import axios from 'axios';
 
+// Customer management table 
 const ManageCustomer = ({
   customers,
   onViewCustomer,
@@ -25,6 +26,7 @@ const ManageCustomer = ({
   onRejectCustomer, 
   onDeleteCustomer 
 }) => {
+  // States
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,20 +40,23 @@ const ManageCustomer = ({
   const customersPerPage = 7;
   const [customerList, setCustomerList] = useState(customers);
 
-  useEffect(() => { setCustomerList(customers); }, [customers]);
+  useEffect(() => { 
+    setCustomerList(customers); 
+  }, [customers]);
 
-  console.log('Customers passed to ManageCustomer:', customers);
-
+  // Confirm delete modal
   const confirmDelete = (customer) => {
     setCustomerToDelete(customer);
     setShowDeleteModal(true);
   };
 
+  // Cancel delete modal
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setCustomerToDelete(null);
   };
 
+  // Delete customer
   const handleDelete = async () => {
     if (customerToDelete) {
       onDeleteCustomer(customerToDelete.c_id);
@@ -60,45 +65,53 @@ const ManageCustomer = ({
     }
   };
 
+  // Approve customer
   const handleApprove = (id) => {
     onApproveCustomer(id); 
   };
 
+  // Reject customer
   const handleReject = (id) => {
     onRejectCustomer(id); 
   };
 
+  // Edit customer
   const handleEdit = (customer) => {
     onEditCustomer(customer); 
   };
 
+  // Cancel edit form
   const handleCancelEdit = () => {
     setEditingCustomer(null);
   };
 
+  // Save edited customer
   const handleSaveEdit = (updatedCustomer) => {
     onEditCustomer(updatedCustomer);
     setEditingCustomer(null);
   };
 
+  // View customer details
   const handleViewCustomer = (customer) => {
     setViewingCustomer(customer.c_id); 
   };
 
+  // Back to customer table from view
   const handleBackToTable = () => {
     setViewingCustomer(null);
   };
 
+  // Toggle customer status (activate/deactivate)
   const handleToggleStatus = async (customer) => {
     const action = customer.accountStatus === 'Active' || customer.accountStatus === 'Approved' 
       ? 'deactivate' 
       : 'activate';
-    
     setStatusAction(action);
     setSelectedCustomerForStatus(customer);
     setShowStatusModal(true);
   };
 
+  // Confirm status change
   const handleConfirmStatusChange = async () => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -106,10 +119,8 @@ const ManageCustomer = ({
         alert('Authentication required. Please login again.');
         return;
       }
-
       const customer = selectedCustomerForStatus;
       const action = statusAction;
-
       const response = await axios.put(
         `http://localhost:5000/api/customers/${customer.c_id}/status`,
         {
@@ -119,27 +130,25 @@ const ManageCustomer = ({
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       setCustomerList(customerList.map(c => 
         c.c_id === customer.c_id ? response.data : c
       ));
-
       setShowStatusModal(false);
       setSelectedCustomerForStatus(null);
       setStatusAction(null);
-
     } catch (error) {
-      console.error('Error updating status:', error);
       alert('Failed to update customer status. Please try again.');
     }
   };
 
+  // Cancel status change modal
   const handleCancelStatusChange = () => {
     setShowStatusModal(false);
     setSelectedCustomerForStatus(null);
     setStatusAction(null);
   };
 
+  // Filter customers by status and search term
   const filteredCustomers = customerList.filter((customer) => {
     return (
       (filterStatus === 'All' || customer.accountStatus === filterStatus) &&
@@ -149,6 +158,7 @@ const ManageCustomer = ({
     );
   });
 
+  // Pagination logic
   const indexOfLastCustomer = currentPage * customersPerPage;
   const indexOfFirstCustomer = indexOfLastCustomer - customersPerPage;
   const currentCustomers = filteredCustomers.slice(indexOfFirstCustomer, indexOfLastCustomer);
@@ -169,6 +179,7 @@ const ManageCustomer = ({
           <CustomerViewForm c_id={viewingCustomer} onBack={handleBackToTable} />
         ) : (
           <>
+            {/* Header with title and add/export buttons */}
             <div className="manage-customer-header d-flex justify-content-between align-items-center mb-3">
               <div className="title-section">
                 <div className="icon-and-title">
@@ -188,7 +199,7 @@ const ManageCustomer = ({
                 </button>
               </div>
             </div>
-
+            {/* Search and filter controls */}
             <div className="manage-request-header d-flex justify-content-between align-items-center mb-3">
               <h4 className="mb-0">Manage Customers</h4>
               <div className="d-flex align-items-center">
@@ -225,7 +236,7 @@ const ManageCustomer = ({
                 </div>
               </div>
             </div>
-
+            {/* Customer table */}
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
               <table className="table table-bordered table-striped customer-table">
                 <thead>
@@ -322,11 +333,12 @@ const ManageCustomer = ({
                 </tbody>
               </table>
             </div>
-
+            {/* Pagination controls */}
             <Pagination className="employee-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           </>
         )}
       </div>
+      {/* Status confirmation modal */}
       {showStatusModal && (
         <ConfirmationModal
           isOpen={showStatusModal}
@@ -336,6 +348,7 @@ const ManageCustomer = ({
           onCancel={handleCancelStatusChange}
         />
       )}
+      {/* Delete confirmation modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal-content">

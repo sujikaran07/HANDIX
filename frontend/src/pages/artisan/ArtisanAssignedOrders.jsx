@@ -6,18 +6,20 @@ import OrderViewForm from '../../components/artisan/OrderViewForm';
 import OrderUpdateForm from '../../components/artisan/OrderUpdateForm';
 import '../../styles/artisan/ArtisanOrders.css';
 
+// Artisan orders management page with view and update functionality
 const ArtisanAssignedOrders = () => {
+  // State management for order views and artisan data
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [showUpdateOrderForm, setShowUpdateOrderForm] = useState(false);
   const [loggedInArtisan, setLoggedInArtisan] = useState(null);
 
   useEffect(() => {
+    // Fetch logged-in artisan information
     const fetchLoggedInArtisan = async () => {
       try {
         const token = localStorage.getItem('artisanToken');
         if (!token) {
-          console.error('No token found for artisan');
           return;
         }
 
@@ -29,17 +31,13 @@ const ArtisanAssignedOrders = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched logged-in employee data:', data);
           
-          // Save the artisan's full details to match what's in the Order table
+          // Format artisan information for order filtering
           const artisanInfo = {
             id: data.eId,
             name: `${data.firstName} ${data.lastName}`.trim(),
           };
-          console.log('Artisan info for orders lookup:', artisanInfo);
           setLoggedInArtisan(artisanInfo);
-        } else {
-          console.error('Failed to fetch logged-in artisan data');
         }
       } catch (error) {
         console.error('Error fetching logged-in artisan data:', error);
@@ -49,22 +47,26 @@ const ArtisanAssignedOrders = () => {
     fetchLoggedInArtisan();
   }, []);
 
+  // Handle order detail view
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderDetails(true);
   };
 
+  // Handle order status update
   const handleUpdateOrder = (order) => {
     setSelectedOrder(order);
     setShowUpdateOrderForm(true);
   };
 
+  // Return to orders list view
   const handleBackToOrders = () => {
     setShowOrderDetails(false);
     setShowUpdateOrderForm(false);
     setSelectedOrder(null);
   };
 
+  // Submit order status update to server
   const handleOrderStatusUpdate = async (updatedOrder) => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -85,15 +87,13 @@ const ArtisanAssignedOrders = () => {
       if (response.ok) {
         setShowUpdateOrderForm(false);
         setSelectedOrder(null);
-        // Refresh the page to show updated data
+        // Refresh to show updated data
         window.location.reload();
       } else {
         const errorData = await response.json();
-        console.error('Failed to update order status:', errorData);
         alert(`Failed to update order status: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      console.error('Error updating order status:', error);
       alert('An error occurred while updating the order status.');
     }
   };
@@ -103,6 +103,7 @@ const ArtisanAssignedOrders = () => {
       <ArtisanSidebar />
       <div className="artisan-main-content">
         <ArtisanTopBar />
+        {/* Conditional rendering based on view state */}
         {showOrderDetails ? (
           <OrderViewForm order={selectedOrder} onBack={handleBackToOrders} onUpdate={handleUpdateOrder} />
         ) : showUpdateOrderForm ? (

@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Card root container for displaying content in a card layout
 const Card = React.forwardRef(
   ({ className, ...props }, ref) => (
     <div
@@ -16,6 +17,7 @@ const Card = React.forwardRef(
 )
 Card.displayName = "Card"
 
+// Card header section
 const CardHeader = React.forwardRef(
   ({ className, ...props }, ref) => (
     <div
@@ -27,6 +29,7 @@ const CardHeader = React.forwardRef(
 )
 CardHeader.displayName = "CardHeader"
 
+// Card title
 const CardTitle = React.forwardRef(
   ({ className, ...props }, ref) => (
     <h3
@@ -41,6 +44,7 @@ const CardTitle = React.forwardRef(
 )
 CardTitle.displayName = "CardTitle"
 
+// Card description text
 const CardDescription = React.forwardRef(
   ({ className, ...props }, ref) => (
     <p
@@ -52,6 +56,7 @@ const CardDescription = React.forwardRef(
 )
 CardDescription.displayName = "CardDescription"
 
+// Card content area
 const CardContent = React.forwardRef(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
@@ -59,6 +64,7 @@ const CardContent = React.forwardRef(
 )
 CardContent.displayName = "CardContent"
 
+// Card footer section
 const CardFooter = React.forwardRef(
   ({ className, ...props }, ref) => (
     <div

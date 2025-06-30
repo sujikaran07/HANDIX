@@ -9,7 +9,7 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../../config/db');
 const { QueryTypes } = require('sequelize');
 
-// Get sales trend data
+// Route: Get sales trend data for dashboard
 router.get('/sales-trend', async (req, res) => {
   try {
     console.log('Fetching sales trend data (Delivered Orders)...');
@@ -35,7 +35,7 @@ router.get('/sales-trend', async (req, res) => {
   }
 });
 
-// Get dashboard summary data
+// Route: Get dashboard summary data (revenue, orders, customers)
 router.get('/summary', async (req, res) => {
   try {
     console.log('Fetching dashboard summary data...');
@@ -61,12 +61,12 @@ router.get('/summary', async (req, res) => {
     });
     console.log('Total Orders:', totalOrders);
 
-    // Active Customers
+    // Active Customers (customers who made a purchase in the last 30 days)
     const activeCustomers = await Customer.count({
       where: {
         accountStatus: 'Approved',
-        registrationDate: {
-          [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30))
+        c_id: {
+          [Op.in]: sequelize.literal(`(SELECT DISTINCT c_id FROM "Orders" WHERE order_date >= NOW() - INTERVAL '30 days')`)
         }
       }
     });
@@ -93,4 +93,4 @@ router.get('/summary', async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;

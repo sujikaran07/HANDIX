@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 const OrderDetails = ({ order, onBack }) => {
-  // Format date for better readability
+  // Format date string for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -16,10 +16,9 @@ const OrderDetails = ({ order, onBack }) => {
     });
   };
 
-  // Get appropriate badge color based on status
+  // Return Bootstrap badge class based on order status
   const getStatusBadgeClass = (status) => {
     if (!status) return 'bg-secondary';
-    
     const statusLower = status.toLowerCase();
     if (statusLower.includes('pending')) return 'bg-warning';
     if (statusLower.includes('processing')) return 'bg-info';
@@ -27,7 +26,6 @@ const OrderDetails = ({ order, onBack }) => {
     if (statusLower.includes('delivered')) return 'bg-success';
     if (statusLower.includes('cancel')) return 'bg-danger';
     if (statusLower.includes('await')) return 'bg-secondary';
-    
     return 'bg-secondary';
   };
 
@@ -43,6 +41,7 @@ const OrderDetails = ({ order, onBack }) => {
                 <h5 className="mb-0">Order Information</h5>
               </div>
               <div className="card-body">
+                {/* Basic order info */}
                 <div className="mb-2">
                   <strong>Order ID:</strong> {order.id || order.order_id}
                 </div>
@@ -70,6 +69,7 @@ const OrderDetails = ({ order, onBack }) => {
             </div>
           </div>
           
+          {/* List of order items */}
           {order.orderDetails && order.orderDetails.length > 0 && (
             <div className="col-md-6 mb-4">
               <div className="card h-100">
@@ -84,6 +84,7 @@ const OrderDetails = ({ order, onBack }) => {
                           <div>
                             <div><strong>Product ID:</strong> {item.product_id}</div>
                             <div>Quantity: {item.quantity}</div>
+                            {/* Show customization if present */}
                             {(item.customization || item.customization_text) && (
                               <div className="mt-2">
                                 <strong>Customization:</strong> <span className="text-muted">
@@ -94,8 +95,7 @@ const OrderDetails = ({ order, onBack }) => {
                           </div>
                           <div className="text-end">
                             <div>Price: LKR {parseFloat(item.priceAtPurchase || item.price_at_purchase).toFixed(2)}</div>
-                            
-                            {/* Simplified check for customization fee */}
+                            {/* Show customization fee if present */}
                             {parseFloat(item.customization_fee || 0) > 0 && (
                               <div className="text-primary">
                                 +LKR {parseFloat(item.customization_fee).toFixed(2)} (Custom Fee)
@@ -112,7 +112,7 @@ const OrderDetails = ({ order, onBack }) => {
           )}
         </div>
 
-        {/* Total amount section */}
+        {/* Total and delivery info */}
         <div className="row mt-3">
           <div className="col-md-6 ms-auto">
             <div className="card">
@@ -131,6 +131,7 @@ const OrderDetails = ({ order, onBack }) => {
           </div>
         </div>
         
+        {/* Back button */}
         <div className="mt-4">
           <button className="btn btn-primary" onClick={onBack}>Back to Orders</button>
         </div>

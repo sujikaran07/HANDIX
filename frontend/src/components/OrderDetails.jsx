@@ -2,8 +2,9 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+// Component for displaying detailed order information
 const OrderDetails = ({ order, onBack }) => {
-  // Format date for better readability
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -16,13 +17,13 @@ const OrderDetails = ({ order, onBack }) => {
     });
   };
 
-  // Format status text
+  // Convert status text for user-friendly display
   const formatStatus = (status) => {
     if (!status) return 'Unknown';
     return status.toLowerCase() === 'awaiting payment' ? 'To Pay' : status;
   };
 
-  // Get appropriate badge color based on status
+  // Get badge color based on order status
   const getStatusBadgeClass = (status) => {
     if (!status) return 'bg-secondary';
     
@@ -43,6 +44,7 @@ const OrderDetails = ({ order, onBack }) => {
         <h2 className="mb-4">Order Details</h2>
         
         <div className="row">
+          {/* Order information section */}
           <div className="col-md-6 mb-4">
             <div className="card h-100">
               <div className="card-header bg-light">
@@ -76,6 +78,7 @@ const OrderDetails = ({ order, onBack }) => {
             </div>
           </div>
           
+          {/* Order items section */}
           {order.orderDetails && order.orderDetails.length > 0 && (
             <div className="col-md-6 mb-4">
               <div className="card h-100">
@@ -90,6 +93,7 @@ const OrderDetails = ({ order, onBack }) => {
                           <div>
                             <div><strong>Product ID:</strong> {item.product_id}</div>
                             <div>Quantity: {item.quantity}</div>
+                            {/* Display customization details if available */}
                             {(item.customization || item.customization_text) && (
                               <div className="mt-2">
                                 <strong>Customization:</strong> <span className="text-muted">
@@ -101,8 +105,8 @@ const OrderDetails = ({ order, onBack }) => {
                           <div className="text-end">
                             <div>Price: LKR {parseFloat(item.priceAtPurchase || item.price_at_purchase).toLocaleString()}</div>
                             
+                            {/* Display customization fee if applicable */}
                             {(() => {
-                              // Get the customization fee however it's stored
                               const fee = item.customization_fee || item.customizationFee || 0;
                               return parseFloat(fee) > 0 ? (
                                 <div className="text-primary">
@@ -121,7 +125,7 @@ const OrderDetails = ({ order, onBack }) => {
           )}
         </div>
 
-        {/* Total amount section */}
+        {/* Total amount and delivery information */}
         <div className="row mt-3">
           <div className="col-md-6 ms-auto">
             <div className="card">
@@ -140,6 +144,7 @@ const OrderDetails = ({ order, onBack }) => {
           </div>
         </div>
         
+        {/* Back button */}
         <div className="mt-4">
           <button className="btn btn-primary" onClick={onBack}>Back to Orders</button>
         </div>

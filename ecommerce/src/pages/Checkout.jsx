@@ -7,7 +7,7 @@ import { useCart } from '../contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import PaymentMethodSelector from '../components/PaymentMethodSelector';
 import { getShippingFeeByDistrict } from '../data/shippingZones';
-import axios from 'axios'; // Import axios for API requests
+import axios from 'axios';
 
 // Step components
 import ShippingAddressStep from '../components/checkout/ShippingAddressStep';
@@ -21,35 +21,32 @@ const CheckoutPage = () => {
   const { items, subtotal, customizationTotal, total, clearCart } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Current step in checkout process
+
+  // Step state
   const [currentStep, setCurrentStep] = useState(1);
-  
-  // State to track if order is completed
+
+  // Order completion state
   const [orderCompleted, setOrderCompleted] = useState(false);
   const [orderId, setOrderId] = useState(null);
-  
-  // State for loading indicator
+
+  // Loading state for order submission
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Get user information from localStorage
+
+  // User info from localStorage
   const [user, setUser] = useState(null);
-  
+
   useEffect(() => {
     const userJson = localStorage.getItem('user');
     if (userJson) {
       try {
         const userData = JSON.parse(userJson);
         setUser(userData);
-        
-        // Pre-fill email if user is logged in
+        // Pre-fill phone and fetch addresses if logged in
         if (userData.email) {
           setFormData(prev => ({
             ...prev,
             phone: userData.phone || '',
           }));
-          
-          // If user is logged in, try to fetch their saved addresses
           fetchCustomerAddresses(userData.c_id);
         }
       } catch (error) {
@@ -58,38 +55,28 @@ const CheckoutPage = () => {
     }
   }, []);
 
-  // Function to fetch customer's saved addresses
+  // Fetch customer's saved addresses from backend
   const fetchCustomerAddresses = async (customerId) => {
     if (!customerId) return;
-    
     try {
       const token = localStorage.getItem('token');
       const config = token ? {
         headers: { Authorization: `Bearer ${token}` }
       } : {};
-      
       const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
       const response = await axios.get(
         `${baseURL}/api/checkout/customer/${customerId}/addresses`,
         config
       );
-      
       if (response.data.success && response.data.addresses.length > 0) {
-        // Get all shipping addresses
         const shippingAddresses = response.data.addresses.filter(
           addr => addr.addressType === 'shipping'
         );
-        
-        // Sort addresses by createdAt in descending order to get the most recent one
-        shippingAddresses.sort((a, b) => 
+        shippingAddresses.sort((a, b) =>
           new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at)
         );
-        
-        // Use the most recent shipping address
         const mostRecentAddress = shippingAddresses[0];
-        
         if (mostRecentAddress) {
-          console.log('Using most recent shipping address:', mostRecentAddress);
           setFormData(prev => ({
             ...prev,
             address: mostRecentAddress.street_address || '',
@@ -98,8 +85,6 @@ const CheckoutPage = () => {
             postalCode: mostRecentAddress.postalCode || ''
           }));
         }
-        
-        // If customer has a phone number, use it
         if (response.data.customer && response.data.customer.phone) {
           setFormData(prev => ({
             ...prev,
@@ -109,7 +94,6 @@ const CheckoutPage = () => {
       }
     } catch (error) {
       console.error('Error fetching customer addresses:', error);
-      // Continue with checkout even if we couldn't fetch addresses
     }
   };
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+// Component for viewing detailed order information with customer details and items
 const OrderViewForm = ({ order: initialOrder, onBack }) => {
+  // State management for order details and related data
   const [order, setOrder] = useState(initialOrder);
   const [addressData, setAddressData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -9,53 +11,40 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
   const [orderItems, setOrderItems] = useState([]);
   
   useEffect(() => {
-    console.log("Initial order data in view form:", initialOrder);
-    
-    // Fetch complete order details
+    // Fetch complete order details with customer info and items
     const fetchCompleteOrderDetails = async () => {
       try {
         setLoading(true);
         const token = localStorage.getItem('artisanToken');
         
-        // Get order ID from either o_id or order_id
+        // Get order ID from multiple possible property names
         const orderId = initialOrder?.o_id || initialOrder?.order_id;
         if (!orderId) {
-          console.error("No order ID available");
           setLoading(false);
           return;
         }
         
-        // Fetch order details
+        // Fetch complete order details
         const response = await axios.get(
           `http://localhost:5000/api/orders/${orderId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         
-        console.log("Complete order data fetched:", response.data);
-        
-        // Update order with complete data
+        // Update order with complete data including shipping fee
         const completeOrder = {
           ...initialOrder,
           ...response.data,
-          // Make sure shipping fee is explicitly set - try multiple possible property names
           shippingFee: response.data.shippingFee || response.data.shipping_fee || response.data.shippingCost || 350
         };
         
-        console.log("Order with shipping fee:", completeOrder.shippingFee);
-        
-        setOrder(completeOrder);
-        
-        // Explicitly log customer ID to verify it's coming from response
-        console.log("Customer ID from response:", response.data.c_id || 'Not in response');
-        
-        // Set the customer_id from c_id to ensure it's correctly displayed
+        // Set customer ID from response
         if (response.data.c_id) {
           completeOrder.customer_id = response.data.c_id;
         }
         
         setOrder(completeOrder);
         
-        // Fetch customer info using c_id from the order
+        // Fetch customer information using customer ID
         if (completeOrder.c_id) {
           try {
             const customerResponse = await axios.get(
@@ -64,13 +53,10 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
             );
             
             if (customerResponse.data) {
-              console.log("Customer data fetched:", customerResponse.data);
-              
               // Update order with customer info
               completeOrder.customerName = `${customerResponse.data.firstName || ''} ${customerResponse.data.lastName || ''}`.trim();
               completeOrder.customerEmail = customerResponse.data.email;
               completeOrder.customerPhone = customerResponse.data.phone;
-              // Ensure customer_id is set correctly
               completeOrder.customer_id = customerResponse.data.c_id;
               
               setOrder(completeOrder);
@@ -79,16 +65,16 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
               fetchCustomerAddresses(completeOrder.c_id);
             }
           } catch (customerError) {
-            console.error("Failed to fetch customer information:", customerError);
+            // Continue without customer details
           }
         } else if (response.data.customerInfo && response.data.customerInfo.c_id) {
-          // Alternative: if c_id not directly in order but nested in customerInfo
+          // Alternative path for nested customer info
           completeOrder.customer_id = response.data.customerInfo.c_id;
           setOrder(completeOrder);
           fetchCustomerAddresses(response.data.customerInfo.c_id);
         }
         
-        // Fetch order items
+        // Fetch order items with product details
         if (completeOrder.order_id) {
           try {
             const itemsResponse = await axios.get(
@@ -97,12 +83,10 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
             );
             
             if (itemsResponse.data && Array.isArray(itemsResponse.data)) {
-              console.log("Order items fetched:", itemsResponse.data);
-              
               // Process items to include product details and images
               const processedItems = await Promise.all(itemsResponse.data.map(async (item) => {
                 try {
-                  // Get product details if not already included
+                  // Get product details if not included
                   if (!item.product_name) {
                     const productResponse = await axios.get(
                       `http://localhost:5000/api/inventory/${item.product_id}`,
@@ -114,7 +98,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
                     }
                   }
                   
-                  // Get product image if not already included
+                  // Get product image if not included
                   if (!item.image_url) {
                     const imageResponse = await axios.get(
                       `http://localhost:5000/api/products/${item.product_id}/images`,
@@ -135,7 +119,6 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
                     customizations: item.customization || null
                   };
                 } catch (err) {
-                  console.error(`Error fetching details for product ${item.product_id}:`, err);
                   return item;
                 }
               }));
@@ -143,20 +126,17 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
               setOrderItems(processedItems);
             }
           } catch (itemsError) {
-            console.error("Failed to fetch order items:", itemsError);
+            // Continue without items
           }
         }
         
-        // Fetch shipping method if available
+        // Fetch shipping method details if available
         if (completeOrder.shippingMethodId) {
           fetchShippingMethod(completeOrder.shippingMethodId);
         }
         
       } catch (error) {
-        console.error("Failed to fetch complete order details:", error);
-        if (error.response) {
-          console.error("Error response:", error.response.status, error.response.data);
-        }
+        // Handle error silently
       } finally {
         setLoading(false);
       }
@@ -165,12 +145,12 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
     fetchCompleteOrderDetails();
   }, [initialOrder]);
   
+  // Fetch customer address information
   const fetchCustomerAddresses = async (customerId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/addresses/customer/${customerId}`);
-      console.log("Customer addresses:", response.data);
       
-      // If addresses are found, use the default one or the first one
+      // Use default address or first available address
       if (response.data && response.data.length > 0) {
         const defaultAddress = response.data.find(addr => addr.isDefault === true) || response.data[0];
         setAddressData({
@@ -180,14 +160,14 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
         });
       }
     } catch (error) {
-      console.error("Failed to fetch customer addresses:", error);
+      // Continue without address data
     }
   };
   
+  // Fetch shipping method name
   const fetchShippingMethod = async (shippingMethodId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/shipping-methods/${shippingMethodId}`);
-      console.log("Shipping method data:", response.data);
       
       if (response.data && response.data.method_name) {
         setShippingMethodName(response.data.method_name);
@@ -208,8 +188,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
         }
       }
     } catch (error) {
-      console.error("Failed to fetch shipping method:", error);
-      // Use default or provided shipping method name if API fails
+      // Use default shipping method name
       setShippingMethodName(order.shippingMethod || 'Standard Delivery');
     }
   };
@@ -218,6 +197,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
     onBack();
   };
   
+  // Loading state display
   if (loading) {
     return (
       <div className="container mt-4 text-center">
@@ -235,7 +215,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
     return <div>No order data available</div>;
   }
 
-  // Format date for display
+  // Utility functions for formatting and styling
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString('en-US', { 
@@ -247,7 +227,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
     });
   };
 
-  // Get the appropriate text color class for status
+  // Get status text color class
   const getStatusTextClass = (status) => {
     if (!status) return 'text-muted';
     const statusLower = status.toLowerCase();
@@ -270,25 +250,18 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
   // Calculate order totals
   const totalQuantity = orderItems.reduce((total, item) => total + (parseInt(item.quantity) || 0), 0);
   const subtotal = order.subtotal || orderItems.reduce((total, item) => total + ((parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 0)), 0);
-  // Make sure we correctly handle shipping fee from all possible sources
+  // Use all possible shipping fee fields, fallback to 350
   const shippingFee = parseFloat(order.shippingFee || order.shipping_fee || order.shippingCost || 350);
   const additionalFees = parseFloat(order.additionalFees || order.customization_fee || 0);
   const totalPrice = parseFloat(order.totalAmount) || subtotal + shippingFee + additionalFees;
 
-  // Get address information - prioritize address from DB, then from order object
-  const streetAddress = addressData?.street || 
-                       (order.shippingAddress && order.shippingAddress.split(',')[0].trim()) || 
-                       'N/A';
-                       
-  const city = addressData?.city || 
-              (order.shippingAddress && order.shippingAddress.split(',').length > 1 ? 
-               order.shippingAddress.split(',')[1].trim() : 'N/A');
-               
-  const district = addressData?.district || 
-                  (order.shippingAddress && order.shippingAddress.split(',').length > 2 ? 
-                   order.shippingAddress.split(',')[2].trim() : 'N/A');
+  // Prefer order.shippingAddress object if present
+  const shippingAddrObj = order.shippingAddress && typeof order.shippingAddress === 'object' ? order.shippingAddress : null;
+  const streetAddress = shippingAddrObj?.street_address || shippingAddrObj?.street || addressData?.street || (typeof order.shippingAddress === 'string' ? order.shippingAddress.split(',')[0].trim() : 'N/A') || 'N/A';
+  const city = shippingAddrObj?.city || addressData?.city || (typeof order.shippingAddress === 'string' && order.shippingAddress.split(',').length > 1 ? order.shippingAddress.split(',')[1].trim() : 'N/A');
+  const district = shippingAddrObj?.district || addressData?.district || (typeof order.shippingAddress === 'string' && order.shippingAddress.split(',').length > 2 ? order.shippingAddress.split(',')[2].trim() : 'N/A');
                    
-  // Function to get appropriate CSS class for status based on AdminOrder.css
+  // Get status color class for badge styling
   const getStatusColorClass = (status) => {
     if (!status) return '';
     
@@ -296,7 +269,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
     
     if (statusLower === 'pending') return 'text-warning';
     if (statusLower === 'processing') return 'text-info';
-    if (statusLower === 'review') return 'text-purple';  // #6f42c1
+    if (statusLower === 'review') return 'text-purple';
     if (statusLower === 'shipped') return 'text-primary';
     if (statusLower === 'delivered') return 'text-success';
     if (statusLower === 'cancelled' || statusLower === 'canceled') return 'text-danger';
@@ -316,6 +289,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
         flexDirection: 'column'
       }}>
         <div className="card-body p-4 d-flex flex-column">
+          {/* Header with back button and status */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
               <div 
@@ -345,12 +319,13 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
             </span>
           </div>
 
+          {/* Order details sections */}
           <div className="row g-3 custom-scrollbar" style={{ 
             overflowY: 'auto', 
             maxHeight: 'calc(100vh - 160px)',
             paddingRight: '5px' 
           }}>
-            {/* Basic Order Information */}
+            {/* Basic order information */}
             <div className="col-md-6">
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -426,7 +401,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
               </div>
             </div>
             
-            {/* Customer Information */}
+            {/* Customer information */}
             <div className="col-md-6">
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -490,7 +465,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
               </div>
             </div>
             
-            {/* Order Items Section */}
+            {/* Order items section */}
             <div className="col-md-12">
               <div className="card border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -592,7 +567,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
               </div>
             </div>
             
-            {/* Order Notes (if available) */}
+            {/* Order notes section */}
             {order.notes && (
               <div className="col-md-12">
                 <div className="card border-0 shadow-sm">
@@ -613,6 +588,7 @@ const OrderViewForm = ({ order: initialOrder, onBack }) => {
             )}
           </div>
           
+          {/* Back button */}
           <div className="d-flex justify-content-end mt-3 pt-2 border-top">
             <button 
               onClick={handleBack}

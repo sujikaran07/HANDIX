@@ -1,3 +1,5 @@
+// Utility functions for data formatting used across the front-end
+
 /**
  * Format a number as currency
  * @param {number|string} value - Number to format

@@ -8,8 +8,8 @@ import { useFavorites } from '../contexts/FavoriteContext';
 
 const FavoritesPage = () => {
   const { favorites, removeFromFavorites, loading, error } = useFavorites();
-  
-  // Process favorites to ensure they have proper number values for price
+
+  // Normalize favorites data for display
   const processedFavorites = Array.isArray(favorites) ? favorites.map(item => ({
     ...item,
     id: item.id,
@@ -22,7 +22,7 @@ const FavoritesPage = () => {
   })) : [];
 
   useEffect(() => {
-    // Log the first product to help debug price issues
+    // Debug: log first favorite after processing
     if (processedFavorites.length > 0) {
       console.log('First favorite after processing:', {
         id: processedFavorites[0].id,
@@ -32,7 +32,7 @@ const FavoritesPage = () => {
       });
     }
   }, [processedFavorites]);
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -49,7 +49,7 @@ const FavoritesPage = () => {
       </div>
     );
   }
-  
+
   if (error) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -75,12 +75,11 @@ const FavoritesPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">Your Favorites</h1>
-            
+            {/* Show count if there are favorites */}
             {processedFavorites.length > 0 && (
               <div className="bg-gray-100 py-2 px-4 rounded-full flex items-center">
                 <Heart size={18} className="text-primary mr-2" />
@@ -90,7 +89,7 @@ const FavoritesPage = () => {
               </div>
             )}
           </div>
-          
+          {/* Show favorites grid or empty state */}
           {processedFavorites.length > 0 ? (
             <ProductGrid 
               products={processedFavorites} 
@@ -113,7 +112,6 @@ const FavoritesPage = () => {
           )}
         </div>
       </main>
-      
       <Footer />
     </div>
   );

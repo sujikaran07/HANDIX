@@ -6,7 +6,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-// Auth middleware to protect routes
+// Middleware to authenticate employee JWT tokens
 const authMiddleware = async (req, res, next) => {
   try {
     // Get token from header
@@ -63,6 +63,7 @@ const authMiddleware = async (req, res, next) => {
   }
 };
 
+// Get all employees
 const getEmployees = async (req, res) => {
   try {
     const result = await Employee.findAll();
@@ -73,6 +74,7 @@ const getEmployees = async (req, res) => {
   }
 };
 
+// Employee login endpoint
 const login = async (req, res) => {
   const { email, password } = req.body;
   console.log(`Login attempt with email: ${email}`);
@@ -118,6 +120,7 @@ const login = async (req, res) => {
   }
 };
 
+// Get current logged-in employee info
 const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -136,6 +139,7 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+// Refresh JWT token for employee
 const refreshToken = async (req, res) => {
   try {
     const { token } = req.body;

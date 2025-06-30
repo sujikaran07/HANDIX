@@ -42,7 +42,7 @@ const cleanupTempFiles = () => {
 // Run cleanup every hour
 setInterval(cleanupTempFiles, 60 * 60 * 1000);
 
-// Helper function to get report title
+// Helper: get report title by type
 const getReportTitle = (reportType) => {
   switch(reportType) {
     case 'sales': return 'Sales Report';
@@ -53,7 +53,7 @@ const getReportTitle = (reportType) => {
   }
 };
 
-// Get sales report data - update to use AliExpress-style grouping and metrics
+// Route: Get sales report data
 router.post('/sales', async (req, res) => {
   try {
     console.log('Received sales report request with filters:', req.body);
@@ -244,7 +244,7 @@ router.post('/sales', async (req, res) => {
   }
 });
 
-// Get product report data
+// Route: Get product report data
 router.post('/products', async (req, res) => {
   try {
     console.log('Received products report request with filters:', req.body);
@@ -409,7 +409,7 @@ router.post('/products', async (req, res) => {
   }
 });
 
-// Get customer report data
+// Route: Get customer report data
 router.post('/customers', async (req, res) => {
   try {
     console.log('Received customers report request with filters:', req.body);
@@ -521,7 +521,7 @@ router.post('/customers', async (req, res) => {
   }
 });
 
-// Get artisan report data
+// Route: Get artisan report data
 router.post('/artisans', async (req, res) => {
   try {
     console.log('Received artisans report request with filters:', req.body);
@@ -698,7 +698,7 @@ router.post('/artisans', async (req, res) => {
   }
 });
 
-// Get report metadata (categories, regions, etc.)
+// Route: Get report metadata (categories, etc.)
 router.get('/metadata', async (req, res) => {
   try {
     // Get actual categories from database
@@ -734,7 +734,7 @@ router.get('/metadata', async (req, res) => {
   }
 });
 
-// Generate PDF report using Puppeteer and HTML from frontend
+// Route: Generate PDF report using Puppeteer
 router.post('/export/pdf', async (req, res) => {
   try {
     console.log('PDF export request body:', JSON.stringify(req.body, null, 2));
@@ -808,7 +808,7 @@ router.post('/export/pdf', async (req, res) => {
   }
 });
 
-// Generate Excel report
+// Route: Generate Excel report
 router.post('/export/excel', async (req, res) => {
   try {
     const { reportData, reportType, dateRange } = req.body;
@@ -849,7 +849,7 @@ router.post('/export/excel', async (req, res) => {
   }
 });
 
-// Enhanced download route with proper content type and headers
+// Route: Download report file
 router.get('/download/:filename', (req, res) => {
   const { filename } = req.params;
   const filePath = path.resolve(__dirname, `../../temp/${filename}`);

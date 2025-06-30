@@ -8,6 +8,7 @@ import '../../styles/admin/AdminCustomer.css';
 import axios from 'axios';
 
 const AdminCustomerPage = () => {
+  // State for customer list
   const [customers, setCustomers] = useState([]);
   const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -15,23 +16,25 @@ const AdminCustomerPage = () => {
   const [showEditCustomerForm, setShowEditCustomerForm] = useState(false);
 
   useEffect(() => {
+    // Fetch all customers on mount
     fetchCustomers();
   }, []);
 
+  // Fetch all customers from backend
   const fetchCustomers = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/customers');
-      console.log('Fetched customers:', response.data); 
+      // Set customers state with fetched data
       setCustomers(response.data);
     } catch (error) {
       console.error('Error fetching customers:', error);
     }
   };
 
+  // View customer details
   const handleViewCustomer = async (customer) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/customers/${customer.c_id}`);
-      console.log('Fetched customer details:', response.data); 
       setSelectedCustomer(response.data); 
       setShowCustomerDetails(true);
     } catch (error) {
@@ -39,11 +42,13 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Back to customer list from details
   const handleBackToList = () => {
     setShowCustomerDetails(false);
     setSelectedCustomer(null);
   };
 
+  // Generate a new unique customer ID
   const generateNewCustomerId = () => {
     const existingIds = customers.map(customer => customer.c_id);
     let newId;
@@ -55,16 +60,19 @@ const AdminCustomerPage = () => {
     return newId;
   };
 
+  // Show add customer form
   const handleAddCustomer = () => {
     const newCustomerId = generateNewCustomerId();
     setSelectedCustomer({ c_id: newCustomerId });
     setShowAddCustomerForm(true);
   };
 
+  // Cancel add customer form
   const handleCancelAddCustomer = () => {
     setShowAddCustomerForm(false);
   };
 
+  // Save new customer to backend
   const handleSaveCustomer = async (newCustomer) => {
     try {
       await axios.post('http://localhost:5000/api/customers', newCustomer);
@@ -76,6 +84,7 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Save and add another customer
   const handleSaveAndAddAnotherCustomer = async (newCustomer) => {
     try {
       await axios.post('http://localhost:5000/api/customers', newCustomer);
@@ -85,16 +94,19 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Edit customer
   const handleEditCustomer = (customer) => {
     setSelectedCustomer(customer);
     setShowEditCustomerForm(true);
   };
 
+  // Cancel edit customer form
   const handleCancelEditCustomer = () => {
     setShowEditCustomerForm(false); 
     setSelectedCustomer(null); 
   };
 
+  // Update customer in backend
   const handleUpdateCustomer = async (updatedCustomer) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${updatedCustomer.c_id}`, updatedCustomer);
@@ -106,6 +118,7 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Approve customer
   const handleApproveCustomer = async (c_id) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${c_id}/approve`);
@@ -115,6 +128,7 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Reject customer
   const handleRejectCustomer = async (c_id) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${c_id}/reject`);
@@ -124,6 +138,7 @@ const AdminCustomerPage = () => {
     }
   };
 
+  // Delete customer
   const handleDeleteCustomer = async (c_id) => {
     try {
       await axios.delete(`http://localhost:5000/api/customers/${c_id}`);
@@ -140,7 +155,7 @@ const AdminCustomerPage = () => {
         <AdminTopbar />
         {showCustomerDetails ? (
           <div>
-            
+            {/* Customer details view */}
             <button onClick={handleBackToList}>Back to List</button>
           </div>
         ) : showEditCustomerForm ? (

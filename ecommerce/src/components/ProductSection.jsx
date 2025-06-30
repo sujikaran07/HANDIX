@@ -16,7 +16,7 @@ const ProductSection = ({ title, products, viewAllLink, bgColor = 'bg-white' }) 
           )}
         </div>
         
-        {/* Update grid to show 4 products per row */}
+        {/* Product grid: 4 per row on md+ screens */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {products.map((product) => (
             <ProductCard key={product.id} product={product} />

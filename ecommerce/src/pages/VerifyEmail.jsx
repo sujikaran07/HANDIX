@@ -7,14 +7,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 
 const VerifyEmailPage = () => {
+  // State for verification status and countdown
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  const [status, setStatus] = useState('verifying'); // verifying, success, error
+  const [status, setStatus] = useState('verifying');
   const [countdown, setCountdown] = useState(5);
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Attempt email verification on mount
   useEffect(() => {
     const verifyEmail = async () => {
       if (!token || !email) {
@@ -26,12 +28,10 @@ const VerifyEmailPage = () => {
         });
         return;
       }
-
       try {
         const response = await axios.get(`http://localhost:5000/api/customers/verify-email`, {
           params: { token, email }
         });
-        
         setStatus('success');
         toast({
           title: "Email Verified Successfully",
@@ -39,8 +39,6 @@ const VerifyEmailPage = () => {
             ? "Your account has been activated!"
             : "Your email has been verified. A administrator will review your application.",
         });
-        
-        // Start countdown to redirect
         setCountdown(5);
       } catch (error) {
         setStatus('error');
@@ -51,11 +49,10 @@ const VerifyEmailPage = () => {
         });
       }
     };
-
     verifyEmail();
   }, [token, email, toast]);
 
-  // Countdown effect
+  // Countdown and redirect after success
   useEffect(() => {
     let timer;
     if (status === 'success' && countdown > 0) {
@@ -65,14 +62,12 @@ const VerifyEmailPage = () => {
     } else if (status === 'success' && countdown === 0) {
       navigate('/login');
     }
-
     return () => clearInterval(timer);
   }, [status, countdown, navigate]);
 
   // Resend verification email
   const handleResendVerification = async () => {
     if (!email) return;
-    
     try {
       await axios.post('http://localhost:5000/api/auth/resend-verification', { email });
       toast({

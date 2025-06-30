@@ -8,10 +8,10 @@ const { Op } = require('sequelize');
 const { sequelize } = require('../../config/db');
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
 
-// Apply auth middleware to all other artisan dashboard routes
+// Apply authentication middleware to all artisan dashboard routes
 router.use(authMiddleware);
 
-// Get artisan dashboard summary data
+// Route: Get artisan dashboard summary data
 router.get('/summary/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -143,7 +143,7 @@ router.get('/summary/:artisanId', async (req, res) => {
   }
 });
 
-// Get products created per month for the last 12 months
+// Route: Get products created per month for the last 12 months
 router.get('/products-trend/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -268,7 +268,7 @@ router.get('/products-trend/:artisanId', async (req, res) => {
   }
 });
 
-// Get revenue trend for the last 12 months
+// Route: Get revenue trend for the last 12 months (mock data)
 router.get('/revenue-trend/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;

@@ -8,8 +8,9 @@ import CategoryManagement from '../../components/CategoryManagement';
 import '../../styles/admin/AdminInventory.css';
 
 const AdminManageInventoryPage = () => {
+  // State for managing selected inventory item and current view
   const [selectedInventory, setSelectedInventory] = useState(null);
-  const [currentView, setCurrentView] = useState('inventory'); // 'inventory', 'details', 'restock', 'categories'
+  const [currentView, setCurrentView] = useState('inventory'); 
 
   const handleViewInventory = (inventory) => {
     setSelectedInventory(inventory);
@@ -30,6 +31,7 @@ const AdminManageInventoryPage = () => {
     setCurrentView('inventory');
   };
 
+  // Handle successful restock completion
   const handleRestockComplete = (restockData) => {
     // Changed success message to indicate request was created, not immediate restock
     alert(`Restock request for ${restockData.quantity} units of product ${restockData.product_id} has been submitted and assigned to artisan.`);
@@ -43,6 +45,7 @@ const AdminManageInventoryPage = () => {
       <AdminSidebar />
       <div className="main-content">
         <AdminTopbar />
+        {/* Conditional rendering based on current view */}
         {currentView === 'inventory' && (
           <ManageInventory 
             onViewInventory={handleViewInventory} 

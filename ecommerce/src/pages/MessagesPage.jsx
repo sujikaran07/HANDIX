@@ -12,6 +12,7 @@ import 'react-medium-image-zoom/dist/styles.css';
 const BACKEND_URL = 'http://localhost:5000';
 
 const MessagesPage = () => {
+  // State for orders, messages, attachments, and UI
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [conversation, setConversation] = useState(null);
@@ -25,10 +26,9 @@ const MessagesPage = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewIndex, setPreviewIndex] = useState(0);
 
+  // Get customerId and token from localStorage or user object
   let customerId = localStorage.getItem('customerId');
   let token = localStorage.getItem('customerToken') || localStorage.getItem('token');
-
-  // Fallback: try to get from user object if not found
   if (!customerId || !token) {
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -36,14 +36,11 @@ const MessagesPage = () => {
         const user = JSON.parse(userStr);
         if (!customerId && user.c_id) customerId = user.c_id;
         if (!token && user.token) token = user.token;
-      } catch (e) {
-        // Ignore JSON parse errors
-      }
+      } catch (e) {}
     }
   }
-  console.log('customerId:', customerId, 'token:', token); // Debug log
 
-  // Fetch customer's orders on mount
+  // Fetch orders on mount
   useEffect(() => {
     const fetchOrders = async () => {
       setLoadingOrders(true);
@@ -53,7 +50,6 @@ const MessagesPage = () => {
           `${BACKEND_URL}/api/orders/simple-customer?customerId=${customerId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        console.log('API response:', res.data); // Debug log
         if (Array.isArray(res.data.orders)) {
           setOrders(res.data.orders);
         } else {
@@ -61,7 +57,6 @@ const MessagesPage = () => {
         }
       } catch (err) {
         setError('Failed to load orders.');
-        console.error('Failed to load orders:', err); // Debug log
       } finally {
         setLoadingOrders(false);
       }
@@ -69,7 +64,7 @@ const MessagesPage = () => {
     if (customerId && token) fetchOrders();
   }, [customerId, token]);
 
-  // When an order is selected, fetch or create the conversation, then fetch messages
+  // Fetch or create conversation and messages when order is selected
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
       if (!selectedOrder) return;
@@ -78,7 +73,6 @@ const MessagesPage = () => {
       setLoadingMessages(true);
       setError(null);
       try {
-        // Try to get the conversation for this order
         let convRes;
         try {
           convRes = await axios.get(
@@ -86,7 +80,6 @@ const MessagesPage = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
         } catch (err) {
-          // If not found, create it
           if (err.response && err.response.status === 404) {
             convRes = await axios.post(
               `${BACKEND_URL}/api/conversations/`,
@@ -117,10 +110,12 @@ const MessagesPage = () => {
     if (selectedOrder && token) fetchOrCreateConversation();
   }, [selectedOrder, customerId, token]);
 
+  // Select an order to view messages
   const handleOrderSelect = (order) => {
     setSelectedOrder(order);
   };
 
+  // Handle file attachments
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     // Limit to 5 files, 5MB each
@@ -128,6 +123,7 @@ const MessagesPage = () => {
     setAttachments(validFiles);
   };
 
+  // Send a new message (with optional attachments)
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && attachments.length === 0) return;
@@ -162,7 +158,7 @@ const MessagesPage = () => {
     return date.toLocaleString();
   };
 
-  // Collect all images in the conversation for swiping
+  // Collect all images in the conversation for preview
   const allImages = messages.flatMap(m => (m.attachments || []).filter(att => att.file_type && att.file_type.startsWith('image/')).map(att => att.file_path));
   const handleImageClick = (src) => {
     const idx = allImages.indexOf(src);
@@ -233,7 +229,7 @@ const MessagesPage = () => {
                         </p>
                       </div>
                     ))
-                  )}
+                  )};
                 </div>
               </div>
               {/* Message Content */}

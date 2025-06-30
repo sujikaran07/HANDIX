@@ -4,10 +4,12 @@ const { sequelize } = require('../../config/db');
 const { Employee } = require('../../models/employeeModel'); 
 const { sendStatusChangeEmail } = require('../../utils/emailService');
 
+// Add password match method to Employee model
 Employee.prototype.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// Setup default admin user if not present
 const setupAdminUser = async () => {
   const admin = await Employee.findOne({ where: { email: 'admin@gmail.com' } });
   if (!admin) {
@@ -35,6 +37,7 @@ const getEmployees = async (req, res) => {
   }
 };
 
+// Get all employee E-IDs
 const getEmployeeEIds = async (req, res) => {
   try {
     const employees = await Employee.findAll({ attributes: ['eId'] });
@@ -45,6 +48,7 @@ const getEmployeeEIds = async (req, res) => {
   }
 };
 
+// Add a new employee
 const addEmployee = async (req, res) => {
   try {
     const { role, ...employeeData } = req.body;
@@ -59,6 +63,7 @@ const addEmployee = async (req, res) => {
   }
 };
 
+// Update employee details
 const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params; 
@@ -75,6 +80,7 @@ const updateEmployee = async (req, res) => {
   }
 };
 
+// Toggle employee status (active/deactivated)
 const toggleEmployeeStatus = async (req, res) => {
   try {
     const { id } = req.params;

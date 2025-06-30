@@ -5,14 +5,15 @@ import '../../styles/artisan/ArtisanSettings.css';
 import axios from 'axios';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+// Artisan settings management component with profile and password update functionality
 const ManageArtisanSettings = ({ onViewSetting }) => {
-  // Add state variables for password
+  // Password visibility toggle states
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordForEdit, setShowPasswordForEdit] = useState(false);
   
-  // Initialize all form fields with empty strings to prevent uncontrolled to controlled warnings
+  // Profile form state with initialized empty strings
   const [profile, setProfile] = useState({
     firstName: '',
     lastName: '',
@@ -36,16 +37,15 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
   const [phoneError, setPhoneError] = useState('');
   const [passwordError, setPasswordError] = useState('');
 
-  // Fetch artisan profile data on component mount
   useEffect(() => {
     fetchProfile();
   }, []);
 
+  // Fetch artisan profile data with role verification
   const fetchProfile = async () => {
     try {
       setLoading(true);
       
-      // Use the artisan-specific token
       const token = localStorage.getItem('artisanToken');
       
       if (!token) {
@@ -54,7 +54,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         return;
       }
       
-      // Ensure artisan role before proceeding
+      // Verify artisan role before proceeding
       try {
         const response = await axios.get('/api/employees/settings/profile', {
           headers: {
@@ -65,6 +65,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         if (response.data && response.data.success) {
           const userData = response.data.data;
           
+          // Ensure user has artisan role (roleId = 2)
           if (userData.roleId !== 2) {
             setError('You are not authorized to access artisan settings.');
             setLoading(false);
@@ -89,7 +90,6 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         }
         setError(null);
       } catch (err) {
-        console.error('Error fetching profile:', err);
         setError('Failed to load profile data. Please try again.');
       }
     } finally {
@@ -97,10 +97,12 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Input validation functions
   const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
   const validatePassword = (password) => password.length >= 8;
 
+  // Handle form input changes with validation
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     let filteredValue = value;
@@ -113,18 +115,19 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     setProfile({ ...profile, [name]: filteredValue });
   };
 
+  // Handle profile picture upload with preview
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Preview the image locally
+    // Preview image locally
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewImage(reader.result);
     };
     reader.readAsDataURL(file);
     
-    // Upload the image to the server
+    // Upload image to server
     try {
       const formData = new FormData();
       formData.append('profilePicture', file);
@@ -148,7 +151,6 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         setTimeout(() => setMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Error uploading image:', err);
       setError('Failed to upload image. Please try again.');
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -160,6 +162,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     fileInputRef.current.click();
   };
 
+  // Validate and save profile changes
   const handleSaveChanges = async () => {
     setFirstNameError('');
     setLastNameError('');
@@ -184,7 +187,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     }
     if (!valid) return;
     
-    // If password fields are filled, validate them first
+    // Handle password update with validation
     if (profile.newPassword || profile.confirmNewPassword || profile.currentPassword) {
       if (profile.newPassword !== profile.confirmNewPassword) {
         setError('New passwords do not match');
@@ -203,10 +206,11 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
       return;
     }
     
-    // If only profile info is changed, update without confirmation
+    // Update profile info only
     await updateProfile();
   };
 
+  // Update profile information
   const updateProfile = async () => {
     try {
       setLoading(true);
@@ -231,7 +235,6 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
       
       setError(null);
     } catch (err) {
-      console.error('Error updating profile:', err);
       setError('Failed to update profile. Please try again.');
     } finally {
       setLoading(false);
@@ -239,11 +242,12 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Handle password confirmation and update
   const handleConfirmPassword = async () => {
     try {
       setLoading(true);
       
-      // Verify the current password first
+      // Verify current password first
       const token = localStorage.getItem('artisanToken');
       
       const verifyResponse = await axios.post('/api/employees/settings/verify-password', 
@@ -256,7 +260,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
       );
       
       if (verifyResponse.data && verifyResponse.data.success) {
-        // If current password is verified, update the password
+        // Update password if verification successful
         const passwordResponse = await axios.put('/api/employees/settings/password', 
           {
             currentPassword: profile.currentPassword,
@@ -285,7 +289,6 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         setTimeout(() => setError(null), 3000);
       }
     } catch (err) {
-      console.error('Error updating password:', err);
       setError('Failed to update password. Please try again.');
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -295,6 +298,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     }
   };
 
+  // Remove profile picture
   const handleRemoveProfilePicture = async () => {
     try {
       setLoading(true);
@@ -312,7 +316,6 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
         setTimeout(() => setMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Error removing profile picture:', err);
       setError('Failed to remove profile picture. Please try again.');
       setTimeout(() => setError(null), 3000);
     } finally {
@@ -324,12 +327,14 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
     <>
       <div className="container mt-4 manage-settings-container">
         <div className="card p-4 manage-settings-card">
+          {/* Settings header */}
           <div className="manage-settings-header d-flex justify-content-between align-items-center mb-3">
             <div className="title-section">
               <h4>Account Settings</h4>
             </div>
           </div>
 
+          {/* Loading spinner */}
           {loading && (
             <div className="text-center my-3">
               <div className="spinner-border text-primary" role="status">
@@ -338,6 +343,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
             </div>
           )}
 
+          {/* Error and success messages */}
           {error && (
             <div className="alert alert-danger" role="alert">
               {error}
@@ -350,10 +356,12 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
             </div>
           )}
 
+          {/* Profile information section */}
           <div className="profile-section mb-4">
             <h5>Profile Information</h5>
             <div className="row mb-3">
               <div className="col-md-3">
+                {/* Profile picture upload with preview */}
                 <div className="profile-picture-container position-relative mb-3">
                   {/* Delete icon with white X */}
                   {previewImage && (
@@ -491,6 +499,7 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
             </div>
           </div>
 
+          {/* Password change section */}
           <div className="password-section mb-4">
             <h5>Password</h5>
             <div className="row mb-3">
@@ -561,12 +570,14 @@ const ManageArtisanSettings = ({ onViewSetting }) => {
             </div>
           </div>
 
+          {/* Save button */}
           <div className="d-flex justify-content-end">
             <button className="btn btn-success" onClick={handleSaveChanges} disabled={loading}>
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
 
+          {/* Password confirmation modal */}
           {showPasswordPopup && (
             <div className="modal password-confirmation-modal" style={{ display: 'block', backgroundColor: 'rgba(0,0,0,0.5)' }}>
               <div className="modal-dialog">

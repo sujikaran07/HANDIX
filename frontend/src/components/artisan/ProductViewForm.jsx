@@ -1,21 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
+// Component for viewing detailed product information with image carousel
 const ProductViewForm = ({ product, onBack }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    console.log("Product data in view form:", product);
-    if (product.entryImages) {
-      console.log("Entry images:", product.entryImages);
-    }
+    // Reset image index when product changes
+    setCurrentImageIndex(0);
   }, [product]);
   
   if (!product) {
     return <div>No product data available</div>;
   }
 
+  // Check if product has images for carousel functionality
   const hasImages = product.entryImages && Array.isArray(product.entryImages) && product.entryImages.length > 0;
   
+  // Image navigation handlers
   const handleNextImage = () => {
     if (hasImages) {
       setCurrentImageIndex((prevIndex) => 
@@ -37,6 +38,7 @@ const ProductViewForm = ({ product, onBack }) => {
       <h4 className="mb-3">Product Details</h4>
       
       <div className="row">
+        {/* Product image carousel section */}
         <div className="col-md-4 mb-3">
           {hasImages ? (
             <div className="position-relative">
@@ -53,12 +55,12 @@ const ProductViewForm = ({ product, onBack }) => {
                   padding: '8px'
                 }}
                 onError={(e) => {
-                  console.error("Image failed to load:", e.target.src);
                   e.target.onerror = null; 
                   e.target.src = 'https://via.placeholder.com/250x250?text=No+Image';
                 }}
               />
               
+              {/* Navigation arrows for multiple images */}
               {product.entryImages.length > 1 && (
                 <div className="d-flex justify-content-between position-absolute w-100" style={{ top: '50%' }}>
                   <button 
@@ -78,6 +80,7 @@ const ProductViewForm = ({ product, onBack }) => {
                 </div>
               )}
               
+              {/* Image indicators */}
               {product.entryImages.length > 1 && (
                 <div className="d-flex justify-content-center mt-2">
                   {product.entryImages.map((_, index) => (
@@ -107,6 +110,7 @@ const ProductViewForm = ({ product, onBack }) => {
           )}
         </div>
         
+        {/* Product information section */}
         <div className="col-md-8">
           <div className="row mb-2">
             <div className="col-md-6">
@@ -169,6 +173,7 @@ const ProductViewForm = ({ product, onBack }) => {
         </div>
       </div>
       
+      {/* Back navigation button */}
       <div className="d-flex justify-content-end mt-3">
         <button className="btn btn-secondary" onClick={onBack}>
           Back

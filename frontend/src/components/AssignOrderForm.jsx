@@ -5,6 +5,7 @@ import { faSearch, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import Pagination from './Pagination';
 
 const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
+  // State management for orders and UI
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,11 +15,11 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const ordersPerPage = 3;
 
-  // Fetch available orders on component mount
   useEffect(() => {
     fetchAvailableOrders();
   }, []);
 
+  // Fetch orders that can be assigned to artisans
   const fetchAvailableOrders = async () => {
     try {
       setLoading(true);
@@ -32,20 +33,17 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
         ordersData = response.data;
       }
       
-      // Normalize customized field to ensure consistent boolean values
+      // Normalize customized field for consistent boolean values
       const formattedOrders = ordersData.map(order => ({
         ...order,
-        // Handle all possible representations of customized field
         customized: order.customized === true || 
                    order.customized === 'true' || 
                    order.customized === 'Yes' || 
                    order.customized === 'yes'
       }));
       
-      console.log("Formatted orders for display:", formattedOrders);
       setOrders(formattedOrders);
     } catch (err) {
-      console.error('Error fetching available orders:', err);
       setError('Failed to load orders. Please try again later.');
     } finally {
       setLoading(false);
@@ -56,6 +54,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
     setSelectedOrder(order);
   };
 
+  // Assign selected order to the artisan
   const handleAssignOrder = async () => {
     if (!selectedOrder || !artisan) {
       setError('Please select an order to assign');
@@ -66,28 +65,24 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
       setSaving(true);
       const BACKEND_URL = 'http://localhost:5000';
       
-      // Update with proper fields
       const response = await axios.put(`${BACKEND_URL}/api/orders/${selectedOrder.id}`, {
         assignedArtisanId: artisan.id,
-        assignedArtisan: artisan.name, // Include name for display purposes
-        orderStatus: 'Processing' // Update status when assigning
+        assignedArtisan: artisan.name,
+        orderStatus: 'Processing'
       });
-      
-      console.log('Order assigned:', response.data);
       
       if (onSave) {
         onSave(response.data);
       }
       alert(`Order #${selectedOrder.id} successfully assigned to artisan: ${artisan.name} (${artisan.id})`);
     } catch (err) {
-      console.error('Error assigning order:', err);
       setError('Failed to assign order. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  // Filter orders based on search term
+  // Filter orders based on search criteria
   const filteredOrders = orders.filter(order => {
     return (
       order.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,7 +90,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
     );
   });
 
-  // Pagination logic
+  // Pagination calculations
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -105,7 +100,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
     setCurrentPage(pageNumber);
   };
 
-  // Format date function
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     
@@ -123,13 +118,14 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
     }
   };
 
-  // Updated function to handle different customized field formats
+  // Get badge style based on order type
   const getOrderTypeBadge = (isCustomized) => {
     return isCustomized ? 'bg-warning text-dark' : 'bg-info text-white';
   };
 
   return (
     <div className="container-fluid p-0">
+      {/* Header with back button */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <div className="d-flex align-items-center">
           <button 
@@ -145,7 +141,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
         </div>
       </div>
 
-      {/* Artisan Info Card - Increased size */}
+      {/* Artisan information display */}
       <div className="card shadow-sm mb-4">
         <div className="card-body p-3">
           <div className="d-flex align-items-center justify-content-between">
@@ -168,7 +164,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
       </div>
 
       <div className="row g-3">
-        {/* Available Orders - Left Side - Fixed Height Container */}
+        {/* Available orders list */}
         <div className="col-md-7">
           <div className="card shadow-sm" style={{ height: "300px" }}>
             <div className="card-header bg-light py-2 d-flex justify-content-between align-items-center">
@@ -195,6 +191,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
                 <div className="text-center p-3 flex-grow-1 d-flex align-items-center justify-content-center">No available orders found</div>
               ) : (
                 <>
+                  {/* Orders table */}
                   <div className="table-responsive flex-grow-1" style={{overflowY: 'auto'}}>
                     <table className="table table-sm table-hover mb-0">
                       <thead className="table-light sticky-top">
@@ -259,7 +256,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
           </div>
         </div>
         
-        {/* Selected Order - Right Side - Fixed Height Container */}
+        {/* Selected order details */}
         <div className="col-md-5">
           <div className="card shadow-sm" style={{ height: "300px" }}>
             <div className="card-header bg-light py-3">
@@ -299,6 +296,7 @@ const AssignOrderForm = ({ onSave, onCancel, artisan }) => {
               )}
             </div>
             
+            {/* Action buttons */}
             <div className="card-footer bg-light py-3 d-flex justify-content-end mt-auto">
               <button
                 className="btn btn-outline-secondary me-2 px-4"

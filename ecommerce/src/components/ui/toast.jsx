@@ -2,10 +2,12 @@ import * as React from "react";
 import { cn } from "../../lib/utils";
 import { X } from "lucide-react";
 
+// ToastProvider for wrapping toast notifications
 const ToastProvider = ({ children }) => {
   return <div className="toast-provider">{children}</div>;
 };
 
+// ToastViewport: container for displaying toasts
 const ToastViewport = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
@@ -18,6 +20,7 @@ const ToastViewport = React.forwardRef(({ className, ...props }, ref) => (
 ));
 ToastViewport.displayName = "ToastViewport";
 
+// Toast: single toast notification
 const Toast = React.forwardRef(({ className, children, ...props }, ref) => {
   return (
     <div
@@ -29,6 +32,7 @@ const Toast = React.forwardRef(({ className, children, ...props }, ref) => {
       {...props}
     >
       <div className="flex-1">{children}</div>
+      {/* Close button for toast */}
       <button className="absolute right-2 top-2 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-2 group-hover:opacity-100">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>

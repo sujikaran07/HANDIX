@@ -7,6 +7,7 @@ import { fetchProductById } from '../data/products';
 import axios from 'axios';
 
 const ProductReviews = () => {
+  // State for product, reviews, filters, pagination, etc.
   const { id } = useParams();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -16,7 +17,8 @@ const ProductReviews = () => {
   const [filterRating, setFilterRating] = useState('all');
   const [page, setPage] = useState(1);
   const reviewsPerPage = 8;
-  
+
+  // Load product and reviews on mount or id change
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -79,7 +81,7 @@ const ProductReviews = () => {
   const currentReviews = sortedReviews.slice(indexOfFirstReview, indexOfLastReview);
   const totalPages = Math.ceil(sortedReviews.length / reviewsPerPage);
   
-  // Rating summary calculation
+  // Calculate rating summary
   const calculateRatingSummary = () => {
     const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     reviews.forEach(review => {
@@ -96,10 +98,10 @@ const ProductReviews = () => {
       total: reviews.length
     };
   };
-  
   const ratingSummary = calculateRatingSummary();
-  
+
   if (loading) {
+    // Show loading spinner
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -110,8 +112,9 @@ const ProductReviews = () => {
       </div>
     );
   }
-  
+
   if (error || !product) {
+    // Show error message
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />

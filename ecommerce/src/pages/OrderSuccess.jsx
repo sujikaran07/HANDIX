@@ -6,8 +6,8 @@ import Footer from '../components/Footer';
 
 const OrderSuccessPage = () => {
   const location = useLocation();
-  
-  // Try to get order details from location state, or use default placeholder values
+
+  // Get order details from location state or use defaults
   const orderDetails = location.state?.orderDetails || {
     orderId: 'ORD' + Math.floor(100000 + Math.random() * 900000),
     total: 12500,

@@ -4,14 +4,15 @@ import Footer from '../components/Footer';
 
 const AboutPage = () => {
   return (
+    // Main layout
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl font-bold mb-8">About Handix</h1>
             
+            {/* story section */}
             <div className="mb-12">
               <img 
                 src="https://lh5.googleusercontent.com/p/AF1QipPf3iJQmgboismhHLYX1KueZUqxZfuiMkrpfxvU=w1440-h810-k-no" 
@@ -37,6 +38,7 @@ const AboutPage = () => {
               </p>
             </div>
             
+            {/* mission section */}
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
               <div className="grid md:grid-cols-3 gap-6">
@@ -61,6 +63,7 @@ const AboutPage = () => {
               </div>
             </div>
             
+            {/* crafts section */}
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Our Crafts</h2>
               <p className="text-gray-700 mb-6">
@@ -93,6 +96,7 @@ const AboutPage = () => {
               </div>
             </div>
             
+            {/* team section */}
             <div className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Meet Our Team</h2>
               <div className="grid md:grid-cols-3 gap-6">
@@ -114,6 +118,7 @@ const AboutPage = () => {
               </div>
             </div>
             
+            {/* call to action section */}
             <div>
               <h2 className="text-2xl font-bold mb-4">Join Our Journey</h2>
               <p className="text-gray-700 mb-4">
@@ -130,7 +135,6 @@ const AboutPage = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

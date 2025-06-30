@@ -3,6 +3,7 @@ const Category = require('../../models/categoryModel');
 const ProductEntry = require('../../models/productEntryModel');
 const { cloudinary } = require('../../utils/cloudinaryConfig');
 
+// Get all categories with product count
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.findAll({
@@ -32,7 +33,7 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Add new endpoint for creating a category
+// Create a new category (with optional image)
 exports.createCategory = async (req, res) => {
   try {
     const { category_name, description } = req.body;
@@ -79,7 +80,7 @@ exports.createCategory = async (req, res) => {
   }
 };
 
-// Add delete endpoint
+// Delete a category if no products are associated
 exports.deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
@@ -121,7 +122,7 @@ exports.deleteCategory = async (req, res) => {
   }
 };
 
-// Add update endpoint
+// Update a category (name, description, image)
 exports.updateCategory = async (req, res) => {
   try {
     const { id } = req.params;

@@ -20,22 +20,18 @@ const CartPage = () => {
   const navigate = useNavigate();
   
   const handleQuantityChange = (itemId, newQuantity) => {
-    // Find the item to check its max available quantity
+    // Limit quantity to available stock
     const item = items.find(i => (i.itemId || i.product.id) === itemId);
     if (!item) return;
-    
-    // Get max available quantity from the product
-    const maxAvailable = item.product.quantity || 999; // Changed from 10 to 999
-    
-    // Ensure quantity is within bounds (1 to maxAvailable)
+    const maxAvailable = item.product.quantity || 999;
     if (newQuantity >= 1 && newQuantity <= maxAvailable) {
       updateQuantity(itemId, newQuantity);
     } else if (newQuantity > maxAvailable) {
-      // If user tries to add more than available, set to max available
       updateQuantity(itemId, maxAvailable);
     }
   };
-  
+
+  // Navigate to checkout page
   const proceedToCheckout = () => {
     navigate('/checkout');
   };

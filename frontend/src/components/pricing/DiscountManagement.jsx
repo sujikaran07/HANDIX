@@ -4,6 +4,7 @@ import { faEdit, faTrash, faPlus, faSearch } from '@fortawesome/free-solid-svg-i
 import Pagination from '../Pagination';
 
 const DiscountManagement = () => {
+  // State management for discounts 
   const [discounts, setDiscounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -25,7 +26,7 @@ const DiscountManagement = () => {
   const itemsPerPage = 7;
   
   useEffect(() => {
-    // Simulate fetching discounts
+    // Load initial discount data (mock implementation)
     setTimeout(() => {
       const mockDiscounts = [
         { id: 1, name: 'Summer Sale', code: 'SUMMER23', discount_type: 'percentage', value: 15, start_date: '2023-06-01', end_date: '2023-08-31', min_purchase: 1000, max_discount: 500, status: 'active' },
@@ -43,11 +44,11 @@ const DiscountManagement = () => {
     setNewDiscount({...newDiscount, [name]: value});
   };
 
+  // Handle form submission for creating/updating discounts
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
-      // Mock API call
       setTimeout(() => {
         if (isEditing) {
           setDiscounts(prev => prev.map(discount => 
@@ -63,12 +64,12 @@ const DiscountManagement = () => {
         setLoading(false);
       }, 500);
     } catch (error) {
-      console.error('Error submitting discount:', error);
       alert('An error occurred while saving the discount');
       setLoading(false);
     }
   };
 
+  // Populate form with existing discount data for editing
   const handleEdit = (discount) => {
     setNewDiscount({
       name: discount.name,
@@ -85,6 +86,7 @@ const DiscountManagement = () => {
     setEditId(discount.id);
   };
 
+  // Handle discount deletion with confirmation
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this discount?')) {
       setDiscounts(prev => prev.filter(discount => discount.id !== id));
@@ -114,7 +116,7 @@ const DiscountManagement = () => {
     return date.toISOString().split('T')[0];
   };
 
-  // Render dropdown actions for discounts
+  // Render action dropdown menu for each discount
   const renderActionMenu = (discount) => {
     return (
       <div className="dropdown">
@@ -143,13 +145,13 @@ const DiscountManagement = () => {
     );
   };
 
-  // Filter discounts by search term
+  // Filter discounts based on search criteria
   const filteredDiscounts = discounts.filter(discount => 
     discount.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     discount.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate pagination
+  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentDiscounts = filteredDiscounts.slice(indexOfFirstItem, indexOfLastItem);
@@ -157,6 +159,7 @@ const DiscountManagement = () => {
 
   return (
     <div className="pricing-form-container">
+      {/* Search and add new discount section */}
       <div className="row mb-3">
         <div className="col-md-6">
           <div className="search-bar">
@@ -190,6 +193,7 @@ const DiscountManagement = () => {
         </div>
       ) : (
         <>
+          {/* Discounts table */}
           <div style={{ height: 'calc(100% - 100px)' }}>
             <table className="table table-bordered table-striped inventory-table">
               <thead>
@@ -245,7 +249,7 @@ const DiscountManagement = () => {
         </>
       )}
 
-      {/* Modal for Add/Edit Form */}
+      {/* Modal for discount form */}
       <div className="modal fade" id="discountFormModal" tabIndex="-1" aria-labelledby="discountFormModalLabel" aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">

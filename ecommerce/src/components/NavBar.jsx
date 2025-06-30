@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, User, Heart, Package, MessageSquare, HelpCircle, Settings, LogOut } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
-import { useFavorites } from '../contexts/FavoriteContext'; // Import useFavorites
+import { useFavorites } from '../contexts/FavoriteContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,22 +13,20 @@ import {
 import { categories } from '../data/products';
 
 const NavBar = () => {
-  const navigate = useNavigate(); // Add this for navigation after logout
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const { productCount, clearCart } = useCart(); // Get clearCart from useCart
-  const { clearFavorites } = useFavorites(); // Get clearFavorites from useFavorites
-  // Check localStorage for authentication status on component mount
+  const { productCount, clearCart } = useCart();
+  const { clearFavorites } = useFavorites();
+  // Auth state and user data
   const [isAuthenticated, setIsAuthenticated] = useState(false); 
-  // Add state for user data
   const [userData, setUserData] = useState(null);
   
   useEffect(() => {
+    // Load authentication status and user data from localStorage on mount
     const authStatus = localStorage.getItem('isAuthenticated');
     if (authStatus === 'true') {
       setIsAuthenticated(true);
-      
-      // Get user data from localStorage
       try {
         const userDataString = localStorage.getItem('user');
         if (userDataString) {
@@ -45,30 +43,25 @@ const NavBar = () => {
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const toggleSearch = () => setSearchOpen(!searchOpen);
   
-  // Update toggleAuth function to clear cart and favorites
+  // Handle login/logout and clear sensitive data on logout
   const toggleAuth = () => {
     const newAuthState = !isAuthenticated;
     setIsAuthenticated(newAuthState);
-    
     if (newAuthState) {
       localStorage.setItem('isAuthenticated', 'true');
     } else {
-      // Clear user data
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       setUserData(null);
-      
-      // Clear cart and favorites
+      // Clear cart and favorites on logout
       if (typeof clearCart === 'function') clearCart();
       if (typeof clearFavorites === 'function') clearFavorites();
-      
-      // Navigate to home page
       navigate('/');
     }
   };
 
-  // Function to get user's full name
+  // Get user's full name for display
   const getUserFullName = () => {
     if (userData && userData.firstName && userData.lastName) {
       return `${userData.firstName} ${userData.lastName}`;
@@ -98,6 +91,7 @@ const NavBar = () => {
                 </svg>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="bg-white shadow-lg rounded-md border border-gray-200 py-2 w-56 mt-1 animate-fade-in">
+                {/* Render category links */}
                 {categories.map((category) => (
                   <DropdownMenuItem key={category} asChild className="cursor-pointer px-4 py-2 hover:bg-gray-50 transition-colors">
                     <Link 
@@ -112,7 +106,7 @@ const NavBar = () => {
             </DropdownMenu>
           </div>
           
-          {/* Search Bar - Center */}
+          {/* Search Bar - Center (desktop only) */}
           <div className="hidden md:flex flex-1 mx-1 lg:mx-2 max-w-md lg:max-w-xl xl:max-w-2xl">
             <div className="relative w-full">
               <input
@@ -127,7 +121,7 @@ const NavBar = () => {
             </div>
           </div>
           
-          {/* Right Side Icons */}
+          {/* Right Side Icons (desktop only) */}
           <div className="hidden md:flex items-center space-x-2 lg:space-x-3 xl:space-x-4 min-w-[120px] lg:min-w-[140px]">
             {!isAuthenticated ? (
               <Link to="/login" className="text-gray-600 hover:text-primary transition-colors flex items-center">
@@ -150,6 +144,7 @@ const NavBar = () => {
                   <span className="max-w-[80px] lg:max-w-[120px] truncate">{userData?.firstName || "Account"}</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-64 bg-white p-0 shadow-lg rounded-lg border border-gray-200 mt-1">
+                  {/* User info section */}
                   <div className="bg-blue-50 p-4 flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-300 flex items-center justify-center">
                       {userData?.profilePicture ? (
@@ -212,6 +207,7 @@ const NavBar = () => {
               </DropdownMenu>
             )}
             
+            {/* Favorites and Cart icons */}
             <Link to="/favorites" className="text-gray-600 hover:text-primary transition-colors flex items-center">
               <Heart size={20} />
               <span className="ml-1"></span>
@@ -227,7 +223,7 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu and icons */}
           <div className="md:hidden flex items-center space-x-2">
             <button 
               onClick={toggleSearch}
@@ -255,7 +251,7 @@ const NavBar = () => {
           </div>
         </div>
 
-        {/* Mobile Search Bar (conditionally rendered) */}
+        {/* Mobile Search Bar */}
         {searchOpen && (
           <div className="py-2 border-t mt-3 transition-all animate-fade-in">
             <div className="relative">
@@ -279,6 +275,7 @@ const NavBar = () => {
         {menuOpen && (
           <div className="md:hidden pt-4 pb-3 border-t animate-fade-in">
             <div className="flex flex-col space-y-4">
+              {/* Mobile categories */}
               <div className="px-4 py-2">
                 <h3 className="font-medium mb-2">Categories</h3>
                 <div className="pl-2 flex flex-col space-y-2">
@@ -295,6 +292,7 @@ const NavBar = () => {
                 </div>
               </div>
               
+              {/* Mobile user/account section */}
               {!isAuthenticated ? (
                 <Link 
                   to="/login"
@@ -362,6 +360,7 @@ const NavBar = () => {
                 </>
               )}
               
+              {/* Mobile search input */}
               <div className="pt-2 border-t">
                 <div className="relative">
                   <input

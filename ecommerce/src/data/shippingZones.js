@@ -1,3 +1,4 @@
+// Shipping zones and district data for Sri Lanka
 export const sriLankaZones = {
     'Zone A': [
         { district: 'Colombo', postalCodes: ['00100', '01500'], shippingFee: 3000 },
@@ -44,13 +45,13 @@ export const sriLankaZones = {
     ]
 };
 
-// Flatten districts for easy selection
+// Flattened districts for selection
 export const allDistricts = Object.values(sriLankaZones).flat();
 
-// Get all district names as an array
+// All district names array
 export const districtNames = allDistricts.map(d => d.district);
 
-// Export the list of Sri Lanka districts
+// List of Sri Lanka districts
 export const sriLankaDistricts = [
   'Ampara',
   'Anuradhapura',
@@ -79,7 +80,7 @@ export const sriLankaDistricts = [
   'Vavuniya'
 ];
 
-// Define shipping fees for each district
+// Shipping fee by district
 const districtShippingFees = {
   'Colombo': 3000,
   'Gampaha': 3000,
@@ -108,15 +109,15 @@ const districtShippingFees = {
   'Kegalle': 2400
 };
 
-// Function to get shipping fee by district - KEPT only this declaration
+// Get shipping fee for a district
 export const getShippingFeeByDistrict = (district) => {
-  return districtShippingFees[district] || 350; // Default to 350 if district not found
+  return districtShippingFees[district] || 350;
 };
 
-// Export the shipping fees object as well
+// Export shipping fees object
 export const shippingFees = districtShippingFees;
 
-// Define shipping zones based on regions
+// Shipping zones by region
 export const shippingZones = {
   'Western': ['Colombo', 'Gampaha', 'Kalutara'],
   'Central': ['Kandy', 'Matale', 'Nuwara Eliya'],
@@ -131,7 +132,7 @@ export const shippingZones = {
 
 
 
-// Function to get zone by district
+// Get zone by district
 export const getZoneByDistrict = (district) => {
   for (const [zone, districts] of Object.entries(shippingZones)) {
     if (districts.includes(district)) {
@@ -141,8 +142,7 @@ export const getZoneByDistrict = (district) => {
   return null;
 };
 
-
-// Export delivery time estimates by district
+// Delivery time estimates by district
 export const deliveryTimeEstimates = {
   'Colombo': '3-5 days',
   'Gampaha': '3-5 days',
@@ -171,7 +171,7 @@ export const deliveryTimeEstimates = {
   'Kegalle': '2-3 days'
 };
 
-// Function to get delivery time estimate for a district
+// Get delivery time estimate for a district
 export const getDeliveryTimeEstimate = (district) => {
-  return deliveryTimeEstimates[district] || '3-5 days'; // Default estimate
+  return deliveryTimeEstimates[district] || '3-5 days';
 };

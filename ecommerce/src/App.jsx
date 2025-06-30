@@ -81,8 +81,6 @@ const App = () => (
                 <Route path="/contact" element={<ContactPage />} />                <Route path="/faq" element={<FAQPage />} />
                 <Route path="/order-success" element={<OrderSuccessPage />} />
                 <Route path="/policies" element={<PoliciesPage />} />
-                
-                {/* Add these new routes for the redirection to work */}
                 <Route path="/reviews/write/:orderId" element={<WriteReviewPage />} />
                 <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
                 <Route path="/products/:id/reviews" element={<ProductReviews />} />

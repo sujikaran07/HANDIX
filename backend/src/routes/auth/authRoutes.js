@@ -12,6 +12,7 @@ const {
   emergencyLogin
 } = require('../../controllers/auth/authController');
 
+// Auth routes for customer login, password reset, and verification
 router.post('/login', login);
 router.post('/forgot-password', forgotPassword);
 router.post('/verify-reset-otp', verifyResetOTP);
@@ -20,7 +21,6 @@ router.post('/change-password', changePassword);
 router.post('/resend-verification', resendVerification);
 router.post('/fix-account', fixAccountPassword);
 router.post('/test-password', testPasswordVerification);
-
 router.post('/emergency-login', emergencyLogin);
 
 module.exports = router;

@@ -1,4 +1,10 @@
-/* Orders Page Styling */
+/* 
+ * Artisan Orders Page Styling
+ * Provides styling for order management interface used by artisans
+ * Includes tables, status indicators, and responsive design elements
+ */
+
+/* Main layout structure */
 .artisan-orders-page {
   display: flex;
   flex-direction: row;
@@ -6,6 +12,7 @@
   font-size: var(--font-size-base);
 }
 
+/* Main content area */
 .artisan-orders-page .artisan-main-content {
   flex: 1;
   padding: 15px;
@@ -17,6 +24,7 @@
   flex-direction: column;
 }
 
+/* Header section */
 .artisan-orders-page .manage-orders-header {
   display: flex;
   justify-content: space-between;
@@ -31,6 +39,7 @@
   margin-top: 0px;
 }
 
+/* Icon styles */
 .order-icon {
   font-size: 45px;
   margin-right: 15px;
@@ -44,6 +53,7 @@
   align-items: center;
 }
 
+/* Text section styles */
 .text-section h2 {
   font-size: 20px;
   color: #333;
@@ -140,6 +150,7 @@
   padding: 0;
 }
 
+/* Order table styles */
 .order-table {
   width: 100%;
   border-collapse: separate;
@@ -169,6 +180,7 @@
   border-radius: 10px;
 }
 
+/* Status indicator styles */
 .status {
   font-weight: 500;
 }
@@ -189,6 +201,7 @@
   color: #dc3545 !important;
 }
 
+/* Action button styles */
 .action-buttons .dropdown-toggle {
   border: 1px solid #e2e8f0;
   background-color: white;
@@ -224,6 +237,7 @@
   background-color: #f1f5f9;
 }
 
+/* Export button styles */
 .export-btn {
   padding: 5px 10px;
   border: 2px solid;
@@ -282,6 +296,7 @@
   opacity: 0.5;
 }
 
+/* Modal styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -310,6 +325,7 @@
   margin-top: 20px;
 }
 
+/* Responsive styles */
 @media (max-width: 768px) {
   .artisan-orders-page .artisan-main-content {
     margin-left: 0;

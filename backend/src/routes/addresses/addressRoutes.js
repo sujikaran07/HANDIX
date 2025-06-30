@@ -2,6 +2,7 @@ const express = require('express');
 const { Address } = require('../../models/addressModel');
 const router = express.Router();
 
+// Get all addresses
 router.get('/', async (req, res) => {
   try {
     const addresses = await Address.findAll();
@@ -11,6 +12,8 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: 'Error fetching addresses', error: error.message });
   }
 });
+
+// Get all addresses for a customer
 router.get('/customer/:c_id', async (req, res) => {
   try {
     const addresses = await Address.findAll({
@@ -22,6 +25,8 @@ router.get('/customer/:c_id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching addresses for customer', error: error.message });
   }
 });
+
+// Get address by address_id
 router.get('/:address_id', async (req, res) => {
   try {
     const address = await Address.findByPk(req.params.address_id);
@@ -35,6 +40,8 @@ router.get('/:address_id', async (req, res) => {
     res.status(500).json({ message: 'Error fetching address', error: error.message });
   }
 });
+
+// Create a new address
 router.post('/', async (req, res) => {
   try {
     console.log('Creating address with data:', req.body);
@@ -45,6 +52,8 @@ router.post('/', async (req, res) => {
     res.status(500).json({ message: 'Error creating address', error: error.message });
   }
 });
+
+// Update an address by address_id
 router.put('/:address_id', async (req, res) => {
   try {
     console.log(`Updating address ID ${req.params.address_id} with data:`, req.body);
@@ -64,6 +73,8 @@ router.put('/:address_id', async (req, res) => {
     res.status(500).json({ message: 'Error updating address', error: error.message });
   }
 });
+
+// Delete an address by address_id
 router.delete('/:address_id', async (req, res) => {
   try {
     const deleted = await Address.destroy({
@@ -80,6 +91,8 @@ router.delete('/:address_id', async (req, res) => {
     res.status(500).json({ message: 'Error deleting address', error: error.message });
   }
 });
+
+// Set an address as default for a customer
 router.put('/:address_id/default', async (req, res) => {
   try {
     const address = await Address.findByPk(req.params.address_id);

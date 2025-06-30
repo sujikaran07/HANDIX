@@ -6,6 +6,7 @@ const ProductImage = require('../../models/productImageModel');
 const { Op } = require('sequelize');
 const { cloudinary } = require('../../utils/cloudinaryConfig');
 
+// Get all products for an employee
 const getAllProducts = async (req, res) => {
   try {
     const { id: e_id } = req.user;
@@ -36,6 +37,7 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+// Get product by ID with category, inventory, images, and variations
 const getProductById = async (req, res) => {
   try {
     const product = await ProductEntry.findOne({
@@ -73,6 +75,7 @@ const getProductById = async (req, res) => {
   }
 };
 
+// Create a new product entry, inventory, and variation
 const createProduct = async (req, res) => {
   try {
     console.log('Request received for product creation:', req.body);
@@ -167,6 +170,7 @@ const createProduct = async (req, res) => {
   }
 };
 
+// Update a product entry and related inventory/variation/category
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -295,6 +299,7 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// Delete a product entry and update inventory/variations/category/images
 const deleteProduct = async (req, res) => {
   try {
     const productEntry = await ProductEntry.findByPk(req.params.id);
@@ -394,6 +399,7 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Get product suggestions by name (for autocomplete)
 const getProductSuggestions = async (req, res) => {
   try {
     const { search } = req.query;
@@ -418,6 +424,7 @@ const getProductSuggestions = async (req, res) => {
   }
 };
 
+// Get inventory suggestions by name (for autocomplete)
 const getInventorySuggestions = async (req, res) => {
   try {
     const { search } = req.query;
@@ -443,6 +450,7 @@ const getInventorySuggestions = async (req, res) => {
   }
 };
 
+// Generate a new product ID (auto-increment)
 const generateNewProductId = async (req, res) => {
   try {
     const lastProduct = await ProductEntry.findOne({
@@ -462,6 +470,7 @@ const generateNewProductId = async (req, res) => {
   }
 };
 
+// Get all product entries for an employee
 const getAllProductEntries = async (req, res) => {
   try {
     const { id: e_id } = req.user;
@@ -511,6 +520,7 @@ const getAllProductEntries = async (req, res) => {
   }
 };
 
+// Get product by name with category, images, and variations
 const getProductByName = async (req, res) => {
   try {
     const { name } = req.query;
@@ -556,6 +566,7 @@ const getProductByName = async (req, res) => {
   }
 };
 
+// Upload product images to Cloudinary and save records
 const uploadProductImages = async (req, res) => {
   try {
     console.log('Image upload request received');
@@ -618,6 +629,7 @@ const uploadProductImages = async (req, res) => {
   }
 };
 
+// Update product entry status and update inventory/category if approved
 const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;

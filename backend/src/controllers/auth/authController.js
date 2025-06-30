@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const nodemailer = require('nodemailer');
 
+// Login endpoint for customers
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -141,10 +142,12 @@ exports.login = async (req, res) => {
   }
 };
 
+// Generate a 4-digit OTP for password reset
 const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
+// Forgot password endpoint (send OTP)
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -251,6 +254,7 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
+// Verify OTP for password reset
 exports.verifyResetOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -312,6 +316,7 @@ exports.verifyResetOTP = async (req, res) => {
   }
 };
 
+// Reset password using reset token
 exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, newPassword } = req.body;
@@ -385,6 +390,7 @@ exports.resetPassword = async (req, res) => {
   }
 };
 
+// Change password for logged-in user
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword, email } = req.body;
@@ -478,10 +484,12 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+// Not implemented: resend verification email
 exports.resendVerification = async (req, res) => {
   res.status(501).json({ message: 'Not implemented yet' });
 };
 
+// Emergency fix for account password (dev only)
 exports.fixAccountPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -515,6 +523,8 @@ exports.fixAccountPassword = async (req, res) => {
     res.status(500).json({ message: 'Error fixing account', error: error.message });
   }
 };
+
+// Test password verification (dev only)
 exports.testPasswordVerification = async (req, res) => {
   if (process.env.NODE_ENV === 'production') {
     return res.status(404).json({ message: 'Not available in production' });
@@ -551,6 +561,7 @@ exports.testPasswordVerification = async (req, res) => {
   }
 };
 
+// Emergency login and password reset (dev only)
 exports.emergencyLogin = async (req, res) => {
   try {
     const { email, password } = req.body;

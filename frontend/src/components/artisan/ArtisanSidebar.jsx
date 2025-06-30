@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../../styles/artisan/ArtisanDashboard.css';
 import logo from '../../assets/logo1.png'; 
 
+// Navigation sidebar component for artisan interface
 const ArtisanSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -13,11 +14,11 @@ const ArtisanSidebar = () => {
     setActiveLink(path);
   };
   
+  // Handle artisan logout with token cleanup
   const handleLogout = (e) => {
     e.preventDefault();
-    console.log('Logging out artisan user');
     
-    // Clear only artisan token from localStorage
+    // Clear artisan authentication token
     localStorage.removeItem('artisanToken');
     
     // Redirect to login page
@@ -43,18 +44,12 @@ const ArtisanSidebar = () => {
             <Link to="/artisan/products" onClick={() => handleLinkClick('/artisan/products')}>
               <FaBox /> Products Update
             </Link>
-          </li>          <li className={activeLink === '/artisan/assignorders' ? 'artisan-active' : ''}>
+          </li>
+          <li className={activeLink === '/artisan/assignorders' ? 'artisan-active' : ''}>
             <Link to="/artisan/assignorders" onClick={() => handleLinkClick('/artisan/assignorders')}>
               <FaRegListAlt /> Assigned Orders
             </Link>
           </li>
-          {/* Reports section hidden - to be implemented in the future 
-          <li className={activeLink === '/artisan/reports' ? 'artisan-active' : ''}>
-            <Link to="/artisan/reports" onClick={() => handleLinkClick('/artisan/reports')}>
-              <FaFileAlt /> Reports
-            </Link>
-          </li>
-          */}
           <li className={activeLink === '/artisan/notification' ? 'artisan-active' : ''}>
             <Link to="/artisan/notification" onClick={() => handleLinkClick('/artisan/notification')}>
               <FaComments /> Notification

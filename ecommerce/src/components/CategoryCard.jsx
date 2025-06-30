@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+// Card for displaying a product category with image and product count
 const CategoryCard = ({ category, image, count }) => {
   return (
     <Link 
+      // Navigates to products page filtered by category
       to={`/products?category=${encodeURIComponent(category.toLowerCase())}`}
       className="flex flex-col items-center group w-full"
     >
@@ -15,6 +17,7 @@ const CategoryCard = ({ category, image, count }) => {
         />
       </div>
       <h3 className="text-base sm:text-lg font-semibold text-center group-hover:text-primary transition-colors">{category}</h3>
+      {/* Show product count if provided */}
       {count !== undefined && <p className="text-xs sm:text-sm text-gray-500">{count} {count === 1 ? 'product' : 'products'}</p>}
     </Link>
   );

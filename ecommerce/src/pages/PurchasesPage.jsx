@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import orderService from '../services/orderService';
 
 const PurchasesPage = () => {
+  // State for orders, filters, UI
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -14,8 +15,8 @@ const PurchasesPage = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  
-  // Fetch orders when component mounts
+
+  // Fetch orders on mount
   useEffect(() => {
     const fetchOrders = async () => {
       try {

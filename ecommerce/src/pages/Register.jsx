@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const RegisterPage = () => {
+  // State for registration form and UI feedback
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',

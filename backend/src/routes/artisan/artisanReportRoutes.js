@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
-// Fix database import and connection handling
 const { sequelize } = require('../../config/db');
 const { formatDate } = require('../../utils/formatters');
 const { generateArtisanPdfReport } = require('../../utils/artisanReportGenerator');
 const path = require('path');
 const fs = require('fs');
 
-// Helper to get date range filter for SQL queries
+// Helper: get date range filter for SQL queries
 const getDateRangeFilter = (startDate, endDate) => {
   if (startDate && endDate) {
     return `AND o.order_date BETWEEN '${startDate}' AND '${endDate}'`;
@@ -15,7 +14,7 @@ const getDateRangeFilter = (startDate, endDate) => {
   return '';
 };
 
-// Helper to handle errors consistently
+// Helper: handle errors for report routes
 const handleError = (res, error) => {
   console.error('Error in artisan report route:', error);
   res.status(500).json({
@@ -26,7 +25,7 @@ const handleError = (res, error) => {
 };
 
 /**
- * Generate orders report for artisan
+ * Orders report for artisan
  */
 router.get('/orders', async (req, res) => {
   try {
@@ -69,7 +68,7 @@ router.get('/orders', async (req, res) => {
 });
 
 /**
- * Generate products report for artisan
+ * Products report for artisan
  */
 router.get('/products', async (req, res) => {
   try {
@@ -105,7 +104,7 @@ router.get('/products', async (req, res) => {
 });
 
 /**
- * Generate performance report for artisan
+ * Performance report for artisan
  */
 router.get('/performance', async (req, res) => {
   try {
@@ -145,8 +144,7 @@ router.get('/performance', async (req, res) => {
 });
 
 /**
- * Generate assignments report for artisan
- * Shows all orders assigned to specific artisans, statuses, delivery timeframes
+ * Assignments report for artisan
  */
 router.get('/assignments', async (req, res) => {
   try {
@@ -183,8 +181,7 @@ router.get('/assignments', async (req, res) => {
 });
 
 /**
- * Generate inventory report for customizable products
- * Shows products with customization_available=true, stock levels, categories
+ * Inventory report for customizable products
  */
 router.get('/inventory', async (req, res) => {
   try {
@@ -219,8 +216,7 @@ router.get('/inventory', async (req, res) => {
 });
 
 /**
- * Generate custom product performance report
- * Revenue from customized products, most frequently customized products, delivery timelines
+ * Custom product performance report
  */
 router.get('/custom-performance', async (req, res) => {
   try {
@@ -347,7 +343,7 @@ router.get('/download/:filename', (req, res) => {
   });
 });
 
-// Helper function to generate periods (months) between two dates
+// Helper: generate periods (months) between two dates
 function generatePeriods(startDate, endDate) {
   const periods = [];
   if (!startDate || !endDate) {

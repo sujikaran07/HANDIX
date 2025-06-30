@@ -1,4 +1,10 @@
-/* Base layout styling with ar- prefix for uniqueness */
+/* 
+ * Admin Reports page styling
+ * Uses ar- prefix for class names to ensure uniqueness and prevent conflicts
+ * Includes layouts for report configuration, visualization components, and responsive design
+ */
+
+/* Base layout styling */
 .ar-reports-page {
   display: flex;
   height: 100vh;
@@ -140,7 +146,7 @@
   padding-bottom: 10px;
   display: flex;
   justify-content: center;
-  margin-bottom: 0; /* Remove bottom margin to match AdminCustomer */
+  margin-bottom: 0;
 }
 
 /* Card styling with consistent properties */

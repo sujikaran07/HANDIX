@@ -6,7 +6,6 @@ import '../styles/admin/AdminTransaction.css';
 const TransactionViewForm = ({ transaction, onBack }) => {
   const getStatusClass = (status) => {
     if (!status) return '';
-    
     switch (status.toLowerCase()) {
       case 'completed':
         return 'status-completed';
@@ -21,6 +20,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
     }
   };
 
+  // Format date string for display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     
@@ -39,6 +39,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
     }
   };
 
+  // Format currency amount for display
   const formatCurrency = (amount) => {
     if (amount === undefined || amount === null) return 'N/A';
     
@@ -52,6 +53,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
     }
   };
 
+  // Handle refund processing for transactions
   const handleRefund = async () => {
     try {
       const confirmed = window.confirm(`Are you sure you want to refund transaction ${transaction.transaction_id} for ${formatCurrency(transaction.amount)}?`);
@@ -94,6 +96,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
     <div className="container mt-4" style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
       <div className="card transaction-view-card" style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
         <div className="card-body p-4 d-flex flex-column">
+          {/* Header with back button and status */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
               <div 
@@ -120,8 +123,9 @@ const TransactionViewForm = ({ transaction, onBack }) => {
             </span>
           </div>
 
+          {/* Scrollable content area */}
           <div className="row g-3 custom-scrollbar" style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 160px)', paddingRight: '5px' }}>
-            {/* Basic Transaction Information */}
+            {/* Basic Transaction Information Section */}
             <div className="col-12">
               <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
                 <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Basic Transaction Information</div>
@@ -148,7 +152,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
               </div>
             </div>
 
-            {/* Customer Information */}
+            {/* Customer Information Section */}
             <div className="col-12">
               <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
                 <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Customer Information</div>
@@ -181,7 +185,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
               </div>
             </div>
 
-            {/* Payment Information */}
+            {/* Payment Information Section */}
             <div className="col-12">
               <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
                 <div className="px-3 py-2" style={{ borderBottom: '1px solid #e3e6f0', fontWeight: 600, fontSize: '15px', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Payment Information</div>
@@ -208,7 +212,7 @@ const TransactionViewForm = ({ transaction, onBack }) => {
               </div>
             </div>
 
-            {/* Order Information (if available) */}
+            {/* Conditional Order Information Section */}
             {(transaction.Order || transaction.orderStatus || transaction.orderTotal) && (
               <div className="col-12">
                 <div className="mb-3 h-100" style={{ border: '1px solid #e3e6f0', borderRadius: '12px', background: '#fff' }}>
@@ -235,4 +239,4 @@ const TransactionViewForm = ({ transaction, onBack }) => {
   );
 };
 
-export default TransactionViewForm; 
+export default TransactionViewForm;

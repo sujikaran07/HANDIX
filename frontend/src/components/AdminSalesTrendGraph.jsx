@@ -1,3 +1,4 @@
+// Sales trend bar graph for admin dashboard
 import React, { useState, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS } from 'chart.js/auto';
@@ -5,6 +6,7 @@ import '../styles/admin/AdminDashboard.css';
 import axios from 'axios';
 
 const SalesTrendGraph = () => {
+  // State for chart data
   const [salesData, setSalesData] = useState({
     labels: [],
     datasets: [{
@@ -20,6 +22,7 @@ const SalesTrendGraph = () => {
   });
 
   useEffect(() => {
+    // Fetch sales trend data from API
     const fetchSalesData = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/dashboard/sales-trend');
@@ -53,6 +56,7 @@ const SalesTrendGraph = () => {
     fetchSalesData();
   }, []);
 
+  // Chart options
   const options = {
     maintainAspectRatio: false,
     plugins: {
@@ -109,6 +113,7 @@ const SalesTrendGraph = () => {
     }
   };
 
+  // Render sales trend bar chart
   return (
     <div className="sales-trend mt-4" style={{ width: '100%' }}>
       <div style={{

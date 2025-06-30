@@ -9,7 +9,7 @@ const { uploadToCloudinary } = require('../../utils/cloudinaryConfig');
 const { sequelize, Sequelize } = require('../../config/db');
 const Op = Sequelize.Op; // Import the operators
 
-// Create a new review
+// Create a new review (with optional images)
 exports.createReview = async (req, res) => {
   try {
     console.log('Review submission body:', req.body);
@@ -302,7 +302,7 @@ exports.getArtisanReviews = async (req, res) => {
   }
 };
 
-// Add a new method to respond to reviews and update status
+// Respond to a review and update status (artisan)
 exports.respondToReview = async (req, res) => {
   try {
     const { review_id, response, status } = req.body;
@@ -396,7 +396,7 @@ exports.respondToReview = async (req, res) => {
   }
 };
 
-// Add new method to get reviews by status (for admin/artisan filtering)
+// Get reviews by status for an artisan (admin/artisan filtering)
 exports.getReviewsByStatus = async (req, res) => {
   try {
     const { status, e_id } = req.query;
@@ -470,7 +470,7 @@ exports.getReviewsByStatus = async (req, res) => {
   }
 };
 
-// Add this new method to get only approved reviews for public display
+// Get only approved reviews for a product (public display)
 exports.getApprovedProductReviews = async (req, res) => {
   try {
     const { product_id } = req.query;

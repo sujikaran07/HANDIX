@@ -5,38 +5,14 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const UserDashboardPage = () => {
+  // State for active tab and selected order
   const [activeTab, setActiveTab] = useState('orders');
   const [selectedOrder, setSelectedOrder] = useState(null);
-  
-  // Sample orders data
-  const orders = [
-    {
-      id: 'HX-1234567',
-      date: '2023-04-15',
-      status: 'delivered',
-      total: 9500,
-      items: 3,
-      trackingId: 'TRK123456789',
-      estimatedDelivery: '2023-04-20'
-    },
-    {
-      id: 'HX-7654321',
-      date: '2023-03-22',
-      status: 'shipped',
-      total: 6200,
-      items: 2,
-      trackingId: 'TRK987654321',
-      estimatedDelivery: '2023-03-29'
-    },
-    {
-      id: 'HX-9876543',
-      date: '2023-02-10',
-      status: 'processing',
-      total: 3500,
-      items: 1
-    }
-  ];
-  
+
+  // TODO: Replace with real orders data from API or context
+  const orders = [];
+
+  // Get color class for order status
   const getStatusColor = (status) => {
     switch (status) {
       case 'processing':
@@ -51,7 +27,8 @@ const UserDashboardPage = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
+  // Get icon for order status
   const getStatusIcon = (status) => {
     switch (status) {
       case 'processing':
@@ -66,7 +43,8 @@ const UserDashboardPage = () => {
         return null;
     }
   };
-  
+
+  // Handle order expand/collapse
   const handleOrderSelect = (order) => {
     setSelectedOrder(selectedOrder?.id === order.id ? null : order);
   };
@@ -85,10 +63,11 @@ const UserDashboardPage = () => {
               <div className="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div className="p-6 border-b">
                   <div className="flex items-center">
-                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">JD</div>
+                    {/* TODO: Replace with real user initials and info */}
+                    <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">--</div>
                     <div className="ml-4">
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-sm text-gray-500">john.doe@example.com</p>
+                      <p className="font-medium">Your Name</p>
+                      <p className="text-sm text-gray-500">your.email@example.com</p>
                     </div>
                   </div>
                 </div>

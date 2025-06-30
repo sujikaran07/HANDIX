@@ -1,14 +1,6 @@
 import React from 'react';
 
-/**
- * A reusable spinner component for loading states
- * 
- * @param {Object} props
- * @param {string} props.size - Size of the spinner (sm, md, lg)
- * @param {string} props.color - Bootstrap color class (primary, secondary, success, etc.)
- * @param {string} props.message - Optional loading message to display
- * @returns {JSX.Element} Spinner component
- */
+// Reusable loading spinner component with customizable size and color
 const Spinner = ({ size = 'md', color = 'primary', message }) => {
   const spinnerSizeClasses = {
     sm: 'spinner-border-sm',

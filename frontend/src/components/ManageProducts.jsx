@@ -14,7 +14,7 @@ const ManageProducts = ({ onViewProduct }) => {
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 7;
+  const productsPerPage = 6;
 
   useEffect(() => {
     const fetchProducts = async () => {

@@ -6,20 +6,20 @@ import ManageProducts from '../../components/ManageProducts';
 import ProductViewForm from '../../components/ProductViewForm';
 import '../../styles/admin/AdminProducts.css';
 
+// Admin products management page with authentication and product viewing
 const AdminManageProductsPage = () => {
   const navigate = useNavigate();
+  // State management for product views and authentication
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showProductDetails, setShowProductDetails] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if admin token exists
+    // Verify admin authentication on page load
     const adminToken = localStorage.getItem('adminToken');
-    console.log('AdminProducts - adminToken check:', adminToken ? 'Token exists' : 'No token found');
     
     if (!adminToken) {
-      console.warn('No admin token found, redirecting to login');
       setIsAuthenticated(false);
       navigate('/login');
       return;
@@ -29,18 +29,17 @@ const AdminManageProductsPage = () => {
     setLoading(false);
   }, [navigate]);
 
+  // Handle product view with image fetching
   const handleViewProduct = async (product) => {
     try {
-      // Optionally fetch additional product details if needed
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        console.error('No token found');
         navigate('/login');
         return;
       }
 
-      // Try to fetch images if available
+      // Fetch product images if available
       try {
         const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
           headers: {
@@ -50,31 +49,31 @@ const AdminManageProductsPage = () => {
         
         if (imagesResponse.ok) {
           const imagesData = await imagesResponse.json();
-          console.log("Images data fetched:", imagesData);
 
           if (imagesData.images && imagesData.images.length > 0) {
             product.entryImages = imagesData.images;
           }
         }
       } catch (error) {
-        console.error("Error fetching images:", error);
+        // Continue with product data even if images fail to load
       }
       
       setSelectedProduct(product);
       setShowProductDetails(true);
     } catch (error) {
-      console.error('Error in view product:', error);
-      // Still show the product with available data
+      // Show product with available data on error
       setSelectedProduct(product);
       setShowProductDetails(true);
     }
   };
 
+  // Return to products list view
   const handleBackToProducts = () => {
     setShowProductDetails(false);
     setSelectedProduct(null);
   };
   
+  // Loading state while verifying authentication
   if (loading) {
     return (
       <div className="container mt-5 text-center">
@@ -92,9 +91,12 @@ const AdminManageProductsPage = () => {
 
   return (
     <div className="admin-products-page">
+      {/* Admin navigation sidebar */}
       <AdminSidebar />
       <div className="main-content">
+        {/* Top navigation bar */}
         <AdminTopbar />
+        {/* Conditional rendering based on view state */}
         {showProductDetails ? (
           <ProductViewForm 
             product={selectedProduct} 

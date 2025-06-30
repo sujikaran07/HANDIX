@@ -6,6 +6,7 @@ const { Customer } = require('../../models/customerModel');
 const ProductVariation = require('../../models/productVariationModel');
 const { sequelize } = require('../../config/db');
 
+// Get user's cart with items and totals
 exports.getUserCart = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -110,6 +111,7 @@ exports.getUserCart = async (req, res) => {
   }
 };
 
+// Add item to cart, create cart if not exists
 exports.addItemToCart = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
@@ -194,6 +196,7 @@ exports.addItemToCart = async (req, res) => {
   }
 };
 
+// Update quantity of a cart item
 exports.updateCartItem = async (req, res) => {
   try {
     const { userId, itemId } = req.params;
@@ -259,6 +262,7 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
+// Remove a single item from cart
 exports.removeCartItem = async (req, res) => {
   try {
     const { userId, itemId } = req.params;
@@ -299,6 +303,7 @@ exports.removeCartItem = async (req, res) => {
   }
 };
 
+// Clear all items from user's cart
 exports.clearCart = async (req, res) => {
   try {
     const { userId } = req.params;

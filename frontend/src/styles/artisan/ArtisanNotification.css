@@ -1,3 +1,10 @@
+/* 
+ * Artisan Notification Styles
+ * Provides styling for the artisan notification interface including notification cards,
+ * priority indicators, and interactive elements
+ */
+
+/* Main layout container */
 .artisan-notification-page {
   display: flex;
   flex-direction: row;
@@ -6,6 +13,7 @@
   font-size: var(--font-size-base);
 }
 
+/* Main content area */
 .artisan-notification-page .artisan-main-content {
   flex: 1;
   padding: 15px;
@@ -18,6 +26,7 @@
   overflow: hidden;
 }
 
+/* Notification container layout */
 .artisan-notification-page .notification-container {
   display: flex;
   flex-direction: column;

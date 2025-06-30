@@ -8,8 +8,10 @@ import ProductViewForm from '../../components/artisan/ProductViewForm';
 import EditProductForm from '../../components/artisan/EditProductForm';
 import '../../styles/artisan/ArtisanProducts.css';
 
+// Artisan products management page with CRUD operations
 const ArtisanProductsPage = () => {
   const navigate = useNavigate();
+  // State management for product operations and authentication
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
   const [loggedInEmployeeId, setLoggedInEmployeeId] = useState(null);
@@ -20,12 +22,10 @@ const ArtisanProductsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if artisan token exists
+    // Verify artisan authentication and get employee ID
     const artisanToken = localStorage.getItem('artisanToken');
-    console.log('ArtisanProducts - artisanToken check:', artisanToken ? 'Token exists' : 'No token found');
     
     if (!artisanToken) {
-      console.warn('No artisan token found, redirecting to login');
       setIsAuthenticated(false);
       navigate('/login');
       return;
@@ -33,10 +33,10 @@ const ArtisanProductsPage = () => {
     
     setIsAuthenticated(true);
     
+    // Fetch logged-in artisan's employee ID
     const fetchLoggedInEmployeeId = async () => {
       try {
         if (!artisanToken) {
-          console.error('No token found for artisan');
           return;
         }
 
@@ -48,15 +48,11 @@ const ArtisanProductsPage = () => {
 
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched logged-in employee ID:', data.eId);
           setLoggedInEmployeeId(data.eId); 
         } else if (response.status === 401) {
-          console.error('Unauthorized access - token may be expired');
           setIsAuthenticated(false);
           navigate('/login');
           return;
-        } else {
-          console.error('Failed to fetch logged-in employee ID');
         }
       } catch (error) {
         console.error('Error fetching logged-in employee ID:', error);
@@ -68,27 +64,30 @@ const ArtisanProductsPage = () => {
     fetchLoggedInEmployeeId();
   }, [navigate]);
 
+  // Handle product view
   const handleViewProduct = async (product) => {
     setSelectedProduct(product);
     setShowProductDetails(true);
   };
 
+  // Handle product edit
   const handleEditProduct = (product) => {
     setSelectedProduct(product);
     setShowEditProductForm(true);
   };
 
+  // Return to products list
   const handleBackToProducts = () => {
     setShowProductDetails(false);
     setShowEditProductForm(false);
     setSelectedProduct(null);
   };
 
+  // Generate new product ID and show add form
   const handleAddProductClick = async () => {
     try {
       const token = localStorage.getItem('artisanToken'); 
       if (!token) {
-        console.error('No token found for artisan');
         navigate('/login');
         return;
       }
@@ -114,6 +113,7 @@ const ArtisanProductsPage = () => {
     setShowAddProductForm(false);
   };
 
+  // Save new product to database
   const handleSave = async (newProduct) => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -142,6 +142,7 @@ const ArtisanProductsPage = () => {
     }
   };
 
+  // Update existing product
   const handleUpdateProduct = async (updatedProduct) => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -171,6 +172,7 @@ const ArtisanProductsPage = () => {
     }
   };
 
+  // Loading state while verifying authentication
   if (loading) {
     return (
       <div className="container mt-5 text-center">
@@ -191,6 +193,7 @@ const ArtisanProductsPage = () => {
       <ArtisanSidebar />
       <div className="artisan-main-content">
         <ArtisanTopBar />
+        {/* Conditional rendering based on current view */}
         {showProductDetails ? (
           <ProductViewForm product={selectedProduct} onBack={handleBackToProducts} />
         ) : showEditProductForm ? (

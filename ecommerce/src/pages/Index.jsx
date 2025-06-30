@@ -10,7 +10,7 @@ import CategoryCard from '../components/CategoryCard';
 import { fetchProducts } from '../data/products';
 import { Progress } from '../components/ui/progress';
 
-// Fix the environment variable reference for Vite
+// API base URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const HomePage = () => {
@@ -20,8 +20,8 @@ const HomePage = () => {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState(null);
   const [usingFallbackCategories, setUsingFallbackCategories] = useState(false);
-  
-  // Fallback categories for when API fails
+
+  // Fallback categories if API fails
   const fallbackCategories = [
     { category_id: 1, category_name: "Carry Goods", product_count: 0 },
     { category_id: 2, category_name: "Clothing", product_count: 0 },
@@ -29,130 +29,92 @@ const HomePage = () => {
     { category_id: 4, category_name: "Crafts", product_count: 0 },
     { category_id: 5, category_name: "Accessories", product_count: 0 }
   ];
-  
-  // Fetch categories directly in component
+
+  // Fetch categories from API or fallback
   const fetchCategories = async () => {
-    console.log(`Attempting to fetch categories from: ${API_URL}/categories`);
     try {
       const response = await axios.get(`${API_URL}/categories`, {
-        timeout: 5000 // Add timeout to prevent long waits
+        timeout: 5000
       });
-      console.log("Categories API response:", response);
       setUsingFallbackCategories(false);
       return response.data.data;
     } catch (error) {
-      console.error("Error fetching categories:", error.message);
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-        console.error("Response headers:", error.response.headers);
-      } else if (error.request) {
-        // The request was made but no response was received
-        console.error("No response received:", error.request);
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        console.error("Request error:", error.message);
-      }
       setUsingFallbackCategories(true);
-      console.log("Using fallback categories due to API error");
       return fallbackCategories;
     }
   };
-  
-  // Add this new function to get correct product counts
+
+  // Calculate correct product counts for categories
   const getCorrectCategoryProductCounts = (productsList, categoriesList) => {
-    // Create a map to count distinct products by category
     const categoryProductMap = {};
-    
-    // Initialize counts for all categories to 0
     categoriesList.forEach(cat => {
       categoryProductMap[cat.category_id] = {
         count: 0,
         distinctProductIds: new Set()
       };
     });
-    
-    // Count distinct products per category
     productsList.forEach(product => {
       const categoryId = categoriesList.find(
         cat => cat.category_name === product.category
       )?.category_id;
-      
       if (categoryId && product.id) {
         categoryProductMap[categoryId].distinctProductIds.add(product.id);
       }
     });
-    
-    // Convert distinct product sets to counts
     Object.keys(categoryProductMap).forEach(catId => {
       categoryProductMap[catId].count = categoryProductMap[catId].distinctProductIds.size;
     });
-    
-    // Return updated categories with correct counts
     return categoriesList.map(cat => ({
       ...cat,
       product_count: categoryProductMap[cat.category_id]?.count || 0
     }));
   };
-  
+
+  // Load products and categories on mount
   useEffect(() => {
     const loadProducts = async () => {
       try {
         setLoading(true);
         const data = await fetchProducts();
         setProducts(data);
-        return data; // Return products data for use below
+        return data;
       } catch (err) {
-        console.error("Error loading products:", err);
         setError("Failed to load products");
         return [];
       } finally {
         setLoading(false);
       }
     };
-    
     const loadCategories = async (productsList) => {
       try {
         setCategoriesLoading(true);
         let data = await fetchCategories();
-        
-        // If we have products, recalculate the category product counts
         if (productsList.length > 0) {
           data = getCorrectCategoryProductCounts(productsList, data);
-          console.log("Corrected category counts:", data.map(c => 
-            `${c.category_name}: ${c.product_count} products`).join(', '));
         }
-        
         setCategories(data);
       } catch (err) {
-        console.error("Error loading categories:", err);
-        // If there's a catastrophic error, set fallback categories
         setCategories(getCorrectCategoryProductCounts(productsList, fallbackCategories));
         setUsingFallbackCategories(true);
       } finally {
         setCategoriesLoading(false);
       }
     };
-    
-    // Load products first, then use that data to correct category counts
+    // Load products first, then categories
     loadProducts().then(productsList => {
       loadCategories(productsList);
     });
   }, []);
-  
-  // Get featured products (first 4)
+
+  // Featured, popular, and new products
   const featuredProducts = products.slice(0, 4);
-  // Get popular products (based on rating if available)
   const popularProducts = [...products]
     .filter(p => p.rating !== undefined)
     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
     .slice(0, 4);
-  // New arrivals (simulating with last 4 products)
   const newArrivals = products.slice(-4).reverse();
-  
-  // Category images mapping - you might want to store these in the database later
+
+  // Category images mapping
   const categoryImages = {
     "Carry Goods": "https://i.pinimg.com/736x/aa/54/65/aa5465fbf05cc1227a770a23704f8cdf.jpg",
     "Clothing": "https://i.pinimg.com/736x/25/af/8a/25af8af775b256edb23e34a1ad02a8d8.jpg",
@@ -160,7 +122,7 @@ const HomePage = () => {
     "Crafts": "https://i.pinimg.com/736x/fb/6a/e5/fb6ae547e543e097408b974b7889cbfd.jpg",
     "Accessories": "https://i.pinimg.com/736x/e4/b9/35/e4b935d3a0537aa49b76be1e8666e53b.jpg"
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />

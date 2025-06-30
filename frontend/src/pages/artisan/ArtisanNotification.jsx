@@ -6,8 +6,8 @@ import { format } from 'date-fns';
 import '../../styles/artisan/ArtisanDashboard.css';
 import '../../styles/artisan/ArtisanNotification.css';
 
+// Group notifications by date for organized display
 const groupByDate = (notifications) => {
-  // Sort notifications by timestamp descending before grouping
   const sorted = [...notifications].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   return sorted.reduce((acc, n) => {
     const dateKey = n.timestamp ? format(new Date(n.timestamp), 'MMMM d, yyyy') : 'Unknown date';
@@ -17,11 +17,13 @@ const groupByDate = (notifications) => {
   }, {});
 };
 
+// Artisan notifications page displaying restock requests, orders, and product entries
 const ArtisanNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch notifications for the logged-in artisan
     const fetchNotifications = async () => {
       try {
         const artisan_id = localStorage.getItem('artisanId');
@@ -33,10 +35,8 @@ const ArtisanNotification = () => {
         if (!response.ok) throw new Error('Failed to fetch notifications');
         const data = await response.json();
         setNotifications(data);
-        console.log('Notifications from backend:', data);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching notifications:', error);
         setIsLoading(false);
       }
     };
@@ -52,6 +52,7 @@ const ArtisanNotification = () => {
         <ArtisanTopBar />
         <div className="container mt-4 notification-container">
           <div className="card notification-card">
+            {/* Notification header */}
             <div className="notification-header d-flex align-items-center">
               <FaBell className="notification-icon" />
               <div className="text-section">
@@ -79,13 +80,14 @@ const ArtisanNotification = () => {
                     <div key={date}>
                       <div className="notification-date-header">{date}</div>
                       {notifs.map((n, idx) => {
-                        // Assign color class based on notification type
+                        // Assign styling based on notification type
                         let typeClass = '';
                         if (n.type === 'restock') typeClass = 'card-restock';
                         else if (n.type === 'entry') typeClass = 'card-entry';
                         else if (n.type === 'order') typeClass = 'card-order';
                         return (
                           <div key={idx} className={`notification-item notification-card-row ${typeClass}`}>
+                            {/* Notification icon based on type */}
                             <div className="notification-icon-container">
                               {n.type === 'restock' && <FaBox />}
                               {n.type === 'entry' && <FaClipboardList />}

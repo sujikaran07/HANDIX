@@ -11,7 +11,8 @@ const AdminDashboardPage = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('products');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
+  // Load products on mount
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -25,24 +26,22 @@ const AdminDashboardPage = () => {
         setLoading(false);
       }
     };
-    
     loadProducts();
   }, []);
-  
+
+  // Filter products by search term
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow bg-gray-50 py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
-          
           <div className="grid md:grid-cols-4 gap-8">
-            {/* Sidebar */}
+            {/* Sidebar navigation */}
             <div className="md:col-span-1">
               <div className="bg-white shadow-sm rounded-lg overflow-hidden">
                 <div className="p-6 border-b">
@@ -55,6 +54,7 @@ const AdminDashboardPage = () => {
                   </div>
                 </div>
                 <nav>
+                  {/* Tab buttons */}
                   <button 
                     onClick={() => setActiveTab('products')}
                     className={`w-full flex items-center p-4 border-b hover:bg-gray-50 ${
@@ -89,8 +89,7 @@ const AdminDashboardPage = () => {
                 </nav>
               </div>
             </div>
-            
-            {/* Main Content */}
+            {/* Main content area */}
             <div className="md:col-span-3">
               <div className="bg-white shadow-sm rounded-lg p-6">
                 {/* Products Tab */}
@@ -106,7 +105,7 @@ const AdminDashboardPage = () => {
                         Add New Product
                       </Link>
                     </div>
-                    
+                    {/* Product search input */}
                     <div className="relative mb-6">
                       <input
                         type="text"
@@ -117,7 +116,7 @@ const AdminDashboardPage = () => {
                       />
                       <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
                     </div>
-                    
+                    {/* Product table */}
                     {loading ? (
                       <div className="flex justify-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
@@ -189,12 +188,11 @@ const AdminDashboardPage = () => {
                     )}
                   </div>
                 )}
-                
                 {/* Orders Tab */}
                 {activeTab === 'orders' && (
                   <div>
                     <h2 className="text-xl font-bold mb-6">Manage Orders</h2>
-                    
+                    {/* Orders table */}
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
@@ -208,46 +206,10 @@ const AdminDashboardPage = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="border-b">
-                            <td className="py-4">HX-1234567</td>
-                            <td>John Doe</td>
-                            <td>2023-04-15</td>
-                            <td>
-                              <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                Completed
-                              </span>
-                            </td>
-                            <td>LKR 9,500</td>
-                            <td>
-                              <button className="text-primary hover:underline">View Details</button>
-                            </td>
-                          </tr>
-                          <tr className="border-b">
-                            <td className="py-4">HX-7654321</td>
-                            <td>Jane Smith</td>
-                            <td>2023-03-22</td>
-                            <td>
-                              <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                                Processing
-                              </span>
-                            </td>
-                            <td>LKR 6,200</td>
-                            <td>
-                              <button className="text-primary hover:underline">View Details</button>
-                            </td>
-                          </tr>
+                          {/* No orders data yet */}
                           <tr>
-                            <td className="py-4">HX-9876543</td>
-                            <td>Mike Johnson</td>
-                            <td>2023-02-10</td>
-                            <td>
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                Shipped
-                              </span>
-                            </td>
-                            <td>LKR 3,500</td>
-                            <td>
-                              <button className="text-primary hover:underline">View Details</button>
+                            <td colSpan="6" className="py-4 text-center text-gray-500">
+                              No orders found
                             </td>
                           </tr>
                         </tbody>
@@ -255,12 +217,11 @@ const AdminDashboardPage = () => {
                     </div>
                   </div>
                 )}
-                
                 {/* Users Tab */}
                 {activeTab === 'users' && (
                   <div>
                     <h2 className="text-xl font-bold mb-6">Manage Users</h2>
-                    
+                    {/* Users table */}
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead>
@@ -273,52 +234,10 @@ const AdminDashboardPage = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="border-b">
-                            <td className="py-4">John Doe</td>
-                            <td>john.doe@example.com</td>
-                            <td>Customer</td>
-                            <td>2023-01-15</td>
-                            <td>
-                              <div className="flex space-x-2">
-                                <button className="p-1 hover:text-primary">
-                                  <Edit size={16} />
-                                </button>
-                                <button className="p-1 hover:text-red-500">
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                          <tr className="border-b">
-                            <td className="py-4">Sarah Williams</td>
-                            <td>sarah@example.com</td>
-                            <td>Artisan</td>
-                            <td>2023-02-22</td>
-                            <td>
-                              <div className="flex space-x-2">
-                                <button className="p-1 hover:text-primary">
-                                  <Edit size={16} />
-                                </button>
-                                <button className="p-1 hover:text-red-500">
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                          {/* No users data yet */}
                           <tr>
-                            <td className="py-4">Mike Johnson</td>
-                            <td>mike@example.com</td>
-                            <td>Customer</td>
-                            <td>2023-03-10</td>
-                            <td>
-                              <div className="flex space-x-2">
-                                <button className="p-1 hover:text-primary">
-                                  <Edit size={16} />
-                                </button>
-                                <button className="p-1 hover:text-red-500">
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
+                            <td colSpan="5" className="py-4 text-center text-gray-500">
+                              No users found
                             </td>
                           </tr>
                         </tbody>
@@ -331,7 +250,6 @@ const AdminDashboardPage = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );

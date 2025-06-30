@@ -6,9 +6,10 @@ const CartContext = createContext(undefined);
 const API_BASE_URL = 'http://localhost:5000/api';
 
 export const CartProvider = ({ children }) => {
+  // State for cart items, totals, and UI feedback
   const [items, setItems] = useState([]);
   const [itemCount, setItemCount] = useState(0);
-  const [productCount, setProductCount] = useState(0); // Unique product count
+  const [productCount, setProductCount] = useState(0); 
   const [subtotal, setSubtotal] = useState(0);
   const [customizationTotal, setCustomizationTotal] = useState(0);
   const [total, setTotal] = useState(0);
@@ -16,7 +17,7 @@ export const CartProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const { toast } = useToast();
 
-  // Get user from localStorage (if authenticated)
+  // Get user ID from localStorage
   const getUserId = () => {
     try {
       const userString = localStorage.getItem('user');
@@ -30,11 +31,12 @@ export const CartProvider = ({ children }) => {
     return null;
   };
 
+  // Check authentication status
   const isAuthenticated = () => {
     return localStorage.getItem('isAuthenticated') === 'true' && getUserId() !== null;
   };
 
-  // Load cart: from API if authenticated, otherwise from localStorage
+  // Load cart from API or localStorage on mount
   useEffect(() => {
     const fetchCart = async () => {
       setLoading(true);
@@ -101,14 +103,14 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, []);
 
-  // Save cart to localStorage when it changes (as backup and for non-authenticated users)
+  // Save cart to localStorage when items change
   useEffect(() => {
     if (!loading) {
       localStorage.setItem('handixCart', JSON.stringify(items));
     }
   }, [items, loading]);
 
-  // Add item to cart
+  // Add item to cart (API or local)
   const addItem = async (product, quantity, customization) => {
     try {
       // Calculate the total unit price (base price + customization fee if applicable)
@@ -385,7 +387,7 @@ export const CartProvider = ({ children }) => {
       updateQuantity,
       clearCart,
       itemCount,
-      productCount, // Number of unique products
+      productCount,
       subtotal,
       customizationTotal,
       total,

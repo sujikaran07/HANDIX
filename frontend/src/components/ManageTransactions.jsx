@@ -22,7 +22,7 @@ const ManageTransactions = ({ onViewTransaction }) => {
   const [selectedPaymentMethods, setSelectedPaymentMethods] = useState([...paymentMethodsList]);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const transactionsPerPage = 7;
+  const transactionsPerPage = 5;
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {

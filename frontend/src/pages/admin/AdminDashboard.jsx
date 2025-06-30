@@ -6,28 +6,26 @@ import AdminDashboardCards from '../../components/AdminDashboardCards';
 import SalesTrendGraph from '../../components/AdminSalesTrendGraph';
 import '../../styles/admin/AdminDashboard.css';
 
+// Admin dashboard page with authentication and layout
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if admin token exists
+    // Check admin token
     const adminToken = localStorage.getItem('adminToken');
-    console.log('AdminDashboard - adminToken check:', adminToken ? 'Token exists' : 'No token found');
-    
     if (!adminToken) {
-      console.warn('No admin token found, redirecting to login');
       setIsAuthenticated(false);
       navigate('/login');
       return;
     }
-    
     setIsAuthenticated(true);
     setLoading(false);
   }, [navigate]);
 
   if (loading) {
+    // Show spinner while loading
     return (
       <div className="container mt-5 text-center">
         <div className="spinner-border text-primary" role="status">
@@ -39,13 +37,15 @@ const AdminDashboard = () => {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
+    // Redirected if not authenticated
+    return null; 
   }
 
+  // Dashboard layout
   return (
     <div className="dashboard-container">
       <AdminSidebar />
-      <AdminTopbar /> 
+      <AdminTopbar />
       <div className="main-content">
         <div className="dashboard-title">
           <h2>Dashboard</h2>

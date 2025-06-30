@@ -17,27 +17,27 @@ const { upload } = require('../../utils/cloudinaryConfig');
 
 const router = express.Router();
 
-// Get all artisans
+// Route: Get all artisans
 router.get('/', getAllArtisans);
 
-// Get orders that can be assigned to artisans
+// Route: Get orders that can be assigned to artisans
 router.get('/assignable-orders', getAssignableOrders);
 
-// Get specific artisan by ID
+// Route: Get specific artisan by ID
 router.get('/:id', getArtisanById);
 
-// Get workload information for a specific artisan
+// Route: Get workload information for a specific artisan
 router.get('/:id/workload', getArtisanWorkload);
 
-// Assign an order to an artisan
+// Route: Assign an order to an artisan
 router.put('/assign-order/:orderId', assignOrderToArtisan);
 
-// Settings routes - reuse employee controllers but with role check for artisans
+// Artisan settings/profile routes (protected)
 router.get('/settings/profile', authMiddleware, getEmployeeProfile);
 router.put('/settings/profile', authMiddleware, updateEmployeeProfile);
 router.put('/settings/profile-picture', authMiddleware, upload.single('profilePicture'), updateProfilePicture);
 router.put('/settings/password', authMiddleware, changePassword);
 
-// You can add more artisan-specific routes here
+// ...add more artisan-specific routes here if needed
 
 module.exports = router;

@@ -2,6 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Textarea component for multi-line text input
 const Textarea = React.forwardRef(({ className, ...props }, ref) => {
   return (
     <textarea

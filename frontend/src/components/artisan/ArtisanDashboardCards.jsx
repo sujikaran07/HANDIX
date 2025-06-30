@@ -3,7 +3,9 @@ import "../../styles/artisan/ArtisanDashboard.css";
 import axios from "axios";
 import { jwtDecode } from 'jwt-decode';
 
-const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = useState({
+// Dashboard cards component displaying artisan's key metrics
+const ArtisanDashboardCards = () => {
+  const [summaryData, setSummaryData] = useState({
     totalProducts: 0,
     totalProductQuantity: 0,
     assignedOrders: 0,
@@ -12,7 +14,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Function to extract artisan ID from token
+  // Extract artisan ID from JWT token
   const getArtisanIdFromToken = () => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -21,52 +23,47 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
       }
       
       const decoded = jwtDecode(token);
-      console.log('Decoded token in dashboard cards:', decoded);
-      return decoded.id; // The employee ID is stored as 'id' in the token
+      return decoded.id;
     } catch (error) {
-      console.error('Error decoding token in dashboard cards:', error);
       return null;
     }
   };
+
   useEffect(() => {
+    // Fetch dashboard summary data for the artisan
     const fetchSummaryData = async () => {
       try {
         setLoading(true);
         
-        // Get artisan ID from token
+        // Get artisan ID from JWT token
         const artisanId = getArtisanIdFromToken();
         
         if (!artisanId) {
           throw new Error('Authentication error. Please log in again.');
         }
         
-        // Store artisanId in localStorage for other components
+        // Store artisan ID for other components
         localStorage.setItem('artisanId', artisanId);
         
-        // Set authorization header with token
+        // Set authorization header
         const token = localStorage.getItem('artisanToken');
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
-        // Add a timeout to prevent hanging if the request takes too long
+        // Add timeout to prevent hanging requests
         const timeoutPromise = new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Request timeout')), 8000)
         );
         
-        console.log('Fetching artisan dashboard summary...');
-        
-        // Fetch the actual summary data
         const fetchPromise = axios.get(`http://localhost:5000/api/artisan-dashboard/summary/${artisanId}`);
         
         try {
           const response = await Promise.race([fetchPromise, timeoutPromise]);
-          console.log('Artisan dashboard summary response:', response.data);
           
-          // Explicitly convert the totalProductQuantity to a number to fix display issues
+          // Process and format response data
           const productQuantity = Number(response.data.totalProductQuantity) || 0;
             
-          // Ensure data has proper format - use productQuantity for totalProducts
           const responseData = {
-            totalProducts: productQuantity, // Use the quantity here for display
+            totalProducts: productQuantity,
             assignedOrders: parseInt(response.data.assignedOrders) || 0,
             completedOrders: parseInt(response.data.completedOrders) || 0
           };
@@ -74,9 +71,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
           setSummaryData(responseData);
           setError(null);
         } catch (fetchError) {
-          console.error('Error fetching artisan dashboard summary:', fetchError);
-          
-          // Show more detailed error messages
+          // Handle fetch errors with detailed messages
           const errorMessage = fetchError.response ? 
             `Error ${fetchError.response.status}: ${fetchError.response.data?.error || 'Unknown error'}` :
             `Failed to fetch data: ${fetchError.message}`;
@@ -91,6 +86,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
     fetchSummaryData();
   }, []);
 
+  // Loading state display
   if (loading) {
     return (
       <div className="artisan-dashboard-cards" style={{ paddingBottom: '20px', opacity: 0.7 }}>
@@ -133,6 +129,7 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
 
   return (
     <div className="artisan-dashboard-cards" style={{ paddingBottom: '20px' }}>
+      {/* Total product units card */}
       <div className="artisan-card" style={{ 
         padding: '20px',
         borderRadius: '10px',
@@ -159,7 +156,9 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
           All product items
         </span>
       </div>
-        <div className="artisan-card" style={{ 
+
+      {/* Ongoing orders card */}
+      <div className="artisan-card" style={{ 
         padding: '20px',
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -185,7 +184,9 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
           Currently Active
         </span>
       </div>
-        <div className="artisan-card" style={{ 
+
+      {/* Completed orders card */}
+      <div className="artisan-card" style={{ 
         padding: '20px',
         borderRadius: '10px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -211,6 +212,8 @@ const ArtisanDashboardCards = () => {  const [summaryData, setSummaryData] = use
           All Time
         </span>
       </div>
+
+      {/* Error display */}
       {error && (
         <div style={{
           color: '#e74c3c', 

@@ -1,3 +1,10 @@
+/* 
+ * Artisan Products Page Styling
+ * Provides styling for product management interface used by artisans
+ * Includes product tables, status indicators, and responsive design
+ */
+
+/* Base typography and document setup */
 body {
     font-family: "Poppins", sans-serif, Arial, sans-serif; 
     font-size: 1rem; 
@@ -12,14 +19,15 @@ body {
     overflow: hidden;
 }
 
+/* Main layout container */
 .artisan-products-page {
     display: flex;
-    flex-direction: column;
     flex-direction: row;
     height: 100vh;
     font-size: var(--font-size-base); 
 }
 
+/* Main content area */
 .artisan-products-page .artisan-main-content {
     flex: 1;
     padding: 15px;

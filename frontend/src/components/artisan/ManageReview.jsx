@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import Spinner from '../common/Spinner';
 
+// Placeholder component for artisan review management functionality
 const ManageReview = () => {
+  // Loading state for future API calls
   const [isLoading, setIsLoading] = useState(false);
 
   return (
     <div className="artisan-manage-review-page">
       <h1>Manage Product Reviews</h1>
-      {/* TODO: Add review table and fetch logic here */}
       {isLoading ? (
         <div className="text-center my-5">
           <Spinner />
@@ -21,4 +22,4 @@ const ManageReview = () => {
   );
 };
 
-export default ManageReview; 
+export default ManageReview;

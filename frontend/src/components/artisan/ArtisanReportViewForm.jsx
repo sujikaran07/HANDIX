@@ -138,7 +138,7 @@ const ArtisanReportViewForm = ({ reportData, reportType, dateRange, onBackClick,
       initLineChart();
     }
     
-    // Clean up on unmount
+    // Clean up on unmounts
     return () => {
       if (barChartInstance.current) barChartInstance.current.destroy();
       if (pieChartInstance.current) pieChartInstance.current.destroy();

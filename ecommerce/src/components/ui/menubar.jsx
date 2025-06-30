@@ -4,14 +4,11 @@ import { Check, ChevronRight, Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Menubar root component for navigation/menu bars
 const MenubarMenu = MenubarPrimitive.Menu
-
 const MenubarGroup = MenubarPrimitive.Group
-
 const MenubarPortal = MenubarPrimitive.Portal
-
 const MenubarSub = MenubarPrimitive.Sub
-
 const MenubarRadioGroup = MenubarPrimitive.RadioGroup
 
 const Menubar = React.forwardRef(({ className, ...props }, ref) => (
@@ -26,6 +23,7 @@ const Menubar = React.forwardRef(({ className, ...props }, ref) => (
 ))
 Menubar.displayName = MenubarPrimitive.Root.displayName
 
+// Trigger for opening a menubar menu
 const MenubarTrigger = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.Trigger
     ref={ref}
@@ -38,6 +36,7 @@ const MenubarTrigger = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName
 
+// Submenu trigger for nested menus
 const MenubarSubTrigger = React.forwardRef(({ className, inset, children, ...props }, ref) => (
   <MenubarPrimitive.SubTrigger
     ref={ref}
@@ -54,6 +53,7 @@ const MenubarSubTrigger = React.forwardRef(({ className, inset, children, ...pro
 ))
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName
 
+// Submenu content
 const MenubarSubContent = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.SubContent
     ref={ref}
@@ -66,6 +66,7 @@ const MenubarSubContent = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName
 
+// Main menu content
 const MenubarContent = React.forwardRef(
   ({ className, align = "start", alignOffset = -4, sideOffset = 8, ...props }, ref) => (
     <MenubarPrimitive.Portal>
@@ -85,6 +86,7 @@ const MenubarContent = React.forwardRef(
 )
 MenubarContent.displayName = MenubarPrimitive.Content.displayName
 
+// Single menu item
 const MenubarItem = React.forwardRef(({ className, inset, ...props }, ref) => (
   <MenubarPrimitive.Item
     ref={ref}
@@ -98,6 +100,7 @@ const MenubarItem = React.forwardRef(({ className, inset, ...props }, ref) => (
 ))
 MenubarItem.displayName = MenubarPrimitive.Item.displayName
 
+// Checkbox menu item
 const MenubarCheckboxItem = React.forwardRef(({ className, children, checked, ...props }, ref) => (
   <MenubarPrimitive.CheckboxItem
     ref={ref}
@@ -118,6 +121,7 @@ const MenubarCheckboxItem = React.forwardRef(({ className, children, checked, ..
 ))
 MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName
 
+// Radio menu item
 const MenubarRadioItem = React.forwardRef(({ className, children, ...props }, ref) => (
   <MenubarPrimitive.RadioItem
     ref={ref}
@@ -137,6 +141,7 @@ const MenubarRadioItem = React.forwardRef(({ className, children, ...props }, re
 ))
 MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName
 
+// Label for menu sections
 const MenubarLabel = React.forwardRef(({ className, inset, ...props }, ref) => (
   <MenubarPrimitive.Label
     ref={ref}
@@ -150,6 +155,7 @@ const MenubarLabel = React.forwardRef(({ className, inset, ...props }, ref) => (
 ))
 MenubarLabel.displayName = MenubarPrimitive.Label.displayName
 
+// Separator for menu sections
 const MenubarSeparator = React.forwardRef(({ className, ...props }, ref) => (
   <MenubarPrimitive.Separator
     ref={ref}
@@ -159,6 +165,7 @@ const MenubarSeparator = React.forwardRef(({ className, ...props }, ref) => (
 ))
 MenubarSeparator.displayName = MenubarPrimitive.Separator.displayName
 
+// Shortcut text for menu item
 const MenubarShortcut = ({ className, ...props }) => {
   return (
     <span

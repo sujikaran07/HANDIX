@@ -2,6 +2,7 @@ const { ProfileImage } = require('../../models/profileImageModel');
 const { Customer } = require('../../models/customerModel');
 const { cloudinary } = require('../../utils/cloudinaryConfig');
 
+// Upload or update customer profile image
 const uploadProfileImage = async (req, res) => {
   try {
     const { c_id } = req.params;
@@ -51,6 +52,7 @@ const uploadProfileImage = async (req, res) => {
   }
 };
 
+// Get customer profile image by c_id
 const getProfileImage = async (req, res) => {
   try {
     const { c_id } = req.params;
@@ -70,6 +72,7 @@ const getProfileImage = async (req, res) => {
   }
 };
 
+// Delete customer profile image from Cloudinary and DB
 const deleteProfileImage = async (req, res) => {
   try {
     const { c_id } = req.params;

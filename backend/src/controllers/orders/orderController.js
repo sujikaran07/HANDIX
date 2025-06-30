@@ -8,6 +8,7 @@ const { sequelize } = require('../../config/db');
 const { Address } = require('../../models/addressModel');
 const ProductImage = require('../../models/productImageModel');
 
+// Get all orders with customer and order details
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.findAll({
@@ -116,6 +117,7 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+// Get order by ID with customer, address, and order details
 const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -136,17 +138,28 @@ const getOrderById = async (req, res) => {
     
     const orderData = order.toJSON();
     
-    if (!orderData.shippingFee) {
-      orderData.shippingFee = 350;
+    // Always provide a consistent shippingFee field
+    orderData.shippingFee = orderData.shippingFee || orderData.shipping_fee || orderData.shippingCost || 350;
+
+    // Add shippingAddress: use latest shipping address for this customer if available
+    let shippingAddress = null;
+    if (orderData.customerInfo && orderData.customerInfo.addresses && orderData.customerInfo.addresses.length > 0) {
+      // Find the most recent shipping address
+      const shippingAddresses = orderData.customerInfo.addresses.filter(addr => addr.addressType === 'shipping');
+      if (shippingAddresses.length > 0) {
+        // Sort by createdAt descending, pick the latest
+        shippingAddresses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        shippingAddress = shippingAddresses[0];
+      }
     }
-    
+    orderData.shippingAddress = shippingAddress;
+
     if (orderData.orderDetails && orderData.orderDetails.length > 0) {
       for (const detail of orderData.orderDetails) {
         try {
           const productImage = await ProductImage.findOne({
             where: { product_id: detail.product_id }
           });
-          
           if (productImage) {
             detail.product_image = productImage.image_url;
           }
@@ -161,7 +174,6 @@ const getOrderById = async (req, res) => {
     orderData.isRefundable = (orderData.orderStatus === 'Cancelled') &&
       (orderData.paymentStatus === 'Paid') &&
       (orderData.paymentMethod && cardMethods.includes(orderData.paymentMethod.toLowerCase()));
-    
     res.status(200).json(orderData);
   } catch (error) {
     console.error('Error fetching order:', error);
@@ -169,6 +181,7 @@ const getOrderById = async (req, res) => {
   }
 };
 
+// Create a new order and update inventory
 const createOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -250,6 +263,7 @@ const createOrder = async (req, res) => {
   }
 };
 
+// Update order status, payment, or artisan assignment
 const updateOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -360,6 +374,7 @@ const updateOrder = async (req, res) => {
   }
 };
 
+// Delete an order by ID
 const deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;
@@ -374,6 +389,7 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// Get all artisans with their order workload and availability
 const getArtisansWithOrderInfo = async (req, res) => {
   try {
     console.log('Starting getArtisansWithOrderInfo function');
@@ -477,6 +493,7 @@ const getArtisansWithOrderInfo = async (req, res) => {
   }
 };
 
+// Get all orders for a specific customer
 const getCustomerOrders = async (req, res) => {
   try {
     const customerId = req.query.customerId || (req.user && req.user.id);
@@ -549,6 +566,7 @@ const getCustomerOrders = async (req, res) => {
   }
 };
 
+// Confirm an order (set to Processing, send confirmation email)
 const confirmOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -644,6 +662,7 @@ const confirmOrder = async (req, res) => {
   }
 };
 
+// Cancel an order (set to Cancelled, return items to inventory, send email)
 const cancelOrder = async (req, res) => {
   const transaction = await sequelize.transaction();
   
@@ -757,6 +776,7 @@ const cancelOrder = async (req, res) => {
   }
 };
 
+// Get assignable orders (Pending, not assigned)
 const getAssignableOrders = async (req, res) => {
   try {
     // Modified to only fetch Pending orders (not Processing)

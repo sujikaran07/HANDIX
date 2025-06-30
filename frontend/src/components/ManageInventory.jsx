@@ -8,6 +8,7 @@ import Pagination from './Pagination';
 import '../styles/admin/AdminInventory.css';
 
 const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories }) => {
+  // State management for inventory data 
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +17,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
-  const inventoryPerPage = 7;
+  const inventoryPerPage = 6;
   const [refreshKey, setRefreshKey] = useState(0); 
 
   useEffect(() => {
@@ -26,7 +27,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
         const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         
         if (!token) {
-          console.error('No token found in localStorage');
           setError('Authentication required. Please login again.');
           setLoading(false);
           return;
@@ -40,11 +40,10 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
         
         if (response.ok) {
           const data = await response.json();
-          console.log('Fetched inventory data:', data);
           setInventory(data.inventory);
           setLoading(false);
         } else if (response.status === 401) {
-          console.warn('Token expired. Attempting to refresh token...');
+          // Handle token refresh
           const refreshResponse = await fetch('http://localhost:5000/api/login/refresh-token', {
             method: 'POST',
             headers: {
@@ -55,7 +54,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
 
           if (refreshResponse.ok) {
             const refreshData = await refreshResponse.json();
-            console.log('Token refreshed:', refreshData.token);
             localStorage.setItem('token', refreshData.token);
             fetchInventory();
           } else {
@@ -67,14 +65,13 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
           setLoading(false);
         }
       } catch (error) {
-        console.error('Error fetching inventory:', error);
         setError('An error occurred while fetching inventory data.');
         setLoading(false);
       }
     };
 
     fetchInventory();
-  }, [refreshKey]); // Add refreshKey to dependencies
+  }, [refreshKey]);
 
   const handleCategoryChange = (category) => {
     setSelectedCategories((prevSelected) =>
@@ -84,12 +81,11 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
     );
   };
 
-  // Update function to handle product disabling/enabling
+  // Handle product enable/disable functionality
   const handleToggleProductStatus = async (item) => {
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
       if (!token) {
-        console.error('No token found in localStorage');
         setError('Authentication required. Please login again.');
         return;
       }
@@ -97,7 +93,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
       const currentStatus = item.product_status;
       const action = currentStatus === 'Disabled' ? 'enable' : 'disable';
       
-      console.log(`Attempting to ${action} product ${item.product_id}`);
       const endpoint = `http://localhost:5000/api/inventory/${item.product_id}/${action}`;
 
       const response = await fetch(endpoint, {
@@ -110,10 +105,9 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`Product ${action} response:`, data);
         
         if (data.success) {
-          // Create a copy of inventory and update the product status
+          // Update inventory state with new product status
           const updatedInventory = inventory.map(product => {
             if (product.product_id === item.product_id) {
               return { 
@@ -126,43 +120,36 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
           
           setInventory(updatedInventory);
           alert(`Product ${action === 'disable' ? 'disabled' : 'enabled'} successfully.`);
-          // Force refresh the inventory data to get updated statuses
           setRefreshKey(prev => prev + 1);
         } else {
-          console.error(`Failed to ${action} product:`, data.message);
           alert(`Failed to ${action} product: ${data.message || 'Unknown error'}`);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
-        console.error(`Failed to ${action} product:`, response.statusText, errorData);
         alert(`Failed to ${action} product. Server returned: ${errorData.message || response.statusText}`);
       }
     } catch (error) {
-      console.error(`Error ${item.product_status === 'Disabled' ? 'enabling' : 'disabling'} product:`, error);
       alert('An error occurred while updating product status. Please try again.');
     }
   };
 
-  // Utility function to determine stock status based on quantity and product_status
+  // Determine stock status based on quantity and product status
   const getStockStatus = (item) => {
-    // If product is disabled, show as "Disabled" regardless of quantity
     if (item.product_status === 'Disabled') {
       return "Disabled";
     }
     
-    // Otherwise, determine status based on quantity
     if (item.quantity === 0) return "Out of Stock";
     if (item.quantity < 10) return "Low Stock";
     return "In Stock";
   };
 
-  // Function to get the effective quantity to display
+  // Get display quantity (0 for disabled products)
   const getDisplayQuantity = (item) => {
     return item.product_status === 'Disabled' ? 0 : item.quantity;
   };
 
   const filteredInventory = inventory.filter(item => {
-    // Calculate the actual status based on quantity and product_status
     const actualStatus = getStockStatus(item);
     
     return (
@@ -183,7 +170,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
     setCurrentPage(pageNumber);
   };
 
-  // Render dropdown actions based on stock status
+  // Render action dropdown menu based on product status
   const renderActionMenu = (item) => {
     const stockStatus = getStockStatus(item);
     
@@ -199,7 +186,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
             </button>
           </li>
           
-          {/* Toggle disable/enable based on current status */}
           <li>
             <button 
               className="dropdown-item" 
@@ -209,7 +195,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
             </button>
           </li>
           
-          {/* Only show restock option if product is not disabled */}
           {item.product_status !== 'Disabled' && (stockStatus === "Low Stock" || stockStatus === "Out of Stock") && (
             <li>
               <button className="dropdown-item" onClick={() => onRestockProduct(item)}>
@@ -225,6 +210,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Header section with title and action buttons */}
         <div className="manage-inventory-header d-flex justify-content-between align-items-center mb-3">
           <div className="title-section">
             <div className="icon-and-title">
@@ -249,6 +235,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
           </div>
         </div>
 
+        {/* Filter section with category checkboxes and search */}
         <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
           <div className="d-flex">
             <div className="form-check form-check-inline">
@@ -343,6 +330,7 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
           </div>
         </div>
 
+        {/* Inventory table with loading states */}
         <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
           {loading ? (
             <div className="text-center py-4">
@@ -371,7 +359,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
               <tbody>
                 {currentInventory.length > 0 ? (
                   currentInventory.map(item => {
-                    // Determine stock status based on quantity and product_status
                     const stockStatus = getStockStatus(item);
                     const displayQuantity = getDisplayQuantity(item);
                     
@@ -413,5 +400,6 @@ const ManageInventory = ({ onViewInventory, onRestockProduct, onManageCategories
     </div>
   );
 };
+
 
 export default ManageInventory;

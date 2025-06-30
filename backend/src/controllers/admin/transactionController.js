@@ -2,7 +2,7 @@ const { Transaction } = require('../../models/transactionModel');
 const { Order } = require('../../models/orderModel');
 const { Customer } = require('../../models/customerModel');
 
-// Get all transactions
+// Get all transactions with customer and order info
 const getAllTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.findAll({
@@ -35,11 +35,10 @@ const getAllTransactions = async (req, res) => {
   }
 };
 
-// Get transaction by ID
+// Get transaction details by transaction ID
 const getTransactionById = async (req, res) => {
   try {
     const { id } = req.params;
-    
     const transaction = await Transaction.findOne({
       where: { transaction_id: id },
       include: [
@@ -77,11 +76,10 @@ const getTransactionById = async (req, res) => {
   }
 };
 
-// Process refund for a transaction
+// Process refund for a transaction and update order status
 const processRefund = async (req, res) => {
   try {
     const { id } = req.params;
-    
     // Find the transaction to refund
     const transaction = await Transaction.findOne({
       where: { transaction_id: id }
@@ -110,7 +108,7 @@ const processRefund = async (req, res) => {
         : `Refunded on ${new Date().toISOString()}`
     });
 
-    // Find the related order and update its status if needed
+    // Update related order status to 'Refunded'
     const order = await Order.findOne({
       where: { order_id: transaction.order_id }
     });
@@ -122,8 +120,7 @@ const processRefund = async (req, res) => {
       });
     }
 
-    // In a real application, you would also handle the actual money refund through
-    // a payment gateway here (Stripe, PayPal, etc.)
+    // Note: Actual payment gateway refund should be handled here
 
     res.status(200).json({ 
       success: true, 
@@ -147,4 +144,4 @@ module.exports = {
   getAllTransactions,
   getTransactionById,
   processRefund
-}; 
+};

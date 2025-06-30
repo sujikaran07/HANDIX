@@ -4,6 +4,7 @@ import ArtisanTopBar from '../../components/artisan/ArtisanTopBar';
 import ManageArtisanLogout from '../../components/artisan/ManageArtisanLogout';
 import '../../styles/artisan/ArtisanLogout.css';
 
+// Artisan logout page with confirmation functionality
 const ArtisanLogoutPage = () => {
   return (
     <div className="artisan-logout-page-unique">

@@ -4,10 +4,12 @@ import { cva } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+// Label style variants for form labels
 const labelVariants = cva(
   "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 )
 
+// Label component for form fields
 const Label = React.forwardRef(({ className, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}

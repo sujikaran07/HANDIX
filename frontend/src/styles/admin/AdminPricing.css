@@ -1,3 +1,4 @@
+/* Styles for Admin Pricing page layout and pricing management components. */
 .pricing-page {
   display: flex;
   height: 100vh;
@@ -9,7 +10,7 @@
   background-color: #f4f6fc;
   margin-left: 232px;
   margin-top: 55px;
-  overflow: hidden; /* Prevent scrollbars */
+  overflow: hidden;
 }
 
 .pricing-card {
@@ -17,7 +18,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: #ffffff;
   height: 100%;
-  overflow: hidden; /* Prevent scrollbars */
+  overflow: hidden;
 }
 
 .pricing-header {
@@ -63,7 +64,7 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 10px;
-  margin-bottom: 0; /* Prevent extra space that could cause scrolling */
+  margin-bottom: 0;
 }
 
 .pricing-table th {
@@ -131,7 +132,7 @@
   justify-content: center;
   padding: 1rem 0;
   margin-top: 10px;
-  margin-bottom: 0; /* Prevent extra space */
+  margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
@@ -142,7 +143,7 @@
 
 /* Make sure the table doesn't force scrolling */
 .table-responsive {
-  overflow: hidden; /* Hide scrollbars */
+  overflow: hidden;
 }
 
 /* Match inventory page form styling */
@@ -150,7 +151,7 @@
   height: 100%;
 }
 
-/* Fixed height for the tab content to fit in the card without scrolling */
+/* Fixed height for the tab content to fit in the card */
 .tab-content {
   height: calc(100% - 130px);
   display: flex;

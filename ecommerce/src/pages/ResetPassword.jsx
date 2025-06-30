@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const ResetPasswordPage = () => {
+  // State for password reset form and UI feedback
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -17,13 +18,13 @@ const ResetPasswordPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
+
   // Get reset token from location state or session storage
   const [resetToken, setResetToken] = useState(() => {
     return location.state?.resetToken || sessionStorage.getItem('resetToken') || '';
   });
 
-  // If token isn't available, redirect to forgot password page
+  // Redirect to forgot password if token is missing
   useEffect(() => {
     if (!resetToken) {
       toast({
@@ -35,6 +36,7 @@ const ResetPasswordPage = () => {
     }
   }, [resetToken, navigate]);
 
+  // Validate password rules
   const validatePassword = (password) => {
     // Minimum 8 characters, at least 1 letter and 1 number
     if (password.length < 8) {
@@ -49,6 +51,7 @@ const ResetPasswordPage = () => {
     return "";
   };
 
+  // Handle password reset form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -136,6 +139,7 @@ const ResetPasswordPage = () => {
     }
   };
 
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };

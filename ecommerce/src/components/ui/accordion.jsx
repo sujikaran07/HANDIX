@@ -4,8 +4,10 @@ import { ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Accordion root component
 const Accordion = AccordionPrimitive.Root
 
+// Accordion item (single collapsible section)
 const AccordionItem = React.forwardRef(({ className, ...props }, ref) => (
   <AccordionPrimitive.Item
     ref={ref}
@@ -15,6 +17,7 @@ const AccordionItem = React.forwardRef(({ className, ...props }, ref) => (
 ))
 AccordionItem.displayName = "AccordionItem"
 
+// Accordion trigger (clickable header)
 const AccordionTrigger = React.forwardRef(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Header className="flex">
     <AccordionPrimitive.Trigger
@@ -32,6 +35,7 @@ const AccordionTrigger = React.forwardRef(({ className, children, ...props }, re
 ))
 AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName
 
+// Accordion content (collapsible content area)
 const AccordionContent = React.forwardRef(({ className, children, ...props }, ref) => (
   <AccordionPrimitive.Content
     ref={ref}
