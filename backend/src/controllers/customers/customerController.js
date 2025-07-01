@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcrypt'); 
 const { sendStatusChangeEmail } = require('../../utils/emailService');
 
+// Get all customers (excluding addedByAdmin field)
 const getAllCustomers = async (req, res) => {
   try {
     
@@ -24,6 +25,7 @@ const getAllCustomers = async (req, res) => {
   }
 };
 
+// Get customer by ID with addresses and orders, plus stats
 const getCustomerById = async (req, res) => {
   try {
     const customer = await Customer.findByPk(req.params.c_id, {
@@ -94,10 +96,13 @@ const getCustomerById = async (req, res) => {
     res.status(500).json({ message: 'Error fetching customer', error: error.message });
   }
 };
+
+// Generate a 4-digit OTP
 const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
+// Create a new customer (registration)
 const createCustomer = async (req, res) => {
   try {
     const customerData = req.body;
@@ -263,6 +268,7 @@ const createCustomer = async (req, res) => {
   }
 };
 
+// Create customer by admin (auto-verified)
 const createCustomerByAdmin = async (req, res) => {
   try {
     const customerData = req.body;
@@ -326,6 +332,7 @@ const createCustomerByAdmin = async (req, res) => {
   }
 };
 
+// Verify OTP for email verification
 const verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -391,6 +398,7 @@ const verifyOTP = async (req, res) => {
   }
 };
 
+// Manual verification for customer (admin use)
 const verifyManually = async (req, res) => {
   try {
     const { email } = req.body;
@@ -427,6 +435,7 @@ const verifyManually = async (req, res) => {
   }
 };
 
+// Verify email using token (from email link)
 const verifyEmail = async (req, res) => {
   try {
     const { token, email } = req.query;
@@ -470,6 +479,7 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+// Update customer details
 const updateCustomer = async (req, res) => {
   try {
     const { country, ...updateData } = req.body; 
@@ -489,6 +499,7 @@ const updateCustomer = async (req, res) => {
   }
 };
 
+// Delete customer by ID
 const deleteCustomer = async (req, res) => {
   try {
     const deleted = await Customer.destroy({
@@ -505,6 +516,7 @@ const deleteCustomer = async (req, res) => {
   }
 };
 
+// Approve customer account
 const approveCustomer = async (req, res) => {
   try {
     const [updated] = await Customer.update({ accountStatus: 'Approved' }, {
@@ -523,6 +535,7 @@ const approveCustomer = async (req, res) => {
   }
 };
 
+// Reject customer account
 const rejectCustomer = async (req, res) => {
   try {
     const [updated] = await Customer.update({ accountStatus: 'Rejected' }, {
@@ -541,6 +554,7 @@ const rejectCustomer = async (req, res) => {
   }
 };
 
+// Get all customers with addresses and orders
 const getAllCustomersWithDetails = async (req, res) => {
   try {
     const customers = await Customer.findAll({
@@ -561,6 +575,7 @@ const getAllCustomersWithDetails = async (req, res) => {
   }
 };
 
+// Resend OTP for email verification
 const resendOTP = async (req, res) => {
   try {
     const { email } = req.body;
@@ -639,6 +654,7 @@ const resendOTP = async (req, res) => {
   }
 };
 
+// Toggle customer status (active/deactivated)
 const toggleCustomerStatus = async (req, res) => {
   try {
     const { c_id } = req.params;

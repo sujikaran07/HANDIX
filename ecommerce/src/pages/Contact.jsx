@@ -4,30 +4,30 @@ import Footer from '../components/Footer';
 import { Mail, Phone, MapPin, CheckCircle } from 'lucide-react';
 
 const ContactPage = () => {
+  // Form state for contact form
   const [formState, setFormState] = useState({
     name: '',
     email: '',
     subject: '',
     message: ''
   });
-  
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
-  
+
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormState(prev => ({ ...prev, [name]: value }));
   };
-  
+
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
-    
-    // Simulate API request
     try {
-      // In a real app, you would send the form data to your API here
+      // Simulate API request
       await new Promise(resolve => setTimeout(resolve, 1000));
       setSubmitted(true);
       setFormState({
@@ -46,7 +46,6 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow py-16">
         <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
           <div className="max-w-4xl mx-auto">
@@ -55,13 +54,12 @@ const ContactPage = () => {
               Have questions, feedback, or inquiries about our handcrafted products? 
               We'd love to hear from you! Fill out the form below or reach out through our contact information.
             </p>
-            
             <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
-              {/* Contact Form */}
+              {/* Contact Form Section */}
               <div>
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h2 className="text-2xl font-bold mb-4">Send us a message</h2>
-                  
+                  {/* Success message after submit */}
                   {submitted ? (
                     <div className="bg-green-50 p-6 rounded-md flex flex-col items-center text-center">
                       <CheckCircle className="text-green-500 mb-3" size={48} />
@@ -78,6 +76,7 @@ const ContactPage = () => {
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit}>
+                      {/* Name input */}
                       <div className="mb-4">
                         <label htmlFor="name" className="block text-gray-700 mb-1">Your Name</label>
                         <input
@@ -90,7 +89,7 @@ const ContactPage = () => {
                           required
                         />
                       </div>
-                      
+                      {/* Email input */}
                       <div className="mb-4">
                         <label htmlFor="email" className="block text-gray-700 mb-1">Email Address</label>
                         <input
@@ -103,7 +102,7 @@ const ContactPage = () => {
                           required
                         />
                       </div>
-                      
+                      {/* Subject input */}
                       <div className="mb-4">
                         <label htmlFor="subject" className="block text-gray-700 mb-1">Subject</label>
                         <input
@@ -116,7 +115,7 @@ const ContactPage = () => {
                           required
                         />
                       </div>
-                      
+                      {/* Message textarea */}
                       <div className="mb-6">
                         <label htmlFor="message" className="block text-gray-700 mb-1">Your Message</label>
                         <textarea
@@ -129,13 +128,13 @@ const ContactPage = () => {
                           required
                         />
                       </div>
-                      
+                      {/* Error message */}
                       {error && (
                         <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4">
                           {error}
                         </div>
                       )}
-                      
+                      {/* Submit button */}
                       <button
                         type="submit"
                         disabled={submitting}
@@ -148,12 +147,12 @@ const ContactPage = () => {
                   )}
                 </div>
               </div>
-              
-              {/* Contact Information */}
+              {/* Contact Information Section */}
               <div>
                 <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
                   <h2 className="text-2xl font-bold mb-4">Contact Information</h2>
                   <div className="space-y-6">
+                    {/* Mullaitivu Branch */}
                     <div className="flex items-start">
                       <MapPin className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
@@ -162,7 +161,7 @@ const ContactPage = () => {
                         <p className="text-gray-600">Mullaitivu, Sri Lanka</p>
                       </div>
                     </div>
-                    
+                    {/* Kilinochchi Branch */}
                     <div className="flex items-start">
                       <MapPin className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
@@ -171,7 +170,7 @@ const ContactPage = () => {
                         <p className="text-gray-600">Kilinochchi, Sri Lanka</p>
                       </div>
                     </div>
-                    
+                    {/* Phone */}
                     <div className="flex items-start">
                       <Phone className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
@@ -182,7 +181,7 @@ const ContactPage = () => {
                         <p className="text-gray-600">Saturday: 10am to 4pm</p>
                       </div>
                     </div>
-                    
+                    {/* Email */}
                     <div className="flex items-start">
                       <Mail className="text-primary mt-1 mr-3 flex-shrink-0" />
                       <div>
@@ -192,8 +191,7 @@ const ContactPage = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Business Hours */}
+                {/* Business Hours Section */}
                 <div className="bg-white p-6 rounded-lg shadow-sm">
                   <h3 className="text-xl font-bold mb-3">Business Hours</h3>
                   <table className="w-full">
@@ -215,11 +213,9 @@ const ContactPage = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Map */}
+            {/* Map Section */}
             <div className="mt-12">
               <h2 className="text-2xl font-bold mb-4">Find Us</h2>
-              
               <div className="grid md:grid-cols-2 gap-6 mb-6">
                 {/* Mullaitivu Branch Map */}
                 <div>
@@ -239,7 +235,6 @@ const ContactPage = () => {
                   </div>
                   <p className="mt-2 text-gray-600">15 Main Street, Mullaitivu</p>
                 </div>
-                
                 {/* Kilinochchi Branch Map */}
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Kilinochchi Branch</h3>
@@ -259,7 +254,6 @@ const ContactPage = () => {
                   <p className="mt-2 text-gray-600">27 KKS Road, Kilinochchi</p>
                 </div>
               </div>
-              
               {/* Directions Info */}
               <div className="bg-gray-50 p-4 rounded-lg text-center">
                 <p className="text-gray-600">
@@ -270,10 +264,11 @@ const ContactPage = () => {
           </div>
         </div>
       </main>
-      
       <Footer />
     </div>
   );
 };
 
 export default ContactPage;
+      
+  

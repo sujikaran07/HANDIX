@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../../styles/artisan/ArtisanProducts.css';
 
+// Form component for adding new products with auto-complete and image upload
 const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }) => {
   const navigate = useNavigate(); 
+  // State management for form data and UI
   const [formData, setFormData] = useState({
     product_id: productId,
     product_name: '',
@@ -25,11 +27,11 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   const [feedbackMessage, setFeedbackMessage] = useState(null);
   const [productNameError, setProductNameError] = useState('');
 
+  // Fetch product suggestions for auto-complete
   const fetchProductSuggestions = async (name) => {
     try {
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         return;
       }
 
@@ -41,27 +43,23 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched inventory product suggestions:', data); 
         setSuggestions(data.products || []);
-      } else {
-        console.error('Failed to fetch product suggestions:', response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching product suggestions:', error);
+      // Continue silently
     }
   };
 
+  // Fetch existing product details by ID
   const fetchProductDetails = async (productId) => {
     try {
       const token = localStorage.getItem('artisanToken'); 
       if (!token || !productId) {
-        console.error('No token found for artisan or product ID is empty');
         return;
       }
 
       setIsLoading(true);
       setFeedbackMessage(null);
-      console.log('Fetching product details for ID:', productId);
       
       setImages([]);
       setExistingImageUrls([]);
@@ -69,6 +67,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       let productData = null;
       let fetchSuccess = false;
       
+      // Try products endpoint first
       try {
         const response = await fetch(`http://localhost:5000/api/products/${productId}`, {
           headers: {
@@ -79,19 +78,18 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         if (response.ok) {
           productData = await response.json();
           fetchSuccess = true;
-          console.log('Successfully fetched from products endpoint:', productData);
           
           if (productData.entryImages && productData.entryImages.length > 0) {
             const productImages = productData.entryImages.map(img => img.image_url);
-            console.log('Found images in product data:', productImages);
             setImages(productImages);
             setExistingImageUrls(productImages); 
           }
         }
       } catch (error) {
-        console.error('Error fetching from products endpoint:', error);
+        // Continue to inventory endpoint
       }
       
+      // Fallback to inventory endpoint
       if (!fetchSuccess) {
         try {
           const response = await fetch(`http://localhost:5000/api/inventory/${productId}`, {
@@ -103,10 +101,9 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           if (response.ok) {
             productData = await response.json();
             fetchSuccess = true;
-            console.log('Successfully fetched from inventory endpoint:', productData);
           }
         } catch (error) {
-          console.error('Error fetching from inventory endpoint:', error);
+          // Continue
         }
       }
    
@@ -116,8 +113,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         return;
       }
       
-      
-      console.log('Explicitly fetching images for product ID:', productId);
+      // Fetch product images
       try {
         const imagesResponse = await fetch(`http://localhost:5000/api/products/${productId}/images`, {
           headers: {
@@ -127,25 +123,20 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         
         if (imagesResponse.ok) {
           const imagesData = await imagesResponse.json();
-          console.log('Images API response:', imagesData);
           
           if (imagesData.images && imagesData.images.length > 0) {
             const productImages = imagesData.images.map(img => img.image_url);
-            console.log('Successfully fetched', productImages.length, 'product images');
             setImages(productImages);
             setExistingImageUrls(productImages); 
-          } else {
-            console.log('No images found for product ID:', productId);
           }
-        } else {
-          console.error('Failed to fetch images. Status:', imagesResponse.status);
         }
       } catch (imageError) {
-        console.error('Error fetching product images:', imageError);
+        // Continue without images
       }
       
       const originalQuantity = formData.quantity;
       
+      // Populate form with fetched product data
       setFormData((prevProduct) => ({
         ...prevProduct,
         product_id: productData.product_id,
@@ -165,22 +156,19 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         type: 'success', 
         message: `Product "${productData.product_name}" details loaded successfully!` 
       });
-      console.log('Populated form data from existing product');
       
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      console.error('Error fetching product details:', error);
       setFeedbackMessage({ type: 'error', message: 'Error fetching product details' });
     }
   };
 
+  // Fetch product details by name for auto-complete selection
   const fetchProductDetailsByName = async (name) => {
     try {
-      console.log('Fetching product details for name:', name); 
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         return;
       }
 
@@ -196,7 +184,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Fetched product details by name:', data);
 
         setFormData((prevProduct) => ({
           ...prevProduct,
@@ -212,9 +199,9 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             (data.additional_price || '')
         }));
         
+        // Fetch images for the product
         if (data.product_id) {
           try {
-            console.log('Fetching images for product ID:', data.product_id);
             const imagesResponse = await fetch(`http://localhost:5000/api/products/${data.product_id}/images`, {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -223,19 +210,15 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             
             if (imagesResponse.ok) {
               const imagesData = await imagesResponse.json();
-              console.log('Images API response:', imagesData);
               
               if (imagesData.images && imagesData.images.length > 0) {
                 const productImages = imagesData.images.map(img => img.image_url);
-                console.log('Successfully fetched', productImages.length, 'product images');
                 setImages(productImages);
                 setExistingImageUrls(productImages);
-              } else {
-                console.log('No images found for product ID:', data.product_id);
               }
             }
           } catch (imageError) {
-            console.error('Error fetching product images:', imageError);
+            // Continue without images
           }
         }
         
@@ -244,7 +227,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           message: `Product "${data.product_name}" details loaded successfully!` 
         });
       } else {
-        console.error('Failed to fetch product details by name:', response.statusText);
         setFeedbackMessage({ 
           type: 'error', 
           message: 'Failed to fetch product details' 
@@ -252,7 +234,6 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       }
       setIsLoading(false);
     } catch (error) {
-      console.error('Error fetching product details by name:', error);
       setFeedbackMessage({ 
         type: 'error', 
         message: 'Error fetching product details' 
@@ -261,9 +242,11 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     }
   };
 
+  // Handle form field changes with category-specific logic
   const handleChange = (e) => {
     const { name, value } = e.target;
     
+    // Handle category changes affecting customization options
     if (name === 'category') {
       if (value !== 'Artistry') {
         setFormData(prev => ({
@@ -279,6 +262,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         }));
       }
     } 
+    // Clear additional price when customization is disabled
     else if (name === 'customization_available' && value === 'No') {
       setFormData(prev => ({
         ...prev,
@@ -293,11 +277,13 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
       }));
     }
 
+    // Auto-fetch product details when ID is entered
     if (name === 'product_id' && value) {
       fetchProductDetails(value);
     }
   };
 
+  // Handle product name input with validation and auto-complete
   const handleNameChange = (e) => {
     const { value } = e.target;
     // Allow only letters, numbers, spaces, and hyphens
@@ -326,13 +312,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     }
   };
 
+  // Image management state and functions
   const [images, setImages] = useState([]);
   const [existingImageUrls, setExistingImageUrls] = useState([]);
   const [imageFiles, setImageFiles] = useState([]); 
+  
   const handleImageUpload = (e) => {
     const files = Array.from(e.target.files);
     const newImageUrls = files.map(file => URL.createObjectURL(file));
-    console.log("New images to upload:", newImageUrls);
     setImages(prevImages => [...prevImages, ...newImageUrls]);
     setImageFiles(prevFiles => [...prevFiles, ...files]); 
   };
@@ -347,6 +334,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     }
   };
 
+  // Form validation
   const validateForm = () => {
     const newErrors = {};
     if (!formData.product_id) newErrors.product_id = 'Product ID is required';
@@ -366,12 +354,14 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
     return Object.keys(newErrors).length === 0;
   };
 
+  // Handle form submission with product creation and image upload
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       try {
         setIsLoading(true);
         
+        // Prepare product data for submission
         const jsonPayload = {
           product_id: formData.product_id,
           product_name: formData.product_name,
@@ -385,15 +375,13 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
           e_id: loggedInEmployeeId
         };
         
-        console.log('Submitting product with JSON payload:', jsonPayload);
-        
         const token = localStorage.getItem('artisanToken');
         if (!token) {
-          console.error('No token found');
           alert('Authentication error. Please log in again.');
           return;
         }
         
+        // Create product entry
         const response = await fetch('http://localhost:5000/api/products', {
           method: 'POST',
           headers: {
@@ -409,13 +397,11 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         }
         
         const productData = await response.json();
-        console.log('Product created successfully:', productData);
         
+        // Upload images if provided
         const uploadImages = async (productId, entryId) => {
           try {
             const token = localStorage.getItem('artisanToken');
-            console.log(`Starting image upload for product ${productId}, entry ${entryId}`);
-            console.log(`Total images to upload: ${imageFiles.length}`);
            
             const formData = new FormData();
 
@@ -424,10 +410,8 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
   
             imageFiles.forEach((file) => {
               formData.append('productImages', file);
-              console.log(`Appending image: ${file.name}, size: ${file.size} bytes`);
             });
             
- 
             const response = await fetch('http://localhost:5000/api/products/images', {
               method: 'POST',
               headers: {
@@ -438,38 +422,30 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             
             if (!response.ok) {
               const errorText = await response.text();
-              console.error('Failed to upload images to Cloudinary:', errorText);
               throw new Error(`Failed to upload images: ${errorText}`);
             }
             
             const result = await response.json();
-            console.log('Images uploaded successfully to Cloudinary:', result);
             return result;
           } catch (error) {
-            console.error('Error during Cloudinary image upload:', error);
             throw error;
           }
         };
 
+        // Upload images to cloud storage
         if (imageFiles.length > 0) {
           try {
-            console.log(`Uploading ${imageFiles.length} images to Cloudinary for product ${productData.productEntry.product_id}`);
             await uploadImages(productData.productEntry.product_id, productData.productEntry.entry_id);
-            console.log('All images uploaded successfully to Cloudinary');
           } catch (imageError) {
-            console.error('Error uploading images to Cloudinary:', imageError);
-            
+            // Product created but image upload failed
           }
         }
 
         alert('Product added successfully!');
-     
         onSave(productData.productEntry);
-       
         window.location.href = '/artisan/products';
         
       } catch (error) {
-        console.error('Error adding product:', error);
         setFeedbackMessage({ 
           type: 'error', 
           message: error.message || 'Failed to add product. Please try again.' 
@@ -496,6 +472,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
         <h4 className="mb-4">Add New Product</h4>
         
         <form onSubmit={handleSubmit} className="d-flex flex-column h-100">
+          {/* Product ID, Name, and Category */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">
@@ -530,6 +507,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
                   required
                 />
             
+                {/* Auto-complete suggestions dropdown */}
                 {suggestions.length > 0 && (
                   <span className="position-absolute" style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}>
                     <i className="fas fa-caret-down text-secondary"></i>
@@ -591,6 +569,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
+          {/* Description, Price, and Quantity */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Description<span className="text-danger">*</span></label>
@@ -634,6 +613,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
+          {/* Customization and Images */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Customization Available</label>
@@ -685,6 +665,7 @@ const AddProductForm = ({ onSave, onCancel, loggedInEmployeeId, productId = '' }
             </div>
           </div>
 
+          {/* Product Status */}
           <div className="row mb-3">
             <div className="col-md-4">
               <label className="form-label">Product Status<span className="text-danger">*</span></label>

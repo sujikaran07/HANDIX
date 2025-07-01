@@ -12,7 +12,7 @@ import {
   Legend
 } from 'chart.js';
 
-// Register ChartJS components
+// Register required ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -22,13 +22,14 @@ ChartJS.register(
   Legend
 );
 
+// Bar chart component displaying monthly product quantity trends for artisans
 const ArtisanProductsBarChart = () => {
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEmpty, setIsEmpty] = useState(false);
 
-  // Get last 12 months for labels
+  // Generate last 12 months labels for the chart
   const getLastTwelveMonths = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const currentDate = new Date();
@@ -43,7 +44,7 @@ const ArtisanProductsBarChart = () => {
     return lastTwelveMonths;
   };
 
-  // Function to extract artisan ID from token
+  // Extract artisan ID from JWT token
   const getArtisanIdFromToken = () => {
     try {
       const token = localStorage.getItem('artisanToken');
@@ -52,15 +53,14 @@ const ArtisanProductsBarChart = () => {
       }
       
       const decoded = jwtDecode(token);
-      console.log('Decoded token:', decoded);
-      return decoded.id; // The employee ID is stored as 'id' in the token
+      return decoded.id;
     } catch (error) {
-      console.error('Error decoding token:', error);
       return null;
     }
   };
 
   useEffect(() => {
+    // Fetch monthly product quantity data for chart
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -70,35 +70,32 @@ const ArtisanProductsBarChart = () => {
         const artisanId = getArtisanIdFromToken();
         
         if (!artisanId) {
-          console.error('No artisan ID found in token');
           throw new Error('Authentication error. Please log in again.');
         }
         
-        // Set authorization header with token
+        // Set authorization header
         const token = localStorage.getItem('artisanToken');
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
-        // Fetch product trend data showing quantities per month
+        // Fetch product trend data
         const response = await axios.get(
           `http://localhost:5000/api/artisan-dashboard/products-trend/${artisanId}`
         );
-        
-        console.log('Products monthly quantity data:', response.data);
         
         if (!response.data || !Array.isArray(response.data) || response.data.length === 0) {
           setIsEmpty(true);
           return;
         }
         
-        // Extract data for the chart
+        // Process data for chart display
         const labels = response.data.map(item => item.monthLabel || 'Unknown');
         const quantities = response.data.map(item => Number(item.count) || 0);
         
-        // Check if there's any data
+        // Check if there's meaningful data
         const hasData = quantities.some(val => val > 0);
         setIsEmpty(!hasData);
         
-        // Create the chart data, always showing all 12 months
+        // Configure chart data
         setChartData({
           labels: labels,
           datasets: [
@@ -114,7 +111,6 @@ const ArtisanProductsBarChart = () => {
           ]
         });
       } catch (error) {
-        console.error('Error fetching chart data:', error);
         setError(error.message || 'Failed to load chart data');
       } finally {
         setLoading(false);
@@ -124,7 +120,7 @@ const ArtisanProductsBarChart = () => {
     fetchData();
   }, []);
 
-  // Update chart options to better display X vs Y axis
+  // Chart configuration options
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -176,7 +172,6 @@ const ArtisanProductsBarChart = () => {
         ticks: {
           precision: 0,
           color: '#666',
-          // Ensure we include 0 on the y-axis
           callback: function(value) {
             return value;
           }
@@ -192,6 +187,7 @@ const ArtisanProductsBarChart = () => {
     }
   };
 
+  // Loading state
   if (loading) {
     return (
       <div className="artisan-products-bar-chart">
@@ -212,6 +208,7 @@ const ArtisanProductsBarChart = () => {
     );
   }
 
+  // Error state
   if (error) {
     return (
       <div className="artisan-products-bar-chart">
@@ -250,6 +247,7 @@ const ArtisanProductsBarChart = () => {
     );
   }
 
+  // Empty data state with sample chart
   if (isEmpty) {
     return (
       <div className="artisan-products-bar-chart">
@@ -273,7 +271,7 @@ const ArtisanProductsBarChart = () => {
             All months will show zero quantity.
           </p>
           
-          {/* Create a simple example chart to show the X and Y axes */}
+          {/* Display empty chart with proper axis labels */}
           <div style={{ width: '80%', height: '200px', marginTop: '20px' }}>
             <Bar 
               data={{
@@ -294,7 +292,7 @@ const ArtisanProductsBarChart = () => {
                   ...options.scales,
                   y: {
                     ...options.scales.y,
-                    max: 10, // Set a fixed max for the empty chart
+                    max: 10,
                   }
                 }
               }} 

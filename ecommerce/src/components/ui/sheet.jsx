@@ -5,14 +5,13 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+// Sheet root component for side panels/drawers
 const Sheet = SheetPrimitive.Root
-
 const SheetTrigger = SheetPrimitive.Trigger
-
 const SheetClose = SheetPrimitive.Close
-
 const SheetPortal = SheetPrimitive.Portal
 
+// Overlay for sheet background
 const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
@@ -25,6 +24,7 @@ const SheetOverlay = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
+// Variants for sheet position/animation
 const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
@@ -44,6 +44,7 @@ const sheetVariants = cva(
   }
 )
 
+// Main sheet content area
 const SheetContent = React.forwardRef(
   ({ side = "right", className, children, ...props }, ref) => (
     <SheetPortal>
@@ -54,6 +55,7 @@ const SheetContent = React.forwardRef(
         {...props}
       >
         {children}
+        {/* Close button in sheet */}
         <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -64,6 +66,7 @@ const SheetContent = React.forwardRef(
 )
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
+// Sheet header section
 const SheetHeader = ({ className, ...props }) => (
   <div
     className={cn(
@@ -75,6 +78,7 @@ const SheetHeader = ({ className, ...props }) => (
 )
 SheetHeader.displayName = "SheetHeader"
 
+// Sheet footer section
 const SheetFooter = ({ className, ...props }) => (
   <div
     className={cn(
@@ -86,6 +90,7 @@ const SheetFooter = ({ className, ...props }) => (
 )
 SheetFooter.displayName = "SheetFooter"
 
+// Sheet title
 const SheetTitle = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Title
     ref={ref}
@@ -95,6 +100,7 @@ const SheetTitle = React.forwardRef(({ className, ...props }, ref) => (
 ))
 SheetTitle.displayName = SheetPrimitive.Title.displayName
 
+// Sheet description
 const SheetDescription = React.forwardRef(({ className, ...props }, ref) => (
   <SheetPrimitive.Description
     ref={ref}

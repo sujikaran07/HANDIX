@@ -3,21 +3,21 @@ import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
-// Format: { THEME_NAME: CSS_SELECTOR }
+// Theme selectors for chart styling
 const THEMES = { light: "", dark: ".dark" }
 
 const ChartContext = React.createContext(null)
 
+// Hook to access chart config context
 function useChart() {
   const context = React.useContext(ChartContext)
-
   if (!context) {
     throw new Error("useChart must be used within a <ChartContainer />")
   }
-
   return context
 }
 
+// Chart container with context and style injection
 const ChartContainer = React.forwardRef(
   ({ id, className, children, config, ...props }, ref) => {
     const uniqueId = React.useId()
@@ -45,6 +45,7 @@ const ChartContainer = React.forwardRef(
 )
 ChartContainer.displayName = "Chart"
 
+// Injects dynamic chart color styles based on theme and config
 const ChartStyle = ({ id, config }) => {
   const colorConfig = Object.entries(config).filter(
     ([_, config]) => config.theme || config.color
@@ -78,8 +79,10 @@ ${colorConfig
   )
 }
 
+// Chart tooltip wrapper
 const ChartTooltip = RechartsPrimitive.Tooltip
 
+// Custom tooltip content for charts
 const ChartTooltipContent = React.forwardRef(
   (
     {
@@ -222,8 +225,10 @@ const ChartTooltipContent = React.forwardRef(
 )
 ChartTooltipContent.displayName = "ChartTooltip"
 
+// Chart legend wrapper
 const ChartLegend = RechartsPrimitive.Legend
 
+// Custom legend content for charts
 const ChartLegendContent = React.forwardRef(
   (
     { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey },

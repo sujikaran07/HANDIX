@@ -21,9 +21,10 @@ const BillingAddressStep = ({ formData, errors, handleChange }) => {
         </div>
       </div>
       
+      {/* Show billing address fields only if not same as shipping */}
       {!formData.sameAsShipping && (
         <div className="space-y-6">
-          {/* Address */}
+          {/* Street Address */}
           <div className="form-group">
             <label htmlFor="billingAddress" className="block text-sm font-medium text-gray-700 mb-1">
               Street Address <span className="text-red-500">*</span>
@@ -58,7 +59,7 @@ const BillingAddressStep = ({ formData, errors, handleChange }) => {
               {errors.billingCity && <p className="text-red-500 text-sm mt-1">{errors.billingCity}</p>}
             </div>
             
-            {/* District */}
+            {/* District dropdown */}
             <div className="form-group md:col-span-1">
               <label htmlFor="billingDistrict" className="block text-sm font-medium text-gray-700 mb-1">
                 District <span className="text-red-500">*</span>
@@ -101,6 +102,7 @@ const BillingAddressStep = ({ formData, errors, handleChange }) => {
         </div>
       )}
       
+      {/* Info about billing address usage */}
       <div className="mt-6">
         <p className="text-sm text-gray-500">
           Your billing address is used for verification purposes and should match the address associated with your payment method.

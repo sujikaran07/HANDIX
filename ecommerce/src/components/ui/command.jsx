@@ -5,6 +5,7 @@ import { Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 
+// Command root component for command palette
 const Command = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CommandPrimitive
@@ -19,6 +20,7 @@ const Command = React.forwardRef(
 )
 Command.displayName = CommandPrimitive.displayName
 
+// Dialog wrapper for command palette/modal
 const CommandDialog = ({ children, ...props }) => {
   return (
     <Dialog {...props}>
@@ -31,6 +33,7 @@ const CommandDialog = ({ children, ...props }) => {
   )
 }
 
+// Command input with search icon
 const CommandInput = React.forwardRef(
   ({ className, ...props }, ref) => (
     <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
@@ -46,9 +49,9 @@ const CommandInput = React.forwardRef(
     </div>
   )
 )
-
 CommandInput.displayName = CommandPrimitive.Input.displayName
 
+// List of command items
 const CommandList = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CommandPrimitive.List
@@ -58,9 +61,9 @@ const CommandList = React.forwardRef(
     />
   )
 )
-
 CommandList.displayName = CommandPrimitive.List.displayName
 
+// Empty state for command list
 const CommandEmpty = React.forwardRef(
   (props, ref) => (
     <CommandPrimitive.Empty
@@ -70,9 +73,9 @@ const CommandEmpty = React.forwardRef(
     />
   )
 )
-
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
+// Group of command items
 const CommandGroup = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CommandPrimitive.Group
@@ -85,9 +88,9 @@ const CommandGroup = React.forwardRef(
     />
   )
 )
-
 CommandGroup.displayName = CommandPrimitive.Group.displayName
 
+// Separator for command items
 const CommandSeparator = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CommandPrimitive.Separator
@@ -99,6 +102,7 @@ const CommandSeparator = React.forwardRef(
 )
 CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
+// Single command item
 const CommandItem = React.forwardRef(
   ({ className, ...props }, ref) => (
     <CommandPrimitive.Item
@@ -111,9 +115,9 @@ const CommandItem = React.forwardRef(
     />
   )
 )
-
 CommandItem.displayName = CommandPrimitive.Item.displayName
 
+// Shortcut text for command item
 const CommandShortcut = ({ className, ...props }) => {
   return (
     <span

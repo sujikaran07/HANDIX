@@ -4,11 +4,13 @@ import * as ToggleGroupPrimitive from "@radix-ui/react-toggle-group"
 import { cn } from "@/lib/utils"
 import { toggleVariants } from "@/components/ui/toggle"
 
+// Context for toggle group variant and size
 const ToggleGroupContext = React.createContext({
   size: "default",
   variant: "default",
 })
 
+// ToggleGroup root for grouping toggle buttons
 const ToggleGroup = React.forwardRef(({ className, variant, size, children, ...props }, ref) => (
   <ToggleGroupPrimitive.Root
     ref={ref}
@@ -20,12 +22,11 @@ const ToggleGroup = React.forwardRef(({ className, variant, size, children, ...p
     </ToggleGroupContext.Provider>
   </ToggleGroupPrimitive.Root>
 ))
-
 ToggleGroup.displayName = ToggleGroupPrimitive.Root.displayName
 
+// Single toggle group item (button)
 const ToggleGroupItem = React.forwardRef(({ className, children, variant, size, ...props }, ref) => {
   const context = React.useContext(ToggleGroupContext)
-
   return (
     <ToggleGroupPrimitive.Item
       ref={ref}
@@ -42,7 +43,6 @@ const ToggleGroupItem = React.forwardRef(({ className, children, variant, size, 
     </ToggleGroupPrimitive.Item>
   )
 })
-
 ToggleGroupItem.displayName = ToggleGroupPrimitive.Item.displayName
 
 export { ToggleGroup, ToggleGroupItem }

@@ -4,6 +4,7 @@ const ProductEntry = require('../../models/productEntryModel');
 const ProductImage = require('../../models/productImageModel');
 const Review = require('../../models/reviewModel');
 
+// Get inventory with images, categories, and review stats
 const getInventory = async (req, res) => {
   try {
     console.log("Fetching inventory with images");
@@ -123,7 +124,7 @@ const getInventory = async (req, res) => {
   }
 };
 
-// Also update the public version of the inventory endpoint to include ratings
+// Get public inventory with images and review stats
 const getPublicInventory = async (req, res) => {
   try {
     // Fetch product data with related models

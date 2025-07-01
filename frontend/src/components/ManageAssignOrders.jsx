@@ -4,14 +4,14 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faFilter, faCloudDownloadAlt, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FaTasks, FaPlus } from 'react-icons/fa';
 import Pagination from './Pagination';
-import AssignOrderForm from './AssignOrderForm'; // Import AssignOrderForm component
+import AssignOrderForm from './AssignOrderForm';
 import axios from 'axios';
 
 const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
+  // State for artisans
   const [artisans, setArtisans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
@@ -26,25 +26,20 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     fetchArtisans();
   }, []);
 
+  // Fetch artisans from backend
   const fetchArtisans = async () => {
     try {
       setLoading(true);
       setError(null);
-     
       const BACKEND_URL = 'http://localhost:5000'; 
       const response = await axios.get(`${BACKEND_URL}/api/artisans`);
-      
-      console.log("API Response:", response.data);
-      
       if (Array.isArray(response.data)) {
         setArtisans(response.data);
       } else {
-        console.error("API did not return an array:", response.data);
         setArtisans([]);
         setError("Invalid data format received from server");
       }
     } catch (err) {
-      console.error('Error fetching artisans data:', err);
       setError('Failed to load artisans. Please try again later.');
       setArtisans([]); 
     } finally {
@@ -52,29 +47,27 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     }
   };
 
+  // Fetch artisan workload details
   const fetchArtisanWorkload = async (id) => {
     try {
       setLoading(true);
       const BACKEND_URL = 'http://localhost:5000';
       const response = await axios.get(`${BACKEND_URL}/api/artisans/${id}/workload`);
-      console.log("Workload data:", response.data);
       setArtisanWorkload(response.data);
       setShowDetailModal(true);
     } catch (err) {
-      console.error(`Error fetching workload for artisan ${id}:`, err);
       setError(`Failed to load details for artisan ${id}`);
     } finally {
       setLoading(false);
     }
   };
 
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString || dateString === 'No orders completed') return dateString;
-    
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString;
-    
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -85,19 +78,21 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     }
   };
 
+  // Edit artisan assignment
   const handleEdit = (id) => {
     const artisan = artisans.find(artisan => artisan.id === id);
     setSelectedArtisan(artisan);
     setShowEditAssignOrderForm(true);
-    // Removed the reference to onAssignArtisan since it's not defined
   };
 
+  // View artisan details and workload
   const handleViewDetails = (id) => {
     const artisan = artisans.find(artisan => artisan.id === id);
     setSelectedArtisan(artisan);
     fetchArtisanWorkload(id);
   };
 
+  // Show add assign order form
   const handleAddAssignOrderClick = () => {
     if (onAddAssignOrderClick) {
       onAddAssignOrderClick();
@@ -105,6 +100,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     setShowAddAssignOrderForm(true);
   };
 
+  // Cancel all modals/forms
   const handleCancel = () => {
     setShowAddAssignOrderForm(false);
     setShowEditAssignOrderForm(false);
@@ -113,6 +109,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     setArtisanWorkload(null);
   };
 
+  // Save assigned order (add or edit)
   const handleSave = (newOrder) => {
     if (showEditAssignOrderForm) {
       setArtisans(artisans.map(artisan => artisan.id === newOrder.id ? newOrder : artisan));
@@ -123,25 +120,22 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     setShowEditAssignOrderForm(false);
   };
 
+  // Filter artisans by search and status
   const filteredArtisans = Array.isArray(artisans) 
     ? artisans.filter(artisan => {
         if (!artisan) return false;
-        
-        // Search term filter
         const matchesSearch = 
           (artisan.name && artisan.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (artisan.email && artisan.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (artisan.id && artisan.id.toLowerCase().includes(searchTerm.toLowerCase()));
-        
-        // Status filter
         const matchesStatus = 
           filterStatus === 'All' || 
           artisan.availability === filterStatus;
-        
         return matchesSearch && matchesStatus;
       }) 
     : [];
 
+  // Pagination logic
   const indexOfLastArtisan = currentPage * artisansPerPage;
   const indexOfFirstArtisan = indexOfLastArtisan - artisansPerPage;
   const currentArtisans = filteredArtisans.slice(indexOfFirstArtisan, indexOfLastArtisan);
@@ -151,25 +145,12 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
     setCurrentPage(pageNumber);
   };
 
-  // Updated to properly display availability based on order thresholds
+  // Get color for availability
   const getAvailabilityColor = (availability) => {
     return availability === 'Available' ? '#28a745' : '#dc3545';
   };
 
-  const getAvailabilityInfo = (artisan) => {
-    if (!artisan) return '';
-    
-    // Extract numbers from ongoingOrders string (e.g., "3 Orders" -> 3)
-    const orderCount = parseInt(artisan.ongoingOrders) || 0;
-    
-    if (artisan.availability === 'Busy') {
-      return `${artisan.availability} (${artisan.ongoingOrders})`;
-    } else {
-      return `${artisan.availability} (${artisan.ongoingOrders})`;
-    }
-  };
-
-  // Add the missing getBadgeClass function
+  // Get badge class for order type
   const getBadgeClass = (customized) => {
     return customized ? 'bg-warning text-dark' : 'bg-info text-white';
   };
@@ -319,6 +300,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
           </div>
         ) : (
           <>
+            {/* Header with title, search, and export */}
             <div className="manage-assign-order-header d-flex justify-content-between align-items-center mb-3">
               <div className="title-section">
                 <div className="icon-and-title">
@@ -351,8 +333,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
                 </button>
               </div>
             </div>
-
-            {/* Filter section - Updated to match ManageOrder.jsx style */}
+            {/* Filter section */}
             <div className="filter-section mb-4 d-flex justify-content-between align-items-center">
               <div className="d-flex">
                 <span className="me-2">Filter by availability:</span>
@@ -399,7 +380,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
                 </small>
               </div>
             </div>
-
+            {/* Artisan table */}
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
               {loading ? (
                 <div className="text-center p-4">
@@ -471,7 +452,7 @@ const ManageAssignOrders = ({ onAddAssignOrderClick }) => {
                 </table>
               )}
             </div>
-
+            {/* Pagination controls */}
             {!loading && !error && (
               <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
             )}

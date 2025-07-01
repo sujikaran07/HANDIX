@@ -4,6 +4,7 @@ import '.././styles/admin/AdminEmployee.css';
 import axios from 'axios';
 
 const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
+  // State for form fields 
   const [firstName, setFirstName] = useState(employee.firstName);
   const [lastName, setLastName] = useState(employee.lastName);
   const [jobRole, setJobRole] = useState(employee.role);
@@ -16,10 +17,12 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
   const [lastNameError, setLastNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
 
+  // Validation functions
   const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
+  // Handle save button click
   const handleSave = async () => {
     let valid = true;
     setFirstNameError('');
@@ -70,6 +73,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
     <div className="edit-employee-form">
       <h4 className="mb-4">Edit Employee</h4>
       <form>
+        {/* First/Last Name */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="firstName" className="form-label">First Name</label>
@@ -96,6 +100,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
             {lastNameError && <div className="text-danger small">{lastNameError}</div>}
           </div>
         </div>
+        {/* Job Role and User ID */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="jobRole" className="form-label">Job Role</label>
@@ -120,6 +125,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
             />
           </div>
         </div>
+        {/* Email and Phone */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="email" className="form-label">Email Address</label>
@@ -147,6 +153,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
             {phoneError && <div className="text-danger small">{phoneError}</div>}
           </div>
         </div>
+        {/* Password */}
         <div className="row mb-3">
           <div className="col-md-12">
             <label htmlFor="password" className="form-label">Password</label>
@@ -159,6 +166,7 @@ const EditEmployeeForm = ({ employee, onSave, onCancel }) => {
             />
           </div>
         </div>
+        {/* Update/Cancel Buttons */}
         <div className="d-flex justify-content-between">
           <button type="button" className="btn btn-success me-2" onClick={handleSave}>Update</button>
           <button type="button" className="btn btn-secondary" onClick={onCancel}>Cancel</button>

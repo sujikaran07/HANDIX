@@ -7,6 +7,7 @@ import AddEmployeeForm from '../../components/AddEmployeeForm';
 import axios from 'axios'; 
 import '../../styles/admin/AdminEmployee.css';
 
+// Admin employee management page
 const AdminManageEmployeePage = () => {
   const navigate = useNavigate();
   const [showAddEmployeeForm, setShowAddEmployeeForm] = useState(false);
@@ -16,35 +17,36 @@ const AdminManageEmployeePage = () => {
   const [showEditEmployeeForm, setShowEditEmployeeForm] = useState(false);
 
   useEffect(() => {
-    // Check if admin token exists
+    // Check admin authentication token
     const adminToken = localStorage.getItem('adminToken');
     console.log('AdminEmployee - adminToken check:', adminToken ? 'Token exists' : 'No token found');
     
     if (!adminToken) {
-      console.warn('No admin token found, redirecting to login');
+      // Redirect if not authenticated
       setIsAuthenticated(false);
       navigate('/login');
       return;
     }
-    
     setIsAuthenticated(true);
     setLoading(false);
   }, [navigate]);
 
+  // Show add employee form
   const handleAddEmployeeClick = () => {
     setShowAddEmployeeForm(true);
   };
 
+  // Cancel add employee form
   const handleCancel = () => {
     setShowAddEmployeeForm(false);
   };
 
+  // Save new employee to backend
   const handleSave = async (newEmployee) => {
     try {
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
-        console.error('No token found in localStorage');
         alert('Authentication required. Please login again.');
         navigate('/login');
         return;
@@ -57,7 +59,6 @@ const AdminManageEmployeePage = () => {
         }
       });
       
-      console.log('Employee saved:', response.data);
       setShowAddEmployeeForm(false);
       window.location.reload(); 
     } catch (error) {
@@ -72,13 +73,14 @@ const AdminManageEmployeePage = () => {
     }
   };
 
+  // Handle employee update (refresh list)
   const handleUpdate = (updatedEmployee) => {
-    console.log('handleUpdate called with:', updatedEmployee); 
     setShowEditEmployeeForm(false); 
     setRefreshKey((prevKey) => prevKey + 1); 
   };
 
   if (loading) {
+    // Show loading spinner
     return (
       <div className="container mt-5 text-center">
         <div className="spinner-border text-primary" role="status">
@@ -90,9 +92,11 @@ const AdminManageEmployeePage = () => {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
+    // If not authenticated, render nothing (redirect handled above)
+    return null;
   }
 
+  // Main layout
   return (
     <div className="admin-employee-page">
       <AdminSidebar />

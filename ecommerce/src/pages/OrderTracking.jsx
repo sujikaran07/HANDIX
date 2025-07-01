@@ -4,19 +4,19 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const OrderTrackingPage = () => {
+  // State for order number input, error, and status
   const [orderNumber, setOrderNumber] = useState('');
   const [error, setError] = useState('');
   const [orderStatus, setOrderStatus] = useState(null);
-  
+
+  // Handle order tracking form submit
   const handleSubmit = (e) => {
     e.preventDefault();
-    
     if (!orderNumber.trim()) {
       setError('Please enter an order number');
       return;
     }
-    
-    
+    // Demo logic for order status
     if (orderNumber.includes('123')) {
       setOrderStatus({
         orderId: `HX-${orderNumber}`,

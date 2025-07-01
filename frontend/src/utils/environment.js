@@ -1,16 +1,13 @@
-/**
- * Environment configuration for the application
- * Contains API base URLs and other environment-specific settings
- */
+// Environment configuration for different deployment environments
 
-// API base URL - adjust based on environment
+// API configuration - update for production deployment
 export const API_BASE_URL = 'http://localhost:5000';
 
-// Other environment variables
+// Application metadata
 export const APP_VERSION = '1.0.0';
 export const APP_NAME = 'HANDIX';
 
-// Helper function to get environment-specific values
+// Get environment configuration values by key
 export const getEnvConfig = (key) => {
   const config = {
     apiBaseUrl: API_BASE_URL,

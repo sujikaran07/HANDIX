@@ -12,7 +12,7 @@ const PoliciesPage = () => {
           <div className="max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold mb-8">Terms & Conditions / Policies</h1>
             
-            {/* Shipping Policy Section */}
+            {/* Shipping Policy Sections */}
             <div className="mb-10 bg-white p-6 rounded-lg shadow-sm">
               <h2 className="text-2xl font-bold mb-4 text-primary">Shipping Policy</h2>
               

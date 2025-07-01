@@ -1,9 +1,15 @@
+/* 
+ * Artisan Logout Page Styles
+ * Provides styling for the artisan logout confirmation interface
+ * Includes responsive layout and button styling
+ */
+
+/* Base reset styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
 
 html {
     box-sizing: border-box;
@@ -14,7 +20,7 @@ html {
     box-sizing: inherit;
 }
 
-
+/* Base typography and document setup */
 body {
     font-family: "Poppins", sans-serif;
     margin: 0;
@@ -23,7 +29,7 @@ body {
     overflow: hidden;
 }
 
-
+/* Main layout container */
 .artisan-logout-page-unique {
     display: flex;
     flex-direction: column;
@@ -43,7 +49,6 @@ body {
     justify-content: space-between; 
     min-height: 100%; 
 }
-
 
 @media (max-width: 768px) {
     body {
@@ -94,7 +99,6 @@ body {
     }
 }
 
-
 @media (min-width: 1600px) {
     .main-content-unique {
         max-width: 1400px; 
@@ -102,6 +106,7 @@ body {
     }
 }
 
+/* Logout section styles */
 .logout-section-unique {
     display: flex;
     justify-content: center;

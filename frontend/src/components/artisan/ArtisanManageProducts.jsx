@@ -9,7 +9,9 @@ import '../../styles/artisan/ArtisanProducts.css';
 import ProductViewForm from './ProductViewForm';
 import EditProductForm from './EditProductForm';
 
+// Component for managing artisan's product entries with CRUD operations
 const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick }) => {
+  // State management for product entries and UI
   const [entries, setEntries] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategories, setSelectedCategories] = useState(['Carry Goods', 'Accessories', 'Clothing', 'Crafts', 'Artistry']);
@@ -26,17 +28,15 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     fetchEntries();
   }, []);
 
+  // Fetch all product entries for the artisan
   const fetchEntries = async () => {
     try {
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         alert('You are not logged in. Please log in to view your entries.');
         window.location.href = '/login';
         return;
       }
-
-      console.log('Fetching all entries');
 
       const response = await fetch('http://localhost:5000/api/products/entries', {
         headers: {
@@ -46,15 +46,12 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`Total entries fetched: ${data.entries.length}`);
         setEntries(data.entries);
         setTotalPages(Math.ceil(data.entries.length / entriesPerPage)); 
       } else {
-        console.error(`Failed to fetch product entries. Status: ${response.status}, Message: ${response.statusText}`);
         alert('Unable to fetch product entries at the moment. Please try again later.');
       }
     } catch (error) {
-      console.error('Error fetching product entries:', error.message);
       alert('An unexpected error occurred while fetching product entries. Please try again later.');
     }
   };
@@ -67,6 +64,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     );
   };
 
+  // Apply search and filter criteria to entries
   const filteredEntries = entries.filter(entry => {
     return (
       (selectedCategories.includes(entry.category?.category_name)) && 
@@ -79,29 +77,23 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     );
   });
 
-  console.log(`Filtered entries: ${filteredEntries.length}`); 
-
+  // Pagination calculations
   const indexOfLastEntry = currentPage * entriesPerPage;
   const indexOfFirstEntry = indexOfLastEntry - entriesPerPage;
   const currentEntries = filteredEntries.slice(indexOfFirstEntry, indexOfLastEntry);
 
-  console.log(`Current entries: ${currentEntries.length}, Page: ${currentPage}`); 
-
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) {
-      console.warn(`Invalid page number: ${pageNumber}. Total pages: ${totalPages}`);
       return;
     }
-    console.log(`Navigating to page: ${pageNumber}`);
     setCurrentPage(pageNumber); 
   };
 
+  // Handle product view with image fetching
   const handleViewProduct = async (product) => {
     try {
-      console.log("Viewing product entry ID:", product.entry_id);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         return;
       }
 
@@ -113,8 +105,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Product data fetched:", data);
         
+        // Fetch product images
         try {
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
@@ -124,42 +116,36 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           
           if (imagesResponse.ok) {
             const imagesData = await imagesResponse.json();
-            console.log("Images data fetched:", imagesData);
 
             if (imagesData.images && imagesData.images.length > 0) {
               data.entryImages = imagesData.images;
             }
-          } else {
-            console.error("Failed to fetch images:", imagesResponse.statusText);
           }
         } catch (imageError) {
-          console.error("Error fetching images:", imageError);
+          // Continue without images
         }
         
         setSelectedProduct(data);
         setViewMode('view');
       } else {
-        console.error('Failed to fetch product details:', response.statusText);
         alert("Failed to load product details. Please try again.");
       }
     } catch (error) {
-      console.error('Error fetching product details:', error);
       alert("An error occurred while fetching product details.");
     }
   };
 
+  // Handle product edit with approval status check
   const handleEditProduct = async (product) => {
     try {
-
+      // Prevent editing of approved products
       if (product.status === 'Approved') {
         alert("Approved products cannot be edited.");
         return;
       }
       
-      console.log("Editing product entry:", product.entry_id);
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         return;
       }
 
@@ -171,10 +157,9 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Product data fetched for editing:", data);
         
+        // Fetch product images for editing
         try {
-         
           const imagesResponse = await fetch(`http://localhost:5000/api/products/${product.product_id}/images`, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -183,41 +168,34 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           
           if (imagesResponse.ok) {
             const imagesData = await imagesResponse.json();
-            console.log("Images data fetched for editing:", imagesData);
 
             if (imagesData.images && imagesData.images.length > 0) {
               data.entryImages = imagesData.images;
             }
-          } else {
-            console.error("Failed to fetch images:", imagesResponse.statusText);
           }
         } catch (imageError) {
-          console.error("Error fetching images:", imageError);
+          // Continue without images
         }
         
         setSelectedProduct(data); 
         setViewMode('edit');
       } else {
-        console.error('Failed to fetch product details:', response.statusText);
         alert("Failed to load product details for editing. Please try again.");
       }
     } catch (error) {
-      console.error('Error fetching product details:', error);
       alert("An error occurred while fetching product details for editing.");
     }
   };
 
+  // Handle product update submission
   const handleProductUpdate = async (updatedProduct) => {
     try {
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         return;
       }
       
-      console.log("Sending update for product:", updatedProduct);
-      
-
+      // Prepare product data for API submission
       const productData = {
         product_name: updatedProduct.product_name,
         description: updatedProduct.description,
@@ -231,8 +209,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         variation_id: updatedProduct.variation_id 
       };
       
-      console.log("Formatted product data for API:", productData);
-      
       const response = await fetch(`http://localhost:5000/api/products/${updatedProduct.entry_id}`, {
         method: 'PUT',
         headers: {
@@ -244,21 +220,19 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       
       if (response.ok) {
         const result = await response.json();
-        console.log("Product updated successfully:", result);
         
         alert("Product successfully updated!");
         
+        // Refresh entries list
         await fetchEntries();
 
         setViewMode('table');
         setSelectedProduct(null);
       } else {
         const errorData = await response.json();
-        console.error('Failed to update product:', errorData);
         alert(`Failed to update product: ${errorData.error || response.statusText}`);
       }
     } catch (error) {
-      console.error('Error updating product:', error);
       alert("An error occurred while updating the product.");
     }
   };
@@ -268,6 +242,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     setViewMode('table');
   };
 
+  // Confirm product deletion with approval status check
   const confirmDelete = (product) => {
     if (product.status === 'Approved') {
       alert("Approved products cannot be deleted.");
@@ -283,6 +258,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
     setProductToDelete(null);
   };
 
+  // Handle product deletion
   const handleDelete = async () => {
     if (productToDelete) {
       if (productToDelete.status === 'Approved') {
@@ -295,11 +271,8 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
       try {
         const token = localStorage.getItem('artisanToken');
         if (!token) {
-          console.error('No token found'); 
           return;
         }
-
-        console.log('Sending delete request for entry ID:', productToDelete.entry_id); 
 
         const response = await fetch(`http://localhost:5000/api/products/${productToDelete.entry_id}`, {
           method: 'DELETE',
@@ -309,18 +282,16 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
         });
 
         if (response.ok) {
-          console.log('Product deleted successfully');
+          // Remove deleted product from local state
           setEntries((prevEntries) =>
             prevEntries.filter((entry) => entry.entry_id !== productToDelete.entry_id)
           );
           setShowDeleteModal(false);
           setProductToDelete(null);
         } else {
-          console.error('Failed to delete product:', response.statusText);
           alert('Failed to delete product. Please try again.');
         }
       } catch (error) {
-        console.error('Error deleting product:', error);
         alert('An error occurred while trying to delete the product.');
       }
     }
@@ -329,6 +300,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Page header with title and action buttons */}
         <div className="manage-products-header d-flex justify-content-between align-items-center mb-3">
           <div className="title-section">
             <div className="icon-and-title">
@@ -348,6 +320,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
             </button>
           </div>
         </div>
+        {/* Search and filter controls */}
         <div className="d-flex align-items-center mb-3 justify-content-end">
           <div className="search-bar me-2">
             <div className="input-group">
@@ -383,6 +356,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           </div>
         </div>
 
+        {/* Product entries table view */}
         {viewMode === 'table' && (
           <>
             <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
@@ -411,6 +385,7 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
                         <td>{new Date(entry.date_added).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
                         <td className={`status ${entry.status.toLowerCase()}`}>{entry.status}</td>
                         <td className="action-buttons">
+                          {/* Action dropdown with conditional options */}
                           <div className="dropdown">
                             <button 
                               className="btn dropdown-toggle" 
@@ -486,10 +461,12 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           </>
         )}
 
+        {/* Product view mode */}
         {viewMode === 'view' && selectedProduct && (
           <ProductViewForm product={selectedProduct} onBack={handleBackToTable} />
         )}
 
+        {/* Product edit mode */}
         {viewMode === 'edit' && selectedProduct && (
           <EditProductForm 
             product={selectedProduct} 
@@ -498,7 +475,6 @@ const ArtisanManageProducts = ({ onViewProduct, onEditProduct, onAddProductClick
           />
         )}
       </div>
-
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal-content">

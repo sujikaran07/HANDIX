@@ -10,6 +10,7 @@ import ConfirmationModal from './ui/ConfirmationModal';
 import axios from 'axios';
 
 const ManageEmployee = ({ onAddEmployeeClick }) => {
+  // State variables for employees, search/filter, pagination, forms, and status modals
   const [employees, setEmployees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('All');
@@ -25,41 +26,32 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
   const employeesPerPage = 7;
 
   useEffect(() => {
+    // Fetch employees from backend API
     const fetchEmployees = async () => {
       try {
-       const token = localStorage.getItem('adminToken');
-       console.log('Admin token being sent:', token);
-        
+        const token = localStorage.getItem('adminToken');
         if (!token) {
-          console.error('No admin token found in localStorage');
           setError('Authentication required. Please login again.');
           setLoading(false);
           return;
         }
-
         const response = await axios.get('http://localhost:5000/api/employees', {
           headers: {
             Authorization: `Bearer ${token}`,
           }
         });
-        
-        console.log('Fetched employees:', response.data);
         setEmployees(response.data);
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching employees:', error);
-        
+        // Handle token expiration and other errors
         if (error.response && error.response.status === 401) {
-          console.warn('Token expired. Attempting to refresh token...');
           try {
             const token = localStorage.getItem('adminToken');
             const refreshResponse = await axios.post('http://localhost:5000/api/login/refresh-token', 
               { token },
               { headers: { 'Content-Type': 'application/json' } }
             );
-
             if (refreshResponse.status === 200) {
-              console.log('Token refreshed:', refreshResponse.data.token);
               localStorage.setItem('adminToken', refreshResponse.data.token);
               fetchEmployees();
             } else {
@@ -67,7 +59,6 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
               setLoading(false);
             }
           } catch (refreshError) {
-            console.error('Error refreshing token:', refreshError);
             setError('Authentication failed. Please login again.');
             setLoading(false);
           }
@@ -77,10 +68,10 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
         }
       }
     };
-    
     fetchEmployees();
   }, []);
 
+  // Handle status (activate/deactivate) modal
   const handleToggleStatus = (employee) => {
     const action = employee.status === 'Active' ? 'deactivate' : 'activate';
     setStatusAction(action);
@@ -88,6 +79,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     setShowStatusModal(true);
   };
 
+  // Confirm status change
   const handleConfirmStatusChange = async () => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -115,44 +107,45 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     }
   };
 
+  // Cancel status change modal
   const handleCancelStatusChange = () => {
     setShowStatusModal(false);
     setSelectedEmployeeForStatus(null);
     setStatusAction(null);
   };
 
+  // Edit employee
   const handleEdit = (eId) => {
     const employee = employees.find(emp => emp.eId === eId);
     setSelectedEmployee(employee);
     setShowEditEmployeeForm(true);
   };
 
+  // Show add employee form
   const handleAddEmployeeClick = () => {
     setShowAddEmployeeForm(true);
   };
 
+  // Cancel add/edit employee form
   const handleCancel = () => {
     setShowAddEmployeeForm(false);
     setShowEditEmployeeForm(false);
   };
 
+  // Save new or edited employee
   const handleSave = async (updatedEmployee) => {
     try {
       const token = localStorage.getItem('adminToken');
-      
       if (!token) {
-        console.error('No admin token found in localStorage');
         alert('Authentication required. Please login again.');
         return;
       }
-      
       if (showEditEmployeeForm) {
         const response = await axios.put(
           `http://localhost:5000/api/employees/${updatedEmployee.eId}`, 
           updatedEmployee,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
         setEmployees(employees.map(emp => 
           emp.eId === updatedEmployee.eId ? response.data : emp
         ));
@@ -162,14 +155,11 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
           updatedEmployee,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
         setEmployees([...employees, response.data]);
       }
-      
       setShowAddEmployeeForm(false);
       setShowEditEmployeeForm(false);
     } catch (error) {
-      console.error('Error saving employee:', error);
       if (error.response && error.response.status === 401) {
         alert('Session expired. Please login again.');
       } else {
@@ -178,6 +168,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     }
   };
 
+  // Filter employees by search and role
   const filteredEmployees = employees.filter(employee => {
     const roleName = employee.roleId === 1 ? 'Admin' : employee.roleId === 2 ? 'Artisan' : 'Other';
     return (
@@ -189,6 +180,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
     );
   });
 
+  // Pagination logic
   const indexOfLastEmployee = currentPage * employeesPerPage;
   const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
@@ -207,6 +199,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
           <EditEmployeeForm employee={selectedEmployee} onSave={handleSave} onCancel={handleCancel} />
         ) : (
           <>
+            {/* Header with title and add/export buttons */}
             <div className="manage-artisan-header d-flex justify-content-between align-items-center mb-3">
               <div className="title-section">
                 <div className="icon-and-title">
@@ -227,6 +220,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
               </div>
             </div>
 
+            {/* Search and filter controls */}
             <div className="manage-request-header d-flex justify-content-between align-items-center mb-3">
               <h4 className="mb-0">Manage Employees</h4>
               <div className="d-flex align-items-center">
@@ -263,6 +257,7 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
               </div>
             </div>
 
+            {/* Employee table */}
             <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
               {loading ? (
                 <div className="text-center py-4">
@@ -333,10 +328,12 @@ const ManageEmployee = ({ onAddEmployeeClick }) => {
               )}
             </div>
 
+            {/* Pagination controls */}
             <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           </>
         )}
       </div>
+      {/* Status confirmation modal */}
       {showStatusModal && (
         <ConfirmationModal
           isOpen={showStatusModal}

@@ -18,6 +18,7 @@ const { upload } = require('../../utils/cloudinaryConfig');
 
 const router = express.Router();
 
+// Middleware: Inject employee ID into request body
 const injectEId = (req, res, next) => {
   if (req.user && req.user.id) {
     req.body.e_id = req.user.id; 
@@ -25,14 +26,25 @@ const injectEId = (req, res, next) => {
   next();
 };
 
+// Route: Upload product images
 router.post('/images', authMiddleware, upload.array('productImages', 5), uploadProductImages);
 
+// Route: Generate new product ID
 router.get('/new-id', authMiddleware, generateNewProductId);
+
+// Route: Get all product entries for employee
 router.get('/entries', authMiddleware, getAllProductEntries);
+
+// Route: Get product by name
 router.get('/by-name', authMiddleware, getProductByName);
+
+// Route: Get product suggestions
 router.get('/suggestions', authMiddleware, getProductSuggestions);
+
+// Route: Get inventory suggestions
 router.get('/inventory-suggestions', authMiddleware, getInventorySuggestions); // Add this new route
 
+// Route: Get product images by product ID
 router.get('/:id/images', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,11 +67,19 @@ router.get('/:id/images', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get product by ID
 router.get('/:id', authMiddleware, getProductById);
+
+// Route: Create new product
 router.post('/', authMiddleware, injectEId, createProduct);
+
+// Route: Update product
 router.put('/:id', authMiddleware, updateProduct);
+
+// Route: Delete product
 router.delete('/:id', authMiddleware, deleteProduct); 
 
+// Route: Get product entry by entryId with variations
 router.get('/entry/:entryId', authMiddleware, async (req, res) => {
   try {
     const { entryId } = req.params;
@@ -117,6 +137,7 @@ router.get('/entry/:entryId', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Update product status
 router.put('/:id/status', authMiddleware, updateProductStatus);
 
 module.exports = router;

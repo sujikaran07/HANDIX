@@ -6,7 +6,7 @@ const { Order } = require('../../models/orderModel');
 const { Op } = require('sequelize');
 const { sequelize } = require('../../config/db');
 
-// Debug endpoint to check artisan data
+// Debug: Check artisan data (products, orders, etc.)
 router.get('/check-artisan-data/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -84,7 +84,7 @@ router.get('/check-artisan-data/:artisanId', async (req, res) => {
   }
 });
 
-// Add a new debug endpoint to check product trend data
+// Debug: Check product trend data for artisan
 router.get('/check-product-trends/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -150,7 +150,7 @@ router.get('/check-product-trends/:artisanId', async (req, res) => {
   }
 });
 
-// Add a debug endpoint to create test products for an artisan
+// Debug: Create test products for an artisan
 router.post('/create-test-products/:artisanId', async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -211,7 +211,7 @@ router.post('/create-test-products/:artisanId', async (req, res) => {
   }
 });
 
-// GET /api/artisan-debug/schema/:tableName - Get table schema
+// Debug: Get table schema for a given table
 router.get('/schema/:tableName', async (req, res) => {
   try {
     const { tableName } = req.params;

@@ -1,42 +1,43 @@
 /**
+ * Helper functions for generating charts and handling reporting logic
+ */
+
+/**
  * Report Chart Utility Functions
  * This module provides helper functions for generating appropriate charts
  * based on different report types.
  */
-
-// Add color schemes for different report types
 const reportColorSchemes = {
   sales: {
-    primary: '#0d6efd', // Blue
-    secondary: '#6610f2', // Indigo
-    accent: '#0dcaf0', // Cyan
+    primary: '#0d6efd',
+    secondary: '#6610f2',
+    accent: '#0dcaf0',
     gradient: ['#0d6efd', '#6610f2'],
     palette: ['#0d6efd', '#6610f2', '#0dcaf0', '#6f42c1', '#0d6efd80', '#6610f280']
   },
   products: {
-    primary: '#198754', // Green
-    secondary: '#20c997', // Teal
-    accent: '#75b798', // Light green
+    primary: '#198754',
+    secondary: '#20c997',
+    accent: '#75b798',
     gradient: ['#198754', '#20c997'],
     palette: ['#198754', '#20c997', '#75b798', '#28a745', '#19875480', '#20c99780']
   },
   customers: {
-    primary: '#0dcaf0', // Cyan
-    secondary: '#0d6efd', // Blue
-    accent: '#6edff6', // Light cyan
+    primary: '#0dcaf0',
+    secondary: '#0d6efd',
+    accent: '#6edff6',
     gradient: ['#0dcaf0', '#0d6efd'],
     palette: ['#0dcaf0', '#0d6efd', '#6edff6', '#17a2b8', '#0dcaf080', '#0d6efd80']
   },
   artisans: {
-    primary: '#fd7e14', // Orange
-    secondary: '#ffc107', // Yellow
-    accent: '#ffda6a', // Light yellow
+    primary: '#fd7e14',
+    secondary: '#ffc107',
+    accent: '#ffda6a',
     gradient: ['#fd7e14', '#ffc107'],
     palette: ['#fd7e14', '#ffc107', '#ffda6a', '#e67e22', '#fd7e1480', '#ffc10780']
   }
 };
 
-// Helper function to get colors for a specific report type
 export const getReportColors = (reportType) => {
   return reportColorSchemes[reportType] || reportColorSchemes.sales; // Default to sales colors
 };
@@ -131,7 +132,7 @@ export const getChartConfig = (reportType, reportData) => {
 };
 
 /**
- * Gets chart configuration for artisan reports with specific handling for order reports
+ * Gets chart configuration for artisan reports
  * @param {string} reportType - The type of report
  * @param {object} reportData - The report data
  * @returns {object} Chart configuration
@@ -196,7 +197,7 @@ export const getArtisanChartConfig = (reportType, reportData) => {
 };
 
 /**
- * Prepares data for a bar chart based on report type
+ * Prepares data for a bar chart
  * For artisans, use completed_orders or units_uploaded as metric
  * @param {string} reportType - The type of report
  * @param {Array} data - The report data
@@ -288,7 +289,7 @@ export const prepareBarChartData = (reportType, data, artisanMetric = 'completed
 };
 
 /**
- * Prepares data for a pie chart based on report type
+ * Prepares data for a pie chart
  * @param {string} reportType - The type of report
  * @param {Array} data - The report data
  * @param {boolean} isArtisan - Whether this is for artisan view
@@ -512,3 +513,4 @@ const formatDate = (dateString) => {
     return dateString;
   }
 };
+    

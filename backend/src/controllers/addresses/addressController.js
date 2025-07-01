@@ -1,15 +1,12 @@
 const { Address } = require('../../models/addressModel');
 
+// Get all addresses for a specific customer
 const getAddressesByCustomerId = async (req, res) => {
   try {
     const customerId = req.params.c_id;
-    console.log(`Fetching addresses for customer ID: ${customerId}`);
-    
     const addresses = await Address.findAll({
       where: { c_id: customerId }
     });
-    
-    console.log(`Found ${addresses.length} addresses for customer ${customerId}`);
     res.json(addresses);
   } catch (error) {
     console.error('Error fetching addresses:', error);
@@ -17,6 +14,7 @@ const getAddressesByCustomerId = async (req, res) => {
   }
 };
 
+// Create a new address
 const createAddress = async (req, res) => {
   try {
     const address = await Address.create(req.body);
@@ -27,6 +25,7 @@ const createAddress = async (req, res) => {
   }
 };
 
+// Update address for a customer, or create if not exists
 const updateAddress = async (req, res) => {
   try {
     const { c_id } = req.params;
@@ -41,7 +40,6 @@ const updateAddress = async (req, res) => {
       await Address.update(addressData, {
         where: { address_id: existingAddress.address_id }
       });
-      
       const updatedAddress = await Address.findByPk(existingAddress.address_id);
       res.json(updatedAddress);
     } else {
@@ -49,7 +47,6 @@ const updateAddress = async (req, res) => {
         ...addressData,
         c_id: c_id
       });
-      
       res.status(201).json(newAddress);
     }
   } catch (error) {

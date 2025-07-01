@@ -4,19 +4,19 @@ const assignedOrderController = require('../../controllers/orders/assignedOrderC
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
 const { getAssignedOrdersByEID } = require('../../controllers/orders/assignedOrderController');
 
-// Get all orders assigned to a specific artisan
+// Route: Get all orders assigned to a specific artisan
 router.get('/assigned/:artisanId', authMiddleware, assignedOrderController.getAssignedOrders);
 
-// Get details of a specific order
+// Route: Get details of a specific order
 router.get('/:orderId', authMiddleware, assignedOrderController.getOrderDetails);
 
-// Get order items for a specific order
+// Route: Get order items for a specific order
 router.get('/:orderId/items', authMiddleware, assignedOrderController.getOrderItems);
 
-// Update the status of an order
+// Route: Update the status of an order
 router.put('/:orderId/status', authMiddleware, assignedOrderController.updateOrderStatus);
 
-// Add new route for fetching assigned orders by artisan eId
+// Route: Get assigned orders by artisan eId
 router.get('/assigned-by-id/:artisanId', authMiddleware, getAssignedOrdersByEID);
 
 module.exports = router;

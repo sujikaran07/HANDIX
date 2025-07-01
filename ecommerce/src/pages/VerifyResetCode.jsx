@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const VerifyResetCodePage = () => {
+  // State for OTP, email, loading, error
   const [otp, setOtp] = useState(['', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState('');
@@ -13,13 +14,13 @@ const VerifyResetCodePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  
+
   // Get email from location state or session storage
   const [email, setEmail] = useState(() => {
     return location.state?.email || sessionStorage.getItem('resetEmail') || '';
   });
 
-  // If email isn't available, redirect to forgot password page
+  // Redirect if email is missing
   useEffect(() => {
     if (!email) {
       toast({
@@ -31,13 +32,14 @@ const VerifyResetCodePage = () => {
     }
   }, [email, navigate]);
 
-  // Focus first input on component mount
+  // Focus first input on mount
   useEffect(() => {
     if (inputRefs[0].current) {
       inputRefs[0].current.focus();
     }
   }, []);
 
+  // Handle OTP input change
   const handleChange = (index, value) => {
     // Only allow numbers
     if (/^\d*$/.test(value)) {
@@ -52,6 +54,7 @@ const VerifyResetCodePage = () => {
     }
   };
 
+  // Handle backspace in OTP input
   const handleKeyDown = (index, e) => {
     // Move to previous input on backspace if current is empty
     if (e.key === 'Backspace' && otp[index] === '' && index > 0) {
@@ -59,6 +62,7 @@ const VerifyResetCodePage = () => {
     }
   };
 
+  // Handle OTP form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -114,6 +118,7 @@ const VerifyResetCodePage = () => {
     }
   };
 
+  // Handle resend code
   const handleResendCode = async () => {
     if (!email) {
       toast({

@@ -1,3 +1,4 @@
+/* Main layout container */
 .artisan-reviews-page {
   display: flex;
   flex-direction: row;
@@ -6,6 +7,7 @@
   font-size: var(--font-size-base);
 }
 
+/* Main content area */
 .artisan-reviews-page .artisan-main-content {
   flex: 1;
   padding: 15px;
@@ -18,6 +20,7 @@
   overflow: hidden;
 }
 
+/* Reviews container */
 .artisan-reviews-page .reviews-container {
   display: flex;
   flex-direction: column;

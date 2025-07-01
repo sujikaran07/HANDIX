@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from 'react';
 
+// Component for displaying detailed product information with image carousel
 const ProductViewForm = ({ product, onBack }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
-    console.log("Product data in view form:", product);
-    // Check if images are available through product.inventory
-    if (product.inventory && product.inventory.images) {
-      console.log("Product images:", product.inventory.images);
-    }
+    // Reset image index when product changes
+    setCurrentImageIndex(0);
   }, [product]);
   
   if (!product) {
     return <div>No product data available</div>;
   }
 
-  // Try to get images from different possible sources in the product object
+  // Get images from various possible sources in product object
   const images = (product.entryImages || 
     (product.inventory && product.inventory.images) || 
     []);
   
   const hasImages = images && Array.isArray(images) && images.length > 0;
   
+  // Image carousel navigation functions
   const handleNextImage = () => {
     if (hasImages) {
       setCurrentImageIndex((prevIndex) => 
@@ -38,7 +37,7 @@ const ProductViewForm = ({ product, onBack }) => {
     }
   };
 
-  // Format date for display
+  // Format date for user-friendly display
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleString('en-US', { 
@@ -50,7 +49,7 @@ const ProductViewForm = ({ product, onBack }) => {
     });
   };
 
-  // Get the appropriate badge class for status
+  // Get status badge styling based on approval status
   const getStatusClass = (status) => {
     if (!status) return '';
     const statusLower = status.toLowerCase();
@@ -61,7 +60,7 @@ const ProductViewForm = ({ product, onBack }) => {
     return 'bg-secondary';
   };
 
-  // Get the appropriate text color class for status
+  // Get text color based on status
   const getStatusTextClass = (status) => {
     if (!status) return 'text-muted';
     const statusLower = status.toLowerCase();
@@ -83,11 +82,13 @@ const ProductViewForm = ({ product, onBack }) => {
         flexDirection: 'column'
       }}>
         <div className="card-body p-4 d-flex flex-column">
+          {/* Header section */}
           <div className="mb-3">
             <h5 className="mb-0">Product Details</h5>
           </div>
 
           <div className="row flex-grow-1">
+            {/* Image carousel section */}
             <div className="col-md-4 mb-3">
               {hasImages ? (
                 <div className="position-relative">
@@ -104,12 +105,12 @@ const ProductViewForm = ({ product, onBack }) => {
                       padding: '8px'
                     }}
                     onError={(e) => {
-                      console.error("Image failed to load:", e.target.src);
                       e.target.onerror = null; 
                       e.target.src = 'https://via.placeholder.com/250x250?text=No+Image';
                     }}
                   />
                   
+                  {/* Navigation buttons for multiple images */}
                   {images.length > 1 && (
                     <div className="d-flex justify-content-between position-absolute w-100" style={{ top: '50%' }}>
                       <button 
@@ -129,6 +130,7 @@ const ProductViewForm = ({ product, onBack }) => {
                     </div>
                   )}
                   
+                  {/* Image indicators */}
                   {images.length > 1 && (
                     <div className="d-flex justify-content-center mt-2">
                       {images.map((_, index) => (
@@ -158,7 +160,9 @@ const ProductViewForm = ({ product, onBack }) => {
               )}
             </div>
             
+            {/* Product information section */}
             <div className="col-md-8 d-flex flex-column">
+              {/* Product ID and Name */}
               <div className="row g-2 flex-grow-1">
                 <div className="col-md-6">
                   <label>Product ID:</label>
@@ -174,6 +178,7 @@ const ProductViewForm = ({ product, onBack }) => {
                 </div>
               </div>
               
+              {/* Category and Status */}
               <div className="row g-2 flex-grow-1">
                 <div className="col-md-6">
                   <label>Category:</label>
@@ -191,6 +196,7 @@ const ProductViewForm = ({ product, onBack }) => {
                 </div>
               </div>
               
+              {/* Price and Quantity */}
               <div className="row g-2 flex-grow-1">
                 <div className="col-md-6">
                   <label>Price:</label>
@@ -206,6 +212,7 @@ const ProductViewForm = ({ product, onBack }) => {
                 </div>
               </div>
               
+              {/* Employee ID and Date Added */}
               <div className="row g-2 flex-grow-1">
                 <div className="col-md-6">
                   <label>Employee ID:</label>
@@ -221,6 +228,7 @@ const ProductViewForm = ({ product, onBack }) => {
                 </div>
               </div>
               
+              {/* Description with custom scrollbar styling */}
               <div className="row g-2 flex-grow-1">
                 <div className="col-12">
                   <label>Description:</label>
@@ -231,15 +239,15 @@ const ProductViewForm = ({ product, onBack }) => {
                       lineHeight: "22px", 
                       paddingLeft: "12px", 
                       overflowY: "auto",
-                      scrollbarWidth: "none", /* Firefox */
-                      msOverflowStyle: "none", /* IE and Edge */
+                      scrollbarWidth: "none",
+                      msOverflowStyle: "none",
                     }}
                   >
                     <style>
                       {`
                         div::-webkit-scrollbar {
                           width: 0;
-                          background: transparent; /* Chrome/Safari/Webkit */
+                          background: transparent;
                         }
                       `}
                     </style>
@@ -250,6 +258,7 @@ const ProductViewForm = ({ product, onBack }) => {
             </div>
           </div>
           
+          {/* Back button */}
           <div className="d-flex justify-content-end mt-3">
             <button className="btn btn-secondary" onClick={onBack}>
               Back

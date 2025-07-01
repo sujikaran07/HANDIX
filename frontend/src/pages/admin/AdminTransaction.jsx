@@ -6,6 +6,7 @@ import TransactionViewForm from '../../components/TransactionViewForm';
 import '../../styles/admin/AdminTransaction.css';
 
 const AdminTransactionPage = () => {
+  // State for managing transaction views and selection
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [currentView, setCurrentView] = useState('transactions'); 
 
@@ -24,6 +25,7 @@ const AdminTransactionPage = () => {
       <AdminSidebar />
       <div className="main-content">
         <AdminTopbar />
+        {/* Conditional rendering based on current view */}
         {currentView === 'transactions' && (
           <ManageTransactions 
             onViewTransaction={handleViewTransaction}
@@ -40,4 +42,4 @@ const AdminTransactionPage = () => {
   );
 };
 
-export default AdminTransactionPage; 
+export default AdminTransactionPage;

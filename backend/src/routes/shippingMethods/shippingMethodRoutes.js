@@ -2,7 +2,7 @@ const express = require('express');
 const { ShippingMethod } = require('../../models/shippingMethodModel');
 const router = express.Router();
 
-// Get all shipping methods
+// Route: Get all shipping methods
 router.get('/', async (req, res) => {
   try {
     const shippingMethods = await ShippingMethod.findAll();
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get shipping method by ID
+// Route: Get shipping method by ID
 router.get('/:id', async (req, res) => {
   try {
     const shippingMethod = await ShippingMethod.findByPk(req.params.id);

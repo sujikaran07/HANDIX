@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { cloudinary } = require('../../utils/cloudinaryConfig');
 
+// Get employee profile with profile image
 const getEmployeeProfile = async (req, res) => {
   try {
     const employee = await Employee.findByPk(req.user.id, {
@@ -34,9 +35,7 @@ const getEmployeeProfile = async (req, res) => {
   }
 };
 
-// @desc    Update employee profile
-// @route   PUT /api/employees/settings/profile
-// @access  Private
+// Update employee profile details and optionally remove profile picture
 const updateEmployeeProfile = async (req, res) => {
   try {
     const { firstName, lastName, phone, removeProfilePicture } = req.body;
@@ -108,6 +107,7 @@ const updateEmployeeProfile = async (req, res) => {
   }
 };
 
+// Update employee profile picture (upload to Cloudinary)
 const updateProfilePicture = async (req, res) => {
   try {    if (!req.file) {
       return res.status(400).json({ success: false, message: 'Please upload a file' });
@@ -176,9 +176,7 @@ const updateProfilePicture = async (req, res) => {
   }
 };
 
-// @desc    Change employee password
-// @route   PUT /api/employees/settings/password
-// @access  Private
+// Change employee password
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;

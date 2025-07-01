@@ -3,11 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { formatDate, formatCurrency } = require('./formatters');
 
-/**
- * Generate a PDF report based on the provided data
- * @param {Object} options - Report generation options
- * @returns {string} - Path to generated PDF file
- */
+// Generate a PDF report based on the provided data
 const generatePDFReport = async (options) => {
   const { title, summary, data, type, filters } = options;
   

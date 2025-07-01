@@ -2,6 +2,7 @@ import React from 'react';
 import { Toast, ToastProvider, ToastViewport } from './toast';
 import { useToast } from '../../hooks/use-toast';
 
+// Toaster component for rendering toast notifications
 export function Toaster() {
   const { toasts } = useToast();
 
@@ -20,6 +21,7 @@ export function Toaster() {
           </Toast>
         );
       })}
+      {/* ToastViewport renders the toast container */}
       <ToastViewport />
     </ToastProvider>
   );

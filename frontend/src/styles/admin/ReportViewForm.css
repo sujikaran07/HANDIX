@@ -1,4 +1,10 @@
-/* ReportViewForm styles */
+/* 
+ * Report View Form Component Styles
+ * Provides styling for the report display interface, including scrollable containers,
+ * charts, tables, and print layout settings
+ */
+
+/* Main container with scrollbar customization */
 .report-view-form {
   padding: 20px;
   padding-bottom: 1rem;

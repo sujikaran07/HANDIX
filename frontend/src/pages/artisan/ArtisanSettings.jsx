@@ -6,39 +6,38 @@ import ManageArtisanSettings from '../../components/artisan/ManageArtisanSetting
 import '../../styles/artisan/ArtisanSettings.css';
 import axios from 'axios';
 
+// Artisan settings page with role-based authentication
 const ArtisanSettingsPage = () => {
+  // State management for settings and authentication
   const [selectedSetting, setSelectedSetting] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Verify artisan authentication and role on page load
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('artisanToken');
         
         if (!token) {
-          console.log('Artisan token missing. Redirecting to login.');
           setIsAuthenticated(false);
           navigate('/login');
           return;
         }
 
-        // Always clear axios headers before setting new ones
+        // Set authorization header for API requests
         delete axios.defaults.headers.common['Authorization'];
-        // Set the Authorization header for subsequent requests
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         
         try {
           const response = await axios.get('/api/employees/settings/profile');
           if (response.data && response.data.success) {
-            // IMPORTANT: Check if user is artisan (role 2)
+            // Verify artisan role (role ID 2)
             if (response.data.data.roleId === 2) {
-              console.log('Confirmed artisan role. Staying on artisan page.');
               setIsAuthenticated(true);
             } else {
-              console.log('User is not an artisan. Redirecting to login.');
-              // Role mismatch - clear artisan token and redirect to login
+              // Invalid role - clear token and redirect
               localStorage.removeItem('artisanToken');
               setIsAuthenticated(false);
               navigate('/login');
@@ -46,7 +45,6 @@ const ArtisanSettingsPage = () => {
             }
           }
         } catch (error) {
-          console.log('Error validating artisan role:', error);
           if (error.response && error.response.status === 401) {
             localStorage.removeItem('artisanToken');
             setIsAuthenticated(false);
@@ -62,6 +60,7 @@ const ArtisanSettingsPage = () => {
     checkAuth();
   }, [navigate]);
 
+  // Handle setting selection (if needed for future functionality)
   const handleViewSetting = (setting) => {
     setSelectedSetting(setting);
   };
@@ -70,6 +69,7 @@ const ArtisanSettingsPage = () => {
     setSelectedSetting(null);
   };
 
+  // Loading state while verifying authentication
   if (loading) {
     return (
       <div className="container mt-5">
@@ -83,6 +83,7 @@ const ArtisanSettingsPage = () => {
     );
   }
 
+  // Unauthorized access display
   if (!isAuthenticated) {
     return (
       <div className="container mt-5">
@@ -98,6 +99,7 @@ const ArtisanSettingsPage = () => {
       <ArtisanSidebar />
       <div className="artisan-main-content">
         <ArtisanTopBar />
+        {/* Conditional rendering for settings view */}
         {selectedSetting ? (
           <div>
             <button className="btn btn-primary mb-3 mt-3 ms-3" onClick={handleBackToSettings}>

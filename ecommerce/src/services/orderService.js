@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// Get base URL from environment variables or use default
+// Set API base URL
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Create axios instance with base configuration
+// Axios instance with base config
 const api = axios.create({
   baseURL: baseURL,
   headers: {
@@ -11,7 +11,7 @@ const api = axios.create({
   }
 });
 
-// Add request interceptor to inject auth token
+// Attach auth token to requests if available
 api.interceptors.request.use(
   config => {
     const token = localStorage.getItem('token');
@@ -23,27 +23,14 @@ api.interceptors.request.use(
   error => Promise.reject(error)
 );
 
-// Service methods for orders
 const orderService = {
-  /**
-   * Get all orders for the logged-in customer
-   */
+  // Fetch all orders for the current customer
   getCustomerOrders: async () => {
     try {
-      // Get customer ID from local storage
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       const customerId = userData.c_id;
-      
-      if (!customerId) {
-        throw new Error('Customer ID not found');
-      }
-      
-      console.log(`Fetching orders for customer: ${customerId}`);
-      
-      // Make API request with customer ID as query parameter
+      if (!customerId) throw new Error('Customer ID not found');
       const response = await api.get(`/api/orders/customer?customerId=${customerId}`);
-      
-      // Return processed data
       return response.data;
     } catch (error) {
       console.error('Error fetching customer orders:', error);
@@ -51,9 +38,7 @@ const orderService = {
     }
   },
 
-  /**
-   * Get a specific order by ID
-   */
+  // Fetch a specific order by its ID
   getOrderById: async (orderId) => {
     try {
       const response = await api.get(`/api/orders/${orderId}`);
@@ -64,9 +49,7 @@ const orderService = {
     }
   },
   
-  /**
-   * Get product image by product ID
-   */
+  // Fetch product image URL by product ID
   getProductImage: async (productId) => {
     try {
       const response = await api.get(`/api/products/${productId}`);
@@ -80,21 +63,17 @@ const orderService = {
     }
   },
 
-  /**
-   * Get inventory item by product ID
-   */
+  // Fetch inventory item by product ID (with auth)
   getInventoryItem: async (productId) => {
     try {
       const token = localStorage.getItem('token');
       const config = token ? {
         headers: { Authorization: `Bearer ${token}` }
       } : {};
-      
       const response = await axios.get(
         `${baseURL}/api/inventory/product/${productId}`,
         config
       );
-      
       return response.data;
     } catch (error) {
       console.error(`Error fetching inventory item for product ${productId}:`, error);

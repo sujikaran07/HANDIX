@@ -7,6 +7,7 @@ import ProductGrid from '../components/ProductGrid';
 import { fetchProducts, categories } from '../data/products';
 
 const ProductsPage = () => {
+  // State for products, filters, UI
   const location = useLocation();
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -17,8 +18,8 @@ const ProductsPage = () => {
   const [priceRange, setPriceRange] = useState([0, 10000]);
   const [minRating, setMinRating] = useState(0);
   const [filterOpen, setFilterOpen] = useState(false);
-  
-  // Fetch products on component mount
+
+  // Fetch products on mount
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -36,8 +37,8 @@ const ProductsPage = () => {
     
     loadProducts();
   }, []);
-  
-  // Parse URL parameters on component mount and when URL changes
+
+  // Parse URL params for category
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const categoryParam = params.get('category');
@@ -53,14 +54,15 @@ const ProductsPage = () => {
       }
     }
   }, [location.search]);
-  
-  // Apply filters when products or filter criteria change
+
+  // Apply filters when dependencies change
   useEffect(() => {
     if (products.length > 0) {
       applyFilters();
     }
   }, [products, selectedCategory, priceRange, minRating, searchTerm]);
-  
+
+  // Filter logic
   const applyFilters = () => {
     let result = [...products];
     
@@ -92,6 +94,7 @@ const ProductsPage = () => {
     setFilteredProducts(result);
   };
   
+  // Clear all filters
   const clearFilters = () => {
     setSelectedCategory(null);
     setPriceRange([0, 10000]);
@@ -104,7 +107,7 @@ const ProductsPage = () => {
     window.history.pushState({}, '', url);
   };
   
-  // Function to handle category selection
+  // Handle category selection and update URL
   const handleCategoryChange = (category) => {
     // If already selected, clear the selection
     if (selectedCategory === category) {
@@ -124,6 +127,7 @@ const ProductsPage = () => {
     }
   };
   
+  // Toggle filter sidebar
   const toggleFilters = () => {
     setFilterOpen(!filterOpen);
   };

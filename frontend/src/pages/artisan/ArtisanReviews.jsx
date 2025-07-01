@@ -7,7 +7,9 @@ import axios from 'axios';
 import '../../styles/artisan/ArtisanDashboard.css';
 import '../../styles/artisan/ArtisanReviews.css';
 
+// Artisan reviews management page for viewing and responding to customer feedback
 const ArtisanReviews = () => {
+  // State management for reviews and filtering
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -24,35 +26,32 @@ const ArtisanReviews = () => {
     fetchReviews();
   }, []);
 
+  // Fetch reviews for products from artisan's completed orders
   const fetchReviews = async () => {
     setIsLoading(true);
     setError(null);
     setStatusMessage('');
     
     try {
-      // Get artisan ID from the various possible storage locations
-      // Based on what we see in employeeLoginControllers.js, artisans likely use artisanToken
+      // Extract artisan ID from various storage locations
       let eId = null;
       
-      // Try to get the JWT token first
+      // Try to get ID from JWT token first
       const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
       
       if (artisanToken) {
-        // If token exists, try to decode it to get the ID
         try {
-          // JWT tokens have three parts separated by dots
           const tokenParts = artisanToken.split('.');
           if (tokenParts.length === 3) {
             const payload = JSON.parse(atob(tokenParts[1]));
-            eId = payload.id; // The ID will be in the payload
-            console.log('Found eId from token:', eId);
+            eId = payload.id;
           }
         } catch (err) {
-          console.error('Error decoding token:', err);
+          // Continue to fallback methods
         }
       }
       
-      // If no eId from token, try direct storage
+      // Fallback to direct storage lookup
       if (!eId) {
         eId = localStorage.getItem('eId') || 
               sessionStorage.getItem('eId') || 
@@ -61,7 +60,7 @@ const ArtisanReviews = () => {
               localStorage.getItem('employee_id') ||
               sessionStorage.getItem('employee_id');
       
-        // Final attempt - check if there's an employee object with ID
+        // Final attempt - check employee object
         if (!eId) {
           const employeeStr = localStorage.getItem('employee') || sessionStorage.getItem('employee');
           if (employeeStr) {
@@ -69,33 +68,22 @@ const ArtisanReviews = () => {
               const employee = JSON.parse(employeeStr);
               eId = employee.eId || employee.id || employee.e_id || employee.employee_id;
             } catch (err) {
-              console.error('Error parsing employee object:', err);
+              // Invalid JSON, continue
             }
           }
         }
       }
     
       if (!eId) {
-        console.error('No artisan ID found in storage', {
-          localStorage: Object.keys(localStorage),
-          sessionStorage: Object.keys(sessionStorage)
-        });
         setError('No artisan ID found. Please log in again.');
         setIsLoading(false);
         return;
       }
       
-      console.log('Using artisan ID for reviews:', eId);
-      
-      // Fetch reviews for products handled by this artisan
+      // Fetch reviews for this artisan's products
       const response = await axios.get(`/api/reviews?e_id=${eId}`);
-      console.log('Review API response:', response.data);
     
       const { products, message, debug } = response.data;
-    
-      if (debug) {
-        console.log('Debug info from API:', debug);
-      }
     
       if (products && products.length > 0) {
         setProducts(products);
@@ -105,18 +93,7 @@ const ArtisanReviews = () => {
         setStatusMessage(`${message || 'No reviews found for your orders.'}${debugInfo}`);
       }
     } catch (err) {
-      console.error('Failed to fetch reviews:', err);
       setError(err.response?.data?.message || err.message || 'Failed to fetch reviews');
-    
-      // Add more detailed debugging for network errors
-      if (err.response) {
-        console.error('Error response:', {
-          status: err.response.status,
-          data: err.response.data
-        });
-      } else if (err.request) {
-        console.error('No response received:', err.request);
-      }
     }
     
     setIsLoading(false);
@@ -125,21 +102,17 @@ const ArtisanReviews = () => {
   // Get all reviews across all products
   const getAllReviews = () => {
     const allReviews = products.flatMap(product => 
-      product.reviews.map(review => {
-        // Debug logging for review status
-        console.log(`Review ${review.id} status: ${review.status || 'undefined'}`);
-        return {
-          ...review,
-          productId: product.id,
-          productName: product.name,
-          productImage: product.image
-        };
-      })
+      product.reviews.map(review => ({
+        ...review,
+        productId: product.id,
+        productName: product.name,
+        productImage: product.image
+      }))
     );
     return allReviews;
   };
 
-  // Filter and sort reviews
+  // Apply filters and sorting to reviews
   const getFilteredReviews = () => {
     let reviewsToProcess = selectedProduct === 'all' 
       ? getAllReviews()
@@ -152,7 +125,7 @@ const ArtisanReviews = () => {
     
     return reviewsToProcess
       .filter(review => {
-        // Filter by rating
+        // Apply rating filter
         if (filterRating !== 'all') {
           if (filterRating === '5' && review.rating !== 5) return false;
           if (filterRating === '4' && review.rating !== 4) return false;
@@ -160,7 +133,7 @@ const ArtisanReviews = () => {
           if (filterRating === '1-2' && review.rating > 2) return false;
         }
         
-        // Filter by search term
+        // Apply search filter
         if (searchTerm) {
           const searchLower = searchTerm.toLowerCase();
           return review.productName?.toLowerCase().includes(searchLower) ||
@@ -169,7 +142,7 @@ const ArtisanReviews = () => {
                 review.orderInfo?.orderId?.toLowerCase().includes(searchLower);
         }
         
-        // Filter by status
+        // Apply status filter
         if (statusFilter !== 'all') {
           return review.status === statusFilter;
         }
@@ -177,7 +150,7 @@ const ArtisanReviews = () => {
         return true;
       })
       .sort((a, b) => {
-        // Sort by selected option
+        // Apply sorting
         if (sortBy === 'newest') {
           return new Date(b.date) - new Date(a.date);
         }
@@ -200,7 +173,7 @@ const ArtisanReviews = () => {
 
   const filteredReviews = getFilteredReviews();
 
-  // Calculate average rating for the selected product or all products
+  // Calculate rating statistics for selected product or all products
   const calculateRatingData = () => {
     if (products.length === 0) return { avg: 0, counts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, total: 0 };
     
@@ -242,6 +215,7 @@ const ArtisanReviews = () => {
     }));
   };
 
+  // Submit response to customer review
   const handleSubmitResponse = async (productId, reviewId) => {
     if (!responseText[reviewId] || responseText[reviewId].trim() === '') {
       toast.error('Response cannot be empty');
@@ -250,10 +224,9 @@ const ArtisanReviews = () => {
 
     setSubmittingResponse(true);
     try {
-      // Use the same token retrieval logic as in fetchReviews
+      // Get artisan ID using same logic as fetchReviews
       let eId = null;
       
-      // Try to get the JWT token first
       const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
       
       if (artisanToken) {
@@ -264,7 +237,7 @@ const ArtisanReviews = () => {
             eId = payload.id;
           }
         } catch (err) {
-          console.error('Error decoding token:', err);
+          // Continue to fallback
         }
       }
       
@@ -285,7 +258,7 @@ const ArtisanReviews = () => {
         response: responseText[reviewId]
       });
       
-      // Update local state
+      // Update local state with new response
       setProducts(products.map(product => 
         product.id === productId 
           ? {
@@ -299,7 +272,7 @@ const ArtisanReviews = () => {
           : product
       ));
       
-      // Clear the response text
+      // Clear response text
       setResponseText(prev => ({
         ...prev,
         [reviewId]: ''
@@ -307,19 +280,18 @@ const ArtisanReviews = () => {
       
       toast.success('Response added successfully');
     } catch (error) {
-      console.error('Error submitting response:', error);
       toast.error(error.response?.data?.message || 'Failed to submit response');
     } finally {
       setSubmittingResponse(false);
     }
   };
 
-  // Add new functions to handle approve/reject
+  // Handle review approval/rejection
   const handleStatusChange = async (productId, reviewId, status) => {
     setSubmittingResponse(true);
     try {
       let eId = null;
-      // Use the same token retrieval logic as in handleSubmitResponse
+      // Use same ID retrieval logic
       const artisanToken = localStorage.getItem('artisanToken') || sessionStorage.getItem('artisanToken');
       
       if (artisanToken) {
@@ -330,7 +302,7 @@ const ArtisanReviews = () => {
             eId = payload.id;
           }
         } catch (err) {
-          console.error('Error decoding token:', err);
+          // Continue to fallback
         }
       }
       
@@ -346,17 +318,12 @@ const ArtisanReviews = () => {
         return;
       }
 
-      // Log the request for debugging
-      console.log(`Sending request to update review ${reviewId} status to ${status}`);
-
       const response = await axios.post(`/api/reviews/respond?e_id=${eId}`, {
         review_id: reviewId,
         status: status
       });
       
-      console.log('Status update response:', response.data);
-      
-      // Update local state - make sure product with ID exists and the review is in the reviews array
+      // Update local state with new status
       const updatedProducts = [...products];
       let reviewUpdated = false;
       
@@ -376,12 +343,10 @@ const ArtisanReviews = () => {
         setProducts(updatedProducts);
         toast.success(`Review ${status === 'Approved' ? 'approved' : 'rejected'} successfully`);
       } else {
-        console.error(`Could not find review ${reviewId} in local products state`);
-        // Refresh data to ensure UI reflects current server state
+        // Refresh data if local update failed
         fetchReviews();
       }
     } catch (error) {
-      console.error(`Error ${status.toLowerCase()}ing review:`, error);
       toast.error(error.response?.data?.message || `Failed to ${status.toLowerCase()} review`);
     } finally {
       setSubmittingResponse(false);
@@ -394,7 +359,7 @@ const ArtisanReviews = () => {
       [reviewId]: currentResponse
     }));
     
-    // Find the review and set response to null to show the edit form
+    // Set editing mode for the review
     setProducts(products.map(product => ({
       ...product,
       reviews: product.reviews.map(review =>
@@ -425,6 +390,7 @@ const ArtisanReviews = () => {
         
         <div className="container mt-4 reviews-container">
           <div className="card reviews-card">
+            {/* Reviews header with stats */}
             <div className="reviews-header d-flex justify-content-between align-items-center mb-0">
               <div className="title-section d-flex align-items-center">
                 <FaStar className="reviews-icon" />
@@ -438,6 +404,7 @@ const ArtisanReviews = () => {
               </div>
             </div>
 
+            {/* Product filter bar */}
             {products.length > 0 && (
               <div className="product-filter-bar">
                 <div className="product-selector">
@@ -465,6 +432,7 @@ const ArtisanReviews = () => {
 
             <div className="reviews-content">
               {isLoading ? (
+                // Loading state
                 <div className="text-center my-5">
                   <div className="spinner-border text-primary" role="status">
                     <span className="visually-hidden">Loading...</span>
@@ -472,10 +440,12 @@ const ArtisanReviews = () => {
                   <p className="mt-2">Loading product reviews...</p>
                 </div>
               ) : error ? (
+                // Error state
                 <div className="text-center my-5 error-message">
                   <p className="text-danger">{error}</p>
                 </div>
               ) : products.length === 0 ? (
+                // Empty state
                 <div className="text-center my-5 no-reviews">
                   <FaStar size={64} className="text-muted mb-3" />
                   <h4>No customers have left reviews for your completed orders yet</h4>
@@ -483,7 +453,7 @@ const ArtisanReviews = () => {
                 </div>
               ) : (
                 <>
-                  {/* Reviews summary */}
+                  {/* Rating summary section */}
                   <div className="review-summary">
                     <div className="row align-items-center">
                       <div className="col-md-3 text-center">
@@ -547,7 +517,7 @@ const ArtisanReviews = () => {
                     </div>
                   </div>
 
-                  {/* Filters */}
+                  {/* Review filters */}
                   <div className="review-filters">
                     <div className="row g-3">
                       <div className="col-md-4">
@@ -603,7 +573,7 @@ const ArtisanReviews = () => {
                     </div>
                   </div>
 
-                  {/* Reviews List */}
+                  {/* Reviews list */}
                   {filteredReviews.length === 0 ? (
                     <div className="empty-reviews">
                       <FaStar size={48} className="text-muted mb-3" />

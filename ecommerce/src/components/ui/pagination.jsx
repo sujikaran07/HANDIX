@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+// Pagination root navigation container
 const Pagination = ({ className, ...props }) => (
   <nav
     role="navigation"
@@ -14,6 +15,7 @@ const Pagination = ({ className, ...props }) => (
 )
 Pagination.displayName = "Pagination"
 
+// Pagination content (list of items)
 const PaginationContent = React.forwardRef(
   ({ className, ...props }, ref) => (
     <ul
@@ -25,6 +27,7 @@ const PaginationContent = React.forwardRef(
 )
 PaginationContent.displayName = "PaginationContent"
 
+// Pagination item (single li)
 const PaginationItem = React.forwardRef(
   ({ className, ...props }, ref) => (
     <li ref={ref} className={cn("", className)} {...props} />
@@ -32,6 +35,7 @@ const PaginationItem = React.forwardRef(
 )
 PaginationItem.displayName = "PaginationItem"
 
+// Pagination link (page number or nav button)
 const PaginationLink = ({
   className,
   isActive,
@@ -52,6 +56,7 @@ const PaginationLink = ({
 )
 PaginationLink.displayName = "PaginationLink"
 
+// Previous page button
 const PaginationPrevious = ({
   className,
   ...props
@@ -68,6 +73,7 @@ const PaginationPrevious = ({
 )
 PaginationPrevious.displayName = "PaginationPrevious"
 
+// Next page button
 const PaginationNext = ({
   className,
   ...props
@@ -84,6 +90,7 @@ const PaginationNext = ({
 )
 PaginationNext.displayName = "PaginationNext"
 
+// Ellipsis for more pages
 const PaginationEllipsis = ({
   className,
   ...props

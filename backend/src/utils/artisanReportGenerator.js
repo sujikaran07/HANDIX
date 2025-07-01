@@ -137,7 +137,7 @@ const addSummary = (doc, summary) => {
           .replace(/_/g, ' ')
           .replace(/^./, str => str.toUpperCase());
         
-        // Format value based on key type
+        // Format value based on key types
         let displayValue;
         if (typeof value === 'number') {
           if (key.toLowerCase().includes('sales') || 

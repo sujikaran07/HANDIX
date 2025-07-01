@@ -3,6 +3,7 @@ const { Op } = require('sequelize');
 const Inventory = require('../../models/inventoryModel');
 const Category = require('../../models/categoryModel');
 
+// Get all admin products with category and inventory info
 const getAllAdminProducts = async (req, res) => {
   try {
     const products = await ProductEntry.findAll({
@@ -20,11 +21,11 @@ const getAllAdminProducts = async (req, res) => {
   }
 };
 
+// Update product status and update inventory/category if approved
 const updateAdminProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
- 
     const validStatuses = ['Approved', 'Pending', 'Rejected', 'Disabled'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
@@ -35,13 +36,11 @@ const updateAdminProductStatus = async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    console.log(`Updating product ${id} status from ${product.status} to ${status}`);
-    
     product.status = status;
     await product.save();
 
     if (status === 'Approved') {   
-      // Update inventory
+      // Update inventory record if exists
       let inventoryRecord = await Inventory.findOne({ where: { product_id: product.product_id } });
       if (inventoryRecord) {
         await inventoryRecord.update({
@@ -51,18 +50,15 @@ const updateAdminProductStatus = async (req, res) => {
           quantity: inventoryRecord.quantity + product.quantity,
           customization_available: product.customization_available
         });
-        console.log('Updated existing inventory record with actual quantity');
       }
-      // Update category stock level
+      // Update category stock level if category exists
       if (product.category_id) {
         try {
           const categoryRecord = await Category.findByPk(product.category_id);
           if (categoryRecord && typeof categoryRecord.stock_level !== 'undefined') {
-            console.log(`Updating category stock level by adding ${product.quantity} units`);
             await categoryRecord.update({
               stock_level: (categoryRecord.stock_level || 0) + product.quantity
             });
-            console.log(`Updated category stock level to ${categoryRecord.stock_level}`);
           }
         } catch (categoryError) {
           console.error('Error updating category stock level:', categoryError);
@@ -84,6 +80,7 @@ const updateAdminProductStatus = async (req, res) => {
   }
 };
 
+// Delete a product entry by id
 const deleteAdminProduct = async (req, res) => {
   try {
     const { id } = req.params;
@@ -106,3 +103,4 @@ module.exports = {
   updateAdminProductStatus,
   deleteAdminProduct,
 };
+ 

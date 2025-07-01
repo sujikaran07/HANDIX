@@ -7,7 +7,9 @@ import { FaBoxOpen } from 'react-icons/fa';
 import Pagination from '../Pagination';
 import '../../styles/artisan/ArtisanOrders.css';
 
+// Component for managing orders assigned to the artisan
 const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
+  // State management for orders and filtering
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
@@ -21,19 +23,18 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
     }
   }, [artisan]);
 
+  // Fetch orders assigned to the logged-in artisan
   const fetchAssignedOrders = async () => {
     try {
       const token = localStorage.getItem('artisanToken');
       if (!token) {
-        console.error('No token found for artisan');
         alert('You are not logged in. Please log in to view your assigned orders.');
         window.location.href = '/login';
         return;
       }
 
-      // If we have a name, use it for lookup; otherwise use ID
+      // Use artisan name or ID for lookup
       const searchValue = artisan.name || artisan.id;
-      console.log('Fetching assigned orders for artisan:', searchValue);
 
       const response = await fetch(`http://localhost:5000/api/orders/assigned/${encodeURIComponent(searchValue)}`, {
         headers: {
@@ -43,19 +44,17 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`Total assigned orders fetched: ${data.orders ? data.orders.length : 0}`);
         setOrders(data.orders || []);
         setTotalPages(Math.ceil((data.orders?.length || 0) / ordersPerPage));
       } else {
-        console.error(`Failed to fetch assigned orders. Status: ${response.status}, Message: ${response.statusText}`);
         alert('Unable to fetch assigned orders at the moment. Please try again later.');
       }
     } catch (error) {
-      console.error('Error fetching assigned orders:', error.message);
       alert('An unexpected error occurred while fetching assigned orders. Please try again later.');
     }
   };
 
+  // Apply search and status filters to orders
   const filteredOrders = orders.filter(order => {
     return (
       (filterStatus === 'All' || order.status === filterStatus) && 
@@ -68,6 +67,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
     );
   });
 
+  // Pagination calculations
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -82,6 +82,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Page header with title and export button */}
         <div className="manage-orders-header d-flex justify-content-between align-items-center mb-3">
           <div className="title-section">
             <div className="icon-and-title">
@@ -99,6 +100,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
           </div>
         </div>
 
+        {/* Search and filter controls */}
         <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
           <div></div>
           <div className="d-flex align-items-center">
@@ -138,6 +140,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
           </div>
         </div>
 
+        {/* Orders table */}
         <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
           <table className="table table-bordered order-table">
             <thead>
@@ -166,6 +169,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
                       </span>
                     </td>
                     <td style={{textAlign: 'right', paddingRight: '10px'}}>
+                      {/* Action dropdown menu */}
                       <div className="dropdown">
                         <button
                           className="btn dropdown-toggle"
@@ -215,6 +219,7 @@ const ArtisanManageOrders = ({ onViewOrder, onUpdateOrder, artisan }) => {
           </table>
         </div>
 
+        {/* Pagination controls */}
         <Pagination className="order-pagination" currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
       </div>
     </div>

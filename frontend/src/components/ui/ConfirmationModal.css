@@ -1,3 +1,4 @@
+/* Modal overlay - covers entire screen with semi-transparent background */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -11,6 +12,7 @@
   z-index: 1000;
 }
 
+/* Main modal content container */
 .modal-content {
   background-color: white;
   padding: 2rem;
@@ -20,6 +22,7 @@
   width: 90%;
 }
 
+/* Action buttons container */
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -27,6 +30,7 @@
   gap: 0.5rem;
 }
 
+/* Modal text styling */
 .modal-content h5 {
   margin-bottom: 1rem;
   color: #333;
@@ -35,4 +39,4 @@
 .modal-content p {
   color: #666;
   margin-bottom: 1rem;
-} 
+}

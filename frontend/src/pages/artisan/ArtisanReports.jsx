@@ -13,7 +13,7 @@ import axios from 'axios';
 import ArtisanReportViewForm from "../../components/artisan/ArtisanReportViewForm";
 import { API_BASE_URL } from "../../utils/environment";
 
-// Report type definitions
+// Available report types for artisans
 const reportTypes = [
   {
     id: 'orders',
@@ -38,8 +38,9 @@ const reportTypes = [
   }
 ];
 
+// Artisan reports page with order, product, and performance analytics
 const ArtisanReports = () => {
-  // State variables
+  // State management for report configuration and data
   const [activeReportType, setActiveReportType] = useState('orders');
   const [dateRange, setDateRange] = useState({
     preset: 'this-month',
@@ -49,12 +50,11 @@ const ArtisanReports = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [reportData, setReportData] = useState(null);
-  // Removed filter related states
   
-  // Get artisan ID from localStorage
+  // Get artisan ID for report filtering
   const artisanId = localStorage.getItem('artisanId');
 
-  // Initialize with default dates
+  // Initialize with current month date range
   useEffect(() => {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -66,19 +66,18 @@ const ArtisanReports = () => {
     });
   }, []);
   
-  // Helper function to format date for input fields
+  // Helper functions for date formatting
   function formatDateForInput(date) {
     return date.toISOString().split('T')[0];
   }
 
-  // Get default start date (first day of current month)
   function getDefaultStartDate() {
     const today = new Date();
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     return formatDateForInput(firstDayOfMonth);
   }
   
-  // Handle preset date range changes
+  // Handle preset date range selection
   const handlePresetChange = (preset) => {
     const today = new Date();
     let startDate, endDate = formatDateForInput(today);
@@ -89,8 +88,8 @@ const ArtisanReports = () => {
         break;
       case 'this-week': {
         const firstDayOfWeek = new Date(today);
-        const day = today.getDay() || 7; // Convert Sunday (0) to 7
-        if (day !== 1) firstDayOfWeek.setDate(today.getDate() - day + 1); // Monday as first day
+        const day = today.getDay() || 7;
+        if (day !== 1) firstDayOfWeek.setDate(today.getDate() - day + 1);
         startDate = formatDateForInput(firstDayOfWeek);
         break;
       }
@@ -104,9 +103,7 @@ const ArtisanReports = () => {
         endDate = formatDateForInput(lastDayLastMonth);
         break;
       }
-      // Removed last-3-months case
       case 'custom':
-        // Keep current custom dates
         return setDateRange({
           ...dateRange,
           preset
@@ -122,16 +119,16 @@ const ArtisanReports = () => {
     });
   };
   
-  // Handle custom date changes
+  // Handle custom date input changes
   const handleDateChange = (field, value) => {
     setDateRange({
       ...dateRange,
       [field]: value,
-      preset: 'custom' // Switch to custom when dates are manually changed
+      preset: 'custom'
     });
   };
   
-  // Generate report
+  // Generate report with selected parameters
   const handleGenerateReport = async () => {
     if (!artisanId) {
       setError('Artisan ID not found. Please log in again.');
@@ -147,8 +144,7 @@ const ArtisanReports = () => {
           artisanId,
           startDate: dateRange.startDate,
           endDate: dateRange.endDate,
-          // Removed filters
-          includeCharts: true // Always include charts
+          includeCharts: true
         }
       });
       
@@ -158,23 +154,21 @@ const ArtisanReports = () => {
         setError('Failed to generate report: ' + (response.data.message || 'Unknown error'));
       }
     } catch (err) {
-      console.error('Error generating report:', err);
       setError(err.response?.data?.message || err.message || 'Failed to generate report');
     } finally {
       setLoading(false);
     }
   };
   
-  // Handle back button click from report view
+  // Return to report configuration view
   const handleBackToReportConfig = () => {
     setReportData(null);
   };
   
-  // Get current report type details
+  // Get styling colors for current report type
   const currentReportType = reportTypes.find(type => type.id === activeReportType) || reportTypes[0];
   const reportColor = `var(--bs-${currentReportType.color})`;
   
-  // Get report type colors similar to AdminReports
   const getReportColors = (reportColor) => {
     const colorMap = {
       'primary': { primary: '#0d6efd', gradient: 'linear-gradient(135deg, #0d6efd, #0a58ca)' },
@@ -185,7 +179,6 @@ const ArtisanReports = () => {
     return colorMap[reportColor] || colorMap.primary;
   };
   
-  // Get current colors
   const colors = getReportColors(currentReportType.color);
 
   return (
@@ -198,7 +191,7 @@ const ArtisanReports = () => {
           <Card className="art-fixed-height-card">
             {!reportData ? (
               <>
-                {/* Report Configuration */}
+                {/* Report configuration interface */}
                 <Card.Header className="art-card-header">
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center">
@@ -223,7 +216,7 @@ const ArtisanReports = () => {
                 </Card.Header>
                 
                 <Card.Body className="p-0 art-fixed-body">
-                  {/* Error Alert */}
+                  {/* Error display */}
                   {error && (
                     <div className="alert alert-danger m-3 art-alert">
                       <div className="error-content">
@@ -240,9 +233,9 @@ const ArtisanReports = () => {
                     </div>
                   )}
                 
-                  {/* Report Configuration UI */}
+                  {/* Report type and date selection */}
                   <div className="report-config-container">
-                    {/* Left Side: Report Types */}
+                    {/* Report type selector */}
                     <div className="report-type-container">
                       <h6 className="section-title">Report Type</h6>
                       
@@ -289,7 +282,7 @@ const ArtisanReports = () => {
                       </div>
                     </div>
                     
-                    {/* Right Side: Date Range & Options */}
+                    {/* Date range and generation options */}
                     <div className="report-options-container">
                       <div className="date-range-selector">
                         <h6 className="section-title">Select Date Range</h6>
@@ -301,7 +294,6 @@ const ArtisanReports = () => {
                             { id: 'this-month', label: 'This Month' },
                             { id: 'last-month', label: 'Last Month' },
                             { id: 'custom', label: 'Custom Range' }
-                            // Removed last-3-months
                           ].map(preset => (
                             <button 
                               key={preset.id}
@@ -423,7 +415,7 @@ const ArtisanReports = () => {
                 </Card.Body>
               </>
             ) : (
-              // Report View Component
+              /* Generated report display */
               <ArtisanReportViewForm
                 reportData={reportData}
                 reportType={activeReportType}

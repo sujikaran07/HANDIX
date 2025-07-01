@@ -11,7 +11,6 @@ import AdminTransaction from "./pages/admin/AdminTransaction";
 import AdminAssignOrder from "./pages/admin/AdminAssignOrder"; 
 import AdminSettings from "./pages/admin/AdminSettings"; 
 import AdminLogout from "./pages/admin/AdminLogout"; 
-// import AdminPricing from "./pages/admin/AdminPricing";
 import AdminReports from "./pages/admin/AdminReports";
 import ArtisanDashboard from "./pages/artisan/ArtisanDashboard"; 
 import ArtisanProducts from "./pages/artisan/ArtisanProducts";
@@ -24,6 +23,7 @@ import ArtisanReports from "./pages/artisan/ArtisanReports";
 import ArtisanChat from "./pages/artisan/ArtisanChat";
 
 function App() {
+  // Show a loading screen for 1 second
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,6 +41,7 @@ function App() {
   return (
     <div style={{ width: "100vw", height: "100vh" }}>
       <Router>
+        {/* Routing configuration for all pages below */}
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -53,19 +54,15 @@ function App() {
           <Route path="/admin/assignorders" element={<AdminAssignOrder />} />
           <Route path="/admin/settings" element={<AdminSettings />} />
           <Route path="/admin/logout" element={<AdminLogout />} /> 
-          {/* <Route path="/admin/pricing" element={<AdminPricing />} /> */}
           <Route path="/admin/reports" element={<AdminReports />} />
           <Route path="/artisan/dashboard" element={<ArtisanDashboard />} />      
           <Route path="/artisan/products" element={<ArtisanProducts />} />
           <Route path="/artisan/assignorders" element={<ArtisanAssignedOrders />} />
-          {/* Route hidden - reports feature to be implemented in the future */}
-          {/* <Route path="/artisan/reports" element={<ArtisanReports />} /> */}
           <Route path="/artisan/notification" element={<ArtisanNotification />} />
           <Route path="/artisan/chat" element={<ArtisanChat />} />         
            <Route path="/artisan/reviews" element={<ArtisanReviews />} />
           <Route path="/artisan/logout" element={<ArtisanLogout />} />
           <Route path="/artisan/settings" element={<ArtisanSettings />} />
-          {/* <Route path="/pricing" element={<AdminPricing />} /> */}
           <Route path="/reports" element={<AdminReports />} />
           <Route path="/" element={<AdminDashboard />} />
         </Routes>

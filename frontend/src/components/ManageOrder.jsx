@@ -10,6 +10,7 @@ import AssignArtisanModal from './AssignArtisanModal';
 import '../styles/admin/AdminOrder.css';
 
 const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
+  // State management for orders and UI
   const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomized, setSelectedCustomized] = useState(['Yes', 'No']);
@@ -19,6 +20,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   const [error, setError] = useState(null);
   const ordersPerPage = 7;
 
+  // Modal states for order actions
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [selectedOrderAction, setSelectedOrderAction] = useState(null);
@@ -34,32 +36,27 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     try {
       setLoading(true);
       const response = await axios.get('http://localhost:5000/api/orders');
-      console.log("API Response:", response.data);
       
-      // Fix: Check if response.data is an object with orders property or if it's directly an array
+      // Handle different response structures
       const ordersData = response.data.orders || response.data || [];
-      
-      // Make sure we're working with an array before mapping
       const ordersArray = Array.isArray(ordersData) ? ordersData : [];
       
       const formattedOrders = ordersArray.map(order => {
-        // Extract only first name for display
+        // Extract customer first name from various possible fields
         let firstName = 'Unknown';
         if (order.customer && order.customer.first_name) {
           firstName = order.customer.first_name;
         } else if (order.customerName && order.customerName.includes(' ')) {
-          // Extract first name from full name
           firstName = order.customerName.split(' ')[0];
         } else if (order.customer && order.customer.firstName) {
           firstName = order.customer.firstName;
         } else if (order.firstName) {
           firstName = order.firstName;
         } else if (order.customerName) {
-          // If customerName exists but doesn't have spaces, use it as is
           firstName = order.customerName;
         }
         
-        // Format date in MM/DD/YY, h:mm AM/PM format
+        // Format order date
         let orderDate = 'N/A';
         if (order.orderDate || order.order_date) {
           const dateValue = order.orderDate || order.order_date;
@@ -77,17 +74,16 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         }
         
         const totalAmount = order.totalAmount || order.total_amount || 0;
-        
         const customizedValue = order.customized || 'No';
         const customized = customizedValue.charAt(0).toUpperCase() + customizedValue.slice(1);
         
-        // Show "Awaiting Payment" as "To Pay" 
+        // Convert "Awaiting Payment" to "To Pay" for display
         let status = order.orderStatus || order.order_status || 'Processing';
         if (status === 'Awaiting Payment') {
           status = 'To Pay';
         }
         
-        // Keep the complete order object for the view form
+        // Return formatted order with all necessary data
         return {
           id: order.order_id || order.id,
           customerName: firstName, 
@@ -113,11 +109,9 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         };
       });
       
-      console.log("Formatted Orders:", formattedOrders);
       setOrders(formattedOrders);
       setError(null);
     } catch (err) {
-      console.error("Failed to fetch orders:", err);
       setError("Failed to load orders. Please try again later.");
     } finally {
       setLoading(false);
@@ -143,12 +137,10 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         `http://localhost:5000/api/orders/${selectedOrderAction.id}/confirm`
       );
       
-      console.log('Order confirmed:', response.data);
       alert('Order has been confirmed and processing has begun. A confirmation email has been sent to the customer.');
       setConfirmModalVisible(false);
-      fetchOrders(); // Refresh orders list
+      fetchOrders();
     } catch (error) {
-      console.error('Failed to confirm order:', error);
       setActionError(error.response?.data?.message || 'Failed to confirm order. Please try again.');
     } finally {
       setConfirmLoading(false);
@@ -172,13 +164,11 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
         { cancellationReason: cancelReason }
       );
       
-      console.log('Order cancelled:', response.data);
       alert('Order has been cancelled successfully');
       setCancelModalVisible(false);
       setCancelReason('');
-      fetchOrders(); // Refresh orders list
+      fetchOrders();
     } catch (error) {
-      console.error('Failed to cancel order:', error);
       setActionError(error.response?.data?.message || 'Failed to cancel order. Please try again.');
     } finally {
       setConfirmLoading(false);
@@ -196,6 +186,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     setCancelReason('');
   };
 
+  // Filter orders based on search and filter criteria
   const filteredOrders = orders.filter(order => {
     return (
       (selectedCustomized.includes(order.customized)) &&
@@ -206,6 +197,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     );
   });
 
+  // Pagination logic
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
   const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
@@ -218,6 +210,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Header section with search and export */}
         <div className="manage-order-header d-flex justify-content-between align-items-center mb-3">
           <div className="title-section">
             <div className="icon-and-title">
@@ -250,6 +243,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           </div>
         </div>
 
+        {/* Filter section */}
         <div className="filter-section mb-3 d-flex justify-content-between align-items-center">
           <div className="d-flex">
             <div className="form-check form-check-inline">
@@ -298,6 +292,7 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
           )}
         </div>
 
+        {/* Orders table */}
         <div style={{ flex: '1 1 auto', overflowY: 'auto', marginTop: '20px' }}>
           {loading ? (
             <div className="text-center p-5">
@@ -327,10 +322,9 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
               <tbody>
                 {currentOrders.length > 0 ? (
                   currentOrders.map(order => {
-                    // Ensure status is always up to date before rendering
                     let displayStatus = order.status;
                     
-                    // Determine if we should disable the assign artisan option
+                    // Check if artisan is already assigned
                     const artisanAlreadyAssigned = order.assignedArtisan && order.assignedArtisan !== 'Not Assigned';
                     
                     return (
@@ -354,13 +348,14 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                                 <button className="dropdown-item" onClick={() => onViewOrder(order)}>View</button>
                               </li>
                               
+                              {/* Assign artisan option */}
                               {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && !artisanAlreadyAssigned && (
                                 <li>
                                   <button className="dropdown-item" onClick={() => onViewOrder(order, 'assign')}>Assign Artisan</button>
                                 </li>
                               )}
                               
-                              {/* Show a disabled, informative version of the button if an artisan is already assigned */}
+                              {/* Show disabled button if artisan already assigned */}
                               {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && artisanAlreadyAssigned && (
                                 <li>
                                   <button 
@@ -373,19 +368,21 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
                                 </li>
                               )}
                               
+                              {/* Confirm option for non-customized orders */}
                               {order.customized !== 'Yes' && ['Pending', 'To Pay'].includes(order.status) && (
                                 <li>
                                   <button className="dropdown-item" onClick={() => showConfirmModal(order)}>Confirm</button>
                                 </li>
                               )}
                               
+                              {/* Cancel option */}
                               {!['Delivered', 'Canceled', 'Cancelled'].includes(order.status) && (
                                 <li>
                                   <button className="dropdown-item" onClick={() => showCancelModal(order)}>Cancel</button>
                                 </li>
                               )}
                               
-                              {/* Refund option for refundable orders */}
+                              {/* Refund option */}
                               {order.isRefundable && (
                                 <li>
                                   <button className="dropdown-item text-primary" onClick={() => alert('Refund initiated!')}>
@@ -538,5 +535,6 @@ const ManageOrder = ({ onAddOrderClick, onViewOrder }) => {
     </div>
   );
 };
+
 
 export default ManageOrder;

@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminEmployee.css';
 
 const AddEmployeeForm = ({ onSave, onCancel }) => {
+  // State for form fields 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [jobRole, setJobRole] = useState('Artisan');
@@ -16,8 +17,10 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
+    // Fetch existing E-IDs for unique generation
     const fetchExistingEIds = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/employees/eids');
@@ -30,6 +33,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
     fetchExistingEIds();
   }, []);
 
+  // Generate unique E-ID
   const generateUniqueEId = (existingEIds) => {
     let newEId;
     let counter = existingEIds.length + 1;
@@ -40,21 +44,26 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
     setUserId(newEId);
   };
 
+  // Generate random password
   const generatePassword = () => {
     const newPassword = Math.random().toString(36).slice(-8);
     setPassword(newPassword);
   };
 
+  // Validation functions
   const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
+  const validatePassword = (password) => password.length >= 8;
 
+  // Handle save button click
   const handleSave = async () => {
     let valid = true;
     setFirstNameError('');
     setLastNameError('');
     setEmailError('');
     setPhoneError('');
+    setPasswordError('');
     if (!validateName(firstName)) {
       setFirstNameError('First name can only contain letters and spaces.');
       valid = false;
@@ -69,6 +78,10 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
     }
     if (!validatePhone(phoneNumber)) {
       setPhoneError('Phone number must be exactly 10 digits.');
+      valid = false;
+    }
+    if (!validatePassword(password)) {
+      setPasswordError('Password must be at least 8 characters.');
       valid = false;
     }
     if (!valid) return;
@@ -90,6 +103,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
     }
   };
 
+  // Reset form fields
   const resetForm = () => {
     setFirstName('');
     setLastName('');
@@ -101,6 +115,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
   };
 
   useEffect(() => {
+    // Generate password on mount
     generatePassword();
   }, []);
 
@@ -108,6 +123,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
     <div className="add-employee-form">
       <h4 className="mb-4">Add New Employee</h4>
       <form>
+        {/* First/Last Name */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="firstName" className="form-label">First Name</label>
@@ -134,6 +150,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
             {lastNameError && <div className="text-danger small">{lastNameError}</div>}
           </div>
         </div>
+        {/* Job Role and E-ID */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="jobRole" className="form-label">Job Role</label>
@@ -158,6 +175,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
             />
           </div>
         </div>
+        {/* Email and Phone */}
         <div className="row mb-3">
           <div className="col-md-6">
             <label htmlFor="email" className="form-label">Email Address</label>
@@ -184,6 +202,7 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
             {phoneError && <div className="text-danger small">{phoneError}</div>}
           </div>
         </div>
+        {/* Password */}
         <div className="row mb-3">
           <div className="col-md-12">
             <label htmlFor="password" className="form-label">Password</label>
@@ -194,8 +213,10 @@ const AddEmployeeForm = ({ onSave, onCancel }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+            {passwordError && <div className="text-danger small">{passwordError}</div>}
           </div>
         </div>
+        {/* Save/Cancel Buttons */}
         <div className="d-flex justify-content-between">
           <div>
             <button type="button" className="btn btn-success me-2" onClick={handleSave}>Save</button>

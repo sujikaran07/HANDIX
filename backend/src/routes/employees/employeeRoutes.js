@@ -4,6 +4,7 @@ const router = express.Router();
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
 const { Employee } = require('../../models/employeeModel');
 
+// Route: Get all employees (optionally filter by role)
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const { role } = req.query;
@@ -24,9 +25,16 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// Route: Get all employee E-IDs
 router.get('/eids', getEmployeeEIds);
-router.post('/', addEmployee); 
-router.put('/:id', updateEmployee); 
+
+// Route: Add a new employee
+router.post('/', addEmployee);
+
+// Route: Update employee details
+router.put('/:id', updateEmployee);
+
+// Route: Toggle employee status (active/deactivated)
 router.put('/:id/status', require('../../controllers/employees/employeeController').toggleEmployeeStatus);
 
 module.exports = router;

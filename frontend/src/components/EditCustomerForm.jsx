@@ -4,6 +4,7 @@ import '.././styles/admin/AdminCustomer.css';
 import axios from 'axios';
 
 const EditCustomerForm = ({ onSave, onCancel, customer }) => {
+  // State for form fields 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [userId, setUserId] = useState('');
@@ -18,6 +19,7 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
   const [phoneError, setPhoneError] = useState('');
 
   useEffect(() => {
+    // Populate form fields with customer data when editing
     if (customer) {
       setFirstName(customer.firstName);
       setLastName(customer.lastName);
@@ -30,10 +32,12 @@ const EditCustomerForm = ({ onSave, onCancel, customer }) => {
     }
   }, [customer]);
 
+  // Validation functions
   const validateName = (name) => /^[A-Za-z ]+$/.test(name.trim());
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePhone = (phone) => /^\d{10}$/.test(phone);
 
+  // Handle save button click with validation and API call
   const handleSave = async () => {
     let valid = true;
     setFirstNameError('');

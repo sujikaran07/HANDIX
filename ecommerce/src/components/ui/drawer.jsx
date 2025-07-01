@@ -3,6 +3,7 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 
+// Drawer root component for sliding panels
 const Drawer = ({
   shouldScaleBackground = true,
   ...props
@@ -15,11 +16,10 @@ const Drawer = ({
 Drawer.displayName = "Drawer"
 
 const DrawerTrigger = DrawerPrimitive.Trigger
-
 const DrawerPortal = DrawerPrimitive.Portal
-
 const DrawerClose = DrawerPrimitive.Close
 
+// Overlay for drawer background
 const DrawerOverlay = React.forwardRef(
   ({ className, ...props }, ref) => (
     <DrawerPrimitive.Overlay
@@ -31,6 +31,7 @@ const DrawerOverlay = React.forwardRef(
 )
 DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 
+// Drawer content area
 const DrawerContent = React.forwardRef(
   ({ className, children, ...props }, ref) => (
     <DrawerPortal>
@@ -51,6 +52,7 @@ const DrawerContent = React.forwardRef(
 )
 DrawerContent.displayName = "DrawerContent"
 
+// Drawer header section
 const DrawerHeader = ({
   className,
   ...props
@@ -62,6 +64,7 @@ const DrawerHeader = ({
 )
 DrawerHeader.displayName = "DrawerHeader"
 
+// Drawer footer section
 const DrawerFooter = ({
   className,
   ...props
@@ -73,6 +76,7 @@ const DrawerFooter = ({
 )
 DrawerFooter.displayName = "DrawerFooter"
 
+// Drawer title
 const DrawerTitle = React.forwardRef(
   ({ className, ...props }, ref) => (
     <DrawerPrimitive.Title
@@ -87,6 +91,7 @@ const DrawerTitle = React.forwardRef(
 )
 DrawerTitle.displayName = DrawerPrimitive.Title.displayName
 
+// Drawer description
 const DrawerDescription = React.forwardRef(
   ({ className, ...props }, ref) => (
     <DrawerPrimitive.Description

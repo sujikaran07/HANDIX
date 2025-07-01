@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const ChangePasswordPage = () => {
+  // State for password fields and UI
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -18,8 +19,8 @@ const ChangePasswordPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Check if user is authenticated
+
+  // Redirect to login if not authenticated
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -33,9 +34,9 @@ const ChangePasswordPage = () => {
       setIsAuthenticated(true);
     }
   }, [navigate]);
-  
+
+  // Password validation rules
   const validatePassword = (password) => {
-    // Minimum 8 characters, at least 1 letter and 1 number
     if (password.length < 8) {
       return "Password must be at least 8 characters long";
     }
@@ -47,53 +48,48 @@ const ChangePasswordPage = () => {
     }
     return "";
   };
-  
+
+  // Handle password change form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Validate current password
+
     if (!currentPassword) {
       setError('Current password is required');
       return;
     }
-    
-    // Validate new password
     const passwordError = validatePassword(newPassword);
     if (passwordError) {
       setError(passwordError);
       return;
     }
-    
-    // Check if passwords match
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       return;
     }
-    
-    // Prevent changing to the same password
     if (currentPassword === newPassword) {
       setError('New password must be different from current password');
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       const token = localStorage.getItem('token');
       const userDataString = localStorage.getItem('user');
       const userData = userDataString ? JSON.parse(userDataString) : null;
-      
+
       if (!token || !userData) {
         throw new Error('Authentication information missing');
       }
-      
+
+      // Send password change request to backend
       const response = await axios.post(
         'http://localhost:5000/api/auth/change-password',
         {
           currentPassword,
           newPassword,
-          email: userData.email  // Send email for additional verification
+          email: userData.email
         },
         {
           headers: {
@@ -101,21 +97,15 @@ const ChangePasswordPage = () => {
           }
         }
       );
-      
-      console.log('Password change response:', response.data);
-      
+
       if (response.data.success) {
         toast({
           title: "Password Changed",
           description: "Your password has been updated successfully. Please log in with your new password.",
         });
-        
-        // Clear form fields
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        
-        // Clear token and user data to force re-login with new password
         setTimeout(() => {
           localStorage.removeItem('token');
           localStorage.removeItem('isAuthenticated');
@@ -126,18 +116,13 @@ const ChangePasswordPage = () => {
           title: "Password Changed",
           description: "Your password has been updated successfully",
         });
-        
-        // Clear form fields
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-        
-        // Redirect to profile page or dashboard
         setTimeout(() => navigate('/'), 2000);
       }
     } catch (error) {
-      console.error('Password change error:', error);
-      
+      // Handle errors from backend
       if (error.response?.status === 401) {
         setError('Current password is incorrect');
         toast({
@@ -157,15 +142,14 @@ const ChangePasswordPage = () => {
       setIsSubmitting(false);
     }
   };
-  
+
   if (!isAuthenticated) {
-    return null; // Don't render anything until authentication check is complete
+    return null;
   }
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />
-      
       <main className="flex-grow bg-gray-50 flex items-center justify-center py-12">
         <div className="container-custom max-w-md">  
           <div className="bg-white rounded-lg shadow-sm p-8">
@@ -173,8 +157,8 @@ const ChangePasswordPage = () => {
             <p className="mb-6 text-gray-600 text-center">
               Keep your account secure by updating your password regularly
             </p>
-          
             <form onSubmit={handleSubmit}>
+              {/* Current password input */}
               <div className="mb-4">
                 <label className="block text-gray-700 mb-1">Current Password</label>
                 <div className="relative">
@@ -196,7 +180,7 @@ const ChangePasswordPage = () => {
                   </button>
                 </div>
               </div>
-              
+              {/* New password input */}
               <div className="mb-4">
                 <label className="block text-gray-700 mb-1">New Password</label>
                 <div className="relative">
@@ -221,7 +205,7 @@ const ChangePasswordPage = () => {
                   Minimum 8 characters, at least 1 letter and 1 number
                 </p>
               </div>
-              
+              {/* Confirm new password input */}
               <div className="mb-6">
                 <label className="block text-gray-700 mb-1">Confirm New Password</label>
                 <div className="relative">
@@ -243,11 +227,9 @@ const ChangePasswordPage = () => {
                   </button>
                 </div>
               </div>
-              
               {error && (
                 <p className="text-red-500 text-sm mb-4">{error}</p>
               )}
-              
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -258,7 +240,7 @@ const ChangePasswordPage = () => {
                 {isSubmitting ? 'Updating...' : 'Update Password'}
               </button>
             </form>
-            
+        
             <div className="mt-6 text-center">
               <Link to="/profile" className="text-gray-500 hover:underline text-sm">
                 Back to Profile

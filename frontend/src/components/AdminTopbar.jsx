@@ -1,3 +1,4 @@
+// Admin topbar with profile info and dashboard title
 import React, { useState, useEffect } from 'react';
 import { FaUserCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
@@ -10,6 +11,7 @@ const AdminTopbar = () => {
   });
 
   useEffect(() => {
+    // Fetch admin profile info
     const fetchUserProfile = async () => {
       try {
         const token = localStorage.getItem('adminToken');
@@ -38,14 +40,14 @@ const AdminTopbar = () => {
 
   return (
     <div className="admin-topbar d-flex justify-content-between align-items-center">
+      {/* Centered dashboard title */}
       <div className="flex-grow-1"></div>
-      
       <div className="position-absolute w-100 d-flex justify-content-center" style={{ pointerEvents: 'none' }}>
         <span style={{ color: '#3e87c3', fontSize: '18px', fontWeight: 'bold' }}>
           Admin Dashboard
         </span>
       </div>
-      
+      {/* Admin profile info */}
       <div className="admin-info position-relative" style={{ zIndex: 5 }}>
         <div className="user-profile">
           {userProfile.profileUrl ? (

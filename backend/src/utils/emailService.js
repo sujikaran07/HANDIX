@@ -2,7 +2,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const fs = require('fs');
 
-// Create transporter with your existing email configuration
+// Email transporter configuration
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -12,11 +12,11 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASSWORD
   },
   tls: {
-    rejectUnauthorized: false // Helps with some SMTP servers
+    rejectUnauthorized: false 
   }
 });
 
-// Function to send invoice email
+// Send invoice email to customer
 const sendInvoiceEmail = async (orderData) => {
   try {
     console.log(`Attempting to send invoice to ${orderData.customerEmail}`);
@@ -26,10 +26,10 @@ const sendInvoiceEmail = async (orderData) => {
     
     // Try multiple possible logo paths
     const logoPaths = [
-      path.join(__dirname, '../public/images/handix-logo1.png'),                     // Within backend folder
-      path.join(__dirname, '../../../ecommerce/public/images/handix-logo1.png'),     // From ecommerce folder
-      path.join(__dirname, '../../../frontend/public/images/handix-logo1.png'),      // From frontend folder
-      path.join(__dirname, '../../../public/images/handix-logo1.png')                // From root directory
+      path.join(__dirname, '../public/images/handix-logo1.png'),                     
+      path.join(__dirname, '../../../ecommerce/public/images/handix-logo1.png'),     
+      path.join(__dirname, '../../../frontend/public/images/handix-logo1.png'),      
+      path.join(__dirname, '../../../public/images/handix-logo1.png')                
     ];
     
     // Find the first path that exists
@@ -70,7 +70,7 @@ const sendInvoiceEmail = async (orderData) => {
   }
 };
 
-// Generic function to send status change email (activation/deactivation)
+// Send status change email (activation/deactivation)
 const sendStatusChangeEmail = async ({ to, name, role, status }) => {
   try {
     const statusText = status === 'active' || status === 'Approved' ? 'Activated' : 'Deactivated';
@@ -98,11 +98,13 @@ const sendStatusChangeEmail = async ({ to, name, role, status }) => {
   }
 };
 
+// Helper: Capitalize string
 function capitalize(str) {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+// Helper: Generate HTML for invoice email
 function generateInvoiceHTML(orderData) {
   const currentYear = new Date().getFullYear();
   
@@ -386,6 +388,7 @@ function generateInvoiceHTML(orderData) {
   `;
 }
 
+// Helper: Generate mobile responsive styles for invoice
 function generateMobileResponsiveStyles() {
   return `
     @media screen and (max-width: 600px) {

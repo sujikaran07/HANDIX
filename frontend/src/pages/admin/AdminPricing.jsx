@@ -8,6 +8,7 @@ import { faTags, faShippingFast, faDownload } from '@fortawesome/free-solid-svg-
 import '../../styles/admin/AdminPricing.css';
 
 const AdminPricingPage = () => {
+  // State for managing active tab
   const [currentTab, setCurrentTab] = useState('discounts');
 
   return (
@@ -17,6 +18,7 @@ const AdminPricingPage = () => {
         <AdminTopbar />
         <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 80px)' }}>
           <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', height: '100%' }}>
+            {/* Header section with dynamic icon and title */}
             <div className="manage-inventory-header d-flex justify-content-between align-items-center mb-3">
               <div className="title-section">
                 <div className="icon-and-title">
@@ -34,6 +36,7 @@ const AdminPricingPage = () => {
               </div>
             </div>
             
+            {/* Tab navigation for switching between discounts and shipping */}
             <div className="filter-section mb-3">
               <div className="segmented-control">
                 <div className="btn-group" role="group">
@@ -55,6 +58,7 @@ const AdminPricingPage = () => {
               </div>
             </div>
             
+            {/* Content area with conditional rendering based on active tab */}
             <div className="pricing-content" style={{ height: 'calc(100% - 150px)' }}>
               {currentTab === 'discounts' ? <DiscountManagement /> : <ShippingManagement />}
             </div>

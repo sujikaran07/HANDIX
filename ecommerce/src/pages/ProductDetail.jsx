@@ -8,6 +8,7 @@ import { fetchProducts, fetchProductById } from '../data/products';
 import { useCart } from '../contexts/CartContext';
 
 const ProductDetailPage = () => {
+  // State for product details, images, cart, etc.
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -23,6 +24,7 @@ const ProductDetailPage = () => {
   const [selectedVariation, setSelectedVariation] = useState(null);
   const { addItem } = useCart();
   
+  // Get max available quantity for selected variation or product
   const getMaxAvailableQuantity = () => {
     if (selectedVariation && selectedVariation.stockLevel !== undefined) {
       return selectedVariation.stockLevel;
@@ -30,6 +32,7 @@ const ProductDetailPage = () => {
     return product ? product.quantity : 0;
   };
 
+  // Load product and related products on mount or id change
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -86,6 +89,7 @@ const ProductDetailPage = () => {
     loadData();
   }, [id]);
   
+  // Handle quantity change
   const handleQuantityChange = (amount) => {
     const newQuantity = quantity + amount;
     const maxAvailable = getMaxAvailableQuantity();
@@ -95,6 +99,7 @@ const ProductDetailPage = () => {
     }
   };
   
+  // Adjust quantity if variation changes
   useEffect(() => {
     const maxAvailable = getMaxAvailableQuantity();
     if (quantity > maxAvailable) {
@@ -102,6 +107,7 @@ const ProductDetailPage = () => {
     }
   }, [selectedVariation]);
 
+  // Toggle customization UI
   const toggleCustomization = () => {
     setIsCustomizing(!isCustomizing);
     if (!isCustomizing) {
@@ -109,6 +115,7 @@ const ProductDetailPage = () => {
     }
   };
   
+  // Handle size/variation change
   const handleSizeChange = (size, variation) => {
     setSelectedSize(size);
     setSelectedVariation(variation);
@@ -123,6 +130,7 @@ const ProductDetailPage = () => {
     return localStorage.getItem('isAuthenticated') === 'true';
   };
 
+  // Add product to cart
   const handleAddToCart = () => {
     if (!product) return;
     
@@ -165,6 +173,7 @@ const ProductDetailPage = () => {
     }
   };
   
+  // Calculate final price with customization/variation
   const calculateFinalPrice = () => {
     if (!product) return 0;
     
@@ -182,6 +191,7 @@ const ProductDetailPage = () => {
   };
   
   if (loading) {
+    // Show loading spinner
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />
@@ -194,6 +204,7 @@ const ProductDetailPage = () => {
   }
   
   if (error || !product) {
+    // Show error message
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />

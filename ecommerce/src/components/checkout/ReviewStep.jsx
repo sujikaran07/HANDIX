@@ -4,18 +4,19 @@ import { Link } from 'react-router-dom';
 import { getShippingFeeByDistrict } from '../../data/shippingZones';
 
 const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user }) => {
+  // Determine if user is business account
   const isBusinessAccount = user && (user.accountType === 'Business' || user.accountType === 'business');
   const [businessDiscount, setBusinessDiscount] = useState(null);
   const [discountedTotal, setDiscountedTotal] = useState(total);
   const [shippingFee, setShippingFee] = useState(0);
 
   useEffect(() => {
-    // Calculate shipping fee based on shipping method and district from formData
+    // Calculate shipping fee based on shipping method and district
     const calculateShippingFee = () => {
       if (formData.shippingMethod === 'pickup') {
-        return 0; // No shipping fee for pickup
+        return 0;
       } else if (user && (user.accountType === 'Personal' || user.accountType === 'personal')) {
-        return 500; // Always 500 for personal accounts
+        return 500;
       } else if (formData.district) {
         return getShippingFeeByDistrict(formData.district, isBusinessAccount ? 'Business' : undefined);
       } else {
@@ -25,20 +26,17 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user
     const fee = calculateShippingFee();
     setShippingFee(fee);
     if (isBusinessAccount) {
-      // Calculate 10% discount on subtotal + customization + shipping
+      // 10% discount for business accounts
       const baseAmount = subtotal + customizationTotal + fee;
       const discount = Math.round((baseAmount * 0.10) * 100) / 100;
       setBusinessDiscount(discount);
-      // Calculate new total with discount
-      const newTotal = baseAmount - discount;
-      setDiscountedTotal(newTotal);
+      setDiscountedTotal(baseAmount - discount);
     } else {
-      // Regular customer - total is just subtotal + customization + shipping
       setDiscountedTotal(subtotal + customizationTotal + fee);
     }
   }, [formData.shippingMethod, formData.district, subtotal, customizationTotal, total, isBusinessAccount, user]);
 
-  // Function to render the payment method icon and name
+  // Render payment method icon and name
   const renderPaymentMethod = () => {
     switch (formData.paymentMethod) {
       case 'card':
@@ -75,7 +73,7 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user
           <h3 className="font-medium text-lg mb-2">Contact Information</h3>
           <div className="bg-gray-50 p-4 rounded-md">
             <div className="flex flex-col space-y-1">
-              {/* Display user info from localStorage instead of form data */}
+              {/* Show user info from localStorage */}
               <p><span className="font-medium">Name:</span> {user?.firstName} {user?.lastName}</p>
               <p><span className="font-medium">Email:</span> {user?.email}</p>
               <p><span className="font-medium">Phone:</span> {formData.phone}</p>
@@ -99,9 +97,7 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user
           <h3 className="font-medium text-lg mb-2">Billing Address</h3>
           <div className="bg-gray-50 p-4 rounded-md">
             {formData.sameAsShipping ? (
-              <>
-                <p><em>Same as shipping address</em></p>
-              </>
+              <p><em>Same as shipping address</em></p>
             ) : (
               <>
                 <p>{user?.firstName} {user?.lastName}</p>
@@ -176,7 +172,7 @@ const ReviewStep = ({ formData, items, subtotal, customizationTotal, total, user
                 <span>LKR {shippingFee.toLocaleString()}</span>
               )}
             </div>
-            {/* Additional message for personal accounts with district selected */}
+            {/* Show info for personal accounts with district */}
             {user && (user.accountType === 'Personal' || user.accountType === 'personal') && formData.district && (
               <div className="text-xs text-amber-600 mt-1">
                 Additional charges may apply based on package weight and courier service.

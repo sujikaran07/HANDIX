@@ -1,3 +1,10 @@
+/* 
+ * Artisan Chat Interface Styles
+ * Provides styling for the messaging interface used by artisans to communicate with customers
+ * Includes layout, message bubbles, contacts list, and responsive design for the chat application
+ */
+
+/* Main layout structure */
 .artisan-chat-page {
   display: flex;
   flex-direction: row;

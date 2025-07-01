@@ -18,7 +18,7 @@ const ProfilePage = () => {
     c_id: ''
   });
 
-  // Load user data from localStorage on component mount
+  // Load user data from localStorage and fetch address/details from API
   useEffect(() => {
     const loadUserData = async () => {
       setIsLoading(true);
@@ -125,6 +125,7 @@ const ProfilePage = () => {
           }
         }
       } catch (error) {
+        // Handle user data load error
         console.error("Error loading user data:", error);
       } finally {
         setIsLoading(false);
@@ -134,17 +135,18 @@ const ProfilePage = () => {
     loadUserData();
   }, []);
 
-  // Function to handle edit profile button click
+  // Handle edit profile button
   const handleEditProfile = () => {
-    navigate('/edit-profile'); // Navigate to the edit profile page
+    navigate('/edit-profile');
   };
 
-  // Add new function to handle change password button click
+  // Handle change password button
   const handleChangePassword = () => {
-    navigate('/settings?tab=security'); // Navigate to the security settings tab
+    navigate('/settings?tab=security');
   };
 
   if (isLoading) {
+    // Show loading spinner
     return (
       <div className="min-h-screen flex flex-col">
         <NavBar />

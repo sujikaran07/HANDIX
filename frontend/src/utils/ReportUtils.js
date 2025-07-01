@@ -11,7 +11,6 @@ import { formatCurrency, formatDate, formatNumber, formatPercentage } from './fo
 export const prepareTimeSeriesData = (data, reportType, dateField = 'order_date', valueField = 'total_amount') => {
   if (!data || data.length === 0) return { labels: [], values: [], formatted: [] };
   
-  // Group by date
   const dateMap = {};
   
   data.forEach(item => {
@@ -26,7 +25,6 @@ export const prepareTimeSeriesData = (data, reportType, dateField = 'order_date'
     dateMap[dateString] += parseFloat(item[valueField] || 0);
   });
   
-  // Convert to array and sort by date
   const sortedData = Object.entries(dateMap)
     .map(([date, value]) => ({
       date: new Date(date),
@@ -35,7 +33,6 @@ export const prepareTimeSeriesData = (data, reportType, dateField = 'order_date'
     }))
     .sort((a, b) => a.date - b.date);
   
-  // Format for chart display
   return {
     labels: sortedData.map(item => item.label),
     values: sortedData.map(item => item.value),
@@ -54,7 +51,6 @@ export const prepareTimeSeriesData = (data, reportType, dateField = 'order_date'
 export const prepareCategoryData = (data, reportType, categoryField = 'category_name', valueField = 'total_amount') => {
   if (!data || data.length === 0) return [];
   
-  // Group by category
   const categoryMap = {};
   
   data.forEach(item => {
@@ -67,7 +63,6 @@ export const prepareCategoryData = (data, reportType, categoryField = 'category_
     categoryMap[category].count++;
   });
   
-  // Convert to array format
   const categoryData = Object.entries(categoryMap)
     .map(([category, data]) => ({
       category,
@@ -78,7 +73,6 @@ export const prepareCategoryData = (data, reportType, categoryField = 'category_
     }))
     .sort((a, b) => b.value - a.value);
   
-  // Calculate percentages
   const total = categoryData.reduce((sum, item) => sum + item.value, 0);
   
   return categoryData.map(item => ({
@@ -121,12 +115,10 @@ export const formatTableCell = (value, column) => {
   
   const colName = column.toLowerCase();
   
-  // Handle dates
   if (colName.includes('date') || colName.includes('time')) {
     return formatDate(value);
   }
   
-  // Handle monetary values
   if (colName.includes('price') || 
       colName.includes('amount') || 
       colName.includes('sales') || 
@@ -136,17 +128,14 @@ export const formatTableCell = (value, column) => {
     return formatCurrency(value);
   }
   
-  // Handle percentages
   if (colName.includes('percent') || colName.includes('growth') || colName.includes('rate')) {
     return formatPercentage(value);
   }
   
-  // Handle quantities
   if (colName.includes('count') || colName.includes('quantity') || colName.includes('number')) {
     return formatNumber(value);
   }
   
-  // Return as string for everything else
   return String(value);
 };
 
@@ -172,8 +161,7 @@ export const getMetricDescription = (key) => {
     totalArtisans: 'Total number of artisans in the system.',
     activeArtisans: 'Artisans who had sales during this period.',
     topPerformer: 'Artisan with the highest sales value.'
-  };
-  
+  }
   return descriptions[key] || 'No description available.';
 };
 

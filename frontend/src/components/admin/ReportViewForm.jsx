@@ -13,8 +13,8 @@ import '../../styles/admin/ReportViewForm.css';
 import axios from 'axios';
 import { API_BASE_URL } from '../../utils/environment';
 
-
 const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, appliedFilters = [] }) => {
+  // State management for UI controls and chart configuration
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -27,17 +27,16 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
   });
   const [dashboardCharts, setDashboardCharts] = useState([]);
   
-  // Refs for chart instances
+  // Chart references and instances for dynamic chart management
   const barChartRef = useRef(null);
   const pieChartRef = useRef(null);
   const lineChartRef = useRef(null);
   
-  // Chart instances
   const barChartInstance = useRef(null);
   const pieChartInstance = useRef(null);
   const lineChartInstance = useRef(null);
 
-  // Add hidden container for PDF export
+  // References for PDF export functionality
   const pdfDashboardRef = useRef(null);
   const pdfChartsRef = useRef(null);
   const pdfTableRef = useRef(null);
@@ -64,21 +63,21 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     }
   };
 
-  // Determine which charts to show based on report type
+  // Configure charts based on report type and available data
   useEffect(() => {
     const config = getChartConfig(reportType, reportData);
     setChartConfig(config);
     setDashboardCharts(config.dashboardCharts || []);
   }, [reportType, reportData]);
 
-  // Initialize charts when reportData changes
+  // Initialize and manage chart lifecycle
   useEffect(() => {
     if (!reportData || !reportData.data || reportData.data.length === 0) {
       // Don't try to initialize charts if there's no data
       return;
     }
     
-    // Clean up any existing charts
+    // Clean up existing chart instances
     if (barChartInstance.current) {
       barChartInstance.current.destroy();
     }
@@ -89,9 +88,9 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       lineChartInstance.current.destroy();
     }
     
-    // Only initialize charts if we have actual data
+    // Initialize charts only with valid data
     const hasRealData = reportData.data && reportData.data.length > 0 && 
-                        !reportData.isEmptyResponse; // Check for empty response flag
+                        !reportData.isEmptyResponse;
     
     // Initialize charts if we have data and the canvas elements exist
     if (hasRealData && barChartRef.current && chartConfig.showBarChart) {
@@ -104,18 +103,18 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       initLineChart();
     }
     
-    // Clean up on unmount
+    // Cleanup on unmount
     return () => {
       if (barChartInstance.current) barChartInstance.current.destroy();
       if (pieChartInstance.current) barChartInstance.current.destroy();
-      if (lineChartInstance.current) barChartInstance.current.destroy();
+      if (lineChartInstance.current) lineChartInstance.current.destroy();
     };
   }, [reportData, activeTab, chartConfig]);
 
-  // Add color scheme for charts based on report type
+  // Color scheme configuration for report theming
   const reportColors = getReportColors(reportType);
 
-  // Initialize bar chart
+  // Initialize bar chart with report-specific data
   const initBarChart = () => {
     const ctx = barChartRef.current.getContext('2d');
     const chartData = prepareBarChartData(reportType, reportData.data);
@@ -173,7 +172,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     });
   };
 
-  // Initialize pie chart
+  // Initialize pie chart with distribution data
   const initPieChart = () => {
     const ctx = pieChartRef.current.getContext('2d');
     const chartData = preparePieChartData(reportType, reportData.data);
@@ -215,7 +214,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     });
   };
 
-  // Initialize line chart
+  // Initialize line chart for time-series analysis
   const initLineChart = () => {
     const ctx = lineChartRef.current.getContext('2d');
     const chartData = prepareLineChartData(reportType, reportData);
@@ -279,7 +278,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     });
   };
 
-  // Add or update this helper function to better detect currency fields
+  // Helper function to determine if field should display as currency
   const shouldUseCurrency = (key) => {
     const fieldName = key.toLowerCase();
     
@@ -295,7 +294,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
            fieldName.includes('spent');
   };
 
-  // Then update the formatValue function
+  // Format values based on data type and context
   const formatValue = (value, field) => {
     if (value === null || value === undefined) return '-';
     
@@ -309,7 +308,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     return String(value);
   };
 
-  // Inside the component, add this function to process the report summary data
+  // Process summary data to handle special cases and filters
   const processReportSummary = (summary, reportType) => {
     // Create a copy so we don't modify the original data
     const processedSummary = {...summary};
@@ -336,7 +335,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     return processedSummary;
   };
 
-  // Render summary cards with report colors
+  // Render summary cards with color-coded styling
   const renderSummaryCards = () => {
     if (!reportData || !reportData.summary) {
       return (
@@ -415,7 +414,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     );
   };
 
-  // Render data table
+  // Render data table with formatted values
   const renderDataTable = () => {
     if (!reportData || !reportData.data || reportData.data.length === 0) {
       return (
@@ -469,12 +468,12 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     );
   };
 
-  // Handle print function
+  // Handle print functionality
   const handlePrint = () => {
     window.print();
   };
   
-  // Handle download function
+  // Handle JSON data download
   const handleDownload = () => {
     if (!reportData) return;
     
@@ -488,13 +487,13 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     document.body.removeChild(element);
   };
 
-  // Add this new component for displaying low stock alert
+  // Alert component for low stock warnings
   const LowStockAlert = ({ count }) => {
     if (!count || count === 0) return null;
   
   };
 
-  // Add function to check if a filter is being applied (for debugging)
+  // Check if filters are currently applied
   const isFilterApplied = () => {
     // Check if reportData has appliedFilters information
     if (reportData && reportData.appliedFilters) {
@@ -508,7 +507,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     return appliedFilters && appliedFilters.length > 0;
   };
 
-  // Check if graphs should be shown based on filters
+  // Determine if graphs should be displayed based on settings
   const shouldShowGraphs = () => {
     // If report data has applied filters information
     if (reportData && reportData.appliedFilters) {
@@ -519,7 +518,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     return true;
   };
 
-  // Modify the handleExportPDF function to include all report data and configuration options
+  // Handle PDF export with chart and table data
   const handleExportPDF = async () => {
     try {
       setIsLoading(true);
@@ -534,17 +533,12 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       if (pieChartRef.current) charts.push(pieChartRef.current.toDataURL());
       if (lineChartRef.current) charts.push(lineChartRef.current.toDataURL());
 
-      // Capture HTML sections from hidden container
+      // Capture HTML sections for PDF generation
       const dashboardHTML = pdfDashboardRef.current ? pdfDashboardRef.current.innerHTML : '';
       const chartsHTML = pdfChartsRef.current ? pdfChartsRef.current.innerHTML : '';
       const tableHTML = pdfTableRef.current ? pdfTableRef.current.innerHTML : '';
 
-      // Debug logging
-      console.log('dashboardHTML:', dashboardHTML);
-      console.log('chartsHTML:', chartsHTML);
-      console.log('tableHTML:', tableHTML);
-
-      // Prepare the export data with all necessary information
+      // Prepare export data package
       const exportData = {
         reportData: {
           ...reportData,
@@ -573,7 +567,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
       const response = await axios.post(`${API_BASE_URL}/api/reports/export/pdf`, exportData);
       
       if (response.data.success) {
-        // Download the generated PDF
+        // Trigger PDF download
         const downloadUrl = `${API_BASE_URL}/api/reports/download/${response.data.fileName}`;
         
         // Create a download link and trigger click
@@ -599,7 +593,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     }
   };
 
-  // Add new function to allow customizing PDF export options
+  // PDF export configuration state
   const [showPdfOptions, setShowPdfOptions] = useState(false);
   const [pdfOptions, setPdfOptions] = useState({
     paperSize: 'a4',
@@ -609,7 +603,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     maxTableRows: 100
   });
 
-  // PDF export options modal
+  // PDF export options modal component
   const renderPdfOptionsModal = () => {
     return (
       <Modal show={showPdfOptions} onHide={() => setShowPdfOptions(false)}>
@@ -701,7 +695,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     );
   };
 
-  // Function to handle PDF export with configured options
+  // Handle PDF export with custom options
   const handleExportPDFWithOptions = async () => {
     try {
       setIsLoading(true);
@@ -749,9 +743,8 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
     }
   };
 
-  // Simple notification function to replace toast
+  // Simple notification system for user feedback
   const showNotification = (message, type = 'success') => {
-    // Create a bootstrap alert that auto-dismisses
     const alertDiv = document.createElement('div');
     alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
     alertDiv.style.top = '20px';
@@ -776,7 +769,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
 
   return (
     <>
-      {/* Hidden PDF export container */}
+      {/* Hidden container for PDF export content */}
       <div style={{ display: 'none' }}>
         <div id="pdf-dashboard-section" ref={pdfDashboardRef}>
           {chartConfig.showSummary && renderSummaryCards()}
@@ -816,7 +809,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           }
         `}</style>
         
-        {/* Report Header */}
+        {/* Report header with title and export options */}
         <Card className="mb-4 shadow-sm">
           <Card.Header className="d-flex justify-content-between align-items-center bg-white py-3">
             <div className="d-flex align-items-center">
@@ -842,7 +835,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </Card.Header>
         </Card>
         
-        {/* Error Alert */}
+        {/* Error display */}
         {error && (
           <Alert variant="danger" className="mb-4">
             <FontAwesomeIcon icon={faExclamationTriangle} className="me-2" />
@@ -850,7 +843,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </Alert>
         )}
         
-        {/* Report Navigation */}
+        {/* Tab navigation for different report views */}
         <div className="nav nav-tabs mb-4">
           <div className="nav-item">
             <button 
@@ -893,7 +886,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </div>
         </div>
         
-        {/* Dashboard Tab */}
+        {/* Dashboard tab - overview with summary and key charts */}
         {activeTab === 'dashboard' && (
           <>
             <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Summary</h5>
@@ -989,7 +982,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </>
         )}
         
-        {/* Charts Tab */}
+        {/* Charts tab - detailed chart analysis */}
         {activeTab === 'charts' && (
           <>
             {!shouldShowGraphs() ? (
@@ -1077,7 +1070,7 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </>
         )}
         
-        {/* Data Tab */}
+        {/* Data table tab - raw data display */}
         {activeTab === 'data' && (
           <>
             <h5 className="mb-3" style={{ color: reportColors.primary }}>Report Data</h5>
@@ -1098,12 +1091,12 @@ const ReportViewForm = ({ reportData, reportType, dateRange, onBackClick, applie
           </>
         )}
         
-        {/* Footer Info */}
+        {/* Report footer information */}
         <div className="text-muted small text-center mt-4">
           <p>Report generated on {formatDate(new Date(), true)}</p>
         </div>
         
-        {/* PDF Options Modal */}
+        {/* PDF export options modal */}
         {renderPdfOptionsModal()}
       </div>
     </>

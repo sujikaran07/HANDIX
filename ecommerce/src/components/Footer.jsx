@@ -7,7 +7,7 @@ const Footer = () => {
     <footer className="bg-gray-100 pt-12 pb-6 w-full">
       <div className="container-custom px-1 sm:px-2 md:px-3 w-full max-w-full md:max-w-[98%] lg:max-w-[96%] xl:max-w-[94%]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* About Section */}
+          {/* About section with social links */}
           <div>
             <h3 className="text-lg font-semibold mb-4">About Handix</h3>
             <p className="text-gray-600 mb-4">
@@ -41,7 +41,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick navigation links */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
@@ -59,7 +59,8 @@ const Footer = () => {
                 <Link to="/contact" className="text-gray-600 hover:text-primary">
                   Contact Us
                 </Link>
-              </li>              <li>
+              </li>
+              <li>
                 <Link to="/faq" className="text-gray-600 hover:text-primary">
                   FAQ
                 </Link>
@@ -72,7 +73,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Product categories */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Categories</h3>
             <ul className="space-y-2">
@@ -104,7 +105,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact information */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Us</h3>
             <ul className="space-y-4">
@@ -130,7 +131,7 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Copyright */}
+        {/* Copyright notice */}
         <div className="mt-8 pt-5 border-t border-gray-200">
           <div className="flex justify-center">
             <p className="text-sm text-gray-500">

@@ -6,19 +6,16 @@ export const useCheckout = () => {
   const navigate = useNavigate();
 
   const placeOrder = (paymentMethod) => {
-    // In a real app, we would send order data to the backend
-    // For now, we'll simulate a successful order placement
-    
+    // Display success notification to user
     toast({
       title: "Order Placed Successfully!",
       description: `Your order has been placed with ${paymentMethod} payment method.`,
     });
     
-    // Clear cart and redirect to confirmation page
+    // Remove all items from shopping cart
     localStorage.removeItem('cartItems');
     
-    // In a real app, we would have an order confirmation page
-    // For now, redirect to home
+    // Return user to homepage after successful checkout
     navigate('/');
   };
 

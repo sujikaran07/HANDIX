@@ -8,7 +8,9 @@ import axios from 'axios';
 
 const BACKEND_URL = 'http://localhost:5000';
 
+// Artisan chat interface for communicating with customers about orders
 const ArtisanChat = () => {
+  // State management for chat functionality
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [conversation, setConversation] = useState(null);
@@ -20,11 +22,11 @@ const ArtisanChat = () => {
   const [error, setError] = useState(null);
   const [attachments, setAttachments] = useState([]);
 
-  // Get artisanId and token from localStorage
+  // Authentication data from localStorage
   const artisanId = localStorage.getItem('artisanId');
   const token = localStorage.getItem('artisanToken');
 
-  // Fetch orders assigned to this artisan on mount
+  // Fetch orders assigned to this artisan
   useEffect(() => {
     const fetchOrders = async () => {
       setLoadingOrders(true);
@@ -48,7 +50,7 @@ const ArtisanChat = () => {
     if (artisanId && token) fetchOrders();
   }, [artisanId, token]);
 
-  // When an order is selected, fetch or create the conversation, then fetch messages
+  // Fetch or create conversation when order is selected
   useEffect(() => {
     const fetchOrCreateConversation = async () => {
       if (!selectedOrder) return;
@@ -57,7 +59,7 @@ const ArtisanChat = () => {
       setLoadingMessages(true);
       setError(null);
       try {
-        // Try to get the conversation for this order
+        // Try to get existing conversation
         let convRes;
         try {
           convRes = await axios.get(
@@ -65,13 +67,13 @@ const ArtisanChat = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
         } catch (err) {
-          // If not found, create it
+          // Create conversation if not found
           if (err.response && err.response.status === 404) {
             convRes = await axios.post(
               `${BACKEND_URL}/api/conversations/`,
               {
                 order_id: selectedOrder.order_id,
-                customer_id: selectedOrder.customerId, // assuming this is the ID
+                customer_id: selectedOrder.customerId,
                 artisan_id: artisanId,
               },
               { headers: { Authorization: `Bearer ${token}` } }
@@ -81,6 +83,7 @@ const ArtisanChat = () => {
           }
         }
         setConversation(convRes.data);
+        
         // Fetch messages for this conversation
         const msgRes = await axios.get(
           `${BACKEND_URL}/api/messages/conversation/${convRes.data.conversations_id}`,
@@ -100,6 +103,7 @@ const ArtisanChat = () => {
     setSelectedOrder(order);
   };
 
+  // Handle file attachment selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     // Limit to 5 files, 5MB each
@@ -107,6 +111,7 @@ const ArtisanChat = () => {
     setAttachments(validFiles);
   };
 
+  // Send message with optional attachments
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() && attachments.length === 0) return;
@@ -120,6 +125,7 @@ const ArtisanChat = () => {
       formData.append('sender_role', 'artisan');
       formData.append('message_text', newMessage.trim());
       attachments.forEach(file => formData.append('attachments', file));
+      
       const res = await axios.post(
         `${BACKEND_URL}/api/messages/`,
         formData,
@@ -135,7 +141,7 @@ const ArtisanChat = () => {
     }
   };
 
-  // Format date for display
+  // Format timestamp for display
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -148,6 +154,7 @@ const ArtisanChat = () => {
         <ArtisanTopBar />
         <div className="container mt-4 chat-container">
           <div className="card chat-card">
+            {/* Chat header */}
             <div className="chat-header d-flex justify-content-between align-items-center mb-0">
               <div className="title-section">
                 <div className="icon-and-title">
@@ -161,7 +168,7 @@ const ArtisanChat = () => {
             </div>
             <div className="chat-content">
               <div className="row h-100 g-0">
-                {/* Orders sidebar */}
+                {/* Orders list sidebar */}
                 <div className="col-md-4 col-lg-3 border-end d-flex flex-column">
                   <div className="contacts-header p-3 border-bottom">
                     <div className="fw-bold mb-2">Assigned Orders</div>
@@ -217,7 +224,8 @@ const ArtisanChat = () => {
                     )}
                   </div>
                 </div>
-                {/* Conversation area */}
+                
+                {/* Chat conversation area */}
                 <div className="col-md-8 col-lg-9">
                   {!selectedOrder ? (
                     <div className="h-100 d-flex flex-column justify-content-center align-items-center">
@@ -227,6 +235,7 @@ const ArtisanChat = () => {
                     </div>
                   ) : (
                     <div className="chat-box d-flex flex-column h-100">
+                      {/* Chat header with order info */}
                       <div className="chat-box-header p-3 border-bottom">
                         <div className="d-flex justify-content-between align-items-center">
                           <div className="d-flex align-items-center">
@@ -242,6 +251,8 @@ const ArtisanChat = () => {
                           </div>
                         </div>
                       </div>
+                      
+                      {/* Messages display area */}
                       <div className="messages-container flex-grow-1 p-3">
                         {loadingMessages ? (
                           <div className="text-center my-4">
@@ -288,6 +299,7 @@ const ArtisanChat = () => {
                                   </div>
                                 </div>
                               )}
+                              
                               {/* Each attachment in its own bubble */}
                               {message.attachments && message.attachments.length > 0 && message.attachments.map(att => (
                                 <div
@@ -333,6 +345,8 @@ const ArtisanChat = () => {
                           ))
                         )}
                       </div>
+                      
+                      {/* Message input with file attachment */}
                       <div className="message-input-container p-3 border-top">
                         <form onSubmit={handleSendMessage} className="d-flex align-items-center" encType="multipart/form-data">
                           <label htmlFor="file-input" className="me-2" style={{ cursor: 'pointer' }}>
@@ -363,6 +377,7 @@ const ArtisanChat = () => {
                             <span className="d-none d-md-inline ms-2">Send</span>
                           </button>
                         </form>
+                        
                         {attachments.length > 0 && (
                           <div className="mb-2">
                             {attachments.map((file, idx) => (

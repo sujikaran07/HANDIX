@@ -6,7 +6,7 @@ const { authMiddleware } = require('../../controllers/login/employeeLoginControl
 const Attachment = require('../../models/attachmentModel');
 const { upload } = require('../../utils/cloudinaryConfig');
 
-// Get all messages for a conversation, including attachments
+// Route: Get all messages for a conversation, including attachments
 router.get('/conversation/:conversationId', authMiddleware, async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -36,7 +36,7 @@ router.get('/conversation/:conversationId', authMiddleware, async (req, res) => 
   }
 });
 
-// Send a new message with optional attachments
+// Route: Send a new message with optional attachments
 router.post('/', authMiddleware, upload.array('attachments', 5), async (req, res) => {
   try {
     const { conversation_id, sender_id, sender_role, message_text } = req.body;

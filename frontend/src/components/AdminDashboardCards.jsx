@@ -1,8 +1,10 @@
+// Dashboard summary cards for admin panel
 import React, { useState, useEffect } from "react";
 import "../styles/admin/AdminDashboard.css";
 import axios from "axios";
 
 const AdminDashboardCards = () => {
+  // State for summary data, loading, and error
   const [summaryData, setSummaryData] = useState({
     totalRevenue: 0,
     totalOrders: 0,
@@ -12,6 +14,7 @@ const AdminDashboardCards = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Fetch dashboard summary data from API
     const fetchSummaryData = async () => {
       try {
         setLoading(true);
@@ -39,8 +42,10 @@ const AdminDashboardCards = () => {
     return <div className="dashboard-cards">Error: {error}</div>;
   }
 
+  // Render summary cards
   return (
     <div className="dashboard-cards" style={{ paddingBottom: '20px' }}>
+      {/* Total Revenue Card */}
       <div className="card" style={{ 
         padding: '20px',
         borderRadius: '10px',
@@ -68,6 +73,7 @@ const AdminDashboardCards = () => {
           marginTop: '5px'
         }}>Last 30 Days</span>
       </div>
+      {/* Total Orders Card */}
       <div className="card" style={{ 
         padding: '20px',
         borderRadius: '10px',
@@ -95,6 +101,7 @@ const AdminDashboardCards = () => {
           marginTop: '5px'
         }}>Last 30 Days</span>
       </div>
+      {/* Active Customers Card */}
       <div className="card" style={{ 
         padding: '20px',
         borderRadius: '10px',

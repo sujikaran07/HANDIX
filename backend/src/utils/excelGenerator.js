@@ -135,7 +135,7 @@ const generateExcelReport = async (options) => {
           worksheet.mergeCells(`${colStart}${row.number}:${colEnd}${row.number}`);
           const keyCell = worksheet.getCell(`${colStart}${row.number}`);
           
-          // Create rich text with two different formats
+          // Create rich text with two different format
           keyCell.value = {
             richText: [
               { text: formattedValue + '\n', font: { size: 16, bold: true, color: { argb: 'FF333333' } } },

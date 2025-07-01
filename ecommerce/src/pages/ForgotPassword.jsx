@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const ForgotPasswordPage = () => {
+  // State for email and UI feedback
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -13,39 +14,30 @@ const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Email validation
   const validateEmail = (email) => {
     return /\S+@\S+\.\S+/.test(email);
   };
 
+  // Handle forgot password form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Validate email
     if (!email.trim()) {
       setError('Email is required');
       return;
     }
-    
     if (!validateEmail(email)) {
       setError('Please enter a valid email address');
       return;
     }
-    
     setIsSubmitting(true);
-    
     try {
+      // Send forgot password request to backend
       const response = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
-      
-      console.log('Password reset response:', response.data);
-      
-      // Even if email doesn't exist, we show success for security
       setSubmitted(true);
-      
-      // Store email in session for the next step
       sessionStorage.setItem('resetEmail', email);
-      
-      // For development environments, if OTP is returned, show in toast
+      // Show OTP in toast for development if present
       if (response.data.otpForTesting) {
         toast({
           title: "Development OTP",
@@ -53,21 +45,16 @@ const ForgotPasswordPage = () => {
           variant: "default"
         });
       }
-      
       // Navigate to OTP verification page
       navigate('/verify-reset-code', { 
         state: { email: email }
       });
-      
     } catch (error) {
-      console.error('Forgot password error:', error);
-      
       toast({
         title: "Error",
         description: "Failed to process your request. Please try again later.",
         variant: "destructive"
       });
-      
       setError('Something went wrong. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -162,5 +149,6 @@ const ForgotPasswordPage = () => {
     </div>
   );
 };
+
 
 export default ForgotPasswordPage;

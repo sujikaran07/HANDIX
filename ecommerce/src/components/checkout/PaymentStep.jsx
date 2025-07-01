@@ -2,13 +2,13 @@ import React from 'react';
 import { FaRegCreditCard, FaRegMoneyBillAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { useCart } from '../../contexts/CartContext';
 
+// Format card number as XXXX XXXX XXXX XXXX
 const formatCardNumber = (value) => {
-  // Remove all non-digits, then group into 4s
   return value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
 };
 
+// Format expiry as MM/YY
 const formatExpiry = (value) => {
-  // Remove all non-digits, add slash after 2 digits
   const cleaned = value.replace(/\D/g, '');
   if (cleaned.length === 0) return '';
   if (cleaned.length <= 2) return cleaned;
@@ -17,12 +17,12 @@ const formatExpiry = (value) => {
 
 const PaymentStep = ({ formData, errors, handleChange, user }) => {
   const { total } = useCart();
-  // Determine if user is business or personal
+  // Check if user is business or personal
   const isBusinessAccount = user && (user.accountType === 'Business' || user.accountType === 'business');
-  // COD is disabled only for personal accounts over 2,000 LKR
+  // Disable COD for personal accounts over 2,000 LKR
   const codDisabled = !isBusinessAccount && total > 2000;
 
-  // If COD was selected but total is over limit (for personal), switch to card payment
+  // Auto-switch to card if COD is not allowed
   React.useEffect(() => {
     if (codDisabled && formData.paymentMethod === 'cod') {
       handleChange({
@@ -34,7 +34,7 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
     }
   }, [codDisabled, formData.paymentMethod]);
 
-  // Custom change handler for card number formatting
+  // Format card number on change
   const handleCardNumberChange = (e) => {
     const formatted = formatCardNumber(e.target.value);
     handleChange({
@@ -45,28 +45,19 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
     });
   };
 
-  // Custom change handler for expiry formatting and restriction (no auto-correction, just input prevention)
+  // Format expiry and prevent invalid input
   const handleCardExpiryChange = (e) => {
     let value = e.target.value.replace(/[^\d]/g, '');
     let prev = formData.cardExpiry || '';
-
-    // Only allow up to 4 digits (MMYY)
     if (value.length > 4) value = value.slice(0, 4);
-
     let month = value.slice(0, 2);
     let year = value.slice(2, 4);
-
-    // Prevent invalid month
     if (month.length === 2 && (parseInt(month, 10) < 1 || parseInt(month, 10) > 12)) {
-      // Don't update if invalid
       return;
     }
-    // Prevent invalid year
     if (year.length === 2 && parseInt(year, 10) > 40) {
-      // Don't update if invalid
       return;
     }
-
     let formatted = month;
     if (year.length) {
       formatted += '/' + year;
@@ -83,7 +74,7 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
     <div>
       <h2 className="text-xl font-bold mb-4">Payment Method</h2>
 
-      {/* COD warning for personal accounts over 2,000 LKR only */}
+      {/* Show COD warning for personal accounts over 2,000 LKR */}
       {!isBusinessAccount && codDisabled && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 flex items-center">
           <FaExclamationTriangle className="text-yellow-500 mr-3" size={20} />
@@ -94,6 +85,7 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Card payment option */}
         <label className={`
           border rounded-lg p-4 cursor-pointer flex items-center transition
           ${formData.paymentMethod === 'card' ? 'border-primary bg-blue-50' : 'border-gray-300 hover:border-primary'}
@@ -115,6 +107,7 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
           </div>
         </label>
 
+        {/* COD payment option */}
         <label className={`
           border rounded-lg p-4 cursor-pointer flex items-center transition
           ${formData.paymentMethod === 'cod' ? 'border-primary bg-blue-50' : 'border-gray-300 hover:border-primary'}
@@ -139,7 +132,7 @@ const PaymentStep = ({ formData, errors, handleChange, user }) => {
         </label>
       </div>
 
-      {/* Card payment form */}
+      {/* Card payment form fields */}
       {formData.paymentMethod === 'card' && (
         <div className="mt-6 border border-gray-200 rounded-lg p-4">
           <h3 className="text-lg font-medium mb-4">Card Details</h3>

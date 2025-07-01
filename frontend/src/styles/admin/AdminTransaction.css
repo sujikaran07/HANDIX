@@ -1,3 +1,9 @@
+/* 
+ * Styles for Admin Transaction page
+ * Includes transaction table styling, status indicators, and responsive layout
+ */
+
+/* Base reset and typography */
 * {
   margin: 0;
   padding: 0;
@@ -438,4 +444,4 @@ body {
 .admin-transaction-page .product-action-btn:hover {
   background-color: #3e87c3;
   color: #ffffff;
-} 
+}

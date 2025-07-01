@@ -5,6 +5,7 @@ const ProductEntry = require('../models/productEntryModel');
 const { Order } = require('../models/orderModel');
 const { Op } = require('sequelize');
 
+// Route: Get notifications for an artisan (restocks, product entries, orders)
 router.get('/', async (req, res) => {
   try {
     const artisan_id = req.query.artisan_id; // e.g., 'E006'

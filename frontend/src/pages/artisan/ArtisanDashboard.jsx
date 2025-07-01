@@ -7,56 +7,52 @@ import ArtisanDashboardCards from '../../components/artisan/ArtisanDashboardCard
 import ArtisanProductsBarChart from '../../components/artisan/ArtisanProductsBarChart';
 import '../../styles/artisan/ArtisanDashboard.css';
 
+// Main artisan dashboard with authentication and role verification
 const ArtisanDashboard = () => {
   const navigate = useNavigate();
+  // State management for authentication and artisan data
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [loading, setLoading] = useState(true);
   const [artisanId, setArtisanId] = useState(null);
 
   useEffect(() => {
-    // Check if artisan token exists and is valid
+    // Verify artisan token and extract user information
     const verifyToken = () => {
       try {
         const artisanToken = localStorage.getItem('artisanToken');
-        console.log('ArtisanDashboard - artisanToken check:', artisanToken ? 'Token exists' : 'No token found');
         
         if (!artisanToken) {
-          console.warn('No artisan token found, redirecting to login');
           setIsAuthenticated(false);
           navigate('/login');
           return false;
         }
         
-        // Verify token by decoding it
+        // Decode and validate JWT token
         const decoded = jwtDecode(artisanToken);
-        console.log('Decoded token in dashboard:', decoded);
         
-        // Check if token is expired
+        // Check token expiration
         const currentTime = Date.now() / 1000;
         if (decoded.exp && decoded.exp < currentTime) {
-          console.warn('Token expired, redirecting to login');
           localStorage.removeItem('artisanToken');
           setIsAuthenticated(false);
           navigate('/login');
           return false;
         }
         
-        // Check if user has artisan role (role ID 2)
+        // Verify artisan role (role ID 2)
         if (decoded.role !== 2) {
-          console.warn('User is not an artisan, redirecting to login');
           setIsAuthenticated(false);
           navigate('/login');
           return false;
         }
         
-        // Save artisan ID
+        // Store artisan ID for dashboard components
         setArtisanId(decoded.id);
         localStorage.setItem('artisanId', decoded.id);
         
         setIsAuthenticated(true);
         return true;
       } catch (error) {
-        console.error('Error verifying token:', error);
         setIsAuthenticated(false);
         navigate('/login');
         return false;
@@ -67,6 +63,7 @@ const ArtisanDashboard = () => {
     setLoading(!isValid);
   }, [navigate]);
 
+  // Loading state while verifying authentication
   if (loading) {
     return (
       <div className="container mt-5 text-center">
@@ -79,7 +76,7 @@ const ArtisanDashboard = () => {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect via useEffect
+    return null; 
   }
 
   return (
@@ -87,12 +84,15 @@ const ArtisanDashboard = () => {
       <ArtisanSidebar />
       <ArtisanTopBar artisanId={artisanId} />
       <div className="artisan-main-content">
+        {/* Dashboard title section */}
         <div className="artisan-dashboard-title">
           <h2>Dashboard</h2>
         </div>
+        {/* Summary cards displaying key metrics */}
         <div className="artisan-dashboard-cards">
           <ArtisanDashboardCards />
         </div>
+        {/* Products performance chart */}
         <div className="artisan-graph-container">
           <ArtisanProductsBarChart />
         </div>

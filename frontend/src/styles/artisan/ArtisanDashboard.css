@@ -1,3 +1,10 @@
+/* 
+ * Artisan Dashboard Styles
+ * Provides styling for the artisan dashboard interface including layout, 
+ * navigation sidebar, cards, charts, and responsive design elements
+ */
+
+/* Base typography and document setup */
 body {
     font-family: "Poppins", sans-serif, Arial, sans-serif; 
     font-size: 1rem; 
@@ -12,12 +19,14 @@ body {
     overflow: hidden;
 }
 
+/* Main layout container */
 .artisan-dashboard-container {
     display: flex;
     min-height: 100vh;
     font-size: var(--font-size-base); 
 }
 
+/* Sidebar navigation */
 .artisan-sidebar {
     width: 250px;
     background-color: #f8f9fa;
@@ -77,6 +86,7 @@ body {
     margin-right: 10px;
 }
 
+/* Main content area */
 .artisan-main-content {
     flex: 1;
     padding: 10px;
@@ -98,6 +108,7 @@ body {
     color: #333333;
 }
 
+/* Topbar for quick actions and search */
 .artisan-topbar {
     display: flex;
     justify-content: space-between;
@@ -139,6 +150,7 @@ body {
     font-size: 16px;
 }
 
+/* User profile and information display */
 .artisan-info {
     display: flex;
     align-items: center;
@@ -156,6 +168,7 @@ body {
     color: #333333;
 }
 
+/* Dashboard cards displaying key metrics */
 .artisan-dashboard-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -196,6 +209,7 @@ body {
     margin-top: 5px;
 }
 
+/* Graphs and charts section */
 .artisan-graph-container {
     display: flex;
     gap: 20px;
@@ -244,6 +258,7 @@ body {
     min-height: 300px;
 }
 
+/* Logo and title alignment */
 .logo-title-container {
     display: flex;
     align-items: center;
@@ -273,6 +288,7 @@ body {
     margin-right: 10px; 
 }
 
+/* Responsive design adjustments */
 @media (max-width: 768px) {
     body {
         font-size: var(--font-size-small); 

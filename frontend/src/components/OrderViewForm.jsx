@@ -2,31 +2,29 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 const OrderViewForm = ({ order, onBack }) => {
+  // State for managing address data and loading states
   const [addressData, setAddressData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [shippingMethodName, setShippingMethodName] = useState('Standard Delivery');
   
   useEffect(() => {
-    console.log("Order data in view form:", order);
-    
-    // Fetch address data if we have a customer ID
+    // Fetch customer address and shipping method data on component mount
     if (order.customer_id || order.customerId) {
       fetchCustomerAddresses(order.customer_id || order.customerId);
     }
     
-    // Fetch shipping method if we have a shipping method ID
     if (order.shippingMethodId) {
       fetchShippingMethod(order.shippingMethodId);
     }
   }, [order]);
   
+  // Fetch customer address details from database
   const fetchCustomerAddresses = async (customerId) => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:5000/api/addresses/customer/${customerId}`);
-      console.log("Customer addresses:", response.data);
       
-      // If addresses are found, use the default one or the first one
+      // Use default address or first available address
       if (response.data && response.data.length > 0) {
         const defaultAddress = response.data.find(addr => addr.isDefault === true) || response.data[0];
         setAddressData({
@@ -42,15 +40,15 @@ const OrderViewForm = ({ order, onBack }) => {
     }
   };
   
+  // Fetch shipping method name based on ID
   const fetchShippingMethod = async (shippingMethodId) => {
     try {
       const response = await axios.get(`http://localhost:5000/api/shipping-methods/${shippingMethodId}`);
-      console.log("Shipping method data:", response.data);
       
       if (response.data && response.data.method_name) {
         setShippingMethodName(response.data.method_name);
       } else {
-        // Fallback based on shipping method ID
+        // Fallback mapping for shipping method IDs
         switch (shippingMethodId.toString()) {
           case '1':
             setShippingMethodName('Standard Delivery');
@@ -67,7 +65,7 @@ const OrderViewForm = ({ order, onBack }) => {
       }
     } catch (error) {
       console.error("Failed to fetch shipping method:", error);
-      // Use default or provided shipping method name if API fails
+      // Use default shipping method if API fails
       setShippingMethodName(order.shippingMethod || 'Standard Delivery');
     }
   };
@@ -92,7 +90,7 @@ const OrderViewForm = ({ order, onBack }) => {
     });
   };
 
-  // Get the appropriate text color class for status
+  // Get status text color class based on order status
   const getStatusTextClass = (status) => {
     if (!status) return 'text-muted';
     const statusLower = status.toLowerCase();
@@ -106,36 +104,29 @@ const OrderViewForm = ({ order, onBack }) => {
     return 'text-secondary';
   };
 
-  // Format currency for display
+  // Format currency amounts for display
   const formatCurrency = (amount) => {
     if (!amount) return 'LKR 0.00';
     return `LKR ${parseFloat(amount).toFixed(2)}`;
   };
 
-  // Order items array - would usually come from order.items or similar
+  // Extract order items and calculate totals
   const orderItems = order.items || [];
-  
-  // Calculate order totals
   const totalQuantity = orderItems.reduce((total, item) => total + (parseInt(item.quantity) || 0), 0);
   const subtotal = order.subtotal || orderItems.reduce((total, item) => total + ((parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 0)), 0);
-  const shippingFee = parseFloat(order.shippingCost || 0);
+  // Use the raw value from backend, fallback only if all are null/undefined
+  const shippingFeeRaw = order.shippingFee ?? order.shipping_fee ?? order.shippingCost;
+  const shippingFee = typeof shippingFeeRaw === 'number' ? shippingFeeRaw : parseFloat(shippingFeeRaw) || 350;
   const additionalFees = parseFloat(order.additionalFees || 0);
   const totalPrice = parseFloat(order.totalAmount) || subtotal + shippingFee + additionalFees;
 
-  // Get address information - prioritize address from DB, then from order object
-  const streetAddress = addressData?.street || 
-                       (order.shippingAddress && order.shippingAddress.split(',')[0].trim()) || 
-                       'N/A';
-                       
-  const city = addressData?.city || 
-              (order.shippingAddress && order.shippingAddress.split(',').length > 1 ? 
-               order.shippingAddress.split(',')[1].trim() : 'N/A');
-               
-  const district = addressData?.district || 
-                  (order.shippingAddress && order.shippingAddress.split(',').length > 2 ? 
-                   order.shippingAddress.split(',')[2].trim() : 'N/A');
+  // Prefer order.shippingAddress object if present
+  const shippingAddrObj = order.shippingAddress && typeof order.shippingAddress === 'object' ? order.shippingAddress : null;
+  const streetAddress = shippingAddrObj?.street_address || shippingAddrObj?.street || addressData?.street || (typeof order.shippingAddress === 'string' ? order.shippingAddress.split(',')[0].trim() : 'N/A') || 'N/A';
+  const city = shippingAddrObj?.city || addressData?.city || (typeof order.shippingAddress === 'string' && order.shippingAddress.split(',').length > 1 ? order.shippingAddress.split(',')[1].trim() : 'N/A');
+  const district = shippingAddrObj?.district || addressData?.district || (typeof order.shippingAddress === 'string' && order.shippingAddress.split(',').length > 2 ? order.shippingAddress.split(',')[2].trim() : 'N/A');
                    
-  // Function to get appropriate CSS class for status based on AdminOrder.css
+  // Get status badge color class
   const getStatusColorClass = (status) => {
     if (!status) return '';
     
@@ -143,7 +134,7 @@ const OrderViewForm = ({ order, onBack }) => {
     
     if (statusLower === 'pending') return 'text-warning';
     if (statusLower === 'processing') return 'text-info';
-    if (statusLower === 'review') return 'text-purple';  // #6f42c1
+    if (statusLower === 'review') return 'text-purple';
     if (statusLower === 'shipped') return 'text-primary';
     if (statusLower === 'delivered') return 'text-success';
     if (statusLower === 'cancelled' || statusLower === 'canceled') return 'text-danger';
@@ -163,6 +154,7 @@ const OrderViewForm = ({ order, onBack }) => {
         flexDirection: 'column'
       }}>
         <div className="card-body p-4 d-flex flex-column">
+          {/* Header with back button and status */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
               <div 
@@ -192,12 +184,13 @@ const OrderViewForm = ({ order, onBack }) => {
             </span>
           </div>
 
+          {/* Main content area with scrollable sections */}
           <div className="row g-3 custom-scrollbar" style={{ 
             overflowY: 'auto', 
             maxHeight: 'calc(100vh - 160px)',
             paddingRight: '5px' 
           }}>
-            {/* Basic Order Information */}
+            {/* Basic Order Information Section */}
             <div className="col-md-6">
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -269,7 +262,7 @@ const OrderViewForm = ({ order, onBack }) => {
               </div>
             </div>
             
-            {/* Customer Information */}
+            {/* Customer Information Section */}
             <div className="col-md-6">
               <div className="card h-100 border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -333,7 +326,7 @@ const OrderViewForm = ({ order, onBack }) => {
               </div>
             </div>
             
-            {/* Order Items Section */}
+            {/* Order Items Section with table */}
             <div className="col-md-12">
               <div className="card border-0 shadow-sm">
                 <div className="card-header bg-light py-2">
@@ -383,6 +376,7 @@ const OrderViewForm = ({ order, onBack }) => {
                           </tr>
                         )}
                       </tbody>
+                      {/* Order totals footer */}
                       <tfoot className="table-light">
                         <tr style={{fontSize: "13px"}}>
                           <td colSpan="2" className="text-end fw-bold">
@@ -435,7 +429,7 @@ const OrderViewForm = ({ order, onBack }) => {
               </div>
             </div>
             
-            {/* Order Notes (if available) */}
+            {/* Order Notes Section (conditional) */}
             {order.notes && (
               <div className="col-md-12">
                 <div className="card border-0 shadow-sm">
@@ -456,6 +450,7 @@ const OrderViewForm = ({ order, onBack }) => {
             )}
           </div>
           
+          {/* Footer with back button */}
           <div className="d-flex justify-content-end mt-3 pt-2 border-top">
             <button 
               onClick={handleBack}

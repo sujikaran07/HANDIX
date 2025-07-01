@@ -4,11 +4,13 @@ import { ChevronRight, MoreHorizontal } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// Breadcrumb navigation root
 const Breadcrumb = React.forwardRef(
   ({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />
 )
 Breadcrumb.displayName = "Breadcrumb"
 
+// List container for breadcrumb items
 const BreadcrumbList = React.forwardRef(
   ({ className, ...props }, ref) => (
     <ol
@@ -23,6 +25,7 @@ const BreadcrumbList = React.forwardRef(
 )
 BreadcrumbList.displayName = "BreadcrumbList"
 
+// Single breadcrumb item
 const BreadcrumbItem = React.forwardRef(
   ({ className, ...props }, ref) => (
     <li
@@ -34,10 +37,10 @@ const BreadcrumbItem = React.forwardRef(
 )
 BreadcrumbItem.displayName = "BreadcrumbItem"
 
+// Breadcrumb link (can be anchor or custom component)
 const BreadcrumbLink = React.forwardRef(
   ({ asChild, className, ...props }, ref) => {
     const Comp = asChild ? Slot : "a"
-
     return (
       <Comp
         ref={ref}
@@ -49,6 +52,7 @@ const BreadcrumbLink = React.forwardRef(
 )
 BreadcrumbLink.displayName = "BreadcrumbLink"
 
+// Current page in breadcrumb (not clickable)
 const BreadcrumbPage = React.forwardRef(
   ({ className, ...props }, ref) => (
     <span
@@ -63,6 +67,7 @@ const BreadcrumbPage = React.forwardRef(
 )
 BreadcrumbPage.displayName = "BreadcrumbPage"
 
+// Separator between breadcrumb items
 const BreadcrumbSeparator = ({
   children,
   className,
@@ -79,6 +84,7 @@ const BreadcrumbSeparator = ({
 )
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator"
 
+// Ellipsis for collapsed breadcrumb items
 const BreadcrumbEllipsis = ({
   className,
   ...props

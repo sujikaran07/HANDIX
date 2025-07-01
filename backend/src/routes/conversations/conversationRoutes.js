@@ -7,7 +7,7 @@ const { Employee } = require('../../models/employeeModel');
 const { Order } = require('../../models/orderModel');
 const { authMiddleware } = require('../../controllers/login/employeeLoginControllers');
 
-// Get conversations by order ID
+// Route: Get conversation by order ID
 router.get('/order/:orderId', authMiddleware, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -32,7 +32,7 @@ router.get('/order/:orderId', authMiddleware, async (req, res) => {
   }
 });
 
-// Get all conversations for a customer
+// Route: Get all conversations for a customer
 router.get('/customer/:customerId', authMiddleware, async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -53,7 +53,7 @@ router.get('/customer/:customerId', authMiddleware, async (req, res) => {
   }
 });
 
-// Get all conversations for an artisan
+// Route: Get all conversations for an artisan
 router.get('/artisan/:artisanId', authMiddleware, async (req, res) => {
   try {
     const { artisanId } = req.params;
@@ -74,7 +74,7 @@ router.get('/artisan/:artisanId', authMiddleware, async (req, res) => {
   }
 });
 
-// Get a specific conversation by ID with messages
+// Route: Get a specific conversation by ID with messages
 router.get('/:conversationId', authMiddleware, async (req, res) => {
   try {
     const { conversationId } = req.params;
@@ -103,7 +103,7 @@ router.get('/:conversationId', authMiddleware, async (req, res) => {
   }
 });
 
-// Create a new conversation
+// Route: Create a new conversation
 router.post('/', authMiddleware, async (req, res) => {
   try {
     const { order_id, customer_id, artisan_id } = req.body;

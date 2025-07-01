@@ -3,6 +3,7 @@ const Inventory = require('../../models/inventoryModel');
 const ProductImage = require('../../models/productImageModel');
 const { sequelize } = require('../../config/db');
 
+// Get all favorites for a customer
 exports.getFavorites = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -67,6 +68,7 @@ exports.getFavorites = async (req, res) => {
   }
 };
 
+// Add a product to favorites
 exports.addFavorite = async (req, res) => {
   const transaction = await sequelize.transaction();
   try {
@@ -103,6 +105,8 @@ exports.addFavorite = async (req, res) => {
     res.status(500).json({ message: 'Failed to add product to favorites', error: error.message });
   }
 };
+
+// Remove a product from favorites
 exports.removeFavorite = async (req, res) => {
   try {
     const { customerId, productId } = req.params;
@@ -125,6 +129,7 @@ exports.removeFavorite = async (req, res) => {
   }
 };
 
+// Check if a product is in favorites
 exports.checkFavorite = async (req, res) => {
   try {
     const { customerId, productId } = req.params;

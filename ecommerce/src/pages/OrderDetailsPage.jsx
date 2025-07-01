@@ -16,7 +16,8 @@ const OrderDetailsPage = () => {
   const [error, setError] = useState(null);
   const invoiceRef = useRef(null);
   const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  
+
+  // Fetch order details on mount
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
@@ -115,6 +116,7 @@ const OrderDetailsPage = () => {
         setOrder(processedOrder);
       } catch (err) {
         console.error('Failed to fetch order details:', err);
+        // Handle fetch error
         setError(err.message || 'Could not load order details. Please try again.');
       } finally {
         setLoading(false);

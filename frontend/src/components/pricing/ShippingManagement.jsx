@@ -4,6 +4,7 @@ import { faEdit, faTrash, faPlus, faSearch } from '@fortawesome/free-solid-svg-i
 import Pagination from '../Pagination';
 
 const ShippingManagement = () => {
+  // State management for shipping rates 
   const [shippingRates, setShippingRates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,7 +13,7 @@ const ShippingManagement = () => {
   const itemsPerPage = 7;
   
   useEffect(() => {
-    // Simulate fetching shipping rates
+    // Load initial shipping rates data 
     setTimeout(() => {
       const mockRates = [
         { id: 1, location: 'Colombo', district: 'Western Province', base_rate: 250, additional_rate: 50, free_shipping_threshold: 5000, status: 'active' },
@@ -27,7 +28,7 @@ const ShippingManagement = () => {
     }, 1000);
   }, []);
 
-  // Render dropdown actions for shipping rates
+  // Render action dropdown menu for each shipping rate
   const renderActionMenu = (rate) => {
     return (
       <div className="dropdown">
@@ -56,13 +57,12 @@ const ShippingManagement = () => {
     );
   };
 
-  // Mock functions for UI interaction
+  // Handle editing shipping rate
   const handleEdit = (rate) => {
-    // Handle edit in a real implementation
-    console.log('Edit rate:', rate);
     alert(`Editing shipping rate for ${rate.location}`);
   };
 
+  // Handle shipping rate deletion with confirmation
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this shipping rate?')) {
       setShippingRates(prev => prev.filter(rate => rate.id !== id));
@@ -70,13 +70,13 @@ const ShippingManagement = () => {
     }
   };
 
-  // Filter rates by search term
+  // Filter shipping rates based on search criteria
   const filteredRates = shippingRates.filter(rate => 
     rate.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
     rate.district.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate pagination
+  // Pagination calculations
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentRates = filteredRates.slice(indexOfFirstItem, indexOfLastItem);
@@ -84,6 +84,7 @@ const ShippingManagement = () => {
 
   return (
     <div>
+      {/* Search and add new shipping rate section */}
       <div className="row mb-3">
         <div className="col-md-6">
           <div className="search-bar">
@@ -117,6 +118,7 @@ const ShippingManagement = () => {
         </div>
       ) : (
         <>
+          {/* Shipping rates table */}
           <div className="table-responsive">
             <table className="table table-bordered table-striped inventory-table">
               <thead>

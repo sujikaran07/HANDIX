@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaArrowLeft, FaCalendarAlt } from 'react-icons/fa';
 
+// Helper function to check if order is customized
 const isCustomizedOrder = (customized) =>
   customized === 'Yes' || customized === 'yes' || customized === true || customized === 'true';
 
+// Form component for updating order status with delivery range and notes
 const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
+  // State management for order updates
   const [orderStatus, setOrderStatus] = useState(order?.status || 'Pending');
   const [notes, setNotes] = useState('');
   const [estimatedDeliveryRange, setEstimatedDeliveryRange] = useState({
@@ -29,6 +32,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     }
   }, [order]);
 
+  // Handle order status update submission
   const handleSubmit = async (status) => {
     if (!order?.o_id) {
       alert("Order ID is missing");
@@ -59,19 +63,20 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
         window.location.href = '/artisan/assignorders';
       }
     } catch (error) {
-      console.error("Failed to update order status:", error);
       alert(`Failed to update order status: ${error.response?.data?.message || error.message}`);
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Handle delivery date range changes with validation
   const handleStartDateChange = (e) => {
     const newStartDate = e.target.value;
     setEstimatedDeliveryRange(prev => ({
       ...prev,
       startDate: newStartDate
     }));
+    // Ensure end date is not before start date
     if (estimatedDeliveryRange.endDate && newStartDate > estimatedDeliveryRange.endDate) {
       setEstimatedDeliveryRange(prev => ({
         ...prev,
@@ -92,10 +97,11 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     window.location.href = '/artisan/assignorders';
   };
 
-  // Button rendering logic
+  // Render action buttons based on order type and current status
   const customized = isCustomizedOrder(order.customized);
   let actionButtons = null;
   if (customized) {
+    // Status flow for customized orders
     switch (order.status) {
       case 'Review':
         actionButtons = (
@@ -124,6 +130,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
         actionButtons = null;
     }
   } else {
+    // Status flow for regular orders
     switch (order.status) {
       case 'Processing':
         actionButtons = (
@@ -145,7 +152,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     }
   }
 
-  // Format date for display with fallback options
+  // Format order date with multiple fallback options
   const formatOrderDate = (order) => {
     const dateValue = order?.orderDate || order?.date || order?.order_date || order?.createdAt;
     if (!dateValue) return 'N/A';
@@ -162,6 +169,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     }
   };
 
+  // Get CSS class for status badge styling
   const getStatusClass = (status) => {
     switch(status.toLowerCase()) {
       case 'pending': return 'bg-warning text-dark';
@@ -174,7 +182,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
     }
   };
 
-  // Helper to format delivery dates for display
+  // Format delivery date range for display
   const formatDeliveryRange = (start, end) => {
     if (start && end) {
       return `Assigned Delivery: ${new Date(start).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })} to ${new Date(end).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}`;
@@ -197,6 +205,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
         flexDirection: 'column'
       }}>
         <div className="card-body p-3 d-flex flex-column">
+          {/* Header with back button and current status */}
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center">
               <div 
@@ -224,6 +233,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
             </div>
           </div>
 
+          {/* Order information display */}
           <div className="row g-2 mb-3">
             <div className="col-12">
               <div className="card border-0 shadow-sm">
@@ -264,6 +274,7 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
               </div>
             </div>
 
+            {/* Delivery range and notes form */}
             <div className="col-12">
               <div className="card border-0 shadow-sm">
                 <div className="card-body p-2">
@@ -327,6 +338,8 @@ const OrderUpdateForm = ({ order, onBack, onStatusUpdate }) => {
               </div>
             </div>
           </div>
+          
+          {/* Action buttons based on order status */}
           <div className="mt-auto d-flex justify-content-end pt-2 border-top" style={{ marginBottom: '15px' }}>
             {validationError && (
               <div className="text-danger me-3 align-self-center">{validationError}</div>

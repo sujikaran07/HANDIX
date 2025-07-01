@@ -4,10 +4,12 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const HelpCenterPage = () => {
+  // State for search, expanded FAQs, and active category
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaqs, setExpandedFaqs] = useState({});
   const [activeCategory, setActiveCategory] = useState('ordering');
-  
+
+  // FAQ categories and questions
   const faqCategories = [
     {
       name: 'ordering',
@@ -78,23 +80,22 @@ const HelpCenterPage = () => {
       ]
     }
   ];
-  
+
+  // Toggle expand/collapse for FAQ
   const handleToggleFaq = (questionId) => {
     setExpandedFaqs(prev => ({
       ...prev,
       [questionId]: !prev[questionId]
     }));
   };
-  
+
   // Filter FAQs based on search query
   const getFilteredFaqs = () => {
     if (!searchQuery.trim()) {
       return [];
     }
-    
     const query = searchQuery.toLowerCase();
     const results = [];
-    
     faqCategories.forEach(category => {
       category.faqs.forEach(faq => {
         if (
@@ -109,15 +110,14 @@ const HelpCenterPage = () => {
         }
       });
     });
-    
     return results;
   };
-  
+
   // Generate a unique ID for each FAQ
   const getFaqId = (categoryName, questionIndex) => {
     return `faq-${categoryName}-${questionIndex}`;
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />

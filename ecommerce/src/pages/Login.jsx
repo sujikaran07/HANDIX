@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from 'axios';
 
 const LoginPage = () => {
+  // State for login form and UI feedback
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,8 +19,8 @@ const LoginPage = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Check if user was redirected after successful verification or password change
+
+  // Show toast if redirected after verification or password change
   useEffect(() => {
     if (location.state?.verificationSuccess) {
       toast({
@@ -34,54 +35,39 @@ const LoginPage = () => {
       });
     }
   }, [location.state]);
-  
+
+  // Validate login form fields
   const validateForm = () => {
     const newErrors = {};
-    
     if (!email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Email is invalid';
     }
-    
     if (!password) {
       newErrors.password = 'Password is required';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
+  // Handle login form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (validateForm()) {
       setLoading(true);
       try {
-        console.log('Attempting login with:', { email, password: '******' });
-        
-        // Connect to backend authentication endpoint with port 5000
+        // Send login request to backend
         const response = await axios.post('http://localhost:5000/api/auth/login', {
           email,
           password
         });
-        
-        console.log('Login response received:', response.status);
-        
         if (response.data && response.data.token) {
-          // Store complete user data from database in localStorage
           localStorage.setItem('token', response.data.token);
-          
-          // Make sure we store the complete user object that came from the database
-          console.log('Storing user data:', response.data.user);
           localStorage.setItem('user', JSON.stringify(response.data.user));
           localStorage.setItem('isAuthenticated', 'true');
-          
-          // Force a window reload to update the NavBar with the latest user data
           setTimeout(() => {
-            // Navigate to home page
             navigate('/');
-            
             toast({
               title: "Login Successful",
               description: "Welcome back to Handix!",
@@ -89,13 +75,9 @@ const LoginPage = () => {
           }, 100);
         }
       } catch (error) {
-        console.error('Login error details:', error);
-        
-        // Handle different error scenarios
+        // Handle login errors and show toast
         if (error.response) {
           const { status, data } = error.response;
-          console.log('Error response data:', data);
-          
           if (status === 401) {
             setErrors({ password: 'Invalid email or password' });
             toast({
@@ -136,11 +118,13 @@ const LoginPage = () => {
       }
     }
   };
-  
+
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
+  // Social login handlers (not implemented)
   const handleGoogleLogin = () => {
     toast({
       title: "Feature Coming Soon",
@@ -148,7 +132,6 @@ const LoginPage = () => {
       variant: "default"
     });
   };
-
   const handleFacebookLogin = () => {
     toast({
       title: "Feature Coming Soon",
@@ -156,7 +139,6 @@ const LoginPage = () => {
       variant: "default"
     });
   };
-
   const handleXLogin = () => {
     toast({
       title: "Feature Coming Soon",
@@ -165,18 +147,17 @@ const LoginPage = () => {
     });
   };
 
+  // Resend verification email
   const handleResendVerification = async () => {
     try {
       await axios.post('http://localhost:5000/api/auth/resend-verification', { 
         email: unverifiedEmail || email 
       });
-      
       toast({
         title: "Verification Email Sent",
         description: "Please check your inbox for the verification link.",
         variant: "default"
       });
-      
       setShowResendVerification(false);
     } catch (error) {
       toast({
@@ -187,6 +168,7 @@ const LoginPage = () => {
     }
   };
 
+  // Manual verification for development
   const handleManualVerify = async () => {
     if (!manualVerifyEmail.trim() || !/\S+@\S+\.\S+/.test(manualVerifyEmail)) {
       toast({
@@ -196,18 +178,15 @@ const LoginPage = () => {
       });
       return;
     }      
-    
     setIsVerifying(true);
     try {
       await axios.post('http://localhost:5000/api/customers/verify-manual', { 
         email: manualVerifyEmail 
       });
-      
       toast({
         title: "Verification Successful",
         description: "Your email has been manually verified. You can now log in.",
       });
-      
       setShowResendVerification(false);
       setManualVerifyEmail('');
     } catch (error) {

@@ -1,27 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-// Create the theme context
+// Theme context for managing light/dark mode
 const ThemeContext = createContext(undefined);
 
-// Available themes
+// Theme options
 const THEMES = {
   LIGHT: 'light',
   DARK: 'dark',
 };
 
-// Theme provider component
 export const ThemeProvider = ({ children }) => {
-  // Initialize theme state from localStorage or default to light theme
+  // State: theme, initialized from localStorage or defaults to light
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('handixTheme');
     return savedTheme || THEMES.LIGHT;
   });
 
-  // Update theme in localStorage when it changes
+  // Sync theme to localStorage and update document class on change
   useEffect(() => {
     localStorage.setItem('handixTheme', theme);
-    
-    // Update document with theme class
+    // Add or remove 'dark' class on <html> for global styling
     if (theme === THEMES.DARK) {
       document.documentElement.classList.add('dark');
     } else {
@@ -31,12 +29,12 @@ export const ThemeProvider = ({ children }) => {
 
   // Toggle between light and dark themes
   const toggleTheme = () => {
-    setTheme(prevTheme => 
+    setTheme(prevTheme =>
       prevTheme === THEMES.LIGHT ? THEMES.DARK : THEMES.LIGHT
     );
   };
 
-  // Set a specific theme
+  // Set a specific theme if valid
   const setThemeMode = (mode) => {
     if (Object.values(THEMES).includes(mode)) {
       setTheme(mode);
@@ -44,8 +42,8 @@ export const ThemeProvider = ({ children }) => {
   };
 
   return (
-    <ThemeContext.Provider value={{ 
-      theme, 
+    <ThemeContext.Provider value={{
+      theme,
       isDarkMode: theme === THEMES.DARK,
       isLightMode: theme === THEMES.LIGHT,
       toggleTheme,
@@ -56,7 +54,7 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-// Custom hook for using the theme context
+// Custom hook for accessing theme context
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {

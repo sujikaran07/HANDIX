@@ -3,15 +3,17 @@ import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '.././styles/admin/AdminCustomer.css';
 
+// View customer details with formatted fields
 const CustomerViewForm = ({ c_id, onBack }) => {
+  // State for customer data and loading
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch customer details by ID
     const fetchCustomerDetails = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/api/customers/${c_id}`);
-        console.log('Fetched customer details:', response.data);
         setCustomer(response.data);
       } catch (error) {
         console.error('Error fetching customer details:', error);
@@ -23,9 +25,10 @@ const CustomerViewForm = ({ c_id, onBack }) => {
     fetchCustomerDetails();
   }, [c_id]);
 
+  // Helper: show 'N/A' if value is empty
   const getFieldValue = (value) => (value ? value : 'N/A');
   
-  // Format currency values
+  // Helper: format currency
   const formatCurrency = (amount) => {
     if (!amount) return 'LKR 0.00';
     return `LKR ${parseFloat(amount).toLocaleString('en-US', {
@@ -34,14 +37,12 @@ const CustomerViewForm = ({ c_id, onBack }) => {
     })}`;
   };
   
-  // Format dates
+  // Helper: format date
   const formatDate = (dateString) => {
     if (!dateString || dateString === 'N/A') return 'N/A';
-    
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return 'N/A';
-      
       return date.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
@@ -60,6 +61,7 @@ const CustomerViewForm = ({ c_id, onBack }) => {
     return <p>Customer not found.</p>;
   }
 
+  // Render customer details
   return (
     <div>
       <h4 className="mb-4">Customer Details</h4>

@@ -10,23 +10,20 @@ const ConfirmationStep = ({ orderId, email }) => {
   const [loading, setLoading] = useState(true);
   const invoiceRef = useRef(null);
   
-  // Fetch order details
+  // Fetch order details from API
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
         if (!orderId) return;
-        
         const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
         const token = localStorage.getItem('token');
         const config = token ? {
           headers: { Authorization: `Bearer ${token}` }
         } : {};
-        
         const response = await axios.get(
           `${baseURL}/api/checkout/order/${orderId}`,
           config
         );
-        
         if (response.data.success && response.data.order) {
           setOrderDetails(response.data.order);
           console.log('Order details retrieved:', response.data.order);
@@ -37,54 +34,47 @@ const ConfirmationStep = ({ orderId, email }) => {
         setLoading(false);
       }
     };
-    
     fetchOrderDetails();
   }, [orderId]);
   
-  // Fetch recommended products when component mounts
+  // Fetch recommended products for suggestions
   useEffect(() => {
     const loadRecommendedProducts = async () => {
       try {
         const products = await fetchProducts();
-        // Get random 4 products for recommendations
+        // Shuffle and pick 4 products
         const shuffled = products.sort(() => 0.5 - Math.random());
         setRecommendedProducts(shuffled.slice(0, 4));
       } catch (error) {
         console.error('Error loading recommended products:', error);
       }
     };
-    
     loadRecommendedProducts();
   }, []);
 
-  // Format estimated delivery date (calculate based on order date, not current date)
+  // Calculate estimated delivery date range based on order date
   const getEstimatedDeliveryDateRange = () => {
-    // Use order date from API if available, otherwise use current date
     const baseDate = orderDetails?.orderDate ? new Date(orderDetails.orderDate) : new Date();
     const startDate = new Date(baseDate);
     const endDate = new Date(baseDate);
-    
-    startDate.setDate(baseDate.getDate() + 7); // Min 7 days from order date
-    endDate.setDate(baseDate.getDate() + 15); // Max 15 days from order date
-    
+    startDate.setDate(baseDate.getDate() + 7);
+    endDate.setDate(baseDate.getDate() + 15);
     const formatDate = (date) => {
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric'
       });
     };
-    
     return `${formatDate(startDate)} - ${formatDate(endDate)}`;
   };
   
-  // Format dates for display
+  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
-    
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -106,14 +96,11 @@ const ConfirmationStep = ({ orderId, email }) => {
   // Get payment status display name
   const getPaymentStatus = () => {
     if (!orderDetails) return 'Processing';
-    
     const status = orderDetails.paymentStatus || '';
     const method = orderDetails.paymentMethod || '';
-    
     if (method.toLowerCase() === 'cod') {
       return 'Pay on Delivery';
     }
-    
     switch (status.toLowerCase()) {
       case 'completed': return 'Paid';
       case 'pending': return 'Pending';
@@ -127,8 +114,6 @@ const ConfirmationStep = ({ orderId, email }) => {
     if (!orderDetails || !orderDetails.orderDetails || !Array.isArray(orderDetails.orderDetails)) {
       return 0;
     }
-    
-    // Sum up all items
     return orderDetails.orderDetails.reduce((total, item) => {
       const price = parseFloat(item.priceAtPurchase || 0);
       const quantity = parseInt(item.quantity || 0);
@@ -136,37 +121,29 @@ const ConfirmationStep = ({ orderId, email }) => {
     }, 0);
   };
   
-  // Calculate shipping fee
+  // Calculate shipping fee based on total and subtotal
   const calculateShippingFee = () => {
     if (!orderDetails) return 350;
-    
-    // If total amount exists, estimate by subtracting from the total
     if (orderDetails.totalAmount) {
       const subtotal = calculateSubtotal();
       const total = parseFloat(orderDetails.totalAmount);
       const difference = total - subtotal;
-      
-      // If difference seems reasonable as a shipping fee
       if (difference > 0 && difference < 1000) {
         return difference;
       }
     }
-    
-    // Default shipping fee
     return 350;
   };
   
-  // Print invoice as PDF using actual order data
+  // Print invoice as PDF using order data
   const printInvoice = () => {
     const printContent = document.getElementById('printable-invoice');
     const originalDisplay = document.body.style.display;
     const originalOverflow = document.body.style.overflow;
-    
-    // Create a new window for printing
+    // Open new window for printing
     const printWindow = window.open('', '_blank');
-    
     if (printWindow) {
-      // Add invoice HTML to the new window with actual order data
+      // Write invoice HTML to new window
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
@@ -379,22 +356,17 @@ const ConfirmationStep = ({ orderId, email }) => {
           </body>
         </html>
       `);
-      
-      // Focus the new window and print it
       printWindow.document.close();
       printWindow.focus();
-      
-      // Slightly delay printing to ensure styles are loaded
       setTimeout(() => {
         printWindow.print();
       }, 250);
     } else {
-      // Fallback if pop-up blocked
       alert("Please allow pop-ups to download the invoice as PDF");
     }
   };
 
-  // Show loading state while fetching order details
+  // Show loading spinner while fetching order details
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto p-8 flex justify-center items-center">
@@ -405,7 +377,7 @@ const ConfirmationStep = ({ orderId, email }) => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Top Banner - Changed to Order Placed Successfully */}
+      {/* Top Banner: Order Placed Successfully */}
       <div className="bg-primary text-white p-6 rounded-t-lg text-center">
         <h2 className="text-3xl font-bold mb-1">Order Placed Successfully!</h2>
         <p className="text-lg">
@@ -430,36 +402,31 @@ const ConfirmationStep = ({ orderId, email }) => {
           </div>
         </div>
         
-        {/* Order Timeline - Handix style with brand blue */}
+        {/* Order Timeline */}
         <div className="my-8">
           <div className="relative">
-            {/* Progress line */}
             <div className="absolute left-0 top-4 w-full h-1 bg-gray-200"></div>
             <div className="absolute left-0 top-4 w-1/4 h-1 bg-primary"></div>
-            
-            {/* Steps - Always start with Order Placed regardless of payment status */}
             <div className="flex justify-between">
+              {/* Timeline steps */}
               <div className="relative text-center">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto">
                   <CheckCircle size={16} className="text-white" />
                 </div>
                 <p className="mt-2 text-xs font-medium text-primary">Order Placed</p>
               </div>
-              
               <div className="relative text-center">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
                   <Package size={16} className="text-gray-500" />
                 </div>
                 <p className="mt-2 text-xs font-medium text-gray-500">Processing</p>
               </div>
-              
               <div className="relative text-center">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
                   <ShoppingBag size={16} className="text-gray-500" />
                 </div>
                 <p className="mt-2 text-xs font-medium text-gray-500">Shipped</p>
               </div>
-              
               <div className="relative text-center">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
                   <CheckCircle size={16} className="text-gray-500" />
@@ -470,16 +437,14 @@ const ConfirmationStep = ({ orderId, email }) => {
           </div>
         </div>
         
-        {/* Delivery Info Card - Handix style with actual data */}
+        {/* Delivery Info Card */}
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <h4 className="font-bold text-gray-800 mb-4">Delivery Information</h4>
-          
           <div className="flex flex-col sm:flex-row justify-between">
             <div className="mb-4 sm:mb-0">
               <p className="text-gray-500 text-sm mb-1">Estimated Delivery</p>
               <p className="font-medium">{getEstimatedDeliveryDateRange()}</p>
             </div>
-            
             <div>
               <p className="text-gray-500 text-sm mb-1">Shipping Method</p>
               <p className="font-medium">
@@ -490,12 +455,11 @@ const ConfirmationStep = ({ orderId, email }) => {
         </div>
       </div>
       
-      {/* Order Details Section - Handix style with actual order data */}
+      {/* Order Details Section */}
       <div className="border border-gray-200 rounded-lg bg-white shadow-sm mb-6">
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-bold text-lg">Order Details</h3>
         </div>
-        
         <div className="p-4">
           <div className="flex justify-between mb-6">
             <div>
@@ -503,7 +467,6 @@ const ConfirmationStep = ({ orderId, email }) => {
                 <p className="text-sm text-gray-500">Order Number</p>
                 <p className="font-medium">{orderId}</p>
               </div>
-              
               <div>
                 <p className="text-sm text-gray-500">Order Date</p>
                 <p className="font-medium">
@@ -511,7 +474,6 @@ const ConfirmationStep = ({ orderId, email }) => {
                 </p>
               </div>
             </div>
-            
             <div>
               <button 
                 onClick={printInvoice}
@@ -522,8 +484,7 @@ const ConfirmationStep = ({ orderId, email }) => {
               </button>
             </div>
           </div>
-          
-          {/* Show ordered items if available */}
+          {/* Ordered items list */}
           {orderDetails && orderDetails.orderDetails && orderDetails.orderDetails.length > 0 && (
             <div className="mb-6">
               <h4 className="font-medium mb-3">Ordered Items</h4>
@@ -545,22 +506,17 @@ const ConfirmationStep = ({ orderId, email }) => {
               </div>
             </div>
           )}
-          
-          {/* Order total summary with actual data */}
+          {/* Order total summary */}
           <div className="border-t border-dashed border-gray-200 pt-4">
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div className="text-gray-500">Payment Method:</div>
               <div className="font-medium">{getPaymentMethodName()}</div>
-              
               <div className="text-gray-500">Payment Status:</div>
               <div className="font-medium">{getPaymentStatus()}</div>
-              
               <div className="text-gray-500">Item(s) Subtotal:</div>
               <div className="font-medium">LKR {calculateSubtotal().toLocaleString()}</div>
-              
               <div className="text-gray-500">Shipping:</div>
               <div className="font-medium">LKR {calculateShippingFee().toLocaleString()}</div>
-              
               <div className="text-primary font-bold text-base">Order Total:</div>
               <div className="text-primary font-bold text-base">
                 LKR {parseFloat(orderDetails?.totalAmount || 0).toLocaleString()}
@@ -570,7 +526,7 @@ const ConfirmationStep = ({ orderId, email }) => {
         </div>
       </div>
       
-      {/* Action Buttons - Handix style with primary blue */}
+      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
         <Link 
           to="/purchases" 
@@ -588,7 +544,7 @@ const ConfirmationStep = ({ orderId, email }) => {
         </Link>
       </div>
       
-      {/* Customer Service - Handix style with primary blue */}
+      {/* Customer Service Section */}
       <div className="bg-white border border-gray-200 rounded-lg p-4 mb-8">
         <div className="flex items-start">
           <div className="mr-3 mt-1">
@@ -607,7 +563,7 @@ const ConfirmationStep = ({ orderId, email }) => {
         </div>
       </div>
       
-      {/* Recommended Products Section with actual products */}
+      {/* Recommended Products Section */}
       <div className="mb-6">
         <h3 className="font-bold text-lg mb-4">Recommended For You</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -645,10 +601,11 @@ const ConfirmationStep = ({ orderId, email }) => {
         </p>
       </div>
       
-      {/* Hidden section that contains the printable invoice */}
+      {/* Hidden printable invoice section */}
       <div id="printable-invoice" ref={invoiceRef} className="hidden"></div>
     </div>
   );
 };
 
 export default ConfirmationStep;
+  

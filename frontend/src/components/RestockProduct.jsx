@@ -3,7 +3,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusCircle, faMinusCircle, faBoxOpen, faUserTag, faCalendarAlt, faStickyNote } from '@fortawesome/free-solid-svg-icons';
 
+// Component for creating product restock requests and assigning to artisans
 const RestockProduct = ({ product, onBack, onRestock }) => {
+  // Form state management
   const [quantity, setQuantity] = useState(1);
   const [artisan, setArtisan] = useState('');
   const [dueDate, setDueDate] = useState('');
@@ -15,13 +17,13 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
   const [isAssigned, setIsAssigned] = useState(false);
   const [assignedArtisan, setAssignedArtisan] = useState(null);
   
-  // Minimum date for the due date picker (tomorrow)
+  // Set minimum date for due date (tomorrow)
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const minDate = tomorrow.toISOString().split('T')[0];
 
   useEffect(() => {
-    // Fetch artisans
+    // Fetch available artisans from API
     const fetchArtisans = async () => {
       const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
       if (!token || token.length < 10) {
@@ -38,19 +40,16 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
         
         if (response.ok) {
           const data = await response.json();
-          // The backend already returns { id, name, ... }
           setArtisans(data);
         } else {
           setArtisans([]);
-          console.error('Failed to fetch artisans');
         }
       } catch (error) {
         setArtisans([]);
-        console.error('Error fetching artisans:', error);
       }
     };
     
-    // Fetch product images
+    // Fetch product images for display
     const fetchProductImages = async () => {
       if (product && product.product_id) {
         const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -69,10 +68,10 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           if (response.ok) {
             const data = await response.json();
             
-            // Initialize an array to store all image objects
+            // Collect all available images from various sources
             let allImages = [];
             
-            // First add the default image if it exists
+            // Add default image if available
             if (product.default_image_url) {
               allImages.push({
                 image_id: 'default',
@@ -82,22 +81,15 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
               });
             }
             
-            // Then add additional images from the API response
+            // Add images from API response
             if (data.images && data.images.length > 0) {
-              console.log(`Fetched ${data.images.length} images for product ${product.product_id}`);
-              
-              // Add any non-default images from the API response
               data.images.forEach(img => {
-                // Avoid duplicates by checking if the image URL already exists in allImages
                 if (!allImages.some(existingImg => existingImg.image_url === img.image_url)) {
                   allImages.push(img);
                 }
               });
             } else if (product.images && product.images.length > 0) {
-              // If the API doesn't return images but the product object has images array
-              console.log(`Using ${product.images.length} images from product object`);
-              
-              // Add images from the product object
+              // Fallback to product object images
               product.images.forEach((imageUrl, index) => {
                 if (typeof imageUrl === 'string' && 
                     !allImages.some(existingImg => existingImg.image_url === imageUrl)) {
@@ -111,7 +103,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
               });
             }
             
-            // If we still have no images, check if product has a single image URL
+            // Single image fallback
             if (allImages.length === 0 && product.image_url) {
               allImages.push({
                 image_id: 'single',
@@ -121,12 +113,9 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
               });
             }
             
-            console.log(`Total of ${allImages.length} unique images collected for display`);
             setProductImages(allImages);
           } else {
-            console.error('Failed to fetch product images');
-            
-            // Fallback to images from product object if available
+            // Handle API failure with fallback images
             if (product.images && product.images.length > 0) {
               const formattedImages = product.images.map((url, index) => ({
                 image_id: `img-${index}`,
@@ -145,8 +134,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
             }
           }
         } catch (error) {
-          console.error('Error fetching product images:', error);
-          // Fallback to images from product object if available
+          // Fallback to product object images on error
           if (product.images && product.images.length > 0) {
             const formattedImages = product.images.map((url, index) => ({
               image_id: `img-${index}`,
@@ -160,7 +148,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
       }
     };
     
-    // Check if this product already has a pending restock assignment
+    // Check for existing restock assignments
     const checkExistingAssignments = async () => {
       const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
       if (!token || token.length < 10) {
@@ -178,7 +166,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
         if (response.ok) {
           const data = await response.json();
           if (data.orders && data.orders.length > 0) {
-            // Find the most recent pending or assigned order
+            // Find pending or assigned restock orders
             const pendingOrder = data.orders.find(order => 
               order.status === 'Assigned' || order.status === 'Pending'
             );
@@ -197,7 +185,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           }
         }
       } catch (error) {
-        console.error('Error checking existing restock orders:', error);
+        // ...existing code...
       }
     };
     
@@ -206,7 +194,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     checkExistingAssignments();
   }, [product]);
 
-  // Handle image navigation
+  // Image carousel navigation
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
   };
@@ -215,6 +203,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     setCurrentImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
   };
 
+  // Quantity input handlers
   const handleQuantityChange = (e) => {
     const value = parseInt(e.target.value);
     if (!isNaN(value) && value >= 1) {
@@ -232,6 +221,7 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
     }
   };
 
+  // Handle restock request submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -266,18 +256,16 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           quantity: parseInt(quantity),
           artisan_id: artisan,
           due_date: dueDate,
-          notes: notes || ''  // Ensure notes is never undefined
+          notes: notes || ''
         })
       });
       
       const data = await response.json();
       
       if (response.ok) {
-        console.log('Restock response:', data);
         setIsAssigned(true);
         setAssignedArtisan(artisans.find(a => a.id === artisan));
         
-        // Call onRestock with the restock data
         onRestock({
           product_id: product.product_id,
           quantity: quantity,
@@ -287,18 +275,17 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
           requestId: data.requestId
         });
       } else {
-        console.error('Restock failed:', data);
         alert(`Failed to restock: ${data.message || 'Server error'}`);
       }
       
       setLoading(false);
     } catch (error) {
-      console.error('Error restocking product:', error);
       setLoading(false);
       alert(`Failed to restock product: ${error.message || 'Unknown error'}`);
     }
   };
 
+  // Cancel existing restock assignment
   const handleCancelAssignment = async () => {
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (!token || token.length < 10) {
@@ -324,7 +311,6 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
         alert(`Failed to cancel assignment: ${data.message || 'Server error'}`);
       }
     } catch (error) {
-      console.error('Error canceling restock:', error);
       alert('Failed to cancel restock assignment. Please try again.');
     }
   };
@@ -332,12 +318,13 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">Request Product Restock</h5>
         </div>
 
         <div className="row g-3">
-          {/* Product Info Card */}
+          {/* Product information with image carousel */}
           <div className="col-lg-4">
             <div className="card h-100">
               <div className="card-header bg-light">
@@ -356,7 +343,6 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
                           objectFit: 'contain'
                         }}
                         onError={(e) => {
-                          console.log(`Failed to load image: ${productImages[currentImageIndex].image_url}`);
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/150?text=No+Image';
                         }}
@@ -434,13 +420,14 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
             </div>
           </div>
           
-          {/* Restock Form Card */}
+          {/* Restock request form */}
           <div className="col-lg-8">
             <div className="card h-100">
               <div className="card-header bg-light">
                 <h6 className="mb-0">Restock Request</h6>
               </div>
               <div className="card-body">
+                {/* Assignment status alert */}
                 {isAssigned && (
                   <div className="alert alert-info mb-2 py-1 small">
                     <div className="d-flex justify-content-between align-items-center">
@@ -458,6 +445,8 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
                     </div>
                   </div>
                 )}
+                
+                {/* Restock form */}
                 <form onSubmit={handleSubmit} className="compact-form">
                   <div className="row mb-1">
                     <div className="col">
@@ -581,7 +570,6 @@ const RestockProduct = ({ product, onBack, onRestock }) => {
               </div>
             </div>
           </div>
-        
         </div>
       </div>
     </div>

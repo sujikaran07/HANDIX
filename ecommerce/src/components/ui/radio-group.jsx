@@ -4,6 +4,7 @@ import { Circle } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
+// RadioGroup root for grouping radio buttons
 const RadioGroup = React.forwardRef(
   ({ className, ...props }, ref) => {
     return (
@@ -17,6 +18,7 @@ const RadioGroup = React.forwardRef(
 )
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 
+// Single radio button item
 const RadioGroupItem = React.forwardRef(
   ({ className, ...props }, ref) => {
     return (
@@ -28,6 +30,7 @@ const RadioGroupItem = React.forwardRef(
         )}
         {...props}
       >
+        {/* Indicator for selected radio */}
         <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
           <Circle className="h-2.5 w-2.5 fill-current text-current" />
         </RadioGroupPrimitive.Indicator>

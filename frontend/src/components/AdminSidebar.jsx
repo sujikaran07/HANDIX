@@ -1,3 +1,4 @@
+// Admin sidebar navigation for dashboard
 import React, { useState } from 'react';
 import { FaTachometerAlt, FaUserTie, FaUsers, FaRegListAlt, FaGift, FaComments, FaCog, FaSignOutAlt, FaChartLine, FaWarehouse, FaBox, FaFileAlt, FaPaypal, FaExchangeAlt, FaPercentage, FaReceipt } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -15,12 +16,7 @@ const AdminSidebar = () => {
   
   const handleLogout = (e) => {
     e.preventDefault();
-    console.log('Logging out admin user');
-    
-    // Clear only admin token from localStorage
     localStorage.removeItem('adminToken');
-    
-    // Redirect to login page
     navigate('/login');
   };
 
@@ -84,7 +80,6 @@ const AdminSidebar = () => {
               <FaFileAlt /> Reports
             </Link>
           </li>
-
           <li className={activeLink === '/admin/settings' ? 'active' : ''}>
             <Link to="/admin/settings" onClick={() => handleLinkClick('/admin/settings')}>
               <FaCog /> Settings

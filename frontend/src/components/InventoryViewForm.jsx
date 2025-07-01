@@ -4,12 +4,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faTags, faBoxOpen, faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
 
 const InventoryViewForm = ({ inventory, onBack }) => {
+  // State for managing product 
   const [productImages, setProductImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [productVariation, setProductVariation] = useState(null);
   
   useEffect(() => {
-    // Fetch product images
+    // Fetch product images from API
     const fetchProductImages = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -18,26 +19,46 @@ const InventoryViewForm = ({ inventory, onBack }) => {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+        let images = [];
         if (response.ok) {
           const data = await response.json();
           if (data.images && data.images.length > 0) {
-            console.log(`Fetched ${data.images.length} images for product ${inventory.product_id}`);
-            setProductImages(data.images);
+            // Normalize: always array of { image_url }
+            images = data.images.map(img =>
+              typeof img === 'string' ? { image_url: img } : img
+            );
           }
-        } else {
-          console.error('Failed to fetch product images');
         }
+        // Fallback: use inventory.images or inventory.default_image_url
+        if (images.length === 0) {
+          if (Array.isArray(inventory.images) && inventory.images.length > 0) {
+            images = inventory.images.map(img =>
+              typeof img === 'string' ? { image_url: img } : img
+            );
+          } else if (inventory.default_image_url) {
+            images = [{ image_url: inventory.default_image_url }];
+          }
+        }
+        setProductImages(images);
       } catch (error) {
         console.error('Error fetching product images:', error);
+        // Fallback: use inventory.images or inventory.default_image_url
+        let images = [];
+        if (Array.isArray(inventory.images) && inventory.images.length > 0) {
+          images = inventory.images.map(img =>
+            typeof img === 'string' ? { image_url: img } : img
+          );
+        } else if (inventory.default_image_url) {
+          images = [{ image_url: inventory.default_image_url }];
+        }
+        setProductImages(images);
       }
     };
     
-    // Fetch product variations for additional fees
+    // Fetch product variations for additional pricing information
     const fetchProductVariation = async () => {
       try {
         const token = localStorage.getItem('token');
-        // Use the correct endpoint for variations
         const response = await fetch(`http://localhost:5000/api/inventory/${inventory.product_id}/variations`, {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -47,10 +68,9 @@ const InventoryViewForm = ({ inventory, onBack }) => {
         if (response.ok) {
           const data = await response.json();
           if (data.variations && data.variations.length > 0) {
-            console.log(`Fetched variations for product ${inventory.product_id}:`, data.variations);
-            setProductVariation(data.variations[0]);  // Get the first variation
+            setProductVariation(data.variations[0]);
           } else {
-            // Try the customization fee endpoint as a fallback
+            // Fallback to customization fee endpoint
             const feeResponse = await fetch(`http://localhost:5000/api/variations/${inventory.product_id}/customization-fee`, {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -59,14 +79,11 @@ const InventoryViewForm = ({ inventory, onBack }) => {
             
             if (feeResponse.ok) {
               const feeData = await feeResponse.json();
-              console.log(`Fetched customization fee for product ${inventory.product_id}:`, feeData);
               if (feeData.fee) {
                 setProductVariation({ additional_price: feeData.fee });
               }
             }
           }
-        } else {
-          console.error('Failed to fetch product variations');
         }
       } catch (error) {
         console.error('Error fetching product variations:', error);
@@ -83,7 +100,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
     return <div>No inventory data available</div>;
   }
 
-  // Handle image navigation
+  // Handle image carousel navigation
   const handlePrevImage = () => {
     setCurrentImageIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1));
   };
@@ -92,9 +109,8 @@ const InventoryViewForm = ({ inventory, onBack }) => {
     setCurrentImageIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1));
   };
 
-  // Determine stock status based on quantity and product_status
+  // Determine stock status based on quantity and product status
   const getStockStatus = (item) => {
-    // If product is disabled, show as "Disabled" regardless of quantity
     if (item.product_status === 'Disabled') {
       return "Disabled";
     }
@@ -104,7 +120,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
     return "In Stock";
   };
 
-  // Get the actual quantity to display
+  // Get display quantity (0 for disabled products)
   const getDisplayQuantity = (item) => {
     return item.product_status === 'Disabled' ? 0 : item.quantity;
   };
@@ -112,7 +128,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
   const stockStatus = getStockStatus(inventory);
   const displayQuantity = getDisplayQuantity(inventory);
   
-  // Determine status class based on status
+  // Get CSS class for status display
   const getStatusClass = (status) => {
     switch(status) {
       case "In Stock": return 'text-success';
@@ -128,6 +144,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
   return (
     <div className="container mt-4" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div className="card p-4" style={{ borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', backgroundColor: '#ffffff', flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+        {/* Header with product status */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5 className="mb-0">Product Details</h5>
           <span className={`badge ${
@@ -141,14 +158,14 @@ const InventoryViewForm = ({ inventory, onBack }) => {
         </div>
 
         <div className="row g-3">
-          {/* Product Info Card */}
+          {/* Product image carousel section */}
           <div className="col-lg-3">
             <div className="card h-100">
               <div className="position-relative">
                 {productImages.length > 0 ? (
                   <>
                     <img 
-                      src={productImages[currentImageIndex].image_url} 
+                      src={productImages[currentImageIndex].image_url || productImages[currentImageIndex].url} 
                       alt={inventory.product_name}
                       className="img-fluid card-img-top" 
                       style={{ 
@@ -163,6 +180,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
                       }}
                     />
                     
+                    {/* Image navigation buttons */}
                     {productImages.length > 1 && (
                       <div className="d-flex justify-content-between position-absolute w-100" style={{ top: '50%' }}>
                         <button 
@@ -182,6 +200,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
                       </div>
                     )}
                     
+                    {/* Image indicators */}
                     {productImages.length > 1 && (
                       <div className="d-flex justify-content-center mt-2">
                         {productImages.map((_, index) => (
@@ -215,8 +234,10 @@ const InventoryViewForm = ({ inventory, onBack }) => {
             </div>
           </div>
 
+          {/* Product details section */}
           <div className="col-lg-9">
             <div className="row">
+              {/* Product information card */}
               <div className="col-md-6 mb-3">
                 <div className="card h-100">
                   <div className="card-header bg-light">
@@ -257,6 +278,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
                 </div>
               </div>
               
+              {/* Additional details card */}
               <div className="col-md-6 mb-3">
                 <div className="card h-100">
                   <div className="card-header bg-light">
@@ -291,6 +313,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
               </div>
             </div>
             
+            {/* Product description */}
             <div className="card mt-3">
               <div className="card-header bg-light">
                 <h6 className="mb-0">Description</h6>
@@ -302,6 +325,7 @@ const InventoryViewForm = ({ inventory, onBack }) => {
           </div>
         </div>
         
+        {/* Back button */}
         <div className="d-flex justify-content-end mt-3">
           <button className="btn btn-secondary" onClick={onBack}>
             Back

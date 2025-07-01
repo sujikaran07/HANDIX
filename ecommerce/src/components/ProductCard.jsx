@@ -9,7 +9,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
   const { toggleFavorite, isFavorite } = useFavorites();
   const navigate = useNavigate();
   
-  // Enhanced debugging for rating information
+  // Debug: log product rating info
   console.log('ProductCard received product with ratings:', {
     id: product?.id, 
     name: product?.name,
@@ -18,39 +18,35 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
     ratingType: typeof product?.rating
   });
 
-  // Check if product is valid
+  // Validate product object
   if (!product || !product.id) {
     console.error('Invalid product passed to ProductCard:', product);
     return null;
   }
   
-  // Check authentication status
+  // Check if user is authenticated
   const isLoggedIn = () => {
     return localStorage.getItem('isAuthenticated') === 'true';
   };
   
+  // Handle favorite toggle (redirect to login if not authenticated)
   const handleToggleFavorite = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Check if user is logged in
     if (!isLoggedIn()) {
       navigate('/login', { 
         state: { from: window.location.pathname, message: 'Please login to add items to favorites' } 
       });
       return;
     }
-    
     toggleFavorite(product);
   };
   
+  // Handle add to cart (redirect to login if not authenticated)
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    // Check if user is logged in
     if (!isLoggedIn()) {
-      // Store current URL and redirect to login
       navigate('/login', { 
         state: { 
           from: window.location.pathname,
@@ -59,8 +55,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
       });
       return;
     }
-    
-    // Create a cart-ready product with required properties
+    // Prepare product object for cart
     const cartReadyProduct = {
       id: product.id,
       name: product.name,
@@ -71,33 +66,31 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
       quantity: product.quantity || 10,
       inStock: product.inStock !== false
     };
-    
-    // Log the prepared product for debugging
+    // Debug: log cart product
     console.log('Adding to cart from ProductCard:', cartReadyProduct);
-    
-    // Add to cart
     addItem(cartReadyProduct, 1);
   };
   
+  // Handle remove from favorites (if applicable)
   const handleRemove = (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (onRemove) onRemove(product.id);
   };
 
-  // Make sure price is a number for display
+  // Format price for display
   const displayPrice = Number(product.price || 0).toLocaleString();
   
-  // Properly parse rating and review count to ensure they're numbers
+  // Parse rating and review count
   const rating = parseFloat(product.rating || 0);
   const reviewCount = parseInt(product.reviewCount || 0);
-  // Determine if this product has any ratings
+  // Check if product has ratings
   const hasRatings = !isNaN(rating) && rating > 0 && !isNaN(reviewCount) && reviewCount > 0;
 
   return (
     <Link to={`/products/${product.id}`} className="group">
       <div className="bg-white overflow-hidden rounded-lg shadow-sm hover:shadow-md transition-shadow relative">
-        {/* Favorite Button */}
+        {/* Favorite button (top right) */}
         <button
           onClick={handleToggleFavorite}
           className={`absolute top-2 right-2 z-10 p-1.5 rounded-full 
@@ -106,7 +99,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
           <Heart size={18} fill={isFavorite && isFavorite(product.id) ? "currentColor" : "none"} />
         </button>
         
-        {/* Remove Button (for favorites page) */}
+        {/* Remove button (top left, only if showRemoveButton is true) */}
         {showRemoveButton && (
           <button
             onClick={handleRemove}
@@ -117,14 +110,14 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
           </button>
         )}
         
-        {/* Top Rated Badge */}
+        {/* Top Rated badge if rating is high */}
         {hasRatings && rating >= 4.5 && (
           <div className="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded">
             Top Rated
           </div>
         )}
         
-        {/* Product Image */}
+        {/* Product image */}
         <div className="aspect-square overflow-hidden">
           <img
             src={product.images && product.images.length > 0 ? product.images[0] : '/images/placeholder.png'}
@@ -133,7 +126,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
           />
         </div>
         
-        {/* Product Info */}
+        {/* Product info section */}
         <div className="p-3">
           <h3 className="font-medium line-clamp-1 mb-1">{product.name || 'Unnamed Product'}</h3>
           
@@ -156,6 +149,7 @@ const ProductCard = ({ product, onRemove, showRemoveButton = false }) => {
               LKR {displayPrice}
             </span>
             
+            {/* Add to cart button */}
             <button
               onClick={handleAddToCart}
               className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary hover:text-white"

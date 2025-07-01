@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+// Helper: create directory if it does not exist
 const createDirIfNotExists = (dirPath) => {
   if (!fs.existsSync(dirPath)) {
     fs.mkdirSync(dirPath, { recursive: true });
@@ -8,6 +9,7 @@ const createDirIfNotExists = (dirPath) => {
   }
 };
 
+// Copy logo file from source to backend public/images
 const copyLogoFile = () => {
   try {
     const sourcePaths = [
@@ -41,7 +43,7 @@ const copyLogoFile = () => {
   }
 };
 
-// Run the copy operation
+// Run the copy operation on script execution
 copyLogoFile();
 
 module.exports = { copyLogoFile };

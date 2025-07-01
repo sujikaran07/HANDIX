@@ -5,24 +5,13 @@ import NavBar from '../components/NavBar';
 import Footer from '../components/Footer';
 
 const ChatPage = () => {
-  const [conversations, setConversations] = useState([
-    { id: 1, name: 'Sarah Wilson', lastMessage: 'Thank you for your order!', unread: 2, active: true },
-    { id: 2, name: 'Craft Haven', lastMessage: 'Your custom order is ready', unread: 0, active: false },
-    { id: 3, name: 'Lakmal Textiles', lastMessage: 'We have new batik designs in stock', unread: 0, active: false },
-  ]);
-  
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'artisan', text: 'Hello! Thank you for your interest in our handwoven bags.', timestamp: new Date(Date.now() - 60000 * 30) },
-    { id: 2, sender: 'user', text: 'Hi there! I was wondering if you can make a custom size for the basket bag?', timestamp: new Date(Date.now() - 60000 * 25) },
-    { id: 3, sender: 'artisan', text: 'Yes, we can definitely customize the size for you. What dimensions are you looking for?', timestamp: new Date(Date.now() - 60000 * 20) },
-    { id: 4, sender: 'user', text: 'I was thinking about 14" width and 12" height. Is that possible?', timestamp: new Date(Date.now() - 60000 * 15) },
-    { id: 5, sender: 'artisan', text: 'Absolutely! That size works well. There will be a small customization fee of LKR 500. Is that okay?', timestamp: new Date(Date.now() - 60000 * 10) },
-    { id: 6, sender: 'artisan', text: 'Also, would you like any specific color pattern for the weave?', timestamp: new Date(Date.now() - 60000 * 5) },
-  ]);
-  
+  // Empty initial state for conversations and messages
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
+  // Switch active conversation
   const selectConversation = (id) => {
     setConversations(conversations.map(conv => ({
       ...conv,
@@ -30,23 +19,20 @@ const ChatPage = () => {
       unread: conv.id === id ? 0 : conv.unread
     })));
   };
-  
+
+  // Handle sending a new message
   const handleSendMessage = (e) => {
     e.preventDefault();
-    
     if (newMessage.trim() === '') return;
-    
     const message = {
       id: messages.length + 1,
       sender: 'user',
       text: newMessage,
       timestamp: new Date()
     };
-    
     setMessages([...messages, message]);
     setNewMessage('');
-    
-    // Simulate response after 1 second
+    // Simulate artisan response
     setTimeout(() => {
       const response = {
         id: messages.length + 2,
@@ -57,15 +43,17 @@ const ChatPage = () => {
       setMessages(prev => [...prev, response]);
     }, 1000);
   };
-  
+
+  // Filter conversations by search
   const filteredConversations = conversations.filter(conv => 
     conv.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  
+
+  // Format message time
   const formatTime = (date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
-  
+
   return (
     <div className="min-h-screen flex flex-col">
       <NavBar />

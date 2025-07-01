@@ -10,10 +10,12 @@ import {
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 
+// Form context provider for react-hook-form
 const Form = FormProvider
 
 const FormFieldContext = React.createContext({})
 
+// FormField wraps Controller and provides field name context
 const FormField = (props) => {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
@@ -22,6 +24,7 @@ const FormField = (props) => {
   )
 }
 
+// Hook to access field state and context
 const useFormField = () => {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
@@ -47,6 +50,7 @@ const useFormField = () => {
 
 const FormItemContext = React.createContext({})
 
+// FormItem provides a unique id for each form item
 const FormItem = React.forwardRef(({ className, ...props }, ref) => {
   const id = React.useId()
 
@@ -58,6 +62,7 @@ const FormItem = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormItem.displayName = "FormItem"
 
+// Label for form fields, shows error state if present
 const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
@@ -72,6 +77,7 @@ const FormLabel = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormLabel.displayName = "FormLabel"
 
+// Control for form fields, sets aria attributes for accessibility
 const FormControl = React.forwardRef(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } = useFormField()
 
@@ -91,6 +97,7 @@ const FormControl = React.forwardRef(({ ...props }, ref) => {
 })
 FormControl.displayName = "FormControl"
 
+// Description text for form fields
 const FormDescription = React.forwardRef(({ className, ...props }, ref) => {
   const { formDescriptionId } = useFormField()
 
@@ -105,6 +112,7 @@ const FormDescription = React.forwardRef(({ className, ...props }, ref) => {
 })
 FormDescription.displayName = "FormDescription"
 
+// Message for form field errors or custom messages
 const FormMessage = React.forwardRef(({ className, children, ...props }, ref) => {
   const { error, formMessageId } = useFormField()
   const body = error ? String(error?.message) : children
